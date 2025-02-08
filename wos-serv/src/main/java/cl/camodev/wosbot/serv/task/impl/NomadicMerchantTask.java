@@ -1,22 +1,20 @@
 package cl.camodev.wosbot.serv.task.impl;
 
+import java.time.LocalDateTime;
+
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.serv.impl.ServLogs;
-import cl.camodev.wosbot.serv.task.ATask;
+import cl.camodev.wosbot.serv.task.Task;
 
-public class NomadicMerchantTask extends ATask {
+public class NomadicMerchantTask extends Task {
 
-	public NomadicMerchantTask(String profile) {
-		super(profile);
+	public NomadicMerchantTask(String profile, LocalDateTime scheduledTime) {
+		super(profile, scheduledTime);
 	}
 
 	@Override
 	protected void execute() {
-//		ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "["+taskName + "] checking for nomadic merchant offers");
-//		try {
-//			Thread.sleep(2000); // Simulación de trabajo
-//		} catch (InterruptedException e) {
-//			Thread.currentThread().interrupt();
-//		}
+		ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "["+taskName + "] checking for nomadic merchant offers");
+		reschedule(LocalDateTime.now().plusMinutes(2));
 	}
 }

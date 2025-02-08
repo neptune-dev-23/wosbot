@@ -4,7 +4,7 @@ import java.util.List;
 
 import cl.camodev.wosbot.almac.repo.IProfileRepository;
 import cl.camodev.wosbot.almac.repo.ProfileRepository;
-import cl.camodev.wosbot.ot.OTProfiles;
+import cl.camodev.wosbot.ot.DTOProfiles;
 
 public class ServProfiles {
 
@@ -23,7 +23,7 @@ public class ServProfiles {
 		return instance;
 	}
 
-	public List<OTProfiles> getProfiles() {
+	public List<DTOProfiles> getProfiles() {
 		return iProfileRepository.getProfiles();
 	}
 

@@ -1,53 +1,27 @@
 package cl.camodev.wosbot.ot;
 
 public class DTOConfig {
+	private Long profileId; // Para saber a qué perfil pertenece
+	private String nombreConfiguracion;
+	private String valor;
 
-	private String profileName;
-	private Integer emulatorNumber;
-
-	private Boolean nomadicMerchant;
-	private Boolean nomadicMerchantVipPoints;
-
-	private Boolean mysteryShopFreePackage;
-
-	public String getProfileName() {
-		return profileName;
+	public DTOConfig(Long profileId, String nombreConfiguracion, String valor) {
+		this.profileId = profileId;
+		this.nombreConfiguracion = nombreConfiguracion;
+		this.valor = valor;
 	}
 
-	public void setProfileName(String profileName) {
-		this.profileName = profileName;
+	// Getters y Setters
+
+	public Long getProfileId() {
+		return profileId;
 	}
 
-	public Integer getEmulatorNumber() {
-		return emulatorNumber;
+	public String getNombreConfiguracion() {
+		return nombreConfiguracion;
 	}
 
-	public void setEmulatorNumber(Integer emulatorNumber) {
-		this.emulatorNumber = emulatorNumber;
+	public String getValor() {
+		return valor;
 	}
-
-	public Boolean getNomadicMerchant() {
-		return nomadicMerchant;
-	}
-
-	public void setNomadicMerchant(Boolean nomadicMerchant) {
-		this.nomadicMerchant = nomadicMerchant;
-	}
-
-	public Boolean getNomadicMerchantVipPoints() {
-		return nomadicMerchantVipPoints;
-	}
-
-	public void setNomadicMerchantVipPoints(Boolean nomadicMerchantVipPoints) {
-		this.nomadicMerchantVipPoints = nomadicMerchantVipPoints;
-	}
-
-	public Boolean getMysteryShopFreePackage() {
-		return mysteryShopFreePackage;
-	}
-
-	public void setMysteryShopFreePackage(Boolean mysteryShopFreePackage) {
-		this.mysteryShopFreePackage = mysteryShopFreePackage;
-	}
-
 }

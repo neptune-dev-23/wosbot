@@ -1,10 +1,15 @@
 package cl.camodev.wosbot.almac.entity;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -25,7 +30,11 @@ public class Profile {
 	@Column(name = "enabled", nullable = false)
 	private Boolean enabled;
 
+	@OneToMany(mappedBy = "profile", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<Config> configs = new ArrayList<>();
+
 	// Getters y Setters
+
 	public Long getId() {
 		return id;
 	}
@@ -56,5 +65,13 @@ public class Profile {
 
 	public void setEnabled(Boolean enabled) {
 		this.enabled = enabled;
+	}
+
+	public List<Config> getConfigs() {
+		return configs;
+	}
+
+	public void setConfigs(List<Config> configs) {
+		this.configs = configs;
 	}
 }

@@ -1,11 +1,9 @@
 package cl.camodev.wosbot.serv.impl;
 
-import java.util.List;
+import java.time.LocalDateTime;
 
-import cl.camodev.wosbot.ot.DTOConfig;
 import cl.camodev.wosbot.serv.task.TaskQueueManager;
-import cl.camodev.wosbot.serv.task.impl.InitializeTask;
-import cl.camodev.wosbot.serv.task.impl.NomadicMerchantTask;
+import cl.camodev.wosbot.serv.task.impl.HeroRecruitmentTask;
 
 public class ServScheduler {
 	private static ServScheduler instance;
@@ -23,21 +21,35 @@ public class ServScheduler {
 		return instance;
 	}
 
-	public void startBot(List<DTOConfig> configs) {
+	public void startBot() {
 
-		for (DTOConfig config : configs) {
-			String queueName = config.getProfileName() + "_" + config.getEmulatorNumber();
+		String queueName = "VICI_0";
+		queueManager.createQueue(queueName);
+		queueManager.getQueue(queueName).addTask(new HeroRecruitmentTask(queueName, LocalDateTime.now()));
+		queueManager.startQueue(queueName);
 
-			queueManager.createQueue(queueName);
-			queueManager.getQueue(queueName).addTask(new InitializeTask(queueName));
+//		configs.forEach(config -> {
+//			
+//		});
 
-			if (config.getNomadicMerchant().booleanValue()) {
-				NomadicMerchantTask nomadicMerchantTask = new NomadicMerchantTask(queueName);
-				queueManager.getQueue(queueName).addTask(nomadicMerchantTask);
-			}
+//		for (DTOConfig config : configs) {
+//			String queueName = config.getProfileName() + "_" + config.getEmulatorNumber();
+//
+//			queueManager.createQueue(queueName);
+//			queueManager.getQueue(queueName).addTask(new InitializeTask(queueName));
+//
+//			if (config.getNomadicMerchant().booleanValue()) {
+//				NomadicMerchantTask nomadicMerchantTask = new NomadicMerchantTask(queueName);
+//				queueManager.getQueue(queueName).addTask(nomadicMerchantTask);
+//			}
+//
+//			queueManager.startQueue(queueName);
+//		}
 
-			queueManager.startQueue(queueName);
-		}
+	}
+
+	public void stopBot() {
+		// TODO Auto-generated method stub
 
 	}
 

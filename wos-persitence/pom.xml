@@ -29,6 +29,13 @@
 			<version>6.2.7.Final</version>
 		</dependency>
 
+		<dependency>
+			<groupId>com.zaxxer</groupId>
+			<artifactId>HikariCP</artifactId>
+			<version>5.0.1</version> <!-- Ajusta la versión según tus necesidades -->
+		</dependency>
+
+
 		<!-- API de JPA -->
 		<dependency>
 			<groupId>jakarta.persistence</groupId>
@@ -41,6 +48,8 @@
 			<artifactId>hibernate-community-dialects</artifactId>
 			<version>6.2.7.Final</version>
 		</dependency>
+					
+		
 
 		<dependency>
 			<groupId>cl.camodev</groupId>

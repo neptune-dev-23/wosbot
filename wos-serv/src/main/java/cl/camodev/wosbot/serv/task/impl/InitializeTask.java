@@ -1,15 +1,17 @@
 package cl.camodev.wosbot.serv.task.impl;
 
+import java.time.LocalDateTime;
+
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.emulator.EmulatorManager;
 import cl.camodev.wosbot.serv.impl.ServLogs;
-import cl.camodev.wosbot.serv.task.ATask;
+import cl.camodev.wosbot.serv.task.Task;
 
-public class InitializeTask extends ATask {
+public class InitializeTask extends Task {
 	boolean isStarted = false;
 
-	public InitializeTask(String taskName) {
-		super(taskName);
+	public InitializeTask(String taskName, LocalDateTime scheduledTime) {
+		super(taskName, scheduledTime);
 	}
 
 	@Override
@@ -47,5 +49,4 @@ public class InitializeTask extends ATask {
 		}
 
 	}
-
 }

@@ -1,26 +1,15 @@
 package org.wos.launcher.controller;
 
-import java.util.List;
-
-import cl.camodev.wosbot.console.model.IProfileModel;
-import cl.camodev.wosbot.console.model.impl.ProfileModel;
-import cl.camodev.wosbot.ot.DTOConfig;
-import cl.camodev.wosbot.ot.OTProfiles;
+import cl.camodev.wosbot.serv.impl.ServScheduler;
 
 public class LauncherActionController {
 
-	private IProfileModel iModel;
-
-	public LauncherActionController() {
-		iModel = new ProfileModel();
+	public void startBot() {
+		ServScheduler.getServices().startBot();
 	}
-
-	public List<OTProfiles> getProfiles() {
-		return iModel.getProfiles();
-	}
-
-	public void startBot(List<DTOConfig> configs) {
-		iModel.startBot(configs);
+	
+	public void stopBot() {
+		ServScheduler.getServices().stopBot();
 	}
 
 }
