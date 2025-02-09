@@ -25,7 +25,6 @@
 			<artifactId>javafx-fxml</artifactId>
 		</dependency>
 
-
 		<dependency>
 			<groupId>cl.camodev</groupId>
 			<artifactId>wos-utiles</artifactId>

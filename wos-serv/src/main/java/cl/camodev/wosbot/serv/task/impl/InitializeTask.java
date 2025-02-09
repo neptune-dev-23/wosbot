@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.emulator.EmulatorManager;
+import cl.camodev.wosbot.ex.StopExecutionException;
 import cl.camodev.wosbot.serv.impl.ServLogs;
 import cl.camodev.wosbot.serv.task.Task;
 
@@ -31,7 +32,7 @@ public class InitializeTask extends Task {
 				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO,
 						"[" + taskName + "] waiting 30 seconds before checking again");
 				try {
-					Thread.sleep(30000);
+					Thread.sleep(10000);
 				} catch (Exception e) {
 
 				}
@@ -42,9 +43,12 @@ public class InitializeTask extends Task {
 		if (!EmulatorManager.isWhiteoutSurvivalInstalled(taskName.split("_")[1])) {
 			ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR,
 					"[" + taskName + "] whiteout survival not installed");
+			throw new StopExecutionException("Game not installed");
 		} else {
 			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO,
 					"[" + taskName + "] whiteout survival installed");
+			
+			EmulatorManager.launchGame(taskName.split("_")[1]);
 
 		}
 

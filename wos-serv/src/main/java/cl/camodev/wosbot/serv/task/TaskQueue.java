@@ -40,7 +40,7 @@ public class TaskQueue {
 //					System.out.println("Iterating task queue");
 					DelayedTask task = it.next();
 					// Si la tarea está lista para ejecutarse (es decir, su delay es <= 0)
-					System.out.println("Task " + task.taskName + " delay: " + task.getDelay(TimeUnit.MILLISECONDS));
+//					System.out.println("Task " + task.taskName + " delay: " + task.getDelay(TimeUnit.MILLISECONDS));
 					if (task.getDelay(TimeUnit.MILLISECONDS) <= 0) {
 						// La removemos de la cola
 						it.remove();

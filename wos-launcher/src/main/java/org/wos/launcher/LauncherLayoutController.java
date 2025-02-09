@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import org.wos.launcher.controller.LauncherActionController;
 
+import cl.camodev.utiles.UtilCV;
 import cl.camodev.wosbot.city.view.CityEventsLayoutController;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.view.ConsoleLogLayoutController;
@@ -55,6 +56,13 @@ public class LauncherLayoutController {
 	@FXML
 	private void initialize() {
 		actionController = new LauncherActionController();
+		
+		 try {
+			UtilCV.loadNativeLibrary("/native/opencv_java4110.dll");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 		consoleLogLayoutController = new ConsoleLogLayoutController();
 		addTab("ConsoleLogLayout", "Logs", consoleLogLayoutController);

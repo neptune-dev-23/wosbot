@@ -10,8 +10,11 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollBar;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 
@@ -36,6 +39,9 @@ public class ConsoleLogLayoutController {
 
 	private ObservableList<LogMessageAux> logMessages;
 
+	private ScrollBar verticalScrollBar;
+	private boolean autoScrollEnabled = true;
+
 	@FXML
 	private void initialize() {
 		actionController = new ConsoleLogActionController(this);
@@ -43,6 +49,21 @@ public class ConsoleLogLayoutController {
 		columnTimeStamp.setCellValueFactory(cellData -> cellData.getValue().timeStampProperty());
 		columnMessage.setCellValueFactory(cellData -> cellData.getValue().messageProperty());
 		tableviewLogMessages.setItems(logMessages);
+
+		tableviewLogMessages.skinProperty().addListener((obs, oldSkin, newSkin) -> {
+			if (newSkin != null) {
+				verticalScrollBar = getVerticalScrollBar();
+				if (verticalScrollBar != null) {
+					verticalScrollBar.valueProperty().addListener((obs2, oldVal, newVal) -> {
+						autoScrollEnabled = newVal.doubleValue() >= verticalScrollBar.getMax(); // Solo auto-scroll si
+																								// estamos abajo
+					});
+				}
+			}
+		});
+
+		// Botón para agregar datos (simula nuevos mensajes)
+		tableviewLogMessages.setPlaceholder(new Label("No hay mensajes aún"));
 
 	}
 
@@ -61,6 +82,21 @@ public class ConsoleLogLayoutController {
 		if (logMessages.size() > 200) {
 			logMessages.remove(0);
 		}
+		if (autoScrollEnabled && verticalScrollBar != null) {
+            verticalScrollBar.setValue(verticalScrollBar.getMax());
+        }
+	}
+
+	private ScrollBar getVerticalScrollBar() {
+		for (Node node : tableviewLogMessages.lookupAll(".scroll-bar")) {
+			if (node instanceof ScrollBar) {
+				ScrollBar sb = (ScrollBar) node;
+				if (sb.getOrientation() == javafx.geometry.Orientation.VERTICAL) {
+					return sb;
+				}
+			}
+		}
+		return null;
 	}
 
 }

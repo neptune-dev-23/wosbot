@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import cl.camodev.wosbot.serv.task.TaskQueueManager;
 import cl.camodev.wosbot.serv.task.impl.HeroRecruitmentTask;
+import cl.camodev.wosbot.serv.task.impl.NomadicMerchantTask;
 
 public class ServScheduler {
 	private static ServScheduler instance;
@@ -25,7 +26,8 @@ public class ServScheduler {
 
 		String queueName = "VICI_0";
 		queueManager.createQueue(queueName);
-		queueManager.getQueue(queueName).addTask(new HeroRecruitmentTask(queueName, LocalDateTime.now()));
+//		queueManager.getQueue(queueName).addTask(new HeroRecruitmentTask(queueName, LocalDateTime.now()));
+		queueManager.getQueue(queueName).addTask(new NomadicMerchantTask(queueName, LocalDateTime.now()));
 		queueManager.startQueue(queueName);
 
 //		configs.forEach(config -> {
