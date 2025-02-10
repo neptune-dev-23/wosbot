@@ -4,12 +4,10 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 
 public abstract class Task implements Runnable {
-	protected String taskName;
 	private volatile boolean recurring = true;
 	protected LocalDateTime scheduledTime;
 
-	public Task(String taskName, LocalDateTime scheduledTime) {
-		this.taskName = taskName;
+	public Task(LocalDateTime scheduledTime) {
 		this.scheduledTime = scheduledTime;
 	}
 

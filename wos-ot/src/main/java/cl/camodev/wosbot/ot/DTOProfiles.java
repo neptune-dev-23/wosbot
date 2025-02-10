@@ -10,6 +10,14 @@ public class DTOProfiles {
 	private Boolean enabled;
 	private List<DTOConfig> configs;
 
+	/**
+	 * Constructor de la clase DTOProfiles.
+	 *
+	 * @param id             El identificador único del perfil.
+	 * @param name           El nombre del perfil.
+	 * @param emulatorNumber El número del emulador asociado al perfil.
+	 * @param enabled        Indica si el perfil está habilitado o no.
+	 */
 	public DTOProfiles(Long id, String name, Long emulatorNumber, Boolean enabled) {
 		this.id = id;
 		this.name = name;

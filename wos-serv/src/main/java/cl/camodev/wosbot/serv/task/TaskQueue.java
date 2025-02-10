@@ -34,26 +34,19 @@ public class TaskQueue {
 			while (running) {
 				boolean executedTask = false;
 
-				// Recorremos la cola mediante un iterador.
 				Iterator<DelayedTask> it = taskQueue.iterator();
 				while (it.hasNext()) {
-//					System.out.println("Iterating task queue");
 					DelayedTask task = it.next();
-					// Si la tarea está lista para ejecutarse (es decir, su delay es <= 0)
-//					System.out.println("Task " + task.taskName + " delay: " + task.getDelay(TimeUnit.MILLISECONDS));
-					if (task.getDelay(TimeUnit.MILLISECONDS) <= 0) {
-						// La removemos de la cola
+					if (task.getDelay(TimeUnit.SECONDS) <= 0) {
 						it.remove();
 
-						// Ejecutamos la tarea (aquí se ejecuta completamente en este mismo hilo)
 						try {
-							System.out.println("Executing task " + task.taskName);
-							task.run(); // Dentro se llamará a execute() según la implementación
+
+							task.run(); 
 						} catch (Exception e) {
 							e.printStackTrace();
 						}
 
-						// Si la tarea es recurrente, se reprograma y se vuelve a agregar a la cola
 						if (task.isRecurring()) {
 							System.out.println("Rescheduling task");
 							addTask(task);

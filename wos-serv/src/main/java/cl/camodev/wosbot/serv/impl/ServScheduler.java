@@ -1,9 +1,11 @@
 package cl.camodev.wosbot.serv.impl;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
+import cl.camodev.wosbot.emulator.EmulatorManager;
+import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.serv.task.TaskQueueManager;
-import cl.camodev.wosbot.serv.task.impl.HeroRecruitmentTask;
 import cl.camodev.wosbot.serv.task.impl.NomadicMerchantTask;
 
 public class ServScheduler {
@@ -24,34 +26,25 @@ public class ServScheduler {
 
 	public void startBot() {
 
-		String queueName = "VICI_0";
-		queueManager.createQueue(queueName);
-//		queueManager.getQueue(queueName).addTask(new HeroRecruitmentTask(queueName, LocalDateTime.now()));
-		queueManager.getQueue(queueName).addTask(new NomadicMerchantTask(queueName, LocalDateTime.now()));
-		queueManager.startQueue(queueName);
+		List<DTOProfiles> profiles = ServProfiles.getServices().getProfiles();
 
-//		configs.forEach(config -> {
-//			
-//		});
+		if (profiles != null) {
+			profiles.forEach(profile -> {
+				if (profile.getEnabled()) {
+					EmulatorManager.getInstance().initializeAdbConnection(profile.getEmulatorNumber().toString());
+					String queueName = profile.getName();
+					queueManager.createQueue(queueName);
+					queueManager.getQueue(queueName).addTask(new NomadicMerchantTask(profile, LocalDateTime.now()));
+					queueManager.startQueue(queueName);
 
-//		for (DTOConfig config : configs) {
-//			String queueName = config.getProfileName() + "_" + config.getEmulatorNumber();
-//
-//			queueManager.createQueue(queueName);
-//			queueManager.getQueue(queueName).addTask(new InitializeTask(queueName));
-//
-//			if (config.getNomadicMerchant().booleanValue()) {
-//				NomadicMerchantTask nomadicMerchantTask = new NomadicMerchantTask(queueName);
-//				queueManager.getQueue(queueName).addTask(nomadicMerchantTask);
-//			}
-//
-//			queueManager.startQueue(queueName);
-//		}
+				}
+			});
+		}
 
 	}
 
 	public void stopBot() {
-		// TODO Auto-generated method stub
+		EmulatorManager.getInstance().closeAllAdbConnections();
 
 	}
 

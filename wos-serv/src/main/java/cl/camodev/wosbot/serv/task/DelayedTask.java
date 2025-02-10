@@ -5,10 +5,9 @@ import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
 
 public abstract class DelayedTask extends Task {
-	
 
-	public DelayedTask(String taskName, LocalDateTime scheduledTime) {
-		super(taskName, scheduledTime);
+	public DelayedTask(LocalDateTime scheduledTime) {
+		super(scheduledTime);
 	}
 
 	/**
@@ -18,6 +17,5 @@ public abstract class DelayedTask extends Task {
 		long delayMillis = ChronoUnit.MILLIS.between(LocalDateTime.now(), scheduledTime);
 		return unit.convert(delayMillis, TimeUnit.MILLISECONDS);
 	}
-
 
 }

@@ -2,23 +2,38 @@ package cl.camodev.wosbot.ot;
 
 public class DTOImageSearchResult {
 	private boolean found;
-	private DTOPoint matchLocation;
+	private DTOPoint point;
+	private double matchPercentage;
 
-	public DTOImageSearchResult(boolean found, DTOPoint matchLocation) {
+	public DTOImageSearchResult(boolean found, DTOPoint point, double matchPercentage) {
 		this.found = found;
-		this.matchLocation = matchLocation;
+		this.point = point;
+		this.matchPercentage = matchPercentage;
 	}
+
+	// Getters y setters
 
 	public boolean isFound() {
 		return found;
 	}
 
-	public DTOPoint getMatchLocation() {
-		return matchLocation;
+	public void setFound(boolean found) {
+		this.found = found;
 	}
 
-	@Override
-	public String toString() {
-		return "DTOImageSearchResult [found=" + found + ", matchLocation=" + matchLocation + "]";
+	public DTOPoint getPoint() {
+		return point;
+	}
+
+	public void setPoint(DTOPoint point) {
+		this.point = point;
+	}
+
+	public double getMatchPercentage() {
+		return matchPercentage;
+	}
+
+	public void setMatchPercentage(double matchPercentage) {
+		this.matchPercentage = matchPercentage;
 	}
 }

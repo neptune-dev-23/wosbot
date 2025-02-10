@@ -8,4 +8,10 @@ public interface IProfileRepository {
 
 	public List<DTOProfiles> getProfiles();
 
+	public boolean addProfile(DTOProfiles profile);
+
+	public boolean saveProfile(DTOProfiles profile);
+
+	public boolean deleteProfile(DTOProfiles profile);
+
 }
