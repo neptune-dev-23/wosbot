@@ -197,6 +197,7 @@ public class ProfileManagerLayoutController {
 					boolean newValue = toggleButton.isSelected();
 					currentProfile.setEnabled(newValue);
 					animateSwitch(newValue);
+//					profileManagerActionController.saveProfile(currentProfile.getId(), newValue);
 				});
 			}
 

@@ -2,6 +2,7 @@ package cl.camodev.wosbot.serv.impl;
 
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.list.ILogListener;
+import cl.camodev.wosbot.ot.DTOLogMessage;
 
 public class ServLogs {
 
@@ -24,9 +25,12 @@ public class ServLogs {
 		this.iLogListener = listener;
 	}
 
-	public void appendLog(EnumTpMessageSeverity severity, String message) {
+	public void appendLog(EnumTpMessageSeverity severity, String task, String profile, String message) {
+
+		DTOLogMessage logMessage = new DTOLogMessage(severity, message, task, profile);
+
 		if (iLogListener != null) {
-			iLogListener.onLogReceived(severity, message);
+			iLogListener.onLogReceived(logMessage);
 		}
 	}
 }

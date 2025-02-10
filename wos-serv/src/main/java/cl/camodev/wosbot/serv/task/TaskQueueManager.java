@@ -12,7 +12,7 @@ public class TaskQueueManager {
 
 	public void createQueue(String queueName) {
 		if (!taskQueues.containsKey(queueName)) {
-			taskQueues.put(queueName, new TaskQueue());
+			taskQueues.put(queueName, new TaskQueue(queueName));
 		}
 	}
 
@@ -23,7 +23,7 @@ public class TaskQueueManager {
 	public void startQueue(String queueName) {
 		TaskQueue queue = taskQueues.get(queueName);
 		if (queue != null) {
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "Starting queue " + queueName);
+			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueueManager", queueName, "Starting queue for profile");
 			queue.start();
 		}
 	}

@@ -6,11 +6,11 @@ import java.time.format.DateTimeFormatter;
 import cl.camodev.wosbot.console.controller.ConsoleLogActionController;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.model.LogMessageAux;
+import cl.camodev.wosbot.ot.DTOLogMessage;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
@@ -37,6 +37,15 @@ public class ConsoleLogLayoutController {
 	@FXML
 	private TableColumn<LogMessageAux, String> columnTimeStamp;
 
+	@FXML
+	private TableColumn<LogMessageAux, String> columnProfile;
+
+	@FXML
+	private TableColumn<LogMessageAux, String> columnTask;
+
+	@FXML
+	private TableColumn<LogMessageAux, String> columnLevel;
+
 	private ObservableList<LogMessageAux> logMessages;
 
 	private ScrollBar verticalScrollBar;
@@ -49,19 +58,10 @@ public class ConsoleLogLayoutController {
 		logMessages = FXCollections.observableArrayList();
 		columnTimeStamp.setCellValueFactory(cellData -> cellData.getValue().timeStampProperty());
 		columnMessage.setCellValueFactory(cellData -> cellData.getValue().messageProperty());
+		columnLevel.setCellValueFactory(cellData -> cellData.getValue().severityProperty());
+		columnTask.setCellValueFactory(cellData -> cellData.getValue().taskProperty());
+		columnProfile.setCellValueFactory(cellData -> cellData.getValue().profileProperty());
 		tableviewLogMessages.setItems(logMessages);
-
-//		tableviewLogMessages.skinProperty().addListener((obs, oldSkin, newSkin) -> {
-//			if (newSkin != null) {
-//				verticalScrollBar = getVerticalScrollBar();
-//				if (verticalScrollBar != null) {
-//					verticalScrollBar.valueProperty().addListener((obs2, oldVal, newVal) -> {
-//						autoScrollEnabled = newVal.doubleValue() >= verticalScrollBar.getMax(); // Solo auto-scroll si
-//																								// estamos abajo
-//					});
-//				}
-//			}
-//		});
 
 		// Botón para agregar datos (simula nuevos mensajes)
 		tableviewLogMessages.setPlaceholder(new Label("NO LOGS"));
@@ -74,30 +74,20 @@ public class ConsoleLogLayoutController {
 		logMessages.clear();
 	}
 
-	public void appendMessage(EnumTpMessageSeverity severity, String message) {
+	public void appendMessage(DTOLogMessage dtoMessage) {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
 		String formattedDate = LocalDateTime.now().format(formatter);
 
-		logMessages.add(new LogMessageAux(formattedDate, severity, message));
-
-		if (logMessages.size() > 200) {
-			logMessages.remove(0);
+		if (!checkboxDebug.isSelected() && dtoMessage.getSeverity() == EnumTpMessageSeverity.DEBUG) {
+			return;
 		}
-//		if (autoScrollEnabled && verticalScrollBar != null) {
-//			verticalScrollBar.setValue(verticalScrollBar.getMax());
-//		}
-	}
 
-	private ScrollBar getVerticalScrollBar() {
-		for (Node node : tableviewLogMessages.lookupAll(".scroll-bar")) {
-			if (node instanceof ScrollBar) {
-				ScrollBar sb = (ScrollBar) node;
-				if (sb.getOrientation() == javafx.geometry.Orientation.VERTICAL) {
-					return sb;
-				}
-			}
+		logMessages.add(0, new LogMessageAux(formattedDate, dtoMessage.getSeverity().toString(), dtoMessage.getMessage(), dtoMessage.getTask(), dtoMessage.getProfile()));
+
+		if (logMessages.size() > 500) {
+			logMessages.remove(logMessages.size());
 		}
-		return null;
+
 	}
 
 }

@@ -4,6 +4,9 @@ import java.util.Iterator;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 
+import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
+import cl.camodev.wosbot.serv.impl.ServLogs;
+
 public class TaskQueue {
 	// Cola que contendrá todas las tareas (no necesariamente ordenadas por tiempo).
 	private final ConcurrentLinkedQueue<DelayedTask> taskQueue = new ConcurrentLinkedQueue<>();
@@ -13,6 +16,12 @@ public class TaskQueue {
 
 	// Hilo que se encargará de evaluar y ejecutar las tareas.
 	private Thread schedulerThread;
+
+	private String queueName;
+
+	public TaskQueue(String queueName) {
+		this.queueName = queueName;
+	}
 
 	/**
 	 * Agrega una tarea a la cola.
@@ -41,8 +50,8 @@ public class TaskQueue {
 						it.remove();
 
 						try {
-
-							task.run(); 
+							ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), queueName, "Starting task execution");
+							task.run();
 						} catch (Exception e) {
 							e.printStackTrace();
 						}

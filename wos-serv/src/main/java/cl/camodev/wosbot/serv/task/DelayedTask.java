@@ -6,8 +6,8 @@ import java.util.concurrent.TimeUnit;
 
 public abstract class DelayedTask extends Task {
 
-	public DelayedTask(LocalDateTime scheduledTime) {
-		super(scheduledTime);
+	public DelayedTask(String taskName, LocalDateTime scheduledTime) {
+		super(taskName, scheduledTime);
 	}
 
 	/**

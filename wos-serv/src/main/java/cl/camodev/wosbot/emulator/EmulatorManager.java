@@ -1,19 +1,22 @@
 package cl.camodev.wosbot.emulator;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.util.HashMap;
-import java.util.Map;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import cl.camodev.utiles.ImageSearchUtil;
+import cl.camodev.utiles.UtilOCR;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
+import net.sourceforge.tess4j.TesseractException;
 
 public class EmulatorManager {
 
@@ -22,9 +25,6 @@ public class EmulatorManager {
 	private static final String MUMU_PATH = "\"C:\\Program Files\\Netease\\MuMuPlayerGlobal-12.0\\shell\\MuMuManager.exe\"";
 	private static final String ADB_PATH = "C:/Program Files/Netease/MuMuPlayerGlobal-12.0/shell/adb";
 	private static final String WHITEOUT_PACKAGE = "com.gof.global";
-
-	private final Map<String, Process> deviceProcesses = new HashMap<>();
-	private final Map<String, BufferedWriter> deviceWriters = new HashMap<>();
 
 	private EmulatorManager() {
 		// Constructor privado para evitar instanciación
@@ -37,69 +37,87 @@ public class EmulatorManager {
 		return instance;
 	}
 
-	/**
-	 * Inicializa la conexión ADB para el emulador especificado.
-	 * <p>
-	 * Este método obtiene la IP del ADB para el emulador indicado mediante el método {@link #getAdbIp(String)} y, a continuación, establece una
-	 * conexión ADB en modo shell utilizando el ejecutable ADB. La conexión se almacena internamente para su posterior uso.
-	 * </p>
-	 *
-	 * @param emulatorNumber Número o identificador del emulador.
-	 */
-	public void initializeAdbConnection(String emulatorNumber) {
-		// Se obtiene la IP del dispositivo asociada al ADB
+	public void captureScrenshotViaADB(String emulatorNumber) {
+		// Obtener la IP del dispositivo usando el método getAdbIp
 		String adbIp = getAdbIp(emulatorNumber);
 		if (adbIp == null) {
-			System.err.println("No se pudo obtener la IP ADB para el emulador " + emulatorNumber);
+			System.err.println("No se pudo obtener la IP para el emulador: " + emulatorNumber);
 			return;
 		}
 
-		// Se construye el comando para abrir una sesión shell del ADB con el dispositivo
-		ProcessBuilder processBuilder = new ProcessBuilder(ADB_PATH, "-s", adbIp, "shell");
+		// Construir el comando para capturar el screenshot
+		ProcessBuilder pb = new ProcessBuilder(ADB_PATH, "-s", adbIp, "exec-out", "screencap", "-p");
+		pb.redirectErrorStream(true);
+
 		try {
-			Process process = processBuilder.start();
-			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
-			// Se almacena el proceso y su BufferedWriter usando el emulatorNumber como clave
-			deviceProcesses.put(emulatorNumber, process);
-			deviceWriters.put(emulatorNumber, writer);
-			System.out.println("Conexión ADB inicializada para el emulador " + emulatorNumber + " (IP: " + adbIp + ")");
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.err.println("Error al inicializar la conexión ADB para el emulador " + emulatorNumber);
-		}
-	}
+			Process process = pb.start();
 
-	/**
-	 * Cierra todas las conexiones ADB abiertas.
-	 * <p>
-	 * Este método recorre internamente las conexiones abiertas (almacenadas en los mapas) y cierra los BufferedWriters, así como destruye los
-	 * procesos asociados.
-	 * </p>
-	 */
-	public void closeAllAdbConnections() {
-		// Cerrar todos los BufferedWriters asociados
-		for (Map.Entry<String, BufferedWriter> entry : deviceWriters.entrySet()) {
-			try {
-				entry.getValue().close();
-			} catch (IOException e) {
-				e.printStackTrace();
-				System.err.println("Error al cerrar la conexión ADB para el emulador " + entry.getKey());
+			// Definir el directorio y el nombre del archivo (por ejemplo, "temp/0.png")
+			Path tempDir = Paths.get("temp"); // Esto crea una ruta relativa llamada "temp"
+			if (!Files.exists(tempDir)) {
+				Files.createDirectories(tempDir);
 			}
+			Path filePath = tempDir.resolve(emulatorNumber + ".png");
+
+			// Leer la salida del comando (imagen en formato PNG) y guardarla en el archivo indicado
+			try (InputStream is = process.getInputStream()) {
+				Files.copy(is, filePath, StandardCopyOption.REPLACE_EXISTING);
+			}
+
+			int exitCode = process.waitFor();
+			if (exitCode == 0) {
+				System.out.println("Screenshot guardado en " + filePath.toAbsolutePath());
+			} else {
+				System.err.println("Error al ejecutar el comando, exit code: " + exitCode);
+			}
+		} catch (IOException | InterruptedException e) {
+			e.printStackTrace();
 		}
-		// Destruir todos los procesos ADB
-		for (Map.Entry<String, Process> entry : deviceProcesses.entrySet()) {
-			entry.getValue().destroy();
-		}
-		// Limpiar los mapas
-		deviceWriters.clear();
-		deviceProcesses.clear();
-		System.out.println("Todas las conexiones ADB han sido cerradas.");
 	}
 
-	public DTOImageSearchResult searchTemplate(String emulatorNumber, String templatePath, int x, int y, int width, int height) {
+	public DTOImageSearchResult searchTemplate(String emulatorNumber, String templatePath, int x, int y, int width, int height, double threshold) {
+		captureScrenshotViaADB(emulatorNumber);
+		DTOImageSearchResult result = ImageSearchUtil.buscarTemplate("temp/" + emulatorNumber + ".png", templatePath, x, y, width, height, threshold);
+		return result;
 
-		return ImageSearchUtil.buscarTemplate(emulatorNumber, templatePath, x, y, width, height, 90);
+	}
 
+	public void tapBackButton(String emulatorNumber) {
+		// Obtener la IP del dispositivo usando el método getAdbIp shell input keyevent KEYCODE_BACK
+		String adbIp = getAdbIp(emulatorNumber);
+		if (adbIp == null) {
+			System.err.println("No se pudo obtener la IP para el emulador: " + emulatorNumber);
+			return;
+		}
+
+		// Construir el comando para capturar el screenshot
+		ProcessBuilder pb = new ProcessBuilder(ADB_PATH, "-s", adbIp, "shell", "input", "keyevent", "KEYCODE_BACK");
+		pb.redirectErrorStream(true);
+
+		try {
+			Process process = pb.start();
+
+			// Definir el directorio y el nombre del archivo (por ejemplo, "temp/0.png")
+			Path tempDir = Paths.get("temp"); // Esto crea una ruta relativa llamada "temp"
+			if (!Files.exists(tempDir)) {
+				Files.createDirectories(tempDir);
+			}
+			Path filePath = tempDir.resolve(emulatorNumber + ".png");
+
+			// Leer la salida del comando (imagen en formato PNG) y guardarla en el archivo indicado
+			try (InputStream is = process.getInputStream()) {
+				Files.copy(is, filePath, StandardCopyOption.REPLACE_EXISTING);
+			}
+
+			int exitCode = process.waitFor();
+			if (exitCode == 0) {
+				System.out.println("Screenshot guardado en " + filePath.toAbsolutePath());
+			} else {
+				System.err.println("Error al ejecutar el comando, exit code: " + exitCode);
+			}
+		} catch (IOException | InterruptedException e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -243,83 +261,36 @@ public class EmulatorManager {
 
 	}
 
-	/**
-	 * Captura la pantalla del emulador y guarda la imagen en el directorio de ejecución (user.dir) dentro de una carpeta "temp". Se crea el
-	 * directorio en caso de no existir.
-	 *
-	 * @param emulatorNumber Número o identificador del emulador (puede usarse para personalizar la ruta si es necesario)
-	 * @return true si la operación se completó correctamente, false en caso de error.
-	 */
-	public static boolean captureScreenshot(String emulatorNumber) {
-		// Comando para capturar la pantalla en el emulador y guardarla en el
-		// dispositivo
-		ProcessBuilder pbCapture = new ProcessBuilder(MUMU_PATH, "adb", "-v", "0", "shell", "screencap", "-p", "/sdcard/foto.png");
-		// Redirige errores al stream de salida para poder verlos si ocurren
-		pbCapture.redirectErrorStream(true);
+	public String connectADB(String emulatorNumber) {
+		StringBuilder output = new StringBuilder();
 
 		try {
-			System.out.println("Ejecutando comando de captura...");
-			Process processCapture = pbCapture.start();
+			// Se construye el comando: adb connect <deviceAddress>
+			ProcessBuilder processBuilder = new ProcessBuilder(ADB_PATH, "connect", getAdbIp(emulatorNumber));
+			// Combina la salida estándar y de error
+			processBuilder.redirectErrorStream(true);
+			Process process = processBuilder.start();
 
-			// Leer la salida (si hubiera mensajes)
-			try (BufferedReader reader = new BufferedReader(new InputStreamReader(processCapture.getInputStream()))) {
-				String line;
-				while ((line = reader.readLine()) != null) {
-					System.out.println(line);
-				}
+			// Se lee la salida del comando
+			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+			String line;
+			while ((line = reader.readLine()) != null) {
+				output.append(line).append(System.lineSeparator());
 			}
 
-			int exitCodeCapture = processCapture.waitFor();
-			if (exitCodeCapture != 0) {
-				System.err.println("Error en la captura de pantalla. Código de salida: " + exitCodeCapture);
-				return false;
+			// Espera a que el proceso finalice
+			int exitCode = process.waitFor();
+			if (exitCode != 0) {
+				System.err.println("El comando adb connect finalizó con el código de error: " + exitCode);
 			}
-
-			// Obtener el directorio de ejecución actual y construir la ruta de salida
-			String currentDir = System.getProperty("user.dir");
-			String outputDirPath = currentDir + File.separator + "temp";
-			File outputDir = new File(outputDirPath);
-			if (!outputDir.exists()) {
-				if (outputDir.mkdirs()) {
-					System.out.println("Directorio creado: " + outputDirPath);
-				} else {
-					System.err.println("No se pudo crear el directorio: " + outputDirPath);
-					return false;
-				}
-			}
-			String outputFilePath = outputDirPath + File.separator + "foto.png";
-
-			// Comando para extraer el archivo del dispositivo/emulador al host
-			// adb pull /sdcard/foto.png <directorio_actual>/temp/foto.png
-			ProcessBuilder pbPull = new ProcessBuilder(ADB_PATH, "pull", "/sdcard/foto.png", outputFilePath);
-			pbPull.redirectErrorStream(true);
-
-			System.out.println("Extrayendo el archivo de imagen...");
-			Process processPull = pbPull.start();
-
-			// Leer la salida del comando pull
-			try (BufferedReader reader = new BufferedReader(new InputStreamReader(processPull.getInputStream()))) {
-				String line;
-				while ((line = reader.readLine()) != null) {
-					System.out.println(line);
-				}
-			}
-
-			int exitCodePull = processPull.waitFor();
-			if (exitCodePull != 0) {
-				System.err.println("Error al transferir la imagen. Código de salida: " + exitCodePull);
-				return false;
-			}
-
-			System.out.println("Captura de pantalla guardada exitosamente en: " + outputFilePath);
 		} catch (IOException | InterruptedException e) {
 			e.printStackTrace();
-			return false;
 		}
-		return true;
+
+		return output.toString();
 	}
 
-	public static String getAdbIp(String emulatorNumber) {
+	public String getAdbIp(String emulatorNumber) {
 		String command = MUMU_PATH + " adb -v " + emulatorNumber;
 
 		try {
@@ -350,9 +321,16 @@ public class EmulatorManager {
 	 * @param point Objeto DTOPoint que contiene las coordenadas (x,y) del tap.
 	 * @return true si el comando se ejecutó correctamente, false en caso de error.
 	 */
-	public static boolean tapAtPoint(DTOPoint point) {
+	public boolean tapAtPoint(String emulatorNumber, DTOPoint point) {
 		if (point == null) {
 			System.err.println("El DTOPoint es null.");
+			return false;
+		}
+
+		// Obtener la IP del dispositivo usando el método getAdbIp shell input keyevent KEYCODE_BACK
+		String adbIp = getAdbIp(emulatorNumber);
+		if (adbIp == null) {
+			System.err.println("No se pudo obtener la IP para el emulador: " + emulatorNumber);
 			return false;
 		}
 
@@ -361,7 +339,7 @@ public class EmulatorManager {
 		String yStr = String.valueOf(Math.round(point.getY()));
 
 		// Comando: adb shell input tap <x> <y>
-		ProcessBuilder pb = new ProcessBuilder(ADB_PATH, "shell", "input", "tap", xStr, yStr);
+		ProcessBuilder pb = new ProcessBuilder(ADB_PATH, "-s", adbIp, "shell", "input", "tap", xStr, yStr);
 		pb.redirectErrorStream(true);
 
 		try {
@@ -388,6 +366,84 @@ public class EmulatorManager {
 			e.printStackTrace();
 			return false;
 		}
+	}
+
+	public boolean tapAtRandomPoint(String emulatorNumber, DTOPoint point1, DTOPoint point2) {
+		if (point1 == null || point2 == null) {
+			System.err.println("Alguno de los DTOPoint es null.");
+			return false;
+		}
+
+		// Obtener la IP del dispositivo usando el método getAdbIp
+		String adbIp = getAdbIp(emulatorNumber);
+		if (adbIp == null) {
+			System.err.println("No se pudo obtener la IP para el emulador: " + emulatorNumber);
+			return false;
+		}
+
+		// Determinar los límites mínimo y máximo para X e Y.
+		int minX = (int) Math.round(Math.min(point1.getX(), point2.getX()));
+		int maxX = (int) Math.round(Math.max(point1.getX(), point2.getX()));
+		int minY = (int) Math.round(Math.min(point1.getY(), point2.getY()));
+		int maxY = (int) Math.round(Math.max(point1.getY(), point2.getY()));
+
+		// Generar coordenadas aleatorias entre los límites
+		Random random = new Random();
+		int randomX = minX + random.nextInt(maxX - minX + 1);
+		int randomY = minY + random.nextInt(maxY - minY + 1);
+
+		// Convertir las coordenadas a String para el comando ADB.
+		String xStr = String.valueOf(randomX);
+		String yStr = String.valueOf(randomY);
+
+		// Comando: adb -s <adbIp> shell input tap <x> <y>
+		ProcessBuilder pb = new ProcessBuilder(ADB_PATH, "-s", adbIp, "shell", "input", "tap", xStr, yStr);
+		pb.redirectErrorStream(true);
+
+		try {
+			System.out.println("Ejecutando tap aleatorio en (" + xStr + ", " + yStr + ")...");
+			Process process = pb.start();
+
+			// Leer la salida del comando (opcional, para depuración)
+			try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+				String line;
+				while ((line = reader.readLine()) != null) {
+					System.out.println(line);
+				}
+			}
+
+			int exitCode = process.waitFor();
+			if (exitCode == 0) {
+				System.out.println("Tap ejecutado correctamente en (" + xStr + ", " + yStr + ").");
+				return true;
+			} else {
+				System.err.println("Error al ejecutar el tap. Código de salida: " + exitCode);
+				return false;
+			}
+		} catch (IOException | InterruptedException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	public String ocrRegionText(String emulatorNumber, DTOPoint dtoPoint, DTOPoint dtoPoint2) {
+		captureScrenshotViaADB(emulatorNumber);
+		try {
+			Path tempDir = Paths.get("temp"); // Esto crea una ruta relativa llamada "temp"
+			if (!Files.exists(tempDir)) {
+				Files.createDirectories(tempDir);
+			}
+			Path filePath = tempDir.resolve(emulatorNumber + ".png");
+
+			return UtilOCR.ocrFromRegion(filePath.toAbsolutePath().toString(), dtoPoint, dtoPoint2);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (TesseractException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
 	}
 
 }

@@ -16,31 +16,34 @@
   </columnConstraints>
   <rowConstraints>
     <RowConstraints maxHeight="1.7976931348623157E308" minHeight="10.0" prefHeight="277.0" vgrow="SOMETIMES" />
-      <RowConstraints maxHeight="30.0" minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES" />
+      <RowConstraints vgrow="NEVER" />
   </rowConstraints>
    <children>
       <TableView fx:id="tableviewLogMessages" prefHeight="200.0" prefWidth="200.0">
         <columns>
-          <TableColumn fx:id="columnTimeStamp" editable="false" maxWidth="150.0" minWidth="150.0" prefWidth="150.0" resizable="false" sortable="false" text="Timestamp" />
-          <TableColumn fx:id="columnMessage" editable="false" maxWidth="1.7976931348623157E308" prefWidth="329.0" sortable="false" text="Message" />
+          <TableColumn fx:id="columnTimeStamp" editable="false" maxWidth="140.0" minWidth="140.0" prefWidth="140.0" resizable="false" sortable="false" text="TIMESTAMP" />
+            <TableColumn fx:id="columnLevel" editable="false" maxWidth="70.0" minWidth="70.0" prefWidth="70.0" sortable="false" text="LEVEL" />
+          <TableColumn fx:id="columnMessage" editable="false" maxWidth="1.7976931348623157E308" prefWidth="196.0" sortable="false" text="MESSAGE" />
+            <TableColumn fx:id="columnProfile" editable="false" maxWidth="90.0" minWidth="90.0" prefWidth="90.0" sortable="false" text="PROFILE" />
+            <TableColumn fx:id="columnTask" editable="false" maxWidth="140.0" minWidth="140.0" prefWidth="140.0" sortable="false" text="TASK" />
         </columns>
          <GridPane.margin>
-            <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
+            <Insets />
          </GridPane.margin>
          <columnResizePolicy>
             <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
          </columnResizePolicy>
       </TableView>
-      <HBox alignment="CENTER_RIGHT" prefHeight="100.0" prefWidth="200.0" GridPane.rowIndex="1">
+      <HBox alignment="CENTER_RIGHT" GridPane.hgrow="NEVER" GridPane.rowIndex="1" GridPane.vgrow="NEVER">
          <children>
-            <CheckBox fx:id="checkboxDebug" mnemonicParsing="false" text="DEBUG">
+            <CheckBox fx:id="checkboxDebug" mnemonicParsing="false" text="DEBUG" HBox.hgrow="NEVER">
                <HBox.margin>
-                  <Insets bottom="2.0" left="2.0" right="8.0" top="2.0" />
+                  <Insets />
                </HBox.margin>
             </CheckBox>
-            <Button fx:id="buttonClearLogs" mnemonicParsing="false" onAction="#handleButtonClearLogs" text="Clear Logs">
+            <Button fx:id="buttonClearLogs" mnemonicParsing="false" onAction="#handleButtonClearLogs" text="Clear Logs" HBox.hgrow="NEVER">
                <HBox.margin>
-                  <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
+                  <Insets />
                </HBox.margin>
             </Button>
          </children>

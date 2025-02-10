@@ -1,5 +1,6 @@
 package cl.camodev.wosbot.launcher.view;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -7,8 +8,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import cl.camodev.utiles.UtilCV;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.view.ConsoleLogLayoutController;
+import cl.camodev.wosbot.ot.DTOLogMessage;
 import cl.camodev.wosbot.pets.view.PetsLayoutController;
 import cl.camodev.wosbot.profile.view.ProfileManagerLayoutController;
 import cl.camodev.wosbot.shop.view.ShopLayoutController;
@@ -29,6 +32,18 @@ public class LauncherLayoutController {
 	private VBox buttonsContainer;
 
 	@FXML
+	private Button buttonHideShow;
+
+	@FXML
+	private Button buttonPause;
+
+	@FXML
+	private Button buttonPhoto;
+
+	@FXML
+	private Button buttonStartStop;
+
+	@FXML
 	private AnchorPane mainContentPane;
 
 	private LauncherActionController actionController;
@@ -42,6 +57,24 @@ public class LauncherLayoutController {
 
 		initializeLogModule();
 		initializeModules();
+		initializeExternalLibraries();
+
+	}
+
+	private void initializeExternalLibraries() {
+		try {
+			UtilCV.loadNativeLibrary("/native/opencv_java4110.dll");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		try {
+			UtilCV.extractResourceFolder("/native/opencv", new File("tessdata"));
+
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
 
 	}
 
@@ -54,11 +87,12 @@ public class LauncherLayoutController {
 		//@formatter:on
 
 		for (ModuleDefinition module : modules) {
-			consoleLogLayoutController.appendMessage(EnumTpMessageSeverity.INFO, "Loading " + module.getButtonTitle());
+			consoleLogLayoutController.appendMessage(new DTOLogMessage(EnumTpMessageSeverity.INFO, "Loading module: " + module.getButtonTitle(), "-", "-"));
 			Object controller = module.getControllerSupplier().get();
 			moduleControllers.put(module.getButtonTitle(), controller);
 			addButton(module.getFxmlName(), module.getButtonTitle(), controller);
 		}
+		buttonStartStop.setDisable(false);
 
 	}
 

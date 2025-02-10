@@ -1,9 +1,9 @@
 package cl.camodev.wosbot.console.list;
 
-import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
+import cl.camodev.wosbot.ot.DTOLogMessage;
 
 public interface ILogListener {
 
-	void onLogReceived(EnumTpMessageSeverity severity, String message);
+	void onLogReceived(DTOLogMessage message);
 
 }
