@@ -14,13 +14,9 @@
 		<javafx-version>23</javafx-version>
 	</properties>
 	<modules>
-		<module>wos-launcher</module>
-		<module>wos-console</module>
+		<module>wos-hmi</module>
 		<module>wos-utiles</module>
-		<module>wos-shop</module>
-		<module>wos-pets</module>
 		<module>wos-persitence</module>
-		<module>wos-fc</module>
 		<module>wos-serv</module>
 		<module>wos-ot</module>
 	</modules>
