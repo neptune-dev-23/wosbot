@@ -31,6 +31,7 @@ public class NomadicMerchantTask extends DelayedTask {
 		super(TASK_NAME, scheduledTime);
 		this.profile = list;
 		this.EMULATOR_NUMBER = list.getEmulatorNumber().toString();
+//		Boolean a = profile.getConfiguracionCasteada(EnumConfigurationKey.BOOL_NOMADIC_MERCHANT, Boolean.class);
 	}
 
 	/**

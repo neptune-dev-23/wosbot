@@ -1,11 +1,19 @@
 package cl.camodev.wosbot.profile.view;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
+import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
+import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.launcher.view.ILauncherConstants;
+import cl.camodev.wosbot.ot.DTOProfileStatus;
 import cl.camodev.wosbot.profile.controller.ProfileManagerActionController;
+import cl.camodev.wosbot.profile.model.ConfigAux;
+import cl.camodev.wosbot.profile.model.IProfileChangeObserver;
 import cl.camodev.wosbot.profile.model.IProfileLoadListener;
 import cl.camodev.wosbot.profile.model.ProfileAux;
+import cl.camodev.wosbot.serv.impl.ServLogs;
 import javafx.animation.TranslateTransition;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -34,7 +42,7 @@ import javafx.stage.Stage;
 import javafx.util.Callback;
 import javafx.util.Duration;
 
-public class ProfileManagerLayoutController {
+public class ProfileManagerLayoutController implements IProfileChangeObserver {
 
 	private ProfileManagerActionController profileManagerActionController;
 
@@ -42,17 +50,20 @@ public class ProfileManagerLayoutController {
 
 	@FXML
 	private TableView<ProfileAux> tableviewLogMessages;
-
 	@FXML
 	private TableColumn<ProfileAux, Void> columnDelete;
 	@FXML
-	private TableColumn<ProfileAux, Long> columnEmulatorNumber;
+	private TableColumn<ProfileAux, String> columnEmulatorNumber;
 	@FXML
 	private TableColumn<ProfileAux, Boolean> columnEnabled;
 	@FXML
 	private TableColumn<ProfileAux, String> columnProfileName;
 	@FXML
 	private TableColumn<ProfileAux, String> columnStatus;
+
+	private Long loadedProfileId;
+
+	private List<IProfileLoadListener> profileLoadListeners;
 
 	@FXML
 	private void initialize() {
@@ -63,14 +74,14 @@ public class ProfileManagerLayoutController {
 	}
 
 	private void initializeController() {
-		profileManagerActionController = new ProfileManagerActionController();
+		profileManagerActionController = new ProfileManagerActionController(this);
 	}
 
 	private void initializeTableView() {
 		profiles = FXCollections.observableArrayList();
 
 		columnProfileName.setCellValueFactory(cellData -> cellData.getValue().nameProperty());
-		columnEmulatorNumber.setCellValueFactory(cellData -> cellData.getValue().emulatorNumberProperty().asObject());
+		columnEmulatorNumber.setCellValueFactory(cellData -> cellData.getValue().emulatorNumberProperty());
 		columnStatus.setCellValueFactory(cellData -> cellData.getValue().statusProperty());
 
 		columnDelete.setCellFactory(new Callback<TableColumn<ProfileAux, Void>, TableCell<ProfileAux, Void>>() {
@@ -140,14 +151,31 @@ public class ProfileManagerLayoutController {
 						btnLoad.setOnAction((ActionEvent event) -> {
 							ProfileAux currentProfile = getTableView().getItems().get(getIndex());
 							System.out.println("Cargando perfil con ID: " + currentProfile.getId());
-//		                    profileManagerActionController.loadProfile(currentProfile.getId());
+							loadedProfileId = currentProfile.getId();
+							notifyProfileLoadListeners(currentProfile);
 						});
 
 						// Acción para el botón Save
 						btnSave.setOnAction((ActionEvent event) -> {
 							ProfileAux currentProfile = getTableView().getItems().get(getIndex());
 							System.out.println("Guardando perfil con ID: " + currentProfile.getId());
-//		                    profileManagerActionController.saveProfile(currentProfile.getId());
+							boolean saved = profileManagerActionController.saveProfile(currentProfile);
+
+							Alert alert;
+							if (saved) {
+								alert = new Alert(Alert.AlertType.INFORMATION);
+								alert.setTitle("SUCCESS UPDATE");
+								alert.setHeaderText(null);
+								alert.setContentText("Profile updated successfully.");
+								loadProfiles();
+							} else {
+								alert = new Alert(Alert.AlertType.ERROR);
+								alert.setTitle("ERROR UPDATE");
+								alert.setHeaderText(null);
+								alert.setContentText("Error updating profile.");
+
+							}
+							alert.showAndWait();
 						});
 					}
 
@@ -161,6 +189,7 @@ public class ProfileManagerLayoutController {
 							setGraphic(buttonContainer);
 						}
 					}
+
 				};
 			}
 		});
@@ -265,7 +294,8 @@ public class ProfileManagerLayoutController {
 			stage.showAndWait();
 		} catch (IOException e) {
 			e.printStackTrace();
-			System.err.println("Error al cargar el archivo FXML: " + e.getMessage());
+			ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, "Profile Manager", "-", "Error loading FXML " + e.getMessage());
+
 		}
 	}
 
@@ -273,23 +303,63 @@ public class ProfileManagerLayoutController {
 		profileManagerActionController.loadProfiles(dtoProfiles -> {
 			Platform.runLater(() -> {
 				profiles.clear();
-				dtoProfiles.forEach(prof -> {
-					ProfileAux aux = new ProfileAux();
-					aux.setId(prof.getId());
-					aux.setName(prof.getName());
-					aux.setEmulatorNumber(prof.getEmulatorNumber());
-					aux.setStatus("NOT RUNNING");
-					aux.setEnabled(prof.getEnabled());
-					profiles.add(aux);
+				dtoProfiles.forEach(dtoProfile -> {
+					ProfileAux profileAux = new ProfileAux(dtoProfile.getId(), dtoProfile.getName(), dtoProfile.getEmulatorNumber(), dtoProfile.getEnabled(), dtoProfile.getStatus());
+					dtoProfile.getConfigs().forEach(config -> {
+						profileAux.getConfigs().add(new ConfigAux(config.getNombreConfiguracion(), config.getValor()));
+					});
+					profiles.add(profileAux);
 				});
+
+				if (!profiles.isEmpty()) {
+					ProfileAux selectedProfile = profiles.stream().filter(p -> p.getId().equals(loadedProfileId)).findFirst().orElse(profiles.get(0));
+
+					notifyProfileLoadListeners(selectedProfile);
+					loadedProfileId = selectedProfile.getId();
+				}
 			});
 		});
+	}
+
+	private void notifyProfileLoadListeners(ProfileAux currentProfile) {
+		if (profileLoadListeners != null) {
+			profileLoadListeners.forEach(listener -> listener.onProfileLoad(currentProfile));
+		}
 
 	}
 
-	public void registryProfileListener(IProfileLoadListener moduleController) {
-		// TODO Auto-generated method stub
+	public void addProfileLoadListener(IProfileLoadListener moduleController) {
+		if (profileLoadListeners == null) {
+			profileLoadListeners = new ArrayList<>();
+		}
+		profileLoadListeners.add(moduleController);
+	}
 
+	public void handleProfileStatusChange(DTOProfileStatus status) {
+		profiles.stream().filter(p -> p.getId() == status.getId()).forEach(p -> {
+			p.setStatus(status.getStatus());
+		});
+		tableviewLogMessages.refresh();
+
+	}
+
+	@Override
+	public void notifyProfileChange(EnumConfigurationKey key, Object value) {
+		try {
+
+			ProfileAux loadedProfile = profiles.stream().filter(profile -> profile.getId().equals(loadedProfileId)).findFirst().orElse(null);
+
+			if (loadedProfile == null) {
+				return;
+			}
+
+			loadedProfile.setConfig(key, value);
+			profileManagerActionController.saveProfile(loadedProfile);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, "Profile Manager", "-", "Error while saving profile: " + e.getMessage());
+		}
 	}
 
 }

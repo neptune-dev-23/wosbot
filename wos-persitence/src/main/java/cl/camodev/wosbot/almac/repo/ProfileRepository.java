@@ -38,7 +38,7 @@ public class ProfileRepository implements IProfileRepository {
 			// Se crea un perfil por defecto
 			Profile defaultProfile = new Profile();
 			defaultProfile.setName("Default");
-			defaultProfile.setEmulatorNumber(0L);
+			defaultProfile.setEmulatorNumber("0");
 			defaultProfile.setEnabled(true);
 			persistence.createEntity(defaultProfile);
 
@@ -68,21 +68,69 @@ public class ProfileRepository implements IProfileRepository {
 	}
 
 	@Override
-	public boolean addProfile(DTOProfiles profile) {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean addProfile(Profile profile) {
+		return persistence.createEntity(profile);
 	}
 
 	@Override
-	public boolean saveProfile(DTOProfiles profile) {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean saveProfile(Profile profile) {
+		return persistence.updateEntity(profile);
 	}
 
 	@Override
-	public boolean deleteProfile(DTOProfiles profile) {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean deleteProfile(Profile profile) {
+		return persistence.deleteEntity(profile);
+	}
+
+	@Override
+	public Profile getProfileById(Long id) {
+		if (id == null) {
+			return null;
+		}
+		return persistence.findEntityById(Profile.class, id);
+	}
+
+	@Override
+	public List<Config> getProfileConfigs(Long profileId) {
+		if (profileId == null) {
+			return Collections.emptyList();
+		}
+
+		String queryStr = "SELECT c FROM Config c WHERE c.profile.id = :profileId";
+		Query query = persistence.createQuery(queryStr);
+		query.setParameter("profileId", profileId);
+
+		return persistence.getQueryResults(query);
+	}
+
+	@Override
+	public boolean deleteConfigs(List<Config> configs) {
+		if (configs == null || configs.isEmpty()) {
+			return false;
+		}
+
+		try {
+			configs.forEach(config -> persistence.deleteEntity(config));
+			return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	@Override
+	public boolean saveConfigs(List<Config> configs) {
+		if (configs == null || configs.isEmpty()) {
+			return false;
+		}
+
+		try {
+			configs.forEach(config -> persistence.createEntity(config));
+			return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 
 }

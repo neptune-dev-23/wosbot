@@ -27,10 +27,10 @@
          </columnResizePolicy>
          <columns>
             <TableColumn fx:id="columnEnabled" maxWidth="50.0" minWidth="50.0" prefWidth="50.0" resizable="false" />
-            <TableColumn fx:id="columnEmulatorNumber" maxWidth="30.0" minWidth="30.0" prefWidth="30.0" resizable="false" />
-            <TableColumn fx:id="columnProfileName" maxWidth="1.7976931348623157E308" prefWidth="204.0" />
-            <TableColumn fx:id="columnStatus" maxWidth="120.0" minWidth="120.0" prefWidth="120.0" resizable="false" />
-            <TableColumn fx:id="columnDelete" maxWidth="140.0" minWidth="140.0" prefWidth="140.0" resizable="false" />
+            <TableColumn fx:id="columnEmulatorNumber" maxWidth="30.0" minWidth="30.0" prefWidth="30.0" resizable="false" text="#" />
+            <TableColumn fx:id="columnProfileName" maxWidth="1.7976931348623157E308" prefWidth="204.0" text="NAME" />
+            <TableColumn fx:id="columnStatus" maxWidth="200.0" minWidth="200.0" prefWidth="200.0" resizable="false" text="STATUS" />
+            <TableColumn fx:id="columnDelete" maxWidth="140.0" minWidth="140.0" prefWidth="140.0" resizable="false" text="ACTIONS" />
          </columns>
       </TableView>
       <HBox alignment="CENTER_RIGHT" prefHeight="100.0" prefWidth="200.0" GridPane.rowIndex="1">

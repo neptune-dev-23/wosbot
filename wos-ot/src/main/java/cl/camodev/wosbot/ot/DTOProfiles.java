@@ -1,14 +1,19 @@
 
 package cl.camodev.wosbot.ot;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+
+import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 
 public class DTOProfiles {
 	private Long id;
 	private String name;
-	private Long emulatorNumber;
+	private String emulatorNumber;
 	private Boolean enabled;
-	private List<DTOConfig> configs;
+	private String status;
+	private List<DTOConfig> configs = new ArrayList<DTOConfig>();
 
 	/**
 	 * Constructor de la clase DTOProfiles.
@@ -18,7 +23,7 @@ public class DTOProfiles {
 	 * @param emulatorNumber El número del emulador asociado al perfil.
 	 * @param enabled        Indica si el perfil está habilitado o no.
 	 */
-	public DTOProfiles(Long id, String name, Long emulatorNumber, Boolean enabled) {
+	public DTOProfiles(Long id, String name, String emulatorNumber, Boolean enabled) {
 		this.id = id;
 		this.name = name;
 		this.emulatorNumber = emulatorNumber;
@@ -35,7 +40,7 @@ public class DTOProfiles {
 		return name;
 	}
 
-	public Long getEmulatorNumber() {
+	public String getEmulatorNumber() {
 		return emulatorNumber;
 	}
 
@@ -50,4 +55,58 @@ public class DTOProfiles {
 	public void setConfigs(List<DTOConfig> configs) {
 		this.configs = configs;
 	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public void setEmulatorNumber(String emulatorNumber) {
+		this.emulatorNumber = emulatorNumber;
+	}
+
+	public void setEnabled(Boolean enabled) {
+		this.enabled = enabled;
+	}
+
+	/**
+	 * Obtiene el valor de una configuración específica utilizando EnumConfigurationKey. Es un método genérico que devuelve el tipo correcto
+	 * basado en la clave.
+	 */
+	public <T> T getConfig(EnumConfigurationKey key, Class<T> clazz) {
+		Optional<DTOConfig> configOptional = configs.stream().filter(config -> config.getNombreConfiguracion().equalsIgnoreCase(key.name())).findFirst();
+
+		if (!configOptional.isPresent()) {
+
+			DTOConfig defaultConfig = new DTOConfig(-1L, key.name(), key.getDefaultValue());
+			configs.add(defaultConfig);
+		}
+		String valor = configOptional.map(DTOConfig::getValor).orElse(key.getDefaultValue());
+
+		return key.castValue(valor);
+	}
+
+	public <T> void setConfig(EnumConfigurationKey key, T value) {
+		String valorAAlmacenar = value.toString();
+		Optional<DTOConfig> configOptional = configs.stream().filter(config -> config.getNombreConfiguracion().equalsIgnoreCase(key.name())).findFirst();
+
+		if (configOptional.isPresent()) {
+			configOptional.get().setValor(valorAAlmacenar);
+		} else {
+			DTOConfig nuevaConfig = new DTOConfig(getId(), key.name(), valorAAlmacenar);
+			configs.add(nuevaConfig);
+		}
+	}
+
+	public String getStatus() {
+		return status;
+	}
+
+	public void setStatus(String status) {
+		this.status = status;
+	}
+
 }

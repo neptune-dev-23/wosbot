@@ -9,12 +9,16 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import cl.camodev.utiles.UtilCV;
+import cl.camodev.wosbot.city.view.CityEventsLayoutController;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.view.ConsoleLogLayoutController;
 import cl.camodev.wosbot.ot.DTOLogMessage;
 import cl.camodev.wosbot.pets.view.PetsLayoutController;
+import cl.camodev.wosbot.profile.model.IProfileChangeObserver;
+import cl.camodev.wosbot.profile.model.IProfileLoadListener;
+import cl.camodev.wosbot.profile.model.IProfileObserverInjectable;
+import cl.camodev.wosbot.profile.model.ProfileAux;
 import cl.camodev.wosbot.profile.view.ProfileManagerLayoutController;
-import cl.camodev.wosbot.shop.view.ShopLayoutController;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -25,8 +29,9 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 
-public class LauncherLayoutController {
+public class LauncherLayoutController implements IProfileLoadListener {
 
 	@FXML
 	private VBox buttonsContainer;
@@ -46,18 +51,35 @@ public class LauncherLayoutController {
 	@FXML
 	private AnchorPane mainContentPane;
 
+	private Stage stage;
+
 	private LauncherActionController actionController;
 
 	private ConsoleLogLayoutController consoleLogLayoutController;
 
+	private ProfileManagerLayoutController profileManagerLayoutController;
+
 	private Map<String, Object> moduleControllers = new HashMap<>();
+
+	private boolean estado = false;
+
+	public LauncherLayoutController(Stage stage) {
+		this.stage = stage;
+	}
 
 	@FXML
 	private void initialize() {
 
 		initializeLogModule();
+		initializeProfileModule();
 		initializeModules();
 		initializeExternalLibraries();
+
+	}
+
+	private void initializeProfileModule() {
+		profileManagerLayoutController = new ProfileManagerLayoutController();
+		addButton("ProfileManagerLayout", "Profiles", profileManagerLayoutController);
 
 	}
 
@@ -71,7 +93,6 @@ public class LauncherLayoutController {
 
 		try {
 			UtilCV.extractResourceFolder("/native/opencv", new File("tessdata"));
-
 		} catch (Exception e) {
 			// TODO: handle exception
 		}
@@ -80,20 +101,24 @@ public class LauncherLayoutController {
 
 	private void initializeModules() {
 		//@formatter:off
-		List<ModuleDefinition> modules = Arrays.asList(
-				new ModuleDefinition("ProfileManagerLayout", "Profiles", ProfileManagerLayoutController::new), 
-				new ModuleDefinition("ShopLayoutLayout", "Shop", ShopLayoutController::new), 
+		List<ModuleDefinition> modules = Arrays.asList(				
+				new ModuleDefinition("CityEventsLayout", "City Events", CityEventsLayoutController::new),
 				new ModuleDefinition("PetsLayout", "Pets", PetsLayoutController::new));
 		//@formatter:on
 
 		for (ModuleDefinition module : modules) {
 			consoleLogLayoutController.appendMessage(new DTOLogMessage(EnumTpMessageSeverity.INFO, "Loading module: " + module.getButtonTitle(), "-", "-"));
-			Object controller = module.getControllerSupplier().get();
+
+			// Crear el controlador con la instancia de profileObserver
+			Object controller = module.createController(profileManagerLayoutController);
 			moduleControllers.put(module.getButtonTitle(), controller);
 			addButton(module.getFxmlName(), module.getButtonTitle(), controller);
-		}
-		buttonStartStop.setDisable(false);
 
+			if (controller instanceof IProfileLoadListener) {
+				profileManagerLayoutController.addProfileLoadListener((IProfileLoadListener) controller);
+			}
+		}
+		profileManagerLayoutController.addProfileLoadListener(this);
 	}
 
 	private void initializeLogModule() {
@@ -119,8 +144,15 @@ public class LauncherLayoutController {
 	}
 
 	@FXML
-	void handleButtonStartStop(ActionEvent event) {
-		actionController.startBot();
+	public void handleButtonStartStop(ActionEvent event) {
+		if (!estado) {
+			actionController.startBot();
+			estado = true;
+		} else {
+			actionController.stopBot();
+			estado = false;
+		}
+
 	}
 
 	private Button addButton(String fxmlName, String title, Object controller) {
@@ -171,9 +203,6 @@ public class LauncherLayoutController {
 		return type.cast(controller);
 	}
 
-	/**
-	 * Clase auxiliar para definir cada módulo. Contiene el nombre del FXML, el título del botón y una función para crear el controlador.
-	 */
 	private static class ModuleDefinition {
 		private final String fxmlName;
 		private final String buttonTitle;
@@ -185,6 +214,14 @@ public class LauncherLayoutController {
 			this.controllerSupplier = controllerSupplier;
 		}
 
+		public Object createController(IProfileChangeObserver profileObserver) {
+			Object controller = controllerSupplier.get();
+			if (controller instanceof IProfileObserverInjectable) {
+				((IProfileObserverInjectable) controller).setProfileObserver(profileObserver);
+			}
+			return controller;
+		}
+
 		public String getFxmlName() {
 			return fxmlName;
 		}
@@ -193,9 +230,13 @@ public class LauncherLayoutController {
 			return buttonTitle;
 		}
 
-		public Supplier<Object> getControllerSupplier() {
-			return controllerSupplier;
-		}
+	}
+
+	@Override
+	public void onProfileLoad(ProfileAux profile) {
+		stage.setTitle("Whiteout Survival Bot - " + profile.getName());
+		buttonStartStop.setDisable(false);
+
 	}
 
 }

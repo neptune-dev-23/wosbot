@@ -24,4 +24,16 @@ public class DTOConfig {
 	public String getValor() {
 		return valor;
 	}
+
+	public void setProfileId(Long profileId) {
+		this.profileId = profileId;
+	}
+
+	public void setNombreConfiguracion(String nombreConfiguracion) {
+		this.nombreConfiguracion = nombreConfiguracion;
+	}
+
+	public void setValor(String valor) {
+		this.valor = valor;
+	}
 }

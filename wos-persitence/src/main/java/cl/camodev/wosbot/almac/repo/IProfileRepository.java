@@ -2,16 +2,25 @@ package cl.camodev.wosbot.almac.repo;
 
 import java.util.List;
 
+import cl.camodev.wosbot.almac.entity.Config;
+import cl.camodev.wosbot.almac.entity.Profile;
 import cl.camodev.wosbot.ot.DTOProfiles;
 
 public interface IProfileRepository {
 
-	public List<DTOProfiles> getProfiles();
+	List<DTOProfiles> getProfiles();
 
-	public boolean addProfile(DTOProfiles profile);
+	boolean addProfile(Profile profile);
 
-	public boolean saveProfile(DTOProfiles profile);
+	boolean saveProfile(Profile profile);
 
-	public boolean deleteProfile(DTOProfiles profile);
+	boolean deleteProfile(Profile profile);
 
+	Profile getProfileById(Long id);
+
+	List<Config> getProfileConfigs(Long profileId);
+
+	boolean deleteConfigs(List<Config> configs);
+
+	boolean saveConfigs(List<Config> configs);
 }

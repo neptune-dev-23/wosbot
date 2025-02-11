@@ -33,6 +33,15 @@ public class Config {
 	@OnDelete(action = OnDeleteAction.CASCADE)
 	private Profile profile;
 
+	public Config() {
+	}
+
+	public Config(Profile profile, String nombreConfiguracion, String valor) {
+		this.profile = profile;
+		this.nombreConfiguracion = nombreConfiguracion;
+		this.valor = valor;
+	}
+
 	// Getters y Setters
 
 	public Long getId() {

@@ -14,4 +14,6 @@ public interface IServProfile {
 
 	public boolean deleteProfile(DTOProfiles profile);
 
+	public void addProfileStatusChangeListerner(IProfileStatusChangeListener listener);
+
 }

@@ -25,7 +25,7 @@ public class Profile {
 	private String name;
 
 	@Column(name = "emulator_number", nullable = false)
-	private Long emulatorNumber;
+	private String emulatorNumber;
 
 	@Column(name = "enabled", nullable = false)
 	private Boolean enabled;
@@ -51,11 +51,11 @@ public class Profile {
 		this.name = name;
 	}
 
-	public Long getEmulatorNumber() {
+	public String getEmulatorNumber() {
 		return emulatorNumber;
 	}
 
-	public void setEmulatorNumber(Long emulatorNumber) {
+	public void setEmulatorNumber(String emulatorNumber) {
 		this.emulatorNumber = emulatorNumber;
 	}
 

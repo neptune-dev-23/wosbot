@@ -261,6 +261,30 @@ public class EmulatorManager {
 
 	}
 
+	public void closeGame(String emulatorNumber) {
+		String command = MUMU_PATH + " api -v " + emulatorNumber + " close_app " + WHITEOUT_PACKAGE;
+
+		try {
+			ProcessBuilder processBuilder = new ProcessBuilder("cmd.exe", "/c", command);
+			processBuilder.redirectErrorStream(true);
+			Process process = processBuilder.start();
+
+			// Leer la salida del comando
+			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+			String line;
+			while ((line = reader.readLine()) != null) {
+				System.out.println(line); // Mostrar salida en consola
+			}
+
+			process.waitFor();
+			System.out.println("✅ Whiteout Survival ha sido iniciado en MuMu.");
+
+		} catch (Exception e) {
+			System.out.println("❌ Error al iniciar Whiteout Survival.");
+			e.printStackTrace();
+		}
+	}
+
 	public String connectADB(String emulatorNumber) {
 		StringBuilder output = new StringBuilder();
 

@@ -19,13 +19,16 @@ public class FXApp extends Application {
 	@Override
 	public void start(Stage stage) throws IOException {
 		FXMLLoader fxmlLoader = new FXMLLoader(LauncherLayoutController.class.getResource("LauncherLayout.fxml"));
-		LauncherLayoutController controller = new LauncherLayoutController();
+		LauncherLayoutController controller = new LauncherLayoutController(stage);
 		fxmlLoader.setController(controller);
 		Parent root = fxmlLoader.load();
 		Scene scene = new Scene(root, 900, 500);
 		scene.getStylesheets().add(ILauncherConstants.getCssPath());
 		stage.setScene(scene);
 		stage.setTitle("Launcher");
+		stage.setOnCloseRequest(event -> {
+			System.exit(0);
+		});
 		stage.show();
 	}
 

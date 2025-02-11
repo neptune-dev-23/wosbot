@@ -17,22 +17,12 @@
       <RowConstraints maxHeight="1.7976931348623157E308" minHeight="10.0" percentHeight="25.0" prefHeight="277.0" vgrow="SOMETIMES" />
   </rowConstraints>
    <children>
-      <CheckBox mnemonicParsing="false" text="Enable Nomadic Merchant">
+      <CheckBox fx:id="checkBoxNomadicMerchant" mnemonicParsing="false" text="Enable Nomadic Merchant">
          <GridPane.margin>
             <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
          </GridPane.margin>
       </CheckBox>
-      <CheckBox mnemonicParsing="false" text="Buy VIP points in Nomadic Merchant" GridPane.rowIndex="1">
-         <GridPane.margin>
-            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-         </GridPane.margin>
-      </CheckBox>
-      <CheckBox mnemonicParsing="false" text="Buy Free stuff in Mystery Shop" GridPane.rowIndex="2">
-         <GridPane.margin>
-            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-         </GridPane.margin>
-      </CheckBox>
-      <CheckBox mnemonicParsing="false" prefHeight="17.0" prefWidth="224.0" text="Open free chests" GridPane.rowIndex="3">
+      <CheckBox fx:id="checkBoxNomadicMechantVip" mnemonicParsing="false" text="Buy VIP points in Nomadic Merchant" GridPane.rowIndex="1">
          <GridPane.margin>
             <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
          </GridPane.margin>

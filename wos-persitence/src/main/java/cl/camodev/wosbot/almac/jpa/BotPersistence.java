@@ -34,39 +34,66 @@ public final class BotPersistence {
 		return instance;
 	}
 
-	public void createEntity(Object entity) {
+	public boolean createEntity(Object entity) {
 		try {
 			if (entity != null) {
 				entityManager.getTransaction().begin();
 				entityManager.persist(entity);
 				entityManager.getTransaction().commit();
+				return true; // Éxito
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
+			if (entityManager.getTransaction().isActive()) {
+				entityManager.getTransaction().rollback();
+			}
+			return false;
 		}
+		return false;
 	}
 
-	public void updateEntity(Object entity) {
+	public boolean updateEntity(Object entity) {
 		try {
 			if (entity != null) {
 				entityManager.getTransaction().begin();
 				entityManager.merge(entity);
 				entityManager.getTransaction().commit();
+				return true;
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
+			if (entityManager.getTransaction().isActive()) {
+				entityManager.getTransaction().rollback();
+			}
+			return false;
 		}
+		return false; // Si la entidad es null, retorna false
 	}
 
-	public void deleteEntity(Object entity) {
+	public boolean deleteEntity(Object entity) {
 		try {
 			if (entity != null) {
 				entityManager.getTransaction().begin();
 				entityManager.remove(entity);
 				entityManager.getTransaction().commit();
+				return true;
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
+			if (entityManager.getTransaction().isActive()) {
+				entityManager.getTransaction().rollback();
+			}
+			return false;
+		}
+		return false;
+	}
+
+	public <T> T findEntityById(Class<T> entityClass, Object id) {
+		try {
+			return entityManager.find(entityClass, id);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
 		}
 	}
 

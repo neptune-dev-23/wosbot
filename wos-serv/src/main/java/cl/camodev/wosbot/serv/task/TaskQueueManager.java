@@ -4,15 +4,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
+import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.serv.impl.ServLogs;
 
 public class TaskQueueManager {
 
 	private final Map<String, TaskQueue> taskQueues = new HashMap<>();
 
-	public void createQueue(String queueName) {
-		if (!taskQueues.containsKey(queueName)) {
-			taskQueues.put(queueName, new TaskQueue(queueName));
+	public void createQueue(DTOProfiles profile) {
+		if (!taskQueues.containsKey(profile.getName())) {
+			taskQueues.put(profile.getName(), new TaskQueue(profile));
 		}
 	}
 
@@ -28,10 +29,9 @@ public class TaskQueueManager {
 		}
 	}
 
-	public void stopQueue(String queueName) {
-		TaskQueue queue = taskQueues.get(queueName);
-		if (queue != null) {
-			queue.stop();
-		}
+	public void stopQueues() {
+		taskQueues.forEach((k, v) -> {
+			v.stop();
+		});
 	}
 }
