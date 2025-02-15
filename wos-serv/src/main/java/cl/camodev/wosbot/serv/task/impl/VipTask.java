@@ -53,6 +53,7 @@ public class VipTask extends DelayedTask {
 			sleepTask(3000);
 
 			reschedule(UtilTime.getGameReset());
+			ServScheduler.getServices().updateDailyTaskStatus(profile, TpDailyTaskEnum.VIP_POINTS, true);
 			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "rescheduled task for tomorrow");
 			EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
 
@@ -62,6 +63,11 @@ public class VipTask extends DelayedTask {
 
 		}
 
+	}
+
+	@Override
+	public boolean isDailyTask() {
+		return true;
 	}
 
 }

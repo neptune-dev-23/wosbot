@@ -1,12 +1,13 @@
 package cl.camodev.wosbot.almac.repo;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import cl.camodev.wosbot.almac.entity.Config;
 import cl.camodev.wosbot.almac.entity.TpConfig;
 import cl.camodev.wosbot.almac.jpa.BotPersistence;
 import cl.camodev.wosbot.console.enumerable.TpConfigEnum;
-import jakarta.persistence.Query;
 
 public class ConfigRepository implements IConfigRepository {
 	private final BotPersistence persistence = BotPersistence.getInstance();
@@ -42,15 +43,16 @@ public class ConfigRepository implements IConfigRepository {
 
 	@Override
 	public List<Config> getProfileConfigs(Long profileId) {
-		Query query = persistence.createQuery("SELECT c FROM Config c WHERE c.profile.id = :profileId");
-		query.setParameter("profileId", profileId);
-		return persistence.getQueryResults(query);
+		String query = "SELECT c FROM Config c WHERE c.profile.id = :profileId";
+		Map<String, Object> parameters = new HashMap<>();
+		parameters.put("profileId", profileId);
+		return persistence.getQueryResults(query, Config.class, parameters);
 	}
 
 	@Override
 	public List<Config> getGlobalConfigs() {
-		Query query = persistence.createQuery("SELECT c FROM Config c WHERE c.profile IS NULL");
-		return persistence.getQueryResults(query);
+		String query = "SELECT c FROM Config c WHERE c.profile IS NULL";
+		return persistence.getQueryResults(query, Config.class, null);
 	}
 
 	@Override

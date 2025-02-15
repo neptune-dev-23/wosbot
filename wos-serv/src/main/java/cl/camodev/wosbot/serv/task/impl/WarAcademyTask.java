@@ -114,4 +114,9 @@ public class WarAcademyTask extends DelayedTask {
 			throw new IllegalArgumentException("El formato del texto no es válido: " + input);
 		}
 	}
+
+	@Override
+	public boolean isDailyTask() {
+		return true;
+	}
 }

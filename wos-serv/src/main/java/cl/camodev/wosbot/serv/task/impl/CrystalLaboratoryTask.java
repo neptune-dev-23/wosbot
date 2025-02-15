@@ -65,6 +65,7 @@ public class CrystalLaboratoryTask extends DelayedTask {
 
 			reschedule(UtilTime.getGameReset());
 			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "rescheduled task for tomorrow");
+			ServScheduler.getServices().updateDailyTaskStatus(profile, TpDailyTaskEnum.CRYSTAL_LABORATORY, true);
 			EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
 
 		} else {
@@ -95,6 +96,11 @@ public class CrystalLaboratoryTask extends DelayedTask {
 		} else {
 			throw new IllegalArgumentException("El formato del texto no es válido: " + input);
 		}
+	}
+
+	@Override
+	public boolean isDailyTask() {
+		return true;
 	}
 
 }

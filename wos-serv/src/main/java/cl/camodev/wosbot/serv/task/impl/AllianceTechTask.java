@@ -52,8 +52,8 @@ public class AllianceTechTask extends DelayedTask {
 			EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
 			sleepTask(200);
 			EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "rescheduling task in 1 hour");
-			this.reschedule(LocalDateTime.now().plusHours(1));
+			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "rescheduling task in 60 minutes");
+			this.reschedule(LocalDateTime.now().plusMinutes(60));
 
 		} else {
 			ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, TASK_NAME, profile.getName(), "Home not found");
@@ -62,6 +62,11 @@ public class AllianceTechTask extends DelayedTask {
 		}
 		sleepTask(3000);
 
+	}
+
+	@Override
+	public boolean isDailyTask() {
+		return false;
 	}
 
 }

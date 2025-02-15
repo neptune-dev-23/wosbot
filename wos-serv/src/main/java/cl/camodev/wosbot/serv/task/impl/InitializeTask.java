@@ -87,4 +87,9 @@ public class InitializeTask extends DelayedTask {
 	public String getEmulatorNumber() {
 		return EMULATOR_NUMBER;
 	}
+
+	@Override
+	public boolean isDailyTask() {
+		return false;
+	}
 }

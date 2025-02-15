@@ -1,12 +1,13 @@
 package cl.camodev.wosbot.almac.repo;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import cl.camodev.wosbot.almac.entity.DailyTask;
 import cl.camodev.wosbot.almac.entity.TpDailyTask;
 import cl.camodev.wosbot.almac.jpa.BotPersistence;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
-import jakarta.persistence.Query;
 
 public class DailyTaskRepository implements IDailyTaskRepository {
 	private final BotPersistence persistence = BotPersistence.getInstance();
@@ -45,18 +46,25 @@ public class DailyTaskRepository implements IDailyTaskRepository {
 
 	@Override
 	public List<DailyTask> findByProfileId(Long profileId) {
-		Query query = persistence.createQuery("SELECT d FROM DailyTask d WHERE d.profile.id = :profileId");
-		query.setParameter("profileId", profileId);
-		return persistence.getQueryResults(query);
+		String query = "SELECT d FROM DailyTask d WHERE d.profile.id = :profileId";
+
+		// Crear el mapa de parámetros
+		Map<String, Object> parameters = new HashMap<>();
+		parameters.put("profileId", profileId);
+
+		return persistence.getQueryResults(query, DailyTask.class, parameters);
 	}
 
 	@Override
 	public DailyTask findByProfileIdAndTaskName(Long profileId, TpDailyTaskEnum taskName) {
-		Query query = persistence.createQuery("SELECT d FROM DailyTask d WHERE d.profile.id = :profileId AND d.task.id = :id");
-		query.setParameter("profileId", profileId);
-		query.setParameter("id", taskName.getId());
+		String query = "SELECT d FROM DailyTask d WHERE d.profile.id = :profileId AND d.task.id = :id";
 
-		List<DailyTask> results = persistence.getQueryResults(query);
+		// Crear el mapa de parámetros
+		Map<String, Object> parameters = new HashMap<>();
+		parameters.put("profileId", profileId);
+		parameters.put("id", taskName.getId());
+
+		List<DailyTask> results = persistence.getQueryResults(query, DailyTask.class, parameters);
 		return results.isEmpty() ? null : results.get(0);
 	}
 

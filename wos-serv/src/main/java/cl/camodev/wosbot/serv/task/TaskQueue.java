@@ -27,8 +27,6 @@ public class TaskQueue {
 
 	private DTOProfiles profile;
 
-	private InitializeTask initializeTask;
-
 	public TaskQueue(DTOProfiles profile) {
 		this.profile = profile;
 	}
@@ -77,7 +75,6 @@ public class TaskQueue {
 						}
 
 						if (task.isRecurring()) {
-							System.out.println("Recurring task, re-qeueing...");
 							addTask(task);
 						}
 
@@ -89,7 +86,7 @@ public class TaskQueue {
 				// Verificar condiciones según el delay mínimo de la cola de tareas
 				if (minDelay != Long.MAX_VALUE) { // Asegurar que hay tareas en la cola
 					// Si la demora mínima es mayor a 30 minutos y la condición no se ha cumplido aún
-					if (!moreThan30Minutes && minDelay > TimeUnit.MINUTES.toSeconds(30)) {
+					if (!moreThan30Minutes && minDelay > TimeUnit.MINUTES.toSeconds(5)) {
 						moreThan30Minutes = true;
 						ejecutarFragmentoEspecifico(minDelay);
 					}
@@ -123,8 +120,8 @@ public class TaskQueue {
 
 	// Métodos auxiliares
 	private void ejecutarFragmentoEspecifico(long minDelay) {
-		EmulatorManager.getInstance().closeGame(initializeTask.getEmulatorNumber());
-		EmulatorManager.getInstance().closePlayer(initializeTask.getEmulatorNumber());
+		EmulatorManager.getInstance().closeGame(profile.getEmulatorNumber());
+		EmulatorManager.getInstance().closePlayer(profile.getEmulatorNumber());
 		ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueue", profile.getName(), "Closing game due to large inactivity");
 		LocalDateTime scheduledTime = LocalDateTime.now().plusSeconds(minDelay);
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -134,7 +131,7 @@ public class TaskQueue {
 	private void encolarNuevaTarea() {
 		ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueue", profile.getName(), "shcheduled task's will start soon");
 		ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "resuming execution"));
-		addTask(initializeTask);
+		addTask(new InitializeTask(profile, LocalDateTime.now()));
 	}
 
 	/**
@@ -159,7 +156,4 @@ public class TaskQueue {
 		System.out.println("TaskQueue detenida de inmediato.");
 	}
 
-	public void setInitializeTask(InitializeTask initializeTask) {
-		this.initializeTask = initializeTask;
-	}
 }

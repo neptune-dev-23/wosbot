@@ -4,12 +4,13 @@ public enum EnumConfigurationKey {
 
 	//@formatter:off
 	BOOL_DEBUG("false", Boolean.class ), 
+	INT_TASK_OFFSET("5", Integer.class),
 	BOOL_NOMADIC_MERCHANT("false", Boolean.class), 
 	BOOL_NOMADIC_MERCHANT_VIP_POINTS("false", Boolean.class), 
 	BOOL_WAR_ACADEMY_SHARDS("false", Boolean.class),
 	BOOL_CRYSTAL_LAB_FC("false",Boolean.class),
 	BOOL_EXPLORATION_CHEST("false",Boolean.class),
-	BOOL_HERO_RECRUITMENT("false",Boolean.class);
+	BOOL_HERO_RECRUITMENT("false",Boolean.class),
 	;
 	//@formatter:on
 	private final String defaultValue;

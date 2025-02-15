@@ -50,11 +50,11 @@ public class ExplorationTask extends DelayedTask {
 				sleepTask(200);
 				EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(230, 890), new DTOPoint(490, 960));
 				sleepTask(200);
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "rescheduling task in 1 hour");
-				this.reschedule(LocalDateTime.now().plusHours(1));
+				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "rescheduling task in 60 minutes");
+				this.reschedule(LocalDateTime.now().plusMinutes(60));
 			} else {
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "no rewards to claim, rescheduling task in 1 hour");
-				this.reschedule(LocalDateTime.now().plusHours(1));
+				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "no rewards to claim, rescheduling task in 60 minutes");
+				this.reschedule(LocalDateTime.now().plusMinutes(60));
 			}
 			EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
 
@@ -65,6 +65,11 @@ public class ExplorationTask extends DelayedTask {
 		}
 		sleepTask(3000);
 
+	}
+
+	@Override
+	public boolean isDailyTask() {
+		return false;
 	}
 
 }

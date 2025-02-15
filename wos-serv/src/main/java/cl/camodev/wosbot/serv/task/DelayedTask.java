@@ -6,6 +6,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
 
 public abstract class DelayedTask implements Runnable {
+
 	private volatile boolean recurring = true;
 	protected LocalDateTime scheduledTime;
 	protected String taskName;
@@ -21,6 +22,8 @@ public abstract class DelayedTask implements Runnable {
 	}
 
 	protected abstract void execute();
+
+	public abstract boolean isDailyTask();
 
 	public boolean isRecurring() {
 		return recurring;

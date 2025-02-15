@@ -1,6 +1,7 @@
 package cl.camodev.wosbot.almac.repo;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -10,7 +11,6 @@ import cl.camodev.wosbot.almac.entity.Profile;
 import cl.camodev.wosbot.almac.jpa.BotPersistence;
 import cl.camodev.wosbot.ot.DTOConfig;
 import cl.camodev.wosbot.ot.DTOProfiles;
-import jakarta.persistence.Query;
 
 public class ProfileRepository implements IProfileRepository {
 
@@ -31,37 +31,41 @@ public class ProfileRepository implements IProfileRepository {
 	@Override
 	public List<DTOProfiles> getProfiles() {
 		String queryProfiles = "SELECT new cl.camodev.wosbot.ot.DTOProfiles(p.id, p.name, p.emulatorNumber, p.enabled) FROM Profile p";
-		List<DTOProfiles> profiles = persistence.getQueryResults(persistence.createQuery(queryProfiles));
+
+		// Obtener perfiles usando getQueryResults
+		List<DTOProfiles> profiles = persistence.getQueryResults(queryProfiles, DTOProfiles.class, null);
 
 		if (profiles == null || profiles.isEmpty()) {
-			// Se crea un perfil por defecto
+			// Crear perfil por defecto si no existen
 			Profile defaultProfile = new Profile();
 			defaultProfile.setName("Default");
 			defaultProfile.setEmulatorNumber("0");
 			defaultProfile.setEnabled(true);
-			persistence.createEntity(defaultProfile);
-//
-//			for (EnumConfigurationKey key : EnumConfigurationKey.values()) {
-//				Config cfg = new Config();
-//				cfg.setProfile(defaultProfile);
-//				cfg.setNombreConfiguracion(key.toString());
-//				cfg.setValor(key.getDefaultValue());
-//				persistence.createEntity(cfg);
-//			}
 
-			profiles = persistence.getQueryResults(persistence.createQuery(queryProfiles));
+			persistence.createEntity(defaultProfile);
+
+			// Reintentar obtener los perfiles
+			profiles = persistence.getQueryResults(queryProfiles, DTOProfiles.class, null);
 		}
 
 		List<Long> profileIds = profiles.stream().map(DTOProfiles::getId).collect(Collectors.toList());
 
-		String queryConfigs = "SELECT new cl.camodev.wosbot.ot.DTOConfig(c.profile.id, c.key, c.valor) " + "FROM Config c WHERE c.profile.id IN :profileIds";
-		Query query = persistence.createQuery(queryConfigs);
-		query.setParameter("profileIds", profileIds);
-		List<DTOConfig> configs = persistence.getQueryResults(query);
+		if (!profileIds.isEmpty()) {
+			// Consulta para obtener las configuraciones de los perfiles
+			String queryConfigs = "SELECT new cl.camodev.wosbot.ot.DTOConfig(c.profile.id, c.key, c.valor) " + "FROM Config c WHERE c.profile.id IN :profileIds";
 
-		Map<Long, List<DTOConfig>> configMap = configs.stream().collect(Collectors.groupingBy(DTOConfig::getProfileId));
+			// Pasar parámetros a la consulta
+			Map<String, Object> parameters = new HashMap<>();
+			parameters.put("profileIds", profileIds);
 
-		profiles.forEach(profile -> profile.setConfigs(configMap.getOrDefault(profile.getId(), Collections.emptyList())));
+			List<DTOConfig> configs = persistence.getQueryResults(queryConfigs, DTOConfig.class, parameters);
+
+			// Agrupar configuraciones por ID de perfil
+			Map<Long, List<DTOConfig>> configMap = configs.stream().collect(Collectors.groupingBy(DTOConfig::getProfileId));
+
+			// Asignar configuraciones a los perfiles
+			profiles.forEach(profile -> profile.setConfigs(configMap.getOrDefault(profile.getId(), Collections.emptyList())));
+		}
 
 		return profiles;
 	}
@@ -96,10 +100,13 @@ public class ProfileRepository implements IProfileRepository {
 		}
 
 		String queryStr = "SELECT c FROM Config c WHERE c.profile.id = :profileId";
-		Query query = persistence.createQuery(queryStr);
-		query.setParameter("profileId", profileId);
 
-		return persistence.getQueryResults(query);
+		// Crear el mapa de parámetros
+		Map<String, Object> parameters = new HashMap<>();
+		parameters.put("profileId", profileId);
+
+		// Ejecutar la consulta usando getQueryResults()
+		return persistence.getQueryResults(queryStr, Config.class, parameters);
 	}
 
 	@Override

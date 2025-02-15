@@ -192,16 +192,9 @@ public class NomadicMerchantTask extends DelayedTask {
 		return EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.NOMADIC_MERCHANT_REFRESH.getTemplate(), REFRESH_BUTTON[0], REFRESH_BUTTON[1], 200, 70, 90).isFound();
 	}
 
-	/**
-	 * Método auxiliar para pausar la ejecución.
-	 *
-	 * @param ms Cantidad de milisegundos a pausar.
-	 */
-//	private void sleep(long ms) {
-//		try {
-//			Thread.sleep(ms);
-//		} catch (InterruptedException e) {
-//			e.printStackTrace();
-//		}
-//	}
+	@Override
+	public boolean isDailyTask() {
+		return true;
+	}
+
 }

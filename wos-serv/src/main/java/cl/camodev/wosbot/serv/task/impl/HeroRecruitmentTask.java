@@ -154,4 +154,9 @@ public class HeroRecruitmentTask extends DelayedTask {
 
 		return result;
 	}
+
+	@Override
+	public boolean isDailyTask() {
+		return false;
+	}
 }

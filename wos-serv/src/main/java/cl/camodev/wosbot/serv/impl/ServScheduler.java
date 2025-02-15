@@ -69,10 +69,7 @@ public class ServScheduler {
 			queueManager.createQueue(profile);
 			TaskQueue queue = queueManager.getQueue(queueName);
 
-			// Inicializar tarea
-			InitializeTask initTask = new InitializeTask(profile, LocalDateTime.now());
-			queue.addTask(initTask);
-			queue.setInitializeTask(initTask);
+			queue.addTask(new InitializeTask(profile, LocalDateTime.now()));
 
 			//@formatter:off
 					Map<EnumConfigurationKey, Supplier<DelayedTask>> taskMappings = Map.of(
@@ -153,6 +150,8 @@ public class ServScheduler {
 			TpDailyTask tpDailyTaskEntity = iDailyTaskRepository.findTpDailyTaskById(task.getId());
 			dailyTask.setProfile(profileEntity);
 			dailyTask.setTask(tpDailyTaskEntity);
+			dailyTask.setFinished(finished);
+			dailyTask.setLastExecution(LocalDateTime.now());
 			iDailyTaskRepository.addDailyTask(dailyTask);
 		}
 
