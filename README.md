@@ -8,6 +8,8 @@ Current Features:
 * War academy daily shards
 * Crystal laboratory daily fire crystals
 * Exploration chest
+* Daily VIP Points
+* Allianche tech
 
 im working on this on my free time, if u need something just ask, ill try to reply asap
 

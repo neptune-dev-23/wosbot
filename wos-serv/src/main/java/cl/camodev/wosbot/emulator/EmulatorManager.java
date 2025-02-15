@@ -141,6 +141,10 @@ public class EmulatorManager {
 		executeCommand(MUMU_PATH + " api -v " + emulatorNumber + " launch_player");
 	}
 
+	public void closePlayer(String emulatorNumber) {
+		executeCommand(MUMU_PATH + " api -v " + emulatorNumber + " shutdown_player");
+	}
+
 	public boolean isWhiteoutSurvivalInstalled(String emulatorNumber) {
 		String command = MUMU_PATH + " api -v " + emulatorNumber + " get_installed_apps";
 		StringBuilder output = new StringBuilder();
@@ -448,6 +452,64 @@ public class EmulatorManager {
 			e.printStackTrace();
 			return false;
 		}
+	}
+
+	public boolean tapAtRandomPoint(String emulatorNumber, DTOPoint point1, DTOPoint point2, int tapCount, int delayMs) {
+		if (point1 == null || point2 == null) {
+			System.err.println("Alguno de los DTOPoint es null.");
+			return false;
+		}
+
+		String adbIp = getAdbIp(emulatorNumber);
+		if (adbIp == null) {
+			System.err.println("No se pudo obtener la IP para el emulador: " + emulatorNumber);
+			return false;
+		}
+
+		int minX = (int) Math.round(Math.min(point1.getX(), point2.getX()));
+		int maxX = (int) Math.round(Math.max(point1.getX(), point2.getX()));
+		int minY = (int) Math.round(Math.min(point1.getY(), point2.getY()));
+		int maxY = (int) Math.round(Math.max(point1.getY(), point2.getY()));
+
+		Random random = new Random();
+
+		for (int i = 0; i < tapCount; i++) {
+			int randomX = minX + random.nextInt(maxX - minX + 1);
+			int randomY = minY + random.nextInt(maxY - minY + 1);
+
+			String xStr = String.valueOf(randomX);
+			String yStr = String.valueOf(randomY);
+
+			ProcessBuilder pb = new ProcessBuilder(ADB_PATH, "-s", adbIp, "shell", "input", "tap", xStr, yStr);
+			pb.redirectErrorStream(true);
+
+			try {
+				System.out.println("Ejecutando tap aleatorio en (" + xStr + ", " + yStr + ")...");
+				Process process = pb.start();
+
+				try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+					String line;
+					while ((line = reader.readLine()) != null) {
+						System.out.println(line);
+					}
+				}
+
+				int exitCode = process.waitFor();
+				if (exitCode != 0) {
+					System.err.println("Error al ejecutar el tap. Código de salida: " + exitCode);
+					return false;
+				}
+
+				if (i < tapCount - 1) {
+					Thread.sleep(delayMs);
+				}
+			} catch (IOException | InterruptedException e) {
+				e.printStackTrace();
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	public String ocrRegionText(String emulatorNumber, DTOPoint dtoPoint, DTOPoint dtoPoint2) {

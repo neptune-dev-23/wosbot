@@ -20,44 +20,64 @@ public class Config {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "id", nullable = false, unique = true)
-	private Long id;
+	private Integer id;
 
-	@Column(name = "nombre_configuracion", nullable = false)
-	private String nombreConfiguracion;
-
-	@Column(name = "valor", nullable = false)
-	private String valor;
-
-	@ManyToOne(fetch = FetchType.LAZY, optional = false)
-	@JoinColumn(name = "profile_id", nullable = false)
+	@ManyToOne(fetch = FetchType.LAZY, optional = true)
+	@JoinColumn(name = "profile_id", nullable = true)
 	@OnDelete(action = OnDeleteAction.CASCADE)
 	private Profile profile;
+
+	@ManyToOne(fetch = FetchType.LAZY, optional = false)
+	@JoinColumn(name = "tp_config_id", nullable = false)
+	private TpConfig tpConfig;
+
+	@Column(name = "config_key", nullable = false)
+	private String key;
+
+	@Column(name = "value", nullable = false)
+	private String valor;
 
 	public Config() {
 	}
 
-	public Config(Profile profile, String nombreConfiguracion, String valor) {
+	public Config(Profile profile, TpConfig tpConfig, String key, String valor) {
 		this.profile = profile;
-		this.nombreConfiguracion = nombreConfiguracion;
+		this.tpConfig = tpConfig;
+		this.key = key;
 		this.valor = valor;
 	}
 
 	// Getters y Setters
-
-	public Long getId() {
+	public Integer getId() {
 		return id;
 	}
 
-	public void setId(Long id) {
+	public void setId(Integer id) {
 		this.id = id;
 	}
 
-	public String getNombreConfiguracion() {
-		return nombreConfiguracion;
+	public Profile getProfile() {
+		return profile;
 	}
 
-	public void setNombreConfiguracion(String nombreConfiguracion) {
-		this.nombreConfiguracion = nombreConfiguracion;
+	public void setProfile(Profile profile) {
+		this.profile = profile;
+	}
+
+	public TpConfig getTpConfig() {
+		return tpConfig;
+	}
+
+	public void setTpConfig(TpConfig tpConfig) {
+		this.tpConfig = tpConfig;
+	}
+
+	public String getKey() {
+		return key;
+	}
+
+	public void setKey(String key) {
+		this.key = key;
 	}
 
 	public String getValor() {
@@ -68,11 +88,8 @@ public class Config {
 		this.valor = valor;
 	}
 
-	public Profile getProfile() {
-		return profile;
-	}
-
-	public void setProfile(Profile profile) {
-		this.profile = profile;
+	@Override
+	public String toString() {
+		return "Config{" + "id=" + id + ", profile=" + (profile != null ? profile.getId() : "Global") + ", tpConfig=" + tpConfig.getName() + ", key='" + key + '\'' + ", valor='" + valor + '\'' + '}';
 	}
 }

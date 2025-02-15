@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 import cl.camodev.wosbot.almac.entity.Config;
 import cl.camodev.wosbot.almac.entity.Profile;
 import cl.camodev.wosbot.almac.jpa.BotPersistence;
-import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.ot.DTOConfig;
 import cl.camodev.wosbot.ot.DTOProfiles;
 import jakarta.persistence.Query;
@@ -41,21 +40,21 @@ public class ProfileRepository implements IProfileRepository {
 			defaultProfile.setEmulatorNumber("0");
 			defaultProfile.setEnabled(true);
 			persistence.createEntity(defaultProfile);
-
-			for (EnumConfigurationKey key : EnumConfigurationKey.values()) {
-				Config cfg = new Config();
-				cfg.setProfile(defaultProfile);
-				cfg.setNombreConfiguracion(key.toString());
-				cfg.setValor(key.getDefaultValue());
-				persistence.createEntity(cfg);
-			}
+//
+//			for (EnumConfigurationKey key : EnumConfigurationKey.values()) {
+//				Config cfg = new Config();
+//				cfg.setProfile(defaultProfile);
+//				cfg.setNombreConfiguracion(key.toString());
+//				cfg.setValor(key.getDefaultValue());
+//				persistence.createEntity(cfg);
+//			}
 
 			profiles = persistence.getQueryResults(persistence.createQuery(queryProfiles));
 		}
 
 		List<Long> profileIds = profiles.stream().map(DTOProfiles::getId).collect(Collectors.toList());
 
-		String queryConfigs = "SELECT new cl.camodev.wosbot.ot.DTOConfig(c.profile.id, c.nombreConfiguracion, c.valor) " + "FROM Config c WHERE c.profile.id IN :profileIds";
+		String queryConfigs = "SELECT new cl.camodev.wosbot.ot.DTOConfig(c.profile.id, c.key, c.valor) " + "FROM Config c WHERE c.profile.id IN :profileIds";
 		Query query = persistence.createQuery(queryConfigs);
 		query.setParameter("profileIds", profileIds);
 		List<DTOConfig> configs = persistence.getQueryResults(query);

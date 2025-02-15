@@ -6,8 +6,12 @@ import java.util.stream.Collectors;
 
 import cl.camodev.wosbot.almac.entity.Config;
 import cl.camodev.wosbot.almac.entity.Profile;
+import cl.camodev.wosbot.almac.entity.TpConfig;
+import cl.camodev.wosbot.almac.repo.ConfigRepository;
+import cl.camodev.wosbot.almac.repo.IConfigRepository;
 import cl.camodev.wosbot.almac.repo.IProfileRepository;
 import cl.camodev.wosbot.almac.repo.ProfileRepository;
+import cl.camodev.wosbot.console.enumerable.TpConfigEnum;
 import cl.camodev.wosbot.ot.DTOProfileStatus;
 import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.serv.IProfileStatusChangeListener;
@@ -19,10 +23,13 @@ public class ServProfiles implements IServProfile {
 
 	private IProfileRepository iProfileRepository;
 
+	private IConfigRepository iConfigRepository;
+
 	private List<IProfileStatusChangeListener> listeners;
 
 	private ServProfiles() {
 		iProfileRepository = ProfileRepository.getRepository();
+		iConfigRepository = ConfigRepository.getRepository();
 	}
 
 	public static ServProfiles getServices() {
@@ -78,13 +85,20 @@ public class ServProfiles implements IServProfile {
 			existingProfile.setEmulatorNumber(profileDTO.getEmulatorNumber());
 			existingProfile.setEnabled(profileDTO.getEnabled());
 
-			// Obtener y eliminar todas las configuraciones existentes del perfil
-			List<Config> existingConfigs = iProfileRepository.getProfileConfigs(existingProfile.getId());
-			iProfileRepository.deleteConfigs(existingConfigs);
+			List<Config> existingConfigs = iConfigRepository.getProfileConfigs(existingProfile.getId());
+			for (Config config : existingConfigs) {
+				iConfigRepository.deleteConfig(config);
+			}
 
-			List<Config> newConfigs = profileDTO.getConfigs().stream().map(dtoConfig -> new Config(existingProfile, dtoConfig.getNombreConfiguracion(), dtoConfig.getValor())).collect(Collectors.toList());
+			TpConfig tpConfig = iConfigRepository.getTpConfig(TpConfigEnum.PROFILE_CONFIG);
 
-			iProfileRepository.saveConfigs(newConfigs);
+			if (tpConfig == null) {
+				return false;
+			}
+
+			List<Config> newConfigs = profileDTO.getConfigs().stream().map(dtoConfig -> new Config(existingProfile, tpConfig, dtoConfig.getNombreConfiguracion(), dtoConfig.getValor())).collect(Collectors.toList());
+
+			newConfigs.forEach(config -> iConfigRepository.addConfig(config));
 
 			return iProfileRepository.saveProfile(existingProfile);
 

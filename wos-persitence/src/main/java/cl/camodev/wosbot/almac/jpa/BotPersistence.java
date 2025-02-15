@@ -21,10 +21,12 @@ public final class BotPersistence {
 
 			entityManagerFactory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME);
 			entityManager = entityManagerFactory.createEntityManager();
+			PersistenceDataInitialization.initializeData();
 		} catch (Exception ex) {
 			System.err.println("Error inicializando EntityManagerFactory: " + ex.getMessage());
 			throw new ExceptionInInitializerError(ex);
 		}
+
 	}
 
 	public static BotPersistence getInstance() {

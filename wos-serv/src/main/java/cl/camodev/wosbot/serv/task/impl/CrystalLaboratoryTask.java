@@ -1,18 +1,20 @@
 package cl.camodev.wosbot.serv.task.impl;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import cl.camodev.utiles.UtilTime;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
+import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.emulator.EmulatorManager;
+import cl.camodev.wosbot.ot.DTODailyTaskStatus;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.serv.impl.ServLogs;
+import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 
 public class CrystalLaboratoryTask extends DelayedTask {
@@ -32,8 +34,12 @@ public class CrystalLaboratoryTask extends DelayedTask {
 	@Override
 	protected void execute() {
 
-//		String text = EmulatorManager.getInstance().ocrRegionText(EMULATOR_NUMBER, new DTOPoint(40, 770), new DTOPoint(350, 810));
-//		System.out.println(text);
+		DTODailyTaskStatus statusTask = ServScheduler.getServices().getDailyTaskStatus(profile, TpDailyTaskEnum.CRYSTAL_LABORATORY);
+		if (statusTask.getFinished()) {
+			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "This task is already done for today, rescheduling for reset");
+			reschedule(UtilTime.getGameReset());
+			return;
+		}
 
 		DTOImageSearchResult homeResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90);
 		DTOImageSearchResult worldResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 0, 0, 720, 1280, 90);
@@ -57,10 +63,7 @@ public class CrystalLaboratoryTask extends DelayedTask {
 				}
 			}
 
-			ZonedDateTime nowUtc = ZonedDateTime.now(ZoneId.of("UTC"));
-			ZonedDateTime nextUtcMidnight = nowUtc.toLocalDate().plusDays(1).atStartOfDay(ZoneId.of("UTC"));
-			ZonedDateTime localNextMidnight = nextUtcMidnight.withZoneSameInstant(ZoneId.systemDefault());
-			reschedule(localNextMidnight.toLocalDateTime());
+			reschedule(UtilTime.getGameReset());
 			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "rescheduled task for tomorrow");
 			EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
 

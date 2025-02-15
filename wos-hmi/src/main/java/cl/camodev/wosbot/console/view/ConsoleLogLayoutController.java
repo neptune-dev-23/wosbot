@@ -85,7 +85,7 @@ public class ConsoleLogLayoutController {
 		logMessages.add(0, new LogMessageAux(formattedDate, dtoMessage.getSeverity().toString(), dtoMessage.getMessage(), dtoMessage.getTask(), dtoMessage.getProfile()));
 
 		if (logMessages.size() > 500) {
-			logMessages.remove(logMessages.size());
+			logMessages.remove(logMessages.size() - 1);
 		}
 
 	}
