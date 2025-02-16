@@ -5,15 +5,19 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
 
+import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
+
 public abstract class DelayedTask implements Runnable {
 
 	private volatile boolean recurring = true;
 	protected LocalDateTime scheduledTime;
-	protected String taskName;
+	protected final String taskName;
+	protected final Long idTpDailyTask;
 
-	public DelayedTask(String taskName, LocalDateTime scheduledTime) {
+	public DelayedTask(TpDailyTaskEnum tpTask, LocalDateTime scheduledTime) {
 		this.scheduledTime = scheduledTime;
-		this.taskName = taskName;
+		this.taskName = tpTask.getName();
+		this.idTpDailyTask = (long) tpTask.getId();
 	}
 
 	@Override
@@ -23,10 +27,12 @@ public abstract class DelayedTask implements Runnable {
 
 	protected abstract void execute();
 
-	public abstract boolean isDailyTask();
-
 	public boolean isRecurring() {
 		return recurring;
+	}
+
+	public Long getTpDailyTaskId() {
+		return idTpDailyTask;
 	}
 
 	public void setRecurring(boolean recurring) {
@@ -38,7 +44,7 @@ public abstract class DelayedTask implements Runnable {
 		scheduledTime = LocalDateTime.now().plus(difference);
 	}
 
-	public void sleepTask(long millis) {
+	protected void sleepTask(long millis) {
 		try {
 			Thread.sleep(millis);
 		} catch (InterruptedException e) {
@@ -51,9 +57,6 @@ public abstract class DelayedTask implements Runnable {
 		return taskName;
 	}
 
-	/**
-	 * Devuelve el retraso restante en la unidad indicada.
-	 */
 	public long getDelay(TimeUnit unit) {
 		long delayMillis = ChronoUnit.MILLIS.between(LocalDateTime.now(), scheduledTime);
 		return unit.convert(delayMillis, TimeUnit.MILLISECONDS);

@@ -50,5 +50,10 @@
             <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
          </GridPane.margin>
       </CheckBox>
+      <CheckBox fx:id="checkBoxDailyVipRewards" mnemonicParsing="false" text="Claim daily vip rewards" GridPane.columnIndex="1">
+         <GridPane.margin>
+            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+         </GridPane.margin>
+      </CheckBox>
    </children>
 </GridPane>

@@ -3,11 +3,13 @@ package cl.camodev.wosbot.almac.repo;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import cl.camodev.wosbot.almac.entity.DailyTask;
 import cl.camodev.wosbot.almac.entity.TpDailyTask;
 import cl.camodev.wosbot.almac.jpa.BotPersistence;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
+import cl.camodev.wosbot.ot.DTODailyTaskStatus;
 
 public class DailyTaskRepository implements IDailyTaskRepository {
 	private final BotPersistence persistence = BotPersistence.getInstance();
@@ -57,7 +59,9 @@ public class DailyTaskRepository implements IDailyTaskRepository {
 
 	@Override
 	public DailyTask findByProfileIdAndTaskName(Long profileId, TpDailyTaskEnum taskName) {
-		String query = "SELECT d FROM DailyTask d WHERE d.profile.id = :profileId AND d.task.id = :id";
+		String query = """
+				SELECT d FROM DailyTask d
+				WHERE d.profile.id = :profileId AND d.task.id = :id""";
 
 		// Crear el mapa de parámetros
 		Map<String, Object> parameters = new HashMap<>();
@@ -65,7 +69,25 @@ public class DailyTaskRepository implements IDailyTaskRepository {
 		parameters.put("id", taskName.getId());
 
 		List<DailyTask> results = persistence.getQueryResults(query, DailyTask.class, parameters);
+
 		return results.isEmpty() ? null : results.get(0);
+	}
+
+	@Override
+	public Map<Long, DTODailyTaskStatus> findDailyTasksStatusByProfile(Long profileId) {
+		String query = """
+				SELECT new cl.camodev.wosbot.ot.DTODailyTaskStatus(
+				d.profile.id, d.task.id, d.lastExecution, d.nextSchedule)
+				FROM DailyTask d
+				WHERE d.profile.id = :profileId""";
+
+		// Crear el mapa de parámetros
+		Map<String, Object> parameters = new HashMap<>();
+		parameters.put("profileId", profileId);
+
+		List<DTODailyTaskStatus> results = persistence.getQueryResults(query, DTODailyTaskStatus.class, parameters);
+
+		return results.stream().collect(Collectors.toMap(DTODailyTaskStatus::getIdTpDailyTask, dto -> dto));
 	}
 
 	@Override

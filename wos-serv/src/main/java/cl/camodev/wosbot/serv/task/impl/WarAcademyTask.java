@@ -9,7 +9,6 @@ import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.emulator.EmulatorManager;
-import cl.camodev.wosbot.ot.DTODailyTaskStatus;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
@@ -22,21 +21,14 @@ public class WarAcademyTask extends DelayedTask {
 	private final String emulatorNumber;
 	private static final String TASK_NAME = "War Academy";
 
-	public WarAcademyTask(DTOProfiles profile, LocalDateTime scheduledTime) {
-		super(TASK_NAME, scheduledTime);
+	public WarAcademyTask(DTOProfiles profile, TpDailyTaskEnum warAcademyShards) {
+		super(warAcademyShards, LocalDateTime.now());
 		this.profile = profile;
 		this.emulatorNumber = profile.getEmulatorNumber().toString();
 	}
 
 	@Override
 	protected void execute() {
-		DTODailyTaskStatus statusTask = ServScheduler.getServices().getDailyTaskStatus(profile, TpDailyTaskEnum.WAR_ACADEMY_SHARDS);
-
-		if (statusTask.getFinished()) {
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "This task is already done for today, rescheduling for reset");
-			reschedule(UtilTime.getGameReset());
-			return;
-		}
 
 		if (isHomeOrWorldScreenFound()) {
 			performWarAcademyTask();
@@ -61,9 +53,10 @@ public class WarAcademyTask extends DelayedTask {
 			claimCrystalsShards();
 		}
 
-		ServScheduler.getServices().updateDailyTaskStatus(profile, TpDailyTaskEnum.WAR_ACADEMY_SHARDS, true);
+		this.reschedule(UtilTime.getGameReset());
+		ServScheduler.getServices().updateDailyTaskStatus(profile, TpDailyTaskEnum.WAR_ACADEMY_SHARDS, UtilTime.getGameReset());
 		EmulatorManager.getInstance().tapBackButton(emulatorNumber);
-		reschedule(UtilTime.getGameReset());
+
 	}
 
 	private void navigateToWarAcademy() {
@@ -115,8 +108,4 @@ public class WarAcademyTask extends DelayedTask {
 		}
 	}
 
-	@Override
-	public boolean isDailyTask() {
-		return true;
-	}
 }

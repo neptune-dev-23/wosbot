@@ -8,6 +8,7 @@ import java.util.regex.Pattern;
 
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
+import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.emulator.EmulatorManager;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
@@ -23,8 +24,8 @@ public class HeroRecruitmentTask extends DelayedTask {
 
 	private final static String TASK_NAME = "Hero Recruitment Task";
 
-	public HeroRecruitmentTask(DTOProfiles profile, LocalDateTime scheduledTime) {
-		super(TASK_NAME, scheduledTime);
+	public HeroRecruitmentTask(DTOProfiles profile, TpDailyTaskEnum heroRecruitment) {
+		super(heroRecruitment, LocalDateTime.now());
 		this.profile = profile;
 		this.EMULATOR_NUMBER = profile.getEmulatorNumber().toString();
 	}
@@ -155,8 +156,4 @@ public class HeroRecruitmentTask extends DelayedTask {
 		return result;
 	}
 
-	@Override
-	public boolean isDailyTask() {
-		return false;
-	}
 }

@@ -8,7 +8,11 @@ public enum TpDailyTaskEnum {
 	WAR_ACADEMY_SHARDS(3, "War Academy Shards"), 
 	CRYSTAL_LABORATORY(4, "Crystal Laboratory"),
 	VIP_POINTS(5, "VIP Points"),
-	PET_ADVENTURE(6, "Pet Adventure"),;
+	PET_ADVENTURE(6, "Pet Adventure"),
+	EXPLORATION_CHEST(7, "Exploration Chest"),
+	ALLIANCE_TECH(8, "Alliance Tech"),
+	
+	INITIALIZE(100, "Initialize");
 	//@formatter:on
 
 	private final int id;

@@ -7,7 +7,6 @@ import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.emulator.EmulatorManager;
-import cl.camodev.wosbot.ot.DTODailyTaskStatus;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
@@ -31,11 +30,11 @@ public class NomadicMerchantTask extends DelayedTask {
 
 	private final EnumTemplates[] TEMPLATES = { EnumTemplates.NOMADIC_MERCHANT_COAL, EnumTemplates.NOMADIC_MERCHANT_MEAT, EnumTemplates.NOMADIC_MERCHANT_STONE, EnumTemplates.NOMADIC_MERCHANT_WOOD };
 
-	public NomadicMerchantTask(DTOProfiles list, LocalDateTime scheduledTime) {
-		super(TASK_NAME, scheduledTime);
+	public NomadicMerchantTask(DTOProfiles list, TpDailyTaskEnum nomadicMerchant) {
+		super(nomadicMerchant, LocalDateTime.now());
 		this.profile = list;
 		this.EMULATOR_NUMBER = list.getEmulatorNumber().toString();
-//		Boolean a = profile.getConfiguracionCasteada(EnumConfigurationKey.BOOL_NOMADIC_MERCHANT, Boolean.class);
+
 	}
 
 	/**
@@ -43,12 +42,6 @@ public class NomadicMerchantTask extends DelayedTask {
 	 */
 	@Override
 	protected void execute() {
-		DTODailyTaskStatus statusTask = ServScheduler.getServices().getDailyTaskStatus(profile, TpDailyTaskEnum.NOMADIC_MERCHANT);
-		if (statusTask.getFinished()) {
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "This task is already done for today, rescheduling for reset");
-			reschedule(UtilTime.getGameReset());
-			return;
-		}
 
 		// Buscar la plantilla de la pantalla HOME
 		DTOImageSearchResult homeResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90);
@@ -60,7 +53,8 @@ public class NomadicMerchantTask extends DelayedTask {
 			EmulatorManager.getInstance().tapAtPoint(EMULATOR_NUMBER, new DTOPoint(70, 1220));
 			sleepTask(3000);
 			processSquaresAndRefresh();
-			ServScheduler.getServices().updateDailyTaskStatus(profile, TpDailyTaskEnum.NOMADIC_MERCHANT, true);
+			ServScheduler.getServices().updateDailyTaskStatus(profile, TpDailyTaskEnum.NOMADIC_MERCHANT, UtilTime.getGameReset());
+			this.reschedule(UtilTime.getGameReset());
 
 		} else {
 			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "HOME NOT FOUND");
@@ -190,11 +184,6 @@ public class NomadicMerchantTask extends DelayedTask {
 	private boolean isRefreshGemRefresh() {
 
 		return EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.NOMADIC_MERCHANT_REFRESH.getTemplate(), REFRESH_BUTTON[0], REFRESH_BUTTON[1], 200, 70, 90).isFound();
-	}
-
-	@Override
-	public boolean isDailyTask() {
-		return true;
 	}
 
 }

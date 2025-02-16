@@ -11,6 +11,8 @@ public enum EnumConfigurationKey {
 	BOOL_CRYSTAL_LAB_FC("false",Boolean.class),
 	BOOL_EXPLORATION_CHEST("false",Boolean.class),
 	BOOL_HERO_RECRUITMENT("false",Boolean.class),
+	BOOL_VIP_POINTS("false",Boolean.class),
+	BOOL_ALLIANCE_TECH("false",Boolean.class),
 	;
 	//@formatter:on
 	private final String defaultValue;

@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
+import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.emulator.EmulatorManager;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
@@ -19,8 +20,8 @@ public class AllianceTechTask extends DelayedTask {
 
 	private final static String TASK_NAME = "Alliance Tech";
 
-	public AllianceTechTask(DTOProfiles list, LocalDateTime scheduledTime) {
-		super(TASK_NAME, scheduledTime);
+	public AllianceTechTask(DTOProfiles list, TpDailyTaskEnum allianceTech) {
+		super(allianceTech, LocalDateTime.now());
 		this.profile = list;
 		this.EMULATOR_NUMBER = list.getEmulatorNumber().toString();
 	}
@@ -62,11 +63,6 @@ public class AllianceTechTask extends DelayedTask {
 		}
 		sleepTask(3000);
 
-	}
-
-	@Override
-	public boolean isDailyTask() {
-		return false;
 	}
 
 }

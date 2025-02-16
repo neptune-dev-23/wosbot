@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
+import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.emulator.EmulatorManager;
 import cl.camodev.wosbot.ex.StopExecutionException;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
@@ -20,8 +21,8 @@ public class InitializeTask extends DelayedTask {
 
 	private final static String TASK_NAME = "Initialize";
 
-	public InitializeTask(DTOProfiles profile, LocalDateTime scheduledTime) {
-		super(TASK_NAME, scheduledTime);
+	public InitializeTask(DTOProfiles profile, TpDailyTaskEnum tpTask) {
+		super(tpTask, LocalDateTime.now());
 		this.profile = profile;
 		this.EMULATOR_NUMBER = profile.getEmulatorNumber().toString();
 	}
@@ -88,8 +89,4 @@ public class InitializeTask extends DelayedTask {
 		return EMULATOR_NUMBER;
 	}
 
-	@Override
-	public boolean isDailyTask() {
-		return false;
-	}
 }

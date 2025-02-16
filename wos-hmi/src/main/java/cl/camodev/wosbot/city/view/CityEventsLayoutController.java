@@ -28,6 +28,9 @@ public class CityEventsLayoutController implements IProfileLoadListener, IProfil
 	@FXML
 	private CheckBox checkBoxWarAcademyShards;
 
+	@FXML
+	private CheckBox checkBoxDailyVipRewards;
+
 	private IProfileChangeObserver profileObserver;
 
 	private boolean isLoadingProfile = false; // Bandera para controlar eventos durante la carga
@@ -74,6 +77,12 @@ public class CityEventsLayoutController implements IProfileLoadListener, IProfil
 				profileObserver.notifyProfileChange(EnumConfigurationKey.BOOL_WAR_ACADEMY_SHARDS, newVal);
 			}
 		});
+
+		checkBoxDailyVipRewards.selectedProperty().addListener((obs, oldVal, newVal) -> {
+			if (!isLoadingProfile) {
+				profileObserver.notifyProfileChange(EnumConfigurationKey.BOOL_VIP_POINTS, newVal);
+			}
+		});
 	}
 
 	@Override
@@ -87,6 +96,7 @@ public class CityEventsLayoutController implements IProfileLoadListener, IProfil
 			checkBoxNomadicMerchant.setSelected(profile.getConfig(EnumConfigurationKey.BOOL_NOMADIC_MERCHANT, Boolean.class));
 			checkBoxNomadicMerchantVip.setSelected(profile.getConfig(EnumConfigurationKey.BOOL_NOMADIC_MERCHANT_VIP_POINTS, Boolean.class));
 			checkBoxWarAcademyShards.setSelected(profile.getConfig(EnumConfigurationKey.BOOL_WAR_ACADEMY_SHARDS, Boolean.class));
+			checkBoxDailyVipRewards.setSelected(profile.getConfig(EnumConfigurationKey.BOOL_VIP_POINTS, Boolean.class));
 		} finally {
 			isLoadingProfile = false; // Reactiva los eventos después de cargar el perfil
 		}

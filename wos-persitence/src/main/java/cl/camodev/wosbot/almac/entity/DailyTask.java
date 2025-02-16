@@ -36,19 +36,19 @@ public class DailyTask {
 	@Column(name = "last_execution", nullable = false)
 	private LocalDateTime lastExecution;
 
-	@Column(name = "finished", nullable = false)
-	private Boolean finished;
+	@Column(name = "next_schedule", nullable = false)
+	private LocalDateTime nextSchedule;
 
 	// Constructor vacío
 	public DailyTask() {
 	}
 
 	// Constructor con parámetros
-	public DailyTask(Profile profile, TpDailyTask task, LocalDateTime lastExecution, Boolean finished) {
+	public DailyTask(Profile profile, TpDailyTask task, LocalDateTime lastExecution, LocalDateTime nextSchedule) {
 		this.profile = profile;
 		this.task = task;
 		this.lastExecution = lastExecution;
-		this.finished = finished;
+		this.nextSchedule = nextSchedule;
 	}
 
 	// Getters y Setters
@@ -84,11 +84,11 @@ public class DailyTask {
 		this.lastExecution = lastExecution;
 	}
 
-	public Boolean getFinished() {
-		return finished;
+	public LocalDateTime getNextSchedule() {
+		return nextSchedule;
 	}
 
-	public void setFinished(Boolean finished) {
-		this.finished = finished;
+	public void setNextSchedule(LocalDateTime nextSchedule) {
+		this.nextSchedule = nextSchedule;
 	}
 }

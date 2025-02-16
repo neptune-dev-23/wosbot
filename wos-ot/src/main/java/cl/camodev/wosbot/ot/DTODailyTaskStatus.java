@@ -4,15 +4,35 @@ import java.time.LocalDateTime;
 
 public class DTODailyTaskStatus {
 
+	private Long idProfile;
+	private Long idTpDailyTask;
 	private LocalDateTime lastExecution;
-	private Boolean finished;
+	private LocalDateTime nextSchedule;
 
 	public DTODailyTaskStatus() {
 	}
 
-	public DTODailyTaskStatus(LocalDateTime lastExecution, Boolean finished) {
+	public DTODailyTaskStatus(Long idProfile, Long idTpDailyTask, LocalDateTime lastExecution, LocalDateTime nextSchedule) {
 		this.lastExecution = lastExecution;
-		this.finished = finished;
+		this.nextSchedule = nextSchedule;
+		this.idProfile = idProfile;
+		this.idTpDailyTask = idTpDailyTask;
+	}
+
+	public Long getIdProfile() {
+		return idProfile;
+	}
+
+	public void setIdProfile(Long idProfile) {
+		this.idProfile = idProfile;
+	}
+
+	public Long getIdTpDailyTask() {
+		return idTpDailyTask;
+	}
+
+	public void setIdTpDailyTask(Long idTpDailyTask) {
+		this.idTpDailyTask = idTpDailyTask;
 	}
 
 	public LocalDateTime getLastExecution() {
@@ -23,11 +43,11 @@ public class DTODailyTaskStatus {
 		this.lastExecution = lastExecution;
 	}
 
-	public Boolean getFinished() {
-		return finished;
+	public LocalDateTime getNextSchedule() {
+		return nextSchedule;
 	}
 
-	public void setFinished(Boolean finished) {
-		this.finished = finished;
+	public void setNextSchedule(LocalDateTime nextSchedule) {
+		this.nextSchedule = nextSchedule;
 	}
 }

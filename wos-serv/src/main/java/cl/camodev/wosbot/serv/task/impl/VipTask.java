@@ -7,7 +7,6 @@ import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.emulator.EmulatorManager;
-import cl.camodev.wosbot.ot.DTODailyTaskStatus;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
@@ -23,21 +22,14 @@ public class VipTask extends DelayedTask {
 
 	private final static String TASK_NAME = "VIP Task";
 
-	public VipTask(DTOProfiles list, LocalDateTime scheduledTime) {
-		super(TASK_NAME, scheduledTime);
+	public VipTask(DTOProfiles list, TpDailyTaskEnum vipPoints) {
+		super(vipPoints, LocalDateTime.now());
 		this.profile = list;
 		this.EMULATOR_NUMBER = list.getEmulatorNumber().toString();
 	}
 
 	@Override
 	protected void execute() {
-
-		DTODailyTaskStatus statusTask = ServScheduler.getServices().getDailyTaskStatus(profile, TpDailyTaskEnum.VIP_POINTS);
-		if (statusTask.getFinished()) {
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "This task is already done for today, rescheduling for reset");
-			reschedule(UtilTime.getGameReset());
-			return;
-		}
 
 		DTOImageSearchResult homeResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90);
 		DTOImageSearchResult worldResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 0, 0, 720, 1280, 90);
@@ -49,11 +41,11 @@ public class VipTask extends DelayedTask {
 			EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(540, 813), new DTOPoint(624, 835), 7, 300);
 			sleepTask(5000);
 
-			EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(530, 860), new DTOPoint(590, 253), 7, 300);
+			EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(602, 263), new DTOPoint(650, 293), 7, 300);
 			sleepTask(3000);
 
 			reschedule(UtilTime.getGameReset());
-			ServScheduler.getServices().updateDailyTaskStatus(profile, TpDailyTaskEnum.VIP_POINTS, true);
+			ServScheduler.getServices().updateDailyTaskStatus(profile, TpDailyTaskEnum.VIP_POINTS, UtilTime.getGameReset());
 			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "rescheduled task for tomorrow");
 			EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
 
@@ -63,11 +55,6 @@ public class VipTask extends DelayedTask {
 
 		}
 
-	}
-
-	@Override
-	public boolean isDailyTask() {
-		return true;
 	}
 
 }

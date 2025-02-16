@@ -9,7 +9,6 @@ import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.emulator.EmulatorManager;
-import cl.camodev.wosbot.ot.DTODailyTaskStatus;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
@@ -25,21 +24,14 @@ public class CrystalLaboratoryTask extends DelayedTask {
 
 	private final static String TASK_NAME = "Crystal Laboratory";
 
-	public CrystalLaboratoryTask(DTOProfiles profile, LocalDateTime scheduledTime) {
-		super(TASK_NAME, scheduledTime);
+	public CrystalLaboratoryTask(DTOProfiles profile, TpDailyTaskEnum crystalLaboratory) {
+		super(crystalLaboratory, LocalDateTime.now());
 		this.profile = profile;
 		this.EMULATOR_NUMBER = profile.getEmulatorNumber().toString();
 	}
 
 	@Override
 	protected void execute() {
-
-		DTODailyTaskStatus statusTask = ServScheduler.getServices().getDailyTaskStatus(profile, TpDailyTaskEnum.CRYSTAL_LABORATORY);
-		if (statusTask.getFinished()) {
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "This task is already done for today, rescheduling for reset");
-			reschedule(UtilTime.getGameReset());
-			return;
-		}
 
 		DTOImageSearchResult homeResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90);
 		DTOImageSearchResult worldResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 0, 0, 720, 1280, 90);
@@ -65,7 +57,7 @@ public class CrystalLaboratoryTask extends DelayedTask {
 
 			reschedule(UtilTime.getGameReset());
 			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "rescheduled task for tomorrow");
-			ServScheduler.getServices().updateDailyTaskStatus(profile, TpDailyTaskEnum.CRYSTAL_LABORATORY, true);
+			ServScheduler.getServices().updateDailyTaskStatus(profile, TpDailyTaskEnum.CRYSTAL_LABORATORY, UtilTime.getGameReset());
 			EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
 
 		} else {
@@ -96,11 +88,6 @@ public class CrystalLaboratoryTask extends DelayedTask {
 		} else {
 			throw new IllegalArgumentException("El formato del texto no es válido: " + input);
 		}
-	}
-
-	@Override
-	public boolean isDailyTask() {
-		return true;
 	}
 
 }
