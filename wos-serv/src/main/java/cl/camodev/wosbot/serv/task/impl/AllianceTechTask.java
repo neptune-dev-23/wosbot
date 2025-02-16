@@ -2,6 +2,7 @@ package cl.camodev.wosbot.serv.task.impl;
 
 import java.time.LocalDateTime;
 
+import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
@@ -53,8 +54,10 @@ public class AllianceTechTask extends DelayedTask {
 			EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
 			sleepTask(200);
 			EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "rescheduling task in 60 minutes");
-			this.reschedule(LocalDateTime.now().plusMinutes(60));
+
+			Integer offset = profile.getConfig(EnumConfigurationKey.INT_ALLIANCE_TECH_OFFSET, Integer.class);
+			this.reschedule(LocalDateTime.now().plusHours(offset));
+			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "rescheduled for " + offset + " hours");
 
 		} else {
 			ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, TASK_NAME, profile.getName(), "Home not found");

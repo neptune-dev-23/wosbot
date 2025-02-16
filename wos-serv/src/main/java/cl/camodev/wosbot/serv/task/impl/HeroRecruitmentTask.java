@@ -15,6 +15,7 @@ import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.serv.impl.ServLogs;
+import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 import net.sourceforge.tess4j.TesseractException;
 
@@ -132,6 +133,7 @@ public class HeroRecruitmentTask extends DelayedTask {
 
 			LocalDateTime nextExecution = getEarliest(nextAdvanced, nextEpic);
 			this.reschedule(nextExecution);
+			ServScheduler.getServices().updateDailyTaskStatus(profile, TpDailyTaskEnum.HERO_RECRUITMENT, nextExecution);
 			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
 
 			// Formatea el LocalDateTime a String con el formato deseado.

@@ -2,6 +2,7 @@ package cl.camodev.wosbot.serv.task.impl;
 
 import java.time.LocalDateTime;
 
+import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
@@ -49,11 +50,15 @@ public class ExplorationTask extends DelayedTask {
 				sleepTask(200);
 				EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(230, 890), new DTOPoint(490, 960));
 				sleepTask(200);
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "rescheduling task in 60 minutes");
-				this.reschedule(LocalDateTime.now().plusMinutes(60));
+
+				int offset = profile.getConfig(EnumConfigurationKey.INT_EXPLORATION_CHEST_OFFSET, Integer.class);
+				this.reschedule(LocalDateTime.now().plusHours(offset));
+				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "rescheduled for " + offset + " hours");
+
 			} else {
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "no rewards to claim, rescheduling task in 60 minutes");
-				this.reschedule(LocalDateTime.now().plusMinutes(60));
+				int offset = profile.getConfig(EnumConfigurationKey.INT_EXPLORATION_CHEST_OFFSET, Integer.class);
+				this.reschedule(LocalDateTime.now().plusHours(offset));
+				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "no rewards to claim, rescheduled for " + offset + " hours");
 			}
 			EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
 

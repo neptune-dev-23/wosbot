@@ -2,7 +2,6 @@ package cl.camodev.wosbot.launcher.view;
 
 import java.io.File;
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -10,6 +9,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import cl.camodev.utiles.UtilCV;
+import cl.camodev.wosbot.alliance.view.AllianceLayoutController;
 import cl.camodev.wosbot.city.view.CityEventsLayoutController;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.view.ConsoleLogLayoutController;
@@ -21,9 +21,6 @@ import cl.camodev.wosbot.profile.model.IProfileLoadListener;
 import cl.camodev.wosbot.profile.model.IProfileObserverInjectable;
 import cl.camodev.wosbot.profile.model.ProfileAux;
 import cl.camodev.wosbot.profile.view.ProfileManagerLayoutController;
-import javafx.animation.Animation;
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -59,9 +56,6 @@ public class LauncherLayoutController implements IProfileLoadListener {
 
 	@FXML
 	private Label labelRunTime;
-
-	private LocalDateTime startTime;
-	private Timeline timeline;
 
 	private Stage stage;
 
@@ -115,6 +109,7 @@ public class LauncherLayoutController implements IProfileLoadListener {
 		//@formatter:off
 		List<ModuleDefinition> modules = Arrays.asList(				
 				new ModuleDefinition("CityEventsLayout", "City Events", CityEventsLayoutController::new),
+				new ModuleDefinition("AllianceLayout", "Alliance", AllianceLayoutController::new),
 				new ModuleDefinition("PetsLayout", "Pets", PetsLayoutController::new));
 		//@formatter:on
 
@@ -272,39 +267,6 @@ public class LauncherLayoutController implements IProfileLoadListener {
 			}
 		}
 
-	}
-
-	private void startUpdatingExecutionTime() {
-		if (timeline != null) {
-			timeline.stop(); // Detener si ya hay una en ejecución
-		}
-
-		timeline = new Timeline(new KeyFrame(javafx.util.Duration.seconds(1), event -> {
-			if (startTime != null) {
-				LocalDateTime now = LocalDateTime.now();
-				java.time.Duration duration = java.time.Duration.between(startTime, now); // Asegurar que uses java.time.Duration aquí
-
-				long days = duration.toDays();
-				long hours = duration.toHours() % 24;
-				long minutes = duration.toMinutes() % 60;
-				long seconds = duration.getSeconds() % 60;
-
-				String timeString = (days > 0) ? String.format("%d %02d:%02d:%02d", days, hours, minutes, seconds) : String.format("%02d:%02d:%02d", hours, minutes, seconds);
-
-				labelRunTime.setText("Running: " + timeString);
-			}
-		}));
-
-		timeline.setCycleCount(Animation.INDEFINITE);
-		timeline.play();
-	}
-
-	private void stopUpdatingExecutionTime() {
-
-		if (timeline != null) {
-			timeline.stop();
-			labelRunTime.setText("Stopped");
-		}
 	}
 
 }

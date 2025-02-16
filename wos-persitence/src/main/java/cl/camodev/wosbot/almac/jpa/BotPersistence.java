@@ -102,6 +102,7 @@ public final class BotPersistence {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	public <T> List<T> getQueryResults(String queryString, Class<T> resultClass, Map<String, Object> parameters) {
 		EntityManager entityManager = getEntityManager();
 		try {

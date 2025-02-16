@@ -10,9 +10,18 @@ public enum EnumConfigurationKey {
 	BOOL_WAR_ACADEMY_SHARDS("false", Boolean.class),
 	BOOL_CRYSTAL_LAB_FC("false",Boolean.class),
 	BOOL_EXPLORATION_CHEST("false",Boolean.class),
+	INT_EXPLORATION_CHEST_OFFSET("1",Integer.class),
 	BOOL_HERO_RECRUITMENT("false",Boolean.class),
 	BOOL_VIP_POINTS("false",Boolean.class),
+	
 	BOOL_ALLIANCE_TECH("false",Boolean.class),
+	INT_ALLIANCE_TECH_OFFSET("1",Integer.class),
+	
+	BOOL_ALLIANCE_CHESTS("false",Boolean.class),
+	INT_ALLIANCE_CHESTS_OFFSET("1",Integer.class),
+	
+	BOOL_ALLIANCE_AUTOJOIN("false",Boolean.class),
+	INT_ALLIANCE_AUTOJOIN_QUEUES("1",Integer.class),
 	;
 	//@formatter:on
 	private final String defaultValue;
