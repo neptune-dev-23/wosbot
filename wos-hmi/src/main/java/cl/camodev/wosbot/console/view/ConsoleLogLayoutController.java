@@ -7,6 +7,7 @@ import cl.camodev.wosbot.console.controller.ConsoleLogActionController;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.model.LogMessageAux;
 import cl.camodev.wosbot.ot.DTOLogMessage;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -70,8 +71,10 @@ public class ConsoleLogLayoutController {
 
 	@FXML
 	void handleButtonClearLogs(ActionEvent event) {
+		Platform.runLater(() -> {
+			logMessages.clear();
+		});
 
-		logMessages.clear();
 	}
 
 	public void appendMessage(DTOLogMessage dtoMessage) {
@@ -84,7 +87,7 @@ public class ConsoleLogLayoutController {
 
 		logMessages.add(0, new LogMessageAux(formattedDate, dtoMessage.getSeverity().toString(), dtoMessage.getMessage(), dtoMessage.getTask(), dtoMessage.getProfile()));
 
-		if (logMessages.size() > 500) {
+		if (logMessages.size() > 30) {
 			logMessages.remove(logMessages.size() - 1);
 		}
 

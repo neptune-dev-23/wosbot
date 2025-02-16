@@ -43,6 +43,7 @@ public class ImageSearchUtil {
 	 *         <li>El porcentaje de coincidencia obtenido.</li>
 	 *         </ul>
 	 */
+
 	public static DTOImageSearchResult buscarTemplate(String imagenPrincipalPath, String templateResourcePath, int roiX, int roiY, int roiWidth, int roiHeight, double thresholdPercentage) {
 
 		// Cargar la imagen principal (externa) desde la ruta proporcionada.
@@ -121,13 +122,84 @@ public class ImageSearchUtil {
 		return new DTOImageSearchResult(true, dtoPoint, matchPercentage);
 	}
 
-	/**
-	 * Lee todos los bytes de un InputStream.
-	 *
-	 * @param is InputStream a leer.
-	 * @return Un arreglo de bytes con el contenido leído.
-	 * @throws IOException Si ocurre algún error durante la lectura.
-	 */
+	public static DTOImageSearchResult buscarTemplate(InputStream imagenPrincipalStream, String templateResourcePath, int roiX, int roiY, int roiWidth, int roiHeight, double thresholdPercentage) {
+		try {
+			// Convertir el InputStream en un byte[]
+			byte[] imageBytes = imagenPrincipalStream.readAllBytes();
+
+			// Decodificar la imagen principal directamente desde el byte[]
+			MatOfByte matOfByte = new MatOfByte(imageBytes);
+			Mat imagenPrincipal = Imgcodecs.imdecode(matOfByte, Imgcodecs.IMREAD_COLOR);
+
+			if (imagenPrincipal.empty()) {
+				System.err.println("Error al cargar la imagen capturada.");
+				return new DTOImageSearchResult(false, null, 0.0);
+			}
+
+			// Cargar la plantilla desde los recursos
+			InputStream is = ImageSearchUtil.class.getResourceAsStream(templateResourcePath);
+			if (is == null) {
+				System.err.println("No se encontró el recurso del template: " + templateResourcePath);
+				return new DTOImageSearchResult(false, null, 0.0);
+			}
+
+			// Leer bytes del template
+			byte[] templateBytes = is.readAllBytes();
+			is.close();
+
+			// Decodificar el template en un Mat
+			MatOfByte templateMatOfByte = new MatOfByte(templateBytes);
+			Mat template = Imgcodecs.imdecode(templateMatOfByte, Imgcodecs.IMREAD_COLOR);
+
+			if (template.empty()) {
+				System.err.println("Error al decodificar la plantilla.");
+				return new DTOImageSearchResult(false, null, 0.0);
+			}
+
+			// Validar la ROI
+			if (roiX + roiWidth > imagenPrincipal.cols() || roiY + roiHeight > imagenPrincipal.rows()) {
+				System.err.println("La región definida se sale de los límites de la imagen principal.");
+				return new DTOImageSearchResult(false, null, 0.0);
+			}
+
+			// Crear la ROI
+			Rect roi = new Rect(roiX, roiY, roiWidth, roiHeight);
+			Mat imagenROI = new Mat(imagenPrincipal, roi);
+
+			// Verificar tamaño
+			int resultCols = imagenROI.cols() - template.cols() + 1;
+			int resultRows = imagenROI.rows() - template.rows() + 1;
+			if (resultCols <= 0 || resultRows <= 0) {
+				System.err.println("La plantilla es más grande que la ROI.");
+				return new DTOImageSearchResult(false, null, 0.0);
+			}
+
+			// Coincidencia de plantilla
+			Mat resultado = new Mat(resultRows, resultCols, CvType.CV_32FC1);
+			Imgproc.matchTemplate(imagenROI, template, resultado, Imgproc.TM_CCOEFF_NORMED);
+
+			// Obtener el mejor match
+			Core.MinMaxLocResult mmr = Core.minMaxLoc(resultado);
+			double matchPercentage = mmr.maxVal * 100.0;
+
+			if (matchPercentage < thresholdPercentage) {
+				System.out.println("No se encontró una coincidencia aceptable.");
+				return new DTOImageSearchResult(false, null, matchPercentage);
+			}
+
+			// Dibujar rectángulo en la imagen para marcar la coincidencia
+			Point matchLoc = mmr.maxLoc;
+			matchLoc.x += roi.x;
+			matchLoc.y += roi.y;
+
+			return new DTOImageSearchResult(true, new DTOPoint(matchLoc.x, matchLoc.y), matchPercentage);
+
+		} catch (IOException e) {
+			e.printStackTrace();
+			return new DTOImageSearchResult(false, null, 0.0);
+		}
+	}
+
 	private static byte[] readAllBytes(InputStream is) throws IOException {
 		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 		int nRead;

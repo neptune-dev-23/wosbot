@@ -1,5 +1,6 @@
 package cl.camodev.wosbot.serv.task.impl;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -15,6 +16,7 @@ import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.serv.impl.ServLogs;
 import cl.camodev.wosbot.serv.task.DelayedTask;
+import net.sourceforge.tess4j.TesseractException;
 
 public class HeroRecruitmentTask extends DelayedTask {
 
@@ -63,12 +65,27 @@ public class HeroRecruitmentTask extends DelayedTask {
 				EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(80, 90), new DTOPoint(140, 130));
 				sleepTask(3000);
 				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "getting next recruitment time");
-				String text = EmulatorManager.getInstance().ocrRegionText(EMULATOR_NUMBER, new DTOPoint(40, 770), new DTOPoint(350, 810));
+				String text = "";
+				try {
+					text = EmulatorManager.getInstance().ocrRegionText(EMULATOR_NUMBER, new DTOPoint(40, 770), new DTOPoint(350, 810));
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (TesseractException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), text + " rescheduling task");
 				nextAdvanced = parseNextFree(text);
 			} else {
 				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "no rewards to claim, getting next recruitment time");
-				String text = EmulatorManager.getInstance().ocrRegionText(EMULATOR_NUMBER, new DTOPoint(40, 770), new DTOPoint(350, 810));
+				String text = "";
+				try {
+					text = EmulatorManager.getInstance().ocrRegionText(EMULATOR_NUMBER, new DTOPoint(40, 770), new DTOPoint(350, 810));
+				} catch (IOException | TesseractException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), text + " rescheduling task");
 				nextAdvanced = parseNextFree(text);
 			}
@@ -91,12 +108,24 @@ public class HeroRecruitmentTask extends DelayedTask {
 				EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(80, 90), new DTOPoint(140, 130));
 				sleepTask(3000);
 				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "getting next recruitment time");
-				String text = EmulatorManager.getInstance().ocrRegionText(EMULATOR_NUMBER, new DTOPoint(53, 1130), new DTOPoint(330, 1160));
+				String text = "";
+				try {
+					text = EmulatorManager.getInstance().ocrRegionText(EMULATOR_NUMBER, new DTOPoint(53, 1130), new DTOPoint(330, 1160));
+				} catch (IOException | TesseractException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), text);
 				nextEpic = parseNextFree(text);
 			} else {
 				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "no rewards to claim, getting next recruitment time");
-				String text = EmulatorManager.getInstance().ocrRegionText(EMULATOR_NUMBER, new DTOPoint(53, 1130), new DTOPoint(330, 1160));
+				String text = "";
+				try {
+					text = EmulatorManager.getInstance().ocrRegionText(EMULATOR_NUMBER, new DTOPoint(53, 1130), new DTOPoint(330, 1160));
+				} catch (IOException | TesseractException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), text);
 				nextEpic = parseNextFree(text);
 			}

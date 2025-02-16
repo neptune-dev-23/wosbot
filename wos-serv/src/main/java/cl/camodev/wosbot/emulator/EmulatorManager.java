@@ -1,6 +1,9 @@
 package cl.camodev.wosbot.emulator;
 
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -12,10 +15,12 @@ import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.imageio.ImageIO;
+
 import cl.camodev.utiles.ImageSearchUtil;
-import cl.camodev.utiles.UtilOCR;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
+import net.sourceforge.tess4j.Tesseract;
 import net.sourceforge.tess4j.TesseractException;
 
 public class EmulatorManager {
@@ -37,12 +42,71 @@ public class EmulatorManager {
 		return instance;
 	}
 
-	public void captureScrenshotViaADB(String emulatorNumber) {
+	public void restartAdbServer() {
+		try {
+			// Comando para matar el servidor ADB
+			ProcessBuilder killServer = new ProcessBuilder(ADB_PATH, "kill-server");
+			killServer.redirectErrorStream(true);
+			Process processKill = killServer.start();
+			processKill.waitFor();
+
+			// Comando para iniciar el servidor ADB
+			ProcessBuilder startServer = new ProcessBuilder(ADB_PATH, "start-server");
+			startServer.redirectErrorStream(true);
+			Process processStart = startServer.start();
+			processStart.waitFor();
+
+			System.out.println("ADB server restarted successfully.");
+		} catch (IOException | InterruptedException e) {
+			System.err.println("Error restarting ADB server:");
+			e.printStackTrace();
+		}
+	}
+
+//	public void captureScrenshotViaADB(String emulatorNumber) {
+//		// Obtener la IP del dispositivo usando el método getAdbIp
+//		String adbIp = getAdbIp(emulatorNumber);
+//		if (adbIp == null) {
+//			System.err.println("No se pudo obtener la IP para el emulador: " + emulatorNumber);
+//			return;
+//		}
+//
+//		// Construir el comando para capturar el screenshot
+//		ProcessBuilder pb = new ProcessBuilder(ADB_PATH, "-s", adbIp, "exec-out", "screencap", "-p");
+//		pb.redirectErrorStream(true);
+//
+//		try {
+//			Process process = pb.start();
+//
+//			// Definir el directorio y el nombre del archivo (por ejemplo, "temp/0.png")
+//			Path tempDir = Paths.get("temp"); // Esto crea una ruta relativa llamada "temp"
+//			if (!Files.exists(tempDir)) {
+//				Files.createDirectories(tempDir);
+//			}
+//			Path filePath = tempDir.resolve(emulatorNumber + ".png");
+//
+//			// Leer la salida del comando (imagen en formato PNG) y guardarla en el archivo indicado
+//			try (InputStream is = process.getInputStream()) {
+//				Files.copy(is, filePath, StandardCopyOption.REPLACE_EXISTING);
+//			}
+//
+//			int exitCode = process.waitFor();
+//			if (exitCode == 0) {
+//				System.out.println("Screenshot guardado en " + filePath.toAbsolutePath());
+//			} else {
+//				System.err.println("Error al ejecutar el comando, exit code: " + exitCode);
+//			}
+//		} catch (IOException | InterruptedException e) {
+//			e.printStackTrace();
+//		}
+//	}
+
+	public ByteArrayInputStream captureScreenshotViaADB(String emulatorNumber) {
 		// Obtener la IP del dispositivo usando el método getAdbIp
 		String adbIp = getAdbIp(emulatorNumber);
 		if (adbIp == null) {
 			System.err.println("No se pudo obtener la IP para el emulador: " + emulatorNumber);
-			return;
+			return null;
 		}
 
 		// Construir el comando para capturar el screenshot
@@ -52,32 +116,36 @@ public class EmulatorManager {
 		try {
 			Process process = pb.start();
 
-			// Definir el directorio y el nombre del archivo (por ejemplo, "temp/0.png")
-			Path tempDir = Paths.get("temp"); // Esto crea una ruta relativa llamada "temp"
-			if (!Files.exists(tempDir)) {
-				Files.createDirectories(tempDir);
-			}
-			Path filePath = tempDir.resolve(emulatorNumber + ".png");
-
-			// Leer la salida del comando (imagen en formato PNG) y guardarla en el archivo indicado
+			// Leer la salida del comando (imagen en formato PNG o mensaje de error)
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			try (InputStream is = process.getInputStream()) {
-				Files.copy(is, filePath, StandardCopyOption.REPLACE_EXISTING);
+				byte[] buffer = new byte[8192];
+				int bytesRead;
+				while ((bytesRead = is.read(buffer)) != -1) {
+					baos.write(buffer, 0, bytesRead);
+				}
 			}
 
 			int exitCode = process.waitFor();
 			if (exitCode == 0) {
-				System.out.println("Screenshot guardado en " + filePath.toAbsolutePath());
+				System.out.println("Captura de pantalla obtenida exitosamente.");
+				return new ByteArrayInputStream(baos.toByteArray());
 			} else {
+				// Imprimir la salida que pudo contener mensajes de error
 				System.err.println("Error al ejecutar el comando, exit code: " + exitCode);
+				System.err.println("Salida del comando: " + baos.toString("UTF-8"));
 			}
 		} catch (IOException | InterruptedException e) {
 			e.printStackTrace();
 		}
+
+		return null;
+
 	}
 
 	public DTOImageSearchResult searchTemplate(String emulatorNumber, String templatePath, int x, int y, int width, int height, double threshold) {
-		captureScrenshotViaADB(emulatorNumber);
-		DTOImageSearchResult result = ImageSearchUtil.buscarTemplate("temp/" + emulatorNumber + ".png", templatePath, x, y, width, height, threshold);
+//		captureScreenshotViaADB(emulatorNumber);
+		DTOImageSearchResult result = ImageSearchUtil.buscarTemplate(captureScreenshotViaADB(emulatorNumber), templatePath, x, y, width, height, threshold);
 		return result;
 
 	}
@@ -512,24 +580,34 @@ public class EmulatorManager {
 		return true;
 	}
 
-	public String ocrRegionText(String emulatorNumber, DTOPoint dtoPoint, DTOPoint dtoPoint2) {
-		captureScrenshotViaADB(emulatorNumber);
-		try {
-			Path tempDir = Paths.get("temp"); // Esto crea una ruta relativa llamada "temp"
-			if (!Files.exists(tempDir)) {
-				Files.createDirectories(tempDir);
-			}
-			Path filePath = tempDir.resolve(emulatorNumber + ".png");
-
-			return UtilOCR.ocrFromRegion(filePath.toAbsolutePath().toString(), dtoPoint, dtoPoint2);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (TesseractException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+	public String ocrRegionText(String emulatorNumbrer, DTOPoint p1, DTOPoint p2) throws IOException, TesseractException {
+		// Cargar la imagen desde el InputStream
+		BufferedImage image = ImageIO.read(captureScreenshotViaADB(emulatorNumbrer));
+		if (image == null) {
+			throw new IOException("No se pudo cargar la imagen desde el InputStream.");
 		}
-		return null;
+
+		// Calcular la región a extraer
+		int x = (int) Math.min(p1.getX(), p2.getX());
+		int y = (int) Math.min(p1.getY(), p2.getY());
+		int width = (int) Math.abs(p1.getX() - p2.getX());
+		int height = (int) Math.abs(p1.getY() - p2.getY());
+
+		// Validar que la región no se salga de los límites de la imagen
+		if (x + width > image.getWidth() || y + height > image.getHeight()) {
+			throw new IllegalArgumentException("La región especificada se sale de los límites de la imagen.");
+		}
+
+		// Extraer la subimagen (región de interés)
+		BufferedImage subImage = image.getSubimage(x, y, width, height);
+
+		// Configurar Tesseract
+		Tesseract tesseract = new Tesseract();
+		tesseract.setDatapath("tessdata"); // Ruta a los datos de entrenamiento de Tesseract
+		tesseract.setLanguage("eng"); // Cambia a "spa" si necesitas OCR en español
+
+		// Ejecutar OCR sobre la subimagen y devolver el texto extraído
+		return tesseract.doOCR(subImage);
 	}
 
 }

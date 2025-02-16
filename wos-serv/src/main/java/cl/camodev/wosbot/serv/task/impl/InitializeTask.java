@@ -19,8 +19,6 @@ public class InitializeTask extends DelayedTask {
 
 	private final String EMULATOR_NUMBER;
 
-	private final static String TASK_NAME = "Initialize";
-
 	public InitializeTask(DTOProfiles profile, TpDailyTaskEnum tpTask) {
 		super(tpTask, LocalDateTime.now());
 		this.profile = profile;
@@ -30,32 +28,28 @@ public class InitializeTask extends DelayedTask {
 	@Override
 	protected void execute() {
 		this.setRecurring(false);
-		ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "Checking emulator status");
+		ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Checking emulator status");
 		while (!isStarted) {
 
 			if (EmulatorManager.getInstance().getPlayerState(EMULATOR_NUMBER)) {
 				isStarted = true;
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "emulator found");
+				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "emulator found");
 			} else {
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "emulator not found, trying to start it");
+				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "emulator not found, trying to start it");
 				EmulatorManager.getInstance().launchPlayer(EMULATOR_NUMBER);
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "waiting 15 seconds before checking again");
-				try {
-					Thread.sleep(15000);
-				} catch (Exception e) {
-
-				}
+				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "waiting 15 seconds before checking again");
+				sleepTask(15000);
 			}
 
 		}
 
 		if (!EmulatorManager.getInstance().isWhiteoutSurvivalInstalled(EMULATOR_NUMBER)) {
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "whiteout survival not installed, stopping queue");
+			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "whiteout survival not installed, stopping queue");
 			throw new StopExecutionException("Game not installed");
 		} else {
 
 //			EmulatorManager.getInstance().
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "launching game");
+			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "launching game");
 			EmulatorManager.getInstance().connectADB(profile.getEmulatorNumber().toString());
 			EmulatorManager.getInstance().launchGame(EMULATOR_NUMBER);
 			sleepTask(25000);
@@ -66,17 +60,19 @@ public class InitializeTask extends DelayedTask {
 				DTOImageSearchResult homeResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90);
 				if (homeResult.isFound()) {
 					homeScreen = true;
-					ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "home screen found");
+					ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "home screen found");
 				} else {
-					ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "screen not found, waiting 5 seconds before checking again");
+					ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "screen not found, waiting 5 seconds before checking again");
 					EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
 					sleepTask(3000);
 					attempts++;
 				}
 
 				if (attempts > 5) {
-					ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "screen not found after 5 attempts, restarting emulator");
+					ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "screen not found after 5 attempts, restarting emulator");
 					EmulatorManager.getInstance().closePlayer(EMULATOR_NUMBER);
+					EmulatorManager.getInstance().restartAdbServer();
+					isStarted = false;
 					this.setRecurring(true);
 					break;
 				}

@@ -13,7 +13,6 @@ import cl.camodev.utiles.UtilCV;
 import cl.camodev.wosbot.city.view.CityEventsLayoutController;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.view.ConsoleLogLayoutController;
-import cl.camodev.wosbot.emulator.EmulatorManager;
 import cl.camodev.wosbot.ot.DTOBotState;
 import cl.camodev.wosbot.ot.DTOLogMessage;
 import cl.camodev.wosbot.pets.view.PetsLayoutController;
@@ -153,7 +152,7 @@ public class LauncherLayoutController implements IProfileLoadListener {
 
 	@FXML
 	void handleButtonPhoto(ActionEvent event) {
-		EmulatorManager.getInstance().captureScrenshotViaADB("0");
+//		EmulatorManager.getInstance().captureScrenshotViaADB("0");
 	}
 
 	@FXML

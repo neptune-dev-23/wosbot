@@ -74,7 +74,7 @@ public class DailyTaskRepository implements IDailyTaskRepository {
 	}
 
 	@Override
-	public Map<Long, DTODailyTaskStatus> findDailyTasksStatusByProfile(Long profileId) {
+	public Map<Integer, DTODailyTaskStatus> findDailyTasksStatusByProfile(Long profileId) {
 		String query = """
 				SELECT new cl.camodev.wosbot.ot.DTODailyTaskStatus(
 				d.profile.id, d.task.id, d.lastExecution, d.nextSchedule)

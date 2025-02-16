@@ -82,20 +82,22 @@ public class ServScheduler {
 
 			// @formatter:on
 
-			Map<Long, DTODailyTaskStatus> taksSchedules = iDailyTaskRepository.findDailyTasksStatusByProfile(profile.getId());
+			Map<Integer, DTODailyTaskStatus> taksSchedules = iDailyTaskRepository.findDailyTasksStatusByProfile(profile.getId());
 			taskMappings.forEach((key, taskSupplier) -> {
+				DelayedTask task = taskSupplier.get();
 				if (profile.getConfig(key, Boolean.class)) {
-					ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskSupplier.get().getTaskName(), profile.getName(), "Schediling tasks");
-					if (taksSchedules.containsKey(taskSupplier.get().getTpDailyTaskId())) {
-						LocalDateTime nextSchedule = taksSchedules.get(taskSupplier.get().getTpDailyTaskId()).getNextSchedule();
-						taskSupplier.get().reschedule(nextSchedule);
-						ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskSupplier.get().getTaskName(), profile.getName(), "Task is completed, rescheduling for tomorrow");
+
+					ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Schediling tasks");
+					if (taksSchedules.containsKey(task.getTpDailyTaskId())) {
+						LocalDateTime nextSchedule = taksSchedules.get(task.getTpDailyTaskId()).getNextSchedule();
+						task.reschedule(nextSchedule);
+						ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Task is completed, rescheduling for tomorrow");
 					} else {
-						ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskSupplier.get().getTaskName(), profile.getName(), "Task not completed, scheduling for today");
-						taskSupplier.get().reschedule(LocalDateTime.now());
+						ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Task not completed, scheduling for today");
+						task.reschedule(LocalDateTime.now());
 					}
 
-					queue.addTask(taskSupplier.get());
+					queue.addTask(task);
 				}
 			});
 

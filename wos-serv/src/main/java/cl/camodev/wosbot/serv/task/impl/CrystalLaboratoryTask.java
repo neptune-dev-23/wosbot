@@ -1,5 +1,6 @@
 package cl.camodev.wosbot.serv.task.impl;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -15,6 +16,7 @@ import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.serv.impl.ServLogs;
 import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.task.DelayedTask;
+import net.sourceforge.tess4j.TesseractException;
 
 public class CrystalLaboratoryTask extends DelayedTask {
 
@@ -44,7 +46,16 @@ public class CrystalLaboratoryTask extends DelayedTask {
 			EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(530, 860), new DTOPoint(600, 1000));
 			sleepTask(3000);
 
-			String rem = EmulatorManager.getInstance().ocrRegionText(EMULATOR_NUMBER, new DTOPoint(210, 1070), new DTOPoint(450, 1113));
+			String rem = null;
+			try {
+				rem = EmulatorManager.getInstance().ocrRegionText(EMULATOR_NUMBER, new DTOPoint(210, 1070), new DTOPoint(450, 1113));
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (TesseractException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), rem);
 			int total = parseRemainingToday(rem);
 			if (total > 0) {

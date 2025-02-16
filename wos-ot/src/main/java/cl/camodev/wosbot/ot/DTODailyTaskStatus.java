@@ -5,14 +5,14 @@ import java.time.LocalDateTime;
 public class DTODailyTaskStatus {
 
 	private Long idProfile;
-	private Long idTpDailyTask;
+	private Integer idTpDailyTask;
 	private LocalDateTime lastExecution;
 	private LocalDateTime nextSchedule;
 
 	public DTODailyTaskStatus() {
 	}
 
-	public DTODailyTaskStatus(Long idProfile, Long idTpDailyTask, LocalDateTime lastExecution, LocalDateTime nextSchedule) {
+	public DTODailyTaskStatus(Long idProfile, Integer idTpDailyTask, LocalDateTime lastExecution, LocalDateTime nextSchedule) {
 		this.lastExecution = lastExecution;
 		this.nextSchedule = nextSchedule;
 		this.idProfile = idProfile;
@@ -27,11 +27,11 @@ public class DTODailyTaskStatus {
 		this.idProfile = idProfile;
 	}
 
-	public Long getIdTpDailyTask() {
+	public Integer getIdTpDailyTask() {
 		return idTpDailyTask;
 	}
 
-	public void setIdTpDailyTask(Long idTpDailyTask) {
+	public void setIdTpDailyTask(Integer idTpDailyTask) {
 		this.idTpDailyTask = idTpDailyTask;
 	}
 

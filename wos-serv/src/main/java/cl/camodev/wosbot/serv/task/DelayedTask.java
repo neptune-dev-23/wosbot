@@ -12,12 +12,12 @@ public abstract class DelayedTask implements Runnable {
 	private volatile boolean recurring = true;
 	protected LocalDateTime scheduledTime;
 	protected final String taskName;
-	protected final Long idTpDailyTask;
+	protected final Integer idTpDailyTask;
 
 	public DelayedTask(TpDailyTaskEnum tpTask, LocalDateTime scheduledTime) {
 		this.scheduledTime = scheduledTime;
 		this.taskName = tpTask.getName();
-		this.idTpDailyTask = (long) tpTask.getId();
+		this.idTpDailyTask = tpTask.getId();
 	}
 
 	@Override
@@ -31,7 +31,7 @@ public abstract class DelayedTask implements Runnable {
 		return recurring;
 	}
 
-	public Long getTpDailyTaskId() {
+	public Integer getTpDailyTaskId() {
 		return idTpDailyTask;
 	}
 

@@ -22,7 +22,7 @@ public interface IDailyTaskRepository {
 
 	DailyTask findByProfileIdAndTaskName(Long profileId, TpDailyTaskEnum taskName);
 
-	Map<Long, DTODailyTaskStatus> findDailyTasksStatusByProfile(Long profileId);
+	Map<Integer, DTODailyTaskStatus> findDailyTasksStatusByProfile(Long profileId);
 
 	TpDailyTask findTpDailyTaskById(Integer id);
 }

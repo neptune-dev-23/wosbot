@@ -1,5 +1,6 @@
 package cl.camodev.wosbot.serv.task.impl;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -15,6 +16,7 @@ import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.serv.impl.ServLogs;
 import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.task.DelayedTask;
+import net.sourceforge.tess4j.TesseractException;
 
 public class WarAcademyTask extends DelayedTask {
 	private final DTOProfiles profile;
@@ -70,7 +72,13 @@ public class WarAcademyTask extends DelayedTask {
 	}
 
 	private int checkRemainingShards() {
-		String remainingText = EmulatorManager.getInstance().ocrRegionText(emulatorNumber, new DTOPoint(463, 452), new DTOPoint(624, 483));
+		String remainingText = "";
+		try {
+			remainingText = EmulatorManager.getInstance().ocrRegionText(emulatorNumber, new DTOPoint(463, 452), new DTOPoint(624, 483));
+		} catch (IOException | TesseractException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), remainingText);
 		return parseRemaining(remainingText);
 	}
