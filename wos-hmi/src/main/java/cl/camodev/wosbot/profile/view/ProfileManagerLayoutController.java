@@ -1,13 +1,12 @@
 package cl.camodev.wosbot.profile.view;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
-import cl.camodev.wosbot.launcher.view.ILauncherConstants;
 import cl.camodev.wosbot.ot.DTOProfileStatus;
+import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.profile.controller.ProfileManagerActionController;
 import cl.camodev.wosbot.profile.model.ConfigAux;
 import cl.camodev.wosbot.profile.model.IProfileChangeObserver;
@@ -20,10 +19,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableCell;
@@ -37,8 +33,6 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
 import javafx.util.Callback;
 import javafx.util.Duration;
 
@@ -130,19 +124,20 @@ public class ProfileManagerLayoutController implements IProfileChangeObserver {
 							ProfileAux currentProfile = getTableView().getItems().get(getIndex());
 							System.out.println("Eliminando perfil con ID: " + currentProfile.getId());
 
-							boolean deletionResult = profileManagerActionController.deleteProfile(currentProfile.getId());
+							boolean deletionResult = profileManagerActionController.deleteProfile(new DTOProfiles(currentProfile.getId(), null, null, null));
 
 							Alert alert;
 							if (deletionResult) {
 								alert = new Alert(Alert.AlertType.INFORMATION);
-								alert.setTitle("Eliminación exitosa");
+								alert.setTitle("SUCCESS DELETE");
 								alert.setHeaderText(null);
-								alert.setContentText("El perfil se ha eliminado correctamente.");
+								alert.setContentText("Profile deleted successfully.");
+								loadProfiles();
 							} else {
 								alert = new Alert(Alert.AlertType.ERROR);
-								alert.setTitle("Error en eliminación");
+								alert.setTitle("ERROR DELETE");
 								alert.setHeaderText(null);
-								alert.setContentText("Hubo un error al eliminar el perfil.");
+								alert.setContentText("Error deleting profile.");
 							}
 							alert.showAndWait();
 						});
@@ -226,7 +221,7 @@ public class ProfileManagerLayoutController implements IProfileChangeObserver {
 					boolean newValue = toggleButton.isSelected();
 					currentProfile.setEnabled(newValue);
 					animateSwitch(newValue);
-//					profileManagerActionController.saveProfile(currentProfile.getId(), newValue);
+
 				});
 			}
 
@@ -239,6 +234,7 @@ public class ProfileManagerLayoutController implements IProfileChangeObserver {
 				ProfileAux currentProfile = getTableView().getItems().get(getIndex());
 				if (currentProfile != null) {
 					currentProfile.setEnabled(newValue);
+					profileManagerActionController.saveProfile(currentProfile);
 				}
 			}
 
@@ -272,34 +268,10 @@ public class ProfileManagerLayoutController implements IProfileChangeObserver {
 
 	@FXML
 	void handleButtonAddProfile(ActionEvent event) {
-		try {
-
-			FXMLLoader loader = new FXMLLoader(getClass().getResource("NewProfileLayout.fxml"));
-			// Asignar una nueva instancia del controlador
-			NewProfileLayoutController controller = new NewProfileLayoutController(profileManagerActionController);
-			loader.setController(controller);
-
-			// Cargar la vista FXML
-			Parent root = loader.load();
-
-			// Crear una nueva escena
-			Scene scene = new Scene(root);
-			scene.getStylesheets().add(ILauncherConstants.getCssPath());
-			// Configurar el escenario (ventana)
-			Stage stage = new Stage();
-			stage.setTitle("New Profile");
-			stage.setScene(scene);
-			stage.initModality(Modality.APPLICATION_MODAL);
-			stage.setResizable(false);
-			stage.showAndWait();
-		} catch (IOException e) {
-			e.printStackTrace();
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, "Profile Manager", "-", "Error loading FXML " + e.getMessage());
-
-		}
+		profileManagerActionController.showNewProfileDialog();
 	}
 
-	private void loadProfiles() {
+	public void loadProfiles() {
 		profileManagerActionController.loadProfiles(dtoProfiles -> {
 			Platform.runLater(() -> {
 				profiles.clear();

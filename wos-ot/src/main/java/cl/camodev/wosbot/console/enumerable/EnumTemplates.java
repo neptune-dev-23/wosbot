@@ -5,6 +5,7 @@ public enum EnumTemplates {
 	// @formatter:off
 	GAME_HOME_FURNACE("/templates/city.png"),
 	GAME_HOME_WORLD("/templates/world.png"),
+	LIFE_ESSENCE_MENU("/templates/essence/threeMenu.png"),
 	NOMADIC_MERCHANT_COAL("/templates/nomadicmerchant/coal.png"), 
 	NOMADIC_MERCHANT_WOOD("/templates/nomadicmerchant/wood.png"), 
 	NOMADIC_MERCHANT_MEAT("/templates/nomadicmerchant/meat.png"), 

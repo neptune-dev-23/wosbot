@@ -11,6 +11,7 @@ public enum TpDailyTaskEnum {
 	PET_ADVENTURE(6, "Pet Adventure"),
 	EXPLORATION_CHEST(7, "Exploration Chest"),
 	ALLIANCE_TECH(8, "Alliance Tech"),
+	LIFE_ESSENCE(9, "Life Essence"),
 	
 	INITIALIZE(100, "Initialize");
 	//@formatter:on

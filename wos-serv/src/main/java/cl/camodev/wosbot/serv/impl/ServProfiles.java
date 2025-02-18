@@ -110,8 +110,28 @@ public class ServProfiles implements IServProfile {
 
 	@Override
 	public boolean deleteProfile(DTOProfiles profile) {
-		// TODO Auto-generated method stub
-		return false;
+		try {
+			if (profile == null || profile.getId() == null) {
+				return false;
+			}
+
+			Profile existingProfile = iProfileRepository.getProfileById(profile.getId());
+
+			if (existingProfile == null) {
+				return false;
+			}
+
+			List<Config> existingConfigs = iConfigRepository.getProfileConfigs(existingProfile.getId());
+			for (Config config : existingConfigs) {
+				iConfigRepository.deleteConfig(config);
+			}
+
+			return iProfileRepository.deleteProfile(existingProfile);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 
 	public void notifyProfileStatusChange(DTOProfileStatus statusDto) {

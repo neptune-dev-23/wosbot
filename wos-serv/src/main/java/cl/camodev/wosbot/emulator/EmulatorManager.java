@@ -7,10 +7,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -62,44 +58,6 @@ public class EmulatorManager {
 			e.printStackTrace();
 		}
 	}
-
-//	public void captureScrenshotViaADB(String emulatorNumber) {
-//		// Obtener la IP del dispositivo usando el método getAdbIp
-//		String adbIp = getAdbIp(emulatorNumber);
-//		if (adbIp == null) {
-//			System.err.println("No se pudo obtener la IP para el emulador: " + emulatorNumber);
-//			return;
-//		}
-//
-//		// Construir el comando para capturar el screenshot
-//		ProcessBuilder pb = new ProcessBuilder(ADB_PATH, "-s", adbIp, "exec-out", "screencap", "-p");
-//		pb.redirectErrorStream(true);
-//
-//		try {
-//			Process process = pb.start();
-//
-//			// Definir el directorio y el nombre del archivo (por ejemplo, "temp/0.png")
-//			Path tempDir = Paths.get("temp"); // Esto crea una ruta relativa llamada "temp"
-//			if (!Files.exists(tempDir)) {
-//				Files.createDirectories(tempDir);
-//			}
-//			Path filePath = tempDir.resolve(emulatorNumber + ".png");
-//
-//			// Leer la salida del comando (imagen en formato PNG) y guardarla en el archivo indicado
-//			try (InputStream is = process.getInputStream()) {
-//				Files.copy(is, filePath, StandardCopyOption.REPLACE_EXISTING);
-//			}
-//
-//			int exitCode = process.waitFor();
-//			if (exitCode == 0) {
-//				System.out.println("Screenshot guardado en " + filePath.toAbsolutePath());
-//			} else {
-//				System.err.println("Error al ejecutar el comando, exit code: " + exitCode);
-//			}
-//		} catch (IOException | InterruptedException e) {
-//			e.printStackTrace();
-//		}
-//	}
 
 	public ByteArrayInputStream captureScreenshotViaADB(String emulatorNumber) {
 		// Obtener la IP del dispositivo usando el método getAdbIp
@@ -165,21 +123,9 @@ public class EmulatorManager {
 		try {
 			Process process = pb.start();
 
-			// Definir el directorio y el nombre del archivo (por ejemplo, "temp/0.png")
-			Path tempDir = Paths.get("temp"); // Esto crea una ruta relativa llamada "temp"
-			if (!Files.exists(tempDir)) {
-				Files.createDirectories(tempDir);
-			}
-			Path filePath = tempDir.resolve(emulatorNumber + ".png");
-
-			// Leer la salida del comando (imagen en formato PNG) y guardarla en el archivo indicado
-			try (InputStream is = process.getInputStream()) {
-				Files.copy(is, filePath, StandardCopyOption.REPLACE_EXISTING);
-			}
-
 			int exitCode = process.waitFor();
 			if (exitCode == 0) {
-				System.out.println("Screenshot guardado en " + filePath.toAbsolutePath());
+				System.out.println("Botón de retroceso presionado.");
 			} else {
 				System.err.println("Error al ejecutar el comando, exit code: " + exitCode);
 			}
@@ -608,6 +554,82 @@ public class EmulatorManager {
 
 		// Ejecutar OCR sobre la subimagen y devolver el texto extraído
 		return tesseract.doOCR(subImage);
+	}
+
+	public void ejecutarZoom(String emulatorNumber) {
+		// Obtener la IP del dispositivo usando el método getAdbIp
+		String adbIp = getAdbIp(emulatorNumber);
+		if (adbIp == null) {
+			System.err.println("No se pudo obtener la IP para el emulador: " + emulatorNumber);
+			return;
+		}
+
+		String devicePrefix = "-s " + adbIp + " ";
+
+		// @formatter:off
+        String[] commands = {
+                "shell sendevent /dev/input/event4 1 29 1",
+                "shell sendevent /dev/input/event4 0 0 4294967295",
+                "shell sendevent /dev/input/event4 1 330 1",
+                "shell sendevent /dev/input/event4 3 47 10",
+                "shell sendevent /dev/input/event4 3 57 10",
+                "shell sendevent /dev/input/event4 3 53 367",
+                "shell sendevent /dev/input/event4 3 54 450",
+                "shell sendevent /dev/input/event4 3 47 11",
+                "shell sendevent /dev/input/event4 3 57 11",
+                "shell sendevent /dev/input/event4 3 53 367",
+                "shell sendevent /dev/input/event4 3 54 899",
+                "shell sendevent /dev/input/event4 0 0 4294967295",
+                "shell sendevent /dev/input/event4 1 330 1",
+                "shell sendevent /dev/input/event4 3 47 10",
+                "shell sendevent /dev/input/event4 3 54 458",
+                "shell sendevent /dev/input/event4 3 47 11",
+                "shell sendevent /dev/input/event4 3 54 891",
+                "shell sendevent /dev/input/event4 0 0 4294967295",
+                "shell sendevent /dev/input/event4 1 330 1",
+                "shell sendevent /dev/input/event4 3 47 10",
+                "shell sendevent /dev/input/event4 3 54 466",
+                "shell sendevent /dev/input/event4 3 47 11",
+                "shell sendevent /dev/input/event4 3 54 883",
+                "shell sendevent /dev/input/event4 0 0 4294967295",
+                "shell sendevent /dev/input/event4 1 330 1",
+                "shell sendevent /dev/input/event4 3 47 10",
+                "shell sendevent /dev/input/event4 3 54 474",
+                "shell sendevent /dev/input/event4 3 47 11",
+                "shell sendevent /dev/input/event4 3 54 875",
+                "shell sendevent /dev/input/event4 0 0 4294967295",
+                "shell sendevent /dev/input/event4 1 330 0",
+                "shell sendevent /dev/input/event4 3 47 10",
+                "shell sendevent /dev/input/event4 3 57 50000",
+                "shell sendevent /dev/input/event4 3 47 11",
+                "shell sendevent /dev/input/event4 3 57 50000",
+                "shell sendevent /dev/input/event4 0 0 4294967295",
+                "shell sendevent /dev/input/event4 1 29 0",
+                "shell sendevent /dev/input/event4 0 0 4294967295"
+            };
+        // @formatter:on
+
+		for (int i = 0; i < 5; i++) {
+			for (String command : commands) {
+				executeCommand(ADB_PATH + " " + devicePrefix + command);
+			}
+		}
+	}
+
+	public void executeSwipe(String emulatorNumber, DTOPoint startPoint, DTOPoint endPoint) {
+		// Obtener la IP del dispositivo usando el método getAdbIp
+		String adbIp = getAdbIp(emulatorNumber);
+		if (adbIp == null) {
+			System.err.println("No se pudo obtener la IP para el emulador: " + emulatorNumber);
+			return;
+		}
+
+		String devicePrefix = "-s " + adbIp + " ";
+
+		// Simula un gesto de swipe desde el punto de inicio al punto de fin
+		executeCommand(ADB_PATH + " " + devicePrefix + "shell input swipe " + startPoint.getX() + " " + startPoint.getY() + " " + endPoint.getX() + " " + endPoint.getY());
+
+		System.out.println("Swipe ejecutado correctamente en el dispositivo: " + adbIp);
 	}
 
 }

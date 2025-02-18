@@ -13,6 +13,8 @@ public interface IProfileModel {
 
 	public boolean saveProfile(DTOProfiles profile);
 
+	public boolean deleteProfile(DTOProfiles profile);
+
 	public void addProfileStatusChangeListerner(IProfileStatusChangeListener listener);
 
 }

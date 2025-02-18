@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import cl.camodev.utiles.UtilTime;
 import cl.camodev.wosbot.almac.entity.DailyTask;
 import cl.camodev.wosbot.almac.entity.Profile;
 import cl.camodev.wosbot.almac.entity.TpDailyTask;
@@ -62,15 +63,20 @@ public class ServScheduler {
 			return;
 		}
 
-		profiles.stream().filter(DTOProfiles::getEnabled).forEach(profile -> {
-			String queueName = profile.getName();
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.DEBUG, "ServScheduler", "-", "starting queue ");
-			queueManager.createQueue(profile);
-			TaskQueue queue = queueManager.getQueue(queueName);
-			queue.addTask(new InitializeTask(profile, TpDailyTaskEnum.INITIALIZE));
+		if (profiles.stream().filter(DTOProfiles::getEnabled).findAny().isEmpty()) {
+			ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, "ServScheduler", "-", "No Enabled profiles");
+			return;
+		} else {
 
-			//@formatter:off
-			Map<EnumConfigurationKey, Supplier<DelayedTask>> taskMappings = Map.of(
+			profiles.stream().filter(DTOProfiles::getEnabled).forEach(profile -> {
+				String queueName = profile.getName();
+				ServLogs.getServices().appendLog(EnumTpMessageSeverity.DEBUG, "ServScheduler", "-", "starting queue ");
+				queueManager.createQueue(profile);
+				TaskQueue queue = queueManager.getQueue(queueName);
+				queue.addTask(new InitializeTask(profile, TpDailyTaskEnum.INITIALIZE));
+
+				//@formatter:off
+				Map<EnumConfigurationKey, Supplier<DelayedTask>> taskMappings = Map.of(
 					EnumConfigurationKey.BOOL_EXPLORATION_CHEST, 	() -> new ExplorationTask(profile	       ,TpDailyTaskEnum.EXPLORATION_CHEST), 
 					EnumConfigurationKey.BOOL_HERO_RECRUITMENT, 	() -> new HeroRecruitmentTask(profile      ,TpDailyTaskEnum.HERO_RECRUITMENT),
 					EnumConfigurationKey.BOOL_WAR_ACADEMY_SHARDS, 	() -> new WarAcademyTask(profile           ,TpDailyTaskEnum.WAR_ACADEMY_SHARDS), 
@@ -78,37 +84,43 @@ public class ServScheduler {
 					EnumConfigurationKey.BOOL_NOMADIC_MERCHANT,		() -> new NomadicMerchantTask(profile      ,TpDailyTaskEnum.NOMADIC_MERCHANT),
 					EnumConfigurationKey.BOOL_VIP_POINTS, 			() -> new VipTask(profile                  ,TpDailyTaskEnum.VIP_POINTS),
 					EnumConfigurationKey.BOOL_ALLIANCE_TECH, 		() -> new AllianceTechTask(profile         ,TpDailyTaskEnum.ALLIANCE_TECH)
-                    );
+		                    );
 
-			// @formatter:on
+					// @formatter:on
 
-			Map<Integer, DTODailyTaskStatus> taksSchedules = iDailyTaskRepository.findDailyTasksStatusByProfile(profile.getId());
-			taskMappings.forEach((key, taskSupplier) -> {
-				DelayedTask task = taskSupplier.get();
-				if (profile.getConfig(key, Boolean.class)) {
+				Map<Integer, DTODailyTaskStatus> taksSchedules = iDailyTaskRepository.findDailyTasksStatusByProfile(profile.getId());
+				LocalDateTime reset = UtilTime.getGameReset();
+				taskMappings.forEach((key, taskSupplier) -> {
+					DelayedTask task = taskSupplier.get();
+					if (profile.getConfig(key, Boolean.class)) {
 
-					ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Schediling tasks");
-					if (taksSchedules.containsKey(task.getTpDailyTaskId())) {
-						LocalDateTime nextSchedule = taksSchedules.get(task.getTpDailyTaskId()).getNextSchedule();
-						task.reschedule(nextSchedule);
-						ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Task is completed, rescheduling for tomorrow");
-					} else {
-						ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Task not completed, scheduling for today");
-						task.reschedule(LocalDateTime.now());
+						ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Schediling tasks");
+						if (taksSchedules.containsKey(task.getTpDailyTaskId())) {
+							LocalDateTime nextSchedule = taksSchedules.get(task.getTpDailyTaskId()).getNextSchedule();
+							task.reschedule(nextSchedule);
+							ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Task is completed, rescheduling for tomorrow");
+						} else {
+							ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Task not completed, scheduling for today");
+							task.reschedule(LocalDateTime.now());
+						}
+
+						queue.addTask(task);
 					}
 
-					queue.addTask(task);
-				}
+				});
+//					queue.addTask(new LifeEssenceTask(profile, TpDailyTaskEnum.LIFE_ESSENCE));
+				queueManager.startQueue(queueName);
 			});
 
-			queueManager.startQueue(queueName);
-		});
-		listeners.forEach(e -> {
-			DTOBotState state = new DTOBotState();
-			state.setRunning(true);
-			state.setActionTime(LocalDateTime.now());
-			e.onBotStateChange(state);
-		});
+			listeners.forEach(e -> {
+				DTOBotState state = new DTOBotState();
+				state.setRunning(true);
+				state.setActionTime(LocalDateTime.now());
+				e.onBotStateChange(state);
+			});
+
+		}
+
 	}
 
 	public void registryBotStateListener(IBotStateListener listener) {
@@ -158,6 +170,7 @@ public class ServScheduler {
 		}
 
 		dailyTask.setLastExecution(LocalDateTime.now());
+		dailyTask.setNextSchedule(nextSchedule);
 
 		// Guardar la entidad (ya sea nueva o existente)
 		iDailyTaskRepository.saveDailyTask(dailyTask);

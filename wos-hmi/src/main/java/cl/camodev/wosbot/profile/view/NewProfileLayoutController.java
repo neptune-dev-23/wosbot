@@ -58,6 +58,7 @@ public class NewProfileLayoutController {
 	@FXML
 	private void handleSaveProfileButton(ActionEvent event) {
 		profileManagerActionController.addProfile(new DTOProfiles(-1L, textfieldProfileName.getText(), textfieldEmulatorNumber.getText(), true));
+		profileManagerActionController.closeNewProfileDialog();
 	}
 
 	private boolean validateFields() {

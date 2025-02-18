@@ -36,4 +36,9 @@ public class ProfileModel implements IProfileModel {
 		servProfile.addProfileStatusChangeListerner(listener);
 	}
 
+	@Override
+	public boolean deleteProfile(DTOProfiles profile) {
+		return servProfile.deleteProfile(profile);
+	}
+
 }

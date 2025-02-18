@@ -15,7 +15,6 @@ import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.view.ConsoleLogLayoutController;
 import cl.camodev.wosbot.ot.DTOBotState;
 import cl.camodev.wosbot.ot.DTOLogMessage;
-import cl.camodev.wosbot.pets.view.PetsLayoutController;
 import cl.camodev.wosbot.profile.model.IProfileChangeObserver;
 import cl.camodev.wosbot.profile.model.IProfileLoadListener;
 import cl.camodev.wosbot.profile.model.IProfileObserverInjectable;
@@ -109,8 +108,9 @@ public class LauncherLayoutController implements IProfileLoadListener {
 		//@formatter:off
 		List<ModuleDefinition> modules = Arrays.asList(				
 				new ModuleDefinition("CityEventsLayout", "City Events", CityEventsLayoutController::new),
-				new ModuleDefinition("AllianceLayout", "Alliance", AllianceLayoutController::new),
-				new ModuleDefinition("PetsLayout", "Pets", PetsLayoutController::new));
+				new ModuleDefinition("AllianceLayout", "Alliance", AllianceLayoutController::new)
+//				new ModuleDefinition("PetsLayout", "Pets", PetsLayoutController::new)
+				);
 		//@formatter:on
 
 		for (ModuleDefinition module : modules) {

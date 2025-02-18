@@ -87,7 +87,7 @@ public class TaskQueue {
 				// Verificar condiciones según el delay mínimo de la cola de tareas
 				if (minDelay != Long.MAX_VALUE) { // Asegurar que hay tareas en la cola
 					// Si la demora mínima es mayor a 30 minutos y la condición no se ha cumplido aún
-					if (!moreThan30Minutes && minDelay > TimeUnit.MINUTES.toSeconds(5)) {
+					if (!moreThan30Minutes && minDelay > TimeUnit.MINUTES.toSeconds(15)) {
 						moreThan30Minutes = true;
 						ejecutarFragmentoEspecifico(minDelay);
 					}
