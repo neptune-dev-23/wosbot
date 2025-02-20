@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import cl.camodev.utiles.UtilTime;
 import cl.camodev.wosbot.almac.entity.DailyTask;
 import cl.camodev.wosbot.almac.entity.Profile;
 import cl.camodev.wosbot.almac.entity.TpDailyTask;
@@ -25,12 +24,15 @@ import cl.camodev.wosbot.serv.IBotStateListener;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 import cl.camodev.wosbot.serv.task.TaskQueue;
 import cl.camodev.wosbot.serv.task.TaskQueueManager;
+import cl.camodev.wosbot.serv.task.impl.AllianceChestTask;
 import cl.camodev.wosbot.serv.task.impl.AllianceTechTask;
 import cl.camodev.wosbot.serv.task.impl.CrystalLaboratoryTask;
 import cl.camodev.wosbot.serv.task.impl.ExplorationTask;
 import cl.camodev.wosbot.serv.task.impl.HeroRecruitmentTask;
 import cl.camodev.wosbot.serv.task.impl.InitializeTask;
 import cl.camodev.wosbot.serv.task.impl.NomadicMerchantTask;
+import cl.camodev.wosbot.serv.task.impl.PetAllianceTreasuresTask;
+import cl.camodev.wosbot.serv.task.impl.TrainingTroopsTask;
 import cl.camodev.wosbot.serv.task.impl.VipTask;
 import cl.camodev.wosbot.serv.task.impl.WarAcademyTask;
 
@@ -83,13 +85,13 @@ public class ServScheduler {
 					EnumConfigurationKey.BOOL_CRYSTAL_LAB_FC, 		() -> new CrystalLaboratoryTask(profile    ,TpDailyTaskEnum.CRYSTAL_LABORATORY), 
 					EnumConfigurationKey.BOOL_NOMADIC_MERCHANT,		() -> new NomadicMerchantTask(profile      ,TpDailyTaskEnum.NOMADIC_MERCHANT),
 					EnumConfigurationKey.BOOL_VIP_POINTS, 			() -> new VipTask(profile                  ,TpDailyTaskEnum.VIP_POINTS),
-					EnumConfigurationKey.BOOL_ALLIANCE_TECH, 		() -> new AllianceTechTask(profile         ,TpDailyTaskEnum.ALLIANCE_TECH)
+					EnumConfigurationKey.BOOL_ALLIANCE_TECH, 		() -> new AllianceTechTask(profile         ,TpDailyTaskEnum.ALLIANCE_TECH),
+					EnumConfigurationKey.BOOL_ALLIANCE_CHESTS, 		() -> new AllianceChestTask(profile		   ,TpDailyTaskEnum.ALLIANCE_CHESTS)
 		                    );
 
 					// @formatter:on
 
 				Map<Integer, DTODailyTaskStatus> taksSchedules = iDailyTaskRepository.findDailyTasksStatusByProfile(profile.getId());
-				LocalDateTime reset = UtilTime.getGameReset();
 				taskMappings.forEach((key, taskSupplier) -> {
 					DelayedTask task = taskSupplier.get();
 					if (profile.getConfig(key, Boolean.class)) {
@@ -108,7 +110,8 @@ public class ServScheduler {
 					}
 
 				});
-//					queue.addTask(new LifeEssenceTask(profile, TpDailyTaskEnum.LIFE_ESSENCE));
+				queue.addTask(new PetAllianceTreasuresTask(profile, TpDailyTaskEnum.ALLIANCE_PET_TREASURE));
+				queue.addTask(new TrainingTroopsTask(profile, TpDailyTaskEnum.TRAINING_TROOPS));
 				queueManager.startQueue(queueName);
 			});
 

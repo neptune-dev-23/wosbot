@@ -106,11 +106,13 @@ public class WarAcademyTask extends DelayedTask {
 	 * @throws IllegalArgumentException si el formato del texto no es válido.
 	 */
 	public static int parseRemaining(String input) {
-		Pattern pattern = Pattern.compile("^\\s*remaining\\s*:\\s*(\\d+)\\s*$", Pattern.CASE_INSENSITIVE);
+		Pattern pattern = Pattern.compile("^\\s*remaining\\s*:\\s*(\\d+|O)\\s*$", Pattern.CASE_INSENSITIVE);
 		Matcher matcher = pattern.matcher(input);
 
 		if (matcher.matches()) {
-			return Integer.parseInt(matcher.group(1));
+			String value = matcher.group(1);
+			// Si es "O", lo interpretamos como 0
+			return value.equalsIgnoreCase("O") ? 0 : Integer.parseInt(value);
 		} else {
 			throw new IllegalArgumentException("El formato del texto no es válido: " + input);
 		}

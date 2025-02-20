@@ -92,6 +92,8 @@ public class EmulatorManager {
 				// Imprimir la salida que pudo contener mensajes de error
 				System.err.println("Error al ejecutar el comando, exit code: " + exitCode);
 				System.err.println("Salida del comando: " + baos.toString("UTF-8"));
+				restartAdbServer();
+				connectADB(emulatorNumber);
 			}
 		} catch (IOException | InterruptedException e) {
 			e.printStackTrace();

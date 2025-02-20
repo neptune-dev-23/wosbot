@@ -37,9 +37,7 @@ public class AllianceLayoutController implements IProfileLoadListener, IProfileO
 	private void initialize() {
 		initializeChangeEvents();
 		checkBoxAutojoin.setDisable(true);
-		checkBoxChests.setDisable(true);
 		textfieldAutojoinQueues.setDisable(true);
-		textfieldChestOffset.setDisable(true);
 
 	}
 

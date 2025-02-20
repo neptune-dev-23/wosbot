@@ -47,7 +47,7 @@ public class AllianceTechTask extends DelayedTask {
 			EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(330, 1000), new DTOPoint(390, 1070));
 			sleepTask(2000);
 
-			EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(400, 1000), new DTOPoint(618, 1056), 15, 300);
+			EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(400, 1000), new DTOPoint(618, 1056), 20, 300);
 
 			EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
 			sleepTask(200);
@@ -64,7 +64,6 @@ public class AllianceTechTask extends DelayedTask {
 			EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
 
 		}
-		sleepTask(3000);
 
 	}
 
