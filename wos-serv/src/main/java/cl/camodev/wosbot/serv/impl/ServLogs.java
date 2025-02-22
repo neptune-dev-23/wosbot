@@ -28,6 +28,7 @@ public class ServLogs {
 	public void appendLog(EnumTpMessageSeverity severity, String task, String profile, String message) {
 
 		DTOLogMessage logMessage = new DTOLogMessage(severity, message, task, profile);
+//		ServDiscord.getServices().enviarLog(logMessage);
 
 		if (iLogListener != null) {
 			iLogListener.onLogReceived(logMessage);

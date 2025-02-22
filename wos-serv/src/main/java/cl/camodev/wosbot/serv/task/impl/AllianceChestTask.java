@@ -11,6 +11,7 @@ import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.serv.impl.ServLogs;
+import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 
 public class AllianceChestTask extends DelayedTask {
@@ -27,54 +28,64 @@ public class AllianceChestTask extends DelayedTask {
 
 	@Override
 	protected void execute() {
+		EmulatorManager emulator = EmulatorManager.getInstance();
+		ServLogs logs = ServLogs.getServices();
 
-		DTOImageSearchResult homeResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90);
-		DTOImageSearchResult worldResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 0, 0, 720, 1280, 90);
-		if (homeResult.isFound() || worldResult.isFound()) {
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "going alliance chest");
-			EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(493, 1187), new DTOPoint(561, 1240));
-			sleepTask(3000);
+		// Verificar si estamos en HOME o en WORLD
+		boolean isHomeOrWorld = emulator.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90).isFound() || emulator.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 0, 0, 720, 1280, 90).isFound();
 
-			DTOImageSearchResult allianceChestResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.ALLIANCE_CHEST_BUTTON.getTemplate(), 0, 0, 720, 1280, 90);
-			if (allianceChestResult.isFound()) {
-				EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, allianceChestResult.getPoint(), allianceChestResult.getPoint());
-
-				sleepTask(4000);
-
-				EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(56, 375), new DTOPoint(320, 420));
-
-				sleepTask(2000);
-
-				DTOImageSearchResult claimButton = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.ALLIANCE_CHEST_LOOT_CLAIM_BUTTON.getTemplate(), 0, 0, 720, 1280, 90);
-
-				if (claimButton.isFound()) {
-					EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, claimButton.getPoint(), claimButton.getPoint(), 10, 300);
-				}
-
-				sleepTask(1000);
-
-				EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(410, 375), new DTOPoint(626, 420));
-
-				sleepTask(2000);
-
-				EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(578, 1180), new DTOPoint(641, 1200), 10, 300);
-
-				Integer offset = profile.getConfig(EnumConfigurationKey.INT_ALLIANCE_CHESTS_OFFSET, Integer.class);
-				this.reschedule(LocalDateTime.now().plusHours(offset));
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "rescheduled for " + offset + " hours");
-
-			} else {
-				Integer offset = profile.getConfig(EnumConfigurationKey.INT_ALLIANCE_CHESTS_OFFSET, Integer.class);
-				this.reschedule(LocalDateTime.now().plusHours(offset));
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "rescheduled for " + offset + " hours");
-
-			}
-
-		} else {
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, taskName, profile.getName(), "Home not found");
-			EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
-
+		if (!isHomeOrWorld) {
+			logs.appendLog(EnumTpMessageSeverity.WARNING, taskName, profile.getName(), "Home not found");
+			emulator.tapBackButton(EMULATOR_NUMBER);
+			return;
 		}
+
+		logs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Going to alliance chest");
+
+		// Ir a la sección de cofres de alianza
+		emulator.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(493, 1187), new DTOPoint(561, 1240));
+		sleepTask(3000);
+
+		DTOImageSearchResult allianceChestResult = emulator.searchTemplate(EMULATOR_NUMBER, EnumTemplates.ALLIANCE_CHEST_BUTTON.getTemplate(), 0, 0, 720, 1280, 90);
+		if (!allianceChestResult.isFound()) {
+			rescheduleTask();
+			return;
+		}
+
+		emulator.tapAtRandomPoint(EMULATOR_NUMBER, allianceChestResult.getPoint(), allianceChestResult.getPoint());
+		sleepTask(4000);
+
+		// Abrir el cofre
+		emulator.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(56, 375), new DTOPoint(320, 420));
+		sleepTask(2000);
+
+		// Buscar el botón de reclamar recompensas
+		DTOImageSearchResult claimButton = emulator.searchTemplate(EMULATOR_NUMBER, EnumTemplates.ALLIANCE_CHEST_LOOT_CLAIM_BUTTON.getTemplate(), 0, 0, 720, 1280, 90);
+		if (claimButton.isFound()) {
+			emulator.tapAtRandomPoint(EMULATOR_NUMBER, claimButton.getPoint(), claimButton.getPoint(), 10, 300);
+			sleepTask(1000);
+		}
+
+		// Confirmar la acción
+		emulator.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(410, 375), new DTOPoint(626, 420));
+		sleepTask(2000);
+
+		// Cerrar la ventana
+		emulator.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(578, 1180), new DTOPoint(641, 1200), 10, 300);
+
+		rescheduleTask();
 	}
 
+	/**
+	 * Obtiene el tiempo de reprogramación y actualiza la tarea.
+	 */
+	private void rescheduleTask() {
+		int offset = profile.getConfig(EnumConfigurationKey.INT_ALLIANCE_CHESTS_OFFSET, Integer.class);
+		LocalDateTime nextExecutionTime = LocalDateTime.now().plusHours(offset);
+
+		this.reschedule(nextExecutionTime);
+		ServScheduler.getServices().updateDailyTaskStatus(profile, TpDailyTaskEnum.ALLIANCE_CHESTS, nextExecutionTime);
+
+		ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Rescheduled for " + offset + " hours");
+	}
 }

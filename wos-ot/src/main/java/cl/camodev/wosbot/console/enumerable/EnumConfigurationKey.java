@@ -17,11 +17,16 @@ public enum EnumConfigurationKey {
 	BOOL_ALLIANCE_TECH("false",Boolean.class),
 	INT_ALLIANCE_TECH_OFFSET("1",Integer.class),
 	
+	BOOL_TRAINING_TROOPS("false",Boolean.class),
+	BOOL_TRAINING_RESOURCES("false",Boolean.class),
+	
 	BOOL_ALLIANCE_CHESTS("false",Boolean.class),
 	INT_ALLIANCE_CHESTS_OFFSET("1",Integer.class),
 	
 	BOOL_ALLIANCE_AUTOJOIN("false",Boolean.class),
 	INT_ALLIANCE_AUTOJOIN_QUEUES("1",Integer.class),
+	
+	BOOL_ALLIANCE_PET_TREASURE("false",Boolean.class),
 	;
 	//@formatter:on
 	private final String defaultValue;

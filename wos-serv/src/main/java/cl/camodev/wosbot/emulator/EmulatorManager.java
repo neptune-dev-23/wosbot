@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Semaphore;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -23,9 +25,13 @@ public class EmulatorManager {
 
 	private static EmulatorManager instance;
 
-	private static final String MUMU_PATH = "\"C:\\Program Files\\Netease\\MuMuPlayerGlobal-12.0\\shell\\MuMuManager.exe\"";
-	private static final String ADB_PATH = "C:/Program Files/Netease/MuMuPlayerGlobal-12.0/shell/adb";
-	private static final String WHITEOUT_PACKAGE = "com.gof.global";
+	private final int MAX_RUNNING_EMULATORS = 2; // Número máximo de emuladores abiertos simultáneamente
+	private final Semaphore emulatorSlots = new Semaphore(MAX_RUNNING_EMULATORS, true);
+	private final ConcurrentHashMap<String, Boolean> activeEmulators = new ConcurrentHashMap<>();
+
+	private final String MUMU_PATH = "\"C:\\Program Files\\Netease\\MuMuPlayerGlobal-12.0\\shell\\MuMuManager.exe\"";
+	private final String ADB_PATH = "C:/Program Files/Netease/MuMuPlayerGlobal-12.0/shell/adb";
+	private final String WHITEOUT_PACKAGE = "com.gof.global";
 
 	private EmulatorManager() {
 		// Constructor privado para evitar instanciación
@@ -154,10 +160,19 @@ public class EmulatorManager {
 	 * Inicia el emulador si no está corriendo.
 	 */
 	public void launchPlayer(String emulatorNumber) {
+		try {
+			emulatorSlots.acquire(); // Bloquea hasta que haya espacio disponible
+			activeEmulators.put(emulatorNumber, true);
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
 		executeCommand(MUMU_PATH + " api -v " + emulatorNumber + " launch_player");
 	}
 
 	public void closePlayer(String emulatorNumber) {
+		if (activeEmulators.remove(emulatorNumber) != null) {
+			emulatorSlots.release();
+		}
 		executeCommand(MUMU_PATH + " api -v " + emulatorNumber + " shutdown_player");
 	}
 
@@ -632,6 +647,10 @@ public class EmulatorManager {
 		executeCommand(ADB_PATH + " " + devicePrefix + "shell input swipe " + startPoint.getX() + " " + startPoint.getY() + " " + endPoint.getX() + " " + endPoint.getY());
 
 		System.out.println("Swipe ejecutado correctamente en el dispositivo: " + adbIp);
+	}
+
+	public int getRunningEmulators() {
+		return activeEmulators.size();
 	}
 
 }

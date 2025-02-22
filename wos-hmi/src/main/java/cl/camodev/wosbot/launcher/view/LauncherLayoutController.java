@@ -20,6 +20,7 @@ import cl.camodev.wosbot.profile.model.IProfileLoadListener;
 import cl.camodev.wosbot.profile.model.IProfileObserverInjectable;
 import cl.camodev.wosbot.profile.model.ProfileAux;
 import cl.camodev.wosbot.profile.view.ProfileManagerLayoutController;
+import cl.camodev.wosbot.training.view.TrainingLayoutController;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -74,11 +75,16 @@ public class LauncherLayoutController implements IProfileLoadListener {
 
 	@FXML
 	private void initialize() {
-
+		initializeDiscordBot();
 		initializeLogModule();
 		initializeProfileModule();
 		initializeModules();
 		initializeExternalLibraries();
+
+	}
+
+	private void initializeDiscordBot() {
+//		ServDiscord.getServices();
 
 	}
 
@@ -108,8 +114,8 @@ public class LauncherLayoutController implements IProfileLoadListener {
 		//@formatter:off
 		List<ModuleDefinition> modules = Arrays.asList(				
 				new ModuleDefinition("CityEventsLayout", "City Events", CityEventsLayoutController::new),
-				new ModuleDefinition("AllianceLayout", "Alliance", AllianceLayoutController::new)
-//				new ModuleDefinition("PetsLayout", "Pets", PetsLayoutController::new)
+				new ModuleDefinition("AllianceLayout", "Alliance", AllianceLayoutController::new),
+				new ModuleDefinition("TrainingLayout", "Training", TrainingLayoutController::new)
 				);
 		//@formatter:on
 

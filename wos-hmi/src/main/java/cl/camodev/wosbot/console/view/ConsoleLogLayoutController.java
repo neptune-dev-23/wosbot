@@ -85,12 +85,13 @@ public class ConsoleLogLayoutController {
 			return;
 		}
 
-		logMessages.add(0, new LogMessageAux(formattedDate, dtoMessage.getSeverity().toString(), dtoMessage.getMessage(), dtoMessage.getTask(), dtoMessage.getProfile()));
+		Platform.runLater(() -> {
+			logMessages.add(0, new LogMessageAux(formattedDate, dtoMessage.getSeverity().toString(), dtoMessage.getMessage(), dtoMessage.getTask(), dtoMessage.getProfile()));
 
-		if (logMessages.size() > 30) {
-			logMessages.remove(logMessages.size() - 1);
-		}
-
+			if (logMessages.size() > 400) {
+				logMessages.remove(logMessages.size() - 1);
+			}
+		});
 	}
 
 }

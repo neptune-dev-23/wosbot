@@ -48,6 +48,7 @@ public class TaskQueue {
 		running = true;
 
 		schedulerThread = new Thread(() -> {
+
 			boolean moreThan30Minutes = false; // Indica si la demora mínima superó los 30 minutos
 
 			while (running) {
@@ -155,6 +156,14 @@ public class TaskQueue {
 		taskQueue.clear();
 
 		System.out.println("TaskQueue detenida de inmediato.");
+	}
+
+	public DTOProfiles getProfile() {
+		return profile;
+	}
+
+	public boolean isRunning() {
+		return running;
 	}
 
 }
