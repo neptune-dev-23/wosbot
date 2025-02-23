@@ -54,7 +54,7 @@
 		<dependency>
 			<groupId>cl.camodev</groupId>
 			<artifactId>wos-ot</artifactId>
-			<version>1.0.0-SNAPSHOT</version>
+			<version>${revision}</version>
 		</dependency>
 	</dependencies>
 </project>

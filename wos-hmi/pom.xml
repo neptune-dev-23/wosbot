@@ -2,13 +2,19 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
+
 	<parent>
 		<groupId>cl.camodev</groupId>
 		<artifactId>wosbot</artifactId>
 		<version>${revision}</version>
 	</parent>
+
 	<artifactId>wos-hmi</artifactId>
 	<name>Wos Bot Features</name>
+
+	<properties>
+		<project.build.outputName>wos-bot-${project.version}</project.build.outputName>
+	</properties>
 
 	<dependencies>
 		<dependency>
@@ -19,54 +25,111 @@
 			<groupId>org.openjfx</groupId>
 			<artifactId>javafx-fxml</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>cl.camodev</groupId>
 			<artifactId>wos-ot</artifactId>
-			<version>1.0.0-SNAPSHOT</version>
+			<version>${revision}</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>cl.camodev</groupId>
 			<artifactId>wos-serv</artifactId>
-			<version>1.0.0-SNAPSHOT</version>
+			<version>${revision}</version>
 			<scope>compile</scope>
 		</dependency>
 	</dependencies>
+
 	<build>
 		<plugins>
-			<!-- ... existing plugins ... -->
+			<!-- 1. Plugin para generar un JAR ejecutable con el nombre
+			wos-bot-x.x.x.jar -->
+
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-shade-plugin</artifactId>
-				<version>3.5.0</version>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>3.2.0</version>
+				<configuration>
+					<archive>
+						<manifest>
+							<mainClass>cl.camodev.wosbot.main.Main</mainClass>
+							<addClasspath>true</addClasspath>
+							<classpathPrefix>lib/</classpathPrefix>
+						</manifest>
+					</archive>
+					<finalName>wos-bot-${project.version}</finalName>
+				</configuration>
+			</plugin>
+
+
+			<!-- 2. Plugin para copiar dependencias en lib/ -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>3.3.0</version>
 				<executions>
 					<execution>
+						<id>copy-dependencies</id>
 						<phase>package</phase>
 						<goals>
-							<goal>shade</goal>
+							<goal>copy-dependencies</goal>
 						</goals>
 						<configuration>
-							<filters>
-								<filter>
-									<includes>
-										<include>**/*.fxml</include>
-										<include>**/*.css</include>
-										<include>**/*.properties</include>
-									</includes>
-								</filter>
-							</filters>
-							<transformers>
-								<transformer
-									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<mainClass>cl.camodev.wosbot.main.Main</mainClass>
-								</transformer>
-							</transformers>
+							<outputDirectory>${project.build.directory}/lib</outputDirectory>
+							<includeScope>runtime</includeScope>
+							<overWriteReleases>false</overWriteReleases>
+							<overWriteSnapshots>false</overWriteSnapshots>
+							<overWriteIfNewer>true</overWriteIfNewer>
 						</configuration>
 					</execution>
 				</executions>
 			</plugin>
 
+			<!-- 3. Plugin para copiar la carpeta tessdata dentro de target -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>3.3.1</version>
+				<executions>
+					<execution>
+						<id>copy-tessdata</id>
+						<phase>process-resources</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.directory}/tessdata</outputDirectory>
+							<resources>
+								<resource>
+									<directory>${project.basedir}/tessdata</directory>
+									<filtering>false</filtering>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- 4. Plugin para empaquetar todo en un 7z con el JAR renombrado -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>3.7.1</version>
+				<executions>
+					<execution>
+						<id>package-zip</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+						<configuration>
+							<finalName>wos-bot-${project.version}</finalName>
+							<descriptors>
+								<descriptor>src/main/assembly/zip.xml</descriptor>
+							</descriptors>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 </project>
