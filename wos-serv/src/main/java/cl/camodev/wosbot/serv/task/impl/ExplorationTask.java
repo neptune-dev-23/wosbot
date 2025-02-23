@@ -21,7 +21,6 @@ public class ExplorationTask extends DelayedTask {
 
 	@Override
 	protected void execute() {
-		ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Starting Task");
 
 		// Buscar la plantilla de la pantalla HOME
 		DTOImageSearchResult homeResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90);

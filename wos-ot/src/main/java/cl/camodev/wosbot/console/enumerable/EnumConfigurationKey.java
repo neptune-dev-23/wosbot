@@ -3,7 +3,8 @@ package cl.camodev.wosbot.console.enumerable;
 public enum EnumConfigurationKey {
 
 	//@formatter:off
-	BOOL_DEBUG("false", Boolean.class ), 
+	BOOL_DEBUG("false", Boolean.class ),
+	DISCORD_TOKEN_STRING("", String.class),
 	
 	INT_TASK_OFFSET("5", Integer.class),
 	BOOL_NOMADIC_MERCHANT("false", Boolean.class), 
@@ -15,17 +16,17 @@ public enum EnumConfigurationKey {
 	BOOL_HERO_RECRUITMENT("false",Boolean.class),
 	BOOL_VIP_POINTS("false",Boolean.class),
 	
-	BOOL_ALLIANCE_TECH("false",Boolean.class),
-	INT_ALLIANCE_TECH_OFFSET("1",Integer.class),
-	
 	BOOL_TRAINING_TROOPS("false",Boolean.class),
 	BOOL_TRAINING_RESOURCES("false",Boolean.class),
 	
-	BOOL_ALLIANCE_CHESTS("false",Boolean.class),
-	INT_ALLIANCE_CHESTS_OFFSET("1",Integer.class),
+	ALLIANCE_CHESTS_BOOL("false",Boolean.class),
+	ALLIANCE_CHESTS_OFFSET_INT("1",Integer.class),
+	ALLIANCE_TECH_BOOL("false",Boolean.class),
+	ALLIANCE_TECH_OFFSET_INT("1",Integer.class),
+	ALLIANCE_AUTOJOIN_BOOL("false",Boolean.class),
+	ALLIANCE_AUTOJOIN_QUEUES_INT("1",Integer.class),
+	ALLIANCE_PET_TREASURE_BOOL("false",Boolean.class),
 	
-	BOOL_ALLIANCE_AUTOJOIN("false",Boolean.class),
-	INT_ALLIANCE_AUTOJOIN_QUEUES("1",Integer.class),
 	
 	GATHERING_COAL_BOOL("false",Boolean.class),
 	GATHERING_WOOD_BOOL("false",Boolean.class),
@@ -34,6 +35,12 @@ public enum EnumConfigurationKey {
 	
 	LIFE_ESSENCE_BOOL("false",Boolean.class),
 	LIFE_ESSENCE_OFFSET_INT("1",Integer.class),
+	
+	MAIL_REWARDS_BOOL("false",Boolean.class),
+	MAIL_REWARDS_OFFSET_INT("1",Integer.class),
+	
+	DAILY_TASKS_BOOL("false",Boolean.class),
+	DAILY_TASKS_OFFSET_INT("1",Integer.class),
 
 	PET_SKILL_STAMINA_BOOL("false",Boolean.class),
 	PET_SKILL_FOOD_BOOL("false",Boolean.class),
@@ -41,7 +48,6 @@ public enum EnumConfigurationKey {
 	PET_SKILL_GATHERING_BOOL("false",Boolean.class),
 	PET_PERSONAL_TREASURE_BOOL("false",Boolean.class),
 	
-	BOOL_ALLIANCE_PET_TREASURE("false",Boolean.class),
 	
 	BOOL_BANK("false",Boolean.class),
 	INT_BANK_DELAY("1",Integer.class),
@@ -74,6 +80,8 @@ public enum EnumConfigurationKey {
 			return (T) Integer.valueOf(value);
 		} else if (type.equals(Double.class)) {
 			return (T) Double.valueOf(value);
+		} else if (type.equals(String.class)) {
+			return (T) value;
 		}
 		// Agrega otros if/else según los tipos soportados
 		throw new UnsupportedOperationException("Tipo " + type.getSimpleName() + " no soportado");

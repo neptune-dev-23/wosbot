@@ -23,6 +23,13 @@ public enum TpDailyTaskEnum {
 	PET_SKILL_TREASURE(18, "Pet Skill Treasure"),
 	PET_SKILL_GATHERING(19, "Pet Skill Gathering"),
 	
+	
+	
+	MAIL_REWARDS(30, "Mail Rewards"),
+	DAILY_TASKS(31, "Daily Tasks"),
+	
+	ALLIANCE_AUTOJOIN(40, "Alliance Autojoin"),
+	
 	INITIALIZE(100, "Initialize");
 	//@formatter:on
 

@@ -16,16 +16,14 @@ public class AllianceLayoutController extends AbstractProfileController {
 
 	@FXML
 	private void initialize() {
-		checkBoxMappings.put(checkBoxAutojoin, EnumConfigurationKey.BOOL_ALLIANCE_AUTOJOIN);
-		checkBoxMappings.put(checkBoxChests, EnumConfigurationKey.BOOL_ALLIANCE_CHESTS);
-		checkBoxMappings.put(checkBoxTechContribution, EnumConfigurationKey.BOOL_ALLIANCE_TECH);
+		checkBoxMappings.put(checkBoxAutojoin, EnumConfigurationKey.ALLIANCE_AUTOJOIN_BOOL);
+		checkBoxMappings.put(checkBoxChests, EnumConfigurationKey.ALLIANCE_CHESTS_BOOL);
+		checkBoxMappings.put(checkBoxTechContribution, EnumConfigurationKey.ALLIANCE_TECH_BOOL);
 
-		textFieldMappings.put(textfieldAutojoinQueues, EnumConfigurationKey.INT_ALLIANCE_AUTOJOIN_QUEUES);
-		textFieldMappings.put(textfieldChestOffset, EnumConfigurationKey.INT_ALLIANCE_CHESTS_OFFSET);
-		textFieldMappings.put(textfieldTechOffset, EnumConfigurationKey.INT_ALLIANCE_TECH_OFFSET);
+		textFieldMappings.put(textfieldAutojoinQueues, EnumConfigurationKey.ALLIANCE_AUTOJOIN_QUEUES_INT);
+		textFieldMappings.put(textfieldChestOffset, EnumConfigurationKey.ALLIANCE_CHESTS_OFFSET_INT);
+		textFieldMappings.put(textfieldTechOffset, EnumConfigurationKey.ALLIANCE_TECH_OFFSET_INT);
 
 		initializeChangeEvents();
-		checkBoxAutojoin.setDisable(true);
-		textfieldAutojoinQueues.setDisable(true);
 	}
 }

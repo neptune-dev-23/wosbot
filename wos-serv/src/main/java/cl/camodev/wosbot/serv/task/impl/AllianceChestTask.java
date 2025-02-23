@@ -74,7 +74,7 @@ public class AllianceChestTask extends DelayedTask {
 	 * Obtiene el tiempo de reprogramación y actualiza la tarea.
 	 */
 	private void rescheduleTask() {
-		int offset = profile.getConfig(EnumConfigurationKey.INT_ALLIANCE_CHESTS_OFFSET, Integer.class);
+		int offset = profile.getConfig(EnumConfigurationKey.ALLIANCE_CHESTS_OFFSET_INT, Integer.class);
 		LocalDateTime nextExecutionTime = LocalDateTime.now().plusHours(offset);
 
 		this.reschedule(nextExecutionTime);

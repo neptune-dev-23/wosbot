@@ -47,7 +47,7 @@ public class AllianceTechTask extends DelayedTask {
 			sleepTask(200);
 			EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
 
-			Integer offset = profile.getConfig(EnumConfigurationKey.INT_ALLIANCE_TECH_OFFSET, Integer.class);
+			Integer offset = profile.getConfig(EnumConfigurationKey.ALLIANCE_TECH_OFFSET_INT, Integer.class);
 			this.reschedule(LocalDateTime.now().plusHours(offset));
 			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "rescheduled for " + offset + " hours");
 

@@ -25,12 +25,14 @@ import cl.camodev.wosbot.serv.IBotStateListener;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 import cl.camodev.wosbot.serv.task.TaskQueue;
 import cl.camodev.wosbot.serv.task.TaskQueueManager;
+import cl.camodev.wosbot.serv.task.impl.AllianceAutojoinTask;
 import cl.camodev.wosbot.serv.task.impl.AllianceChestTask;
 import cl.camodev.wosbot.serv.task.impl.AllianceTechTask;
 import cl.camodev.wosbot.serv.task.impl.CrystalLaboratoryTask;
 import cl.camodev.wosbot.serv.task.impl.ExplorationTask;
 import cl.camodev.wosbot.serv.task.impl.HeroRecruitmentTask;
 import cl.camodev.wosbot.serv.task.impl.InitializeTask;
+import cl.camodev.wosbot.serv.task.impl.MailRewardsTask;
 import cl.camodev.wosbot.serv.task.impl.NomadicMerchantTask;
 import cl.camodev.wosbot.serv.task.impl.PetAllianceTreasuresTask;
 import cl.camodev.wosbot.serv.task.impl.PetSkillsTask;
@@ -109,11 +111,11 @@ public class ServScheduler {
 				taskMappings.put(EnumConfigurationKey.BOOL_VIP_POINTS, List.of(() -> new VipTask(profile, TpDailyTaskEnum.VIP_POINTS)
 				));
 
-				taskMappings.put(EnumConfigurationKey.BOOL_ALLIANCE_TECH, List.of(
+				taskMappings.put(EnumConfigurationKey.ALLIANCE_TECH_BOOL, List.of(
 				    () -> new AllianceTechTask(profile, TpDailyTaskEnum.ALLIANCE_TECH)
 				));
 
-				taskMappings.put(EnumConfigurationKey.BOOL_ALLIANCE_CHESTS, List.of(
+				taskMappings.put(EnumConfigurationKey.ALLIANCE_CHESTS_BOOL, List.of(
 				    () -> new AllianceChestTask(profile, TpDailyTaskEnum.ALLIANCE_CHESTS)
 				));
 
@@ -123,7 +125,7 @@ public class ServScheduler {
 				    () -> new TrainingTroopsTask(profile, TpDailyTaskEnum.TRAINING_TROOPS, TroopType.MARKSMAN)
 				));
 
-				taskMappings.put(EnumConfigurationKey.BOOL_ALLIANCE_PET_TREASURE, List.of(
+				taskMappings.put(EnumConfigurationKey.ALLIANCE_PET_TREASURE_BOOL, List.of(
 				    () -> new PetAllianceTreasuresTask(profile, TpDailyTaskEnum.ALLIANCE_PET_TREASURE)
 				));
 				
@@ -142,6 +144,10 @@ public class ServScheduler {
 				taskMappings.put(EnumConfigurationKey.PET_SKILL_TRESURE_BOOL, List.of(
 					() -> new PetSkillsTask(profile, TpDailyTaskEnum.PET_SKILL_TREASURE, PetSkill.TREASURE)
 				));
+				
+				taskMappings.put(EnumConfigurationKey.ALLIANCE_AUTOJOIN_BOOL, List.of(
+						() -> new AllianceAutojoinTask(profile, TpDailyTaskEnum.ALLIANCE_AUTOJOIN)
+					));
 				
 				
 				
@@ -171,6 +177,7 @@ public class ServScheduler {
 						}
 					}
 				});
+				queue.addTask(new MailRewardsTask(profile, TpDailyTaskEnum.MAIL_REWARDS));
 
 				queueManager.startQueue(queueName);
 			});

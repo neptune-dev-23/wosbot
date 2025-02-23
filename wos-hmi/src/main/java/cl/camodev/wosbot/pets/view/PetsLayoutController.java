@@ -26,7 +26,7 @@ public class PetsLayoutController extends AbstractProfileController {
 
 	@FXML
 	private void initialize() {
-		checkBoxMappings.put(checkBoxPetAllianceTreasure, EnumConfigurationKey.BOOL_ALLIANCE_PET_TREASURE);
+		checkBoxMappings.put(checkBoxPetAllianceTreasure, EnumConfigurationKey.ALLIANCE_PET_TREASURE_BOOL);
 		checkBoxMappings.put(checkBoxPetPersonalTreasure, EnumConfigurationKey.PET_PERSONAL_TREASURE_BOOL);
 		checkBoxMappings.put(checkboxFoodSkill, EnumConfigurationKey.PET_SKILL_FOOD_BOOL);
 		checkBoxMappings.put(checkboxGatheringSkill, EnumConfigurationKey.PET_SKILL_GATHERING_BOOL);
