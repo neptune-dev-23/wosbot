@@ -15,10 +15,10 @@ A bot for automating tasks in **Whiteout Survival**. This project is a work in p
 ✅ Gathers **Fire Crystals** from the **Crystal Laboratory**  
 ✅ Opens **Exploration Chests**  
 ✅ Claims **Daily VIP Points**  
-✅ Contributes to **Alliance Tech**
-✅ Collects to **Alliance Chests** 
-✅ Auto **Training Troops** (only training for the moment not upgrade)
-✅ Auto **Pet Skills** (Food, Treasure and Stamina)
+✅ Contributes to **Alliance Tech**  
+✅ Collects to **Alliance Chests**  
+✅ Auto **Training Troops** (only training for the moment not upgrade)  
+✅ Auto **Pet Skills** (Food, Treasure and Stamina)  
 
 ---
 
