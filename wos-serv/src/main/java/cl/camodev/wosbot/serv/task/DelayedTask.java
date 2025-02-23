@@ -6,18 +6,23 @@ import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
 
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
+import cl.camodev.wosbot.ot.DTOProfiles;
 
 public abstract class DelayedTask implements Runnable {
 
-	private volatile boolean recurring = true;
+	protected volatile boolean recurring = true;
 	protected LocalDateTime scheduledTime;
-	protected final String taskName;
-	protected final Integer idTpDailyTask;
+	protected String taskName;
+	protected DTOProfiles profile;
+	protected String EMULATOR_NUMBER;
+	protected TpDailyTaskEnum tpTask;
 
-	public DelayedTask(TpDailyTaskEnum tpTask, LocalDateTime scheduledTime) {
-		this.scheduledTime = scheduledTime;
+	public DelayedTask(DTOProfiles profile, TpDailyTaskEnum tpTask) {
+		this.profile = profile;
 		this.taskName = tpTask.getName();
-		this.idTpDailyTask = tpTask.getId();
+		this.scheduledTime = LocalDateTime.now();
+		this.EMULATOR_NUMBER = profile.getEmulatorNumber().toString();
+		this.tpTask = tpTask;
 	}
 
 	@Override
@@ -32,7 +37,7 @@ public abstract class DelayedTask implements Runnable {
 	}
 
 	public Integer getTpDailyTaskId() {
-		return idTpDailyTask;
+		return tpTask.getId();
 	}
 
 	public void setRecurring(boolean recurring) {

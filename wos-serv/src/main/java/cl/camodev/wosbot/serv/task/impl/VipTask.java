@@ -1,7 +1,5 @@
 package cl.camodev.wosbot.serv.task.impl;
 
-import java.time.LocalDateTime;
-
 import cl.camodev.utiles.UtilTime;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
@@ -16,16 +14,8 @@ import cl.camodev.wosbot.serv.task.DelayedTask;
 
 public class VipTask extends DelayedTask {
 
-	private final DTOProfiles profile;
-
-	private final String EMULATOR_NUMBER;
-
-	private final static String TASK_NAME = "VIP Task";
-
-	public VipTask(DTOProfiles list, TpDailyTaskEnum vipPoints) {
-		super(vipPoints, LocalDateTime.now());
-		this.profile = list;
-		this.EMULATOR_NUMBER = list.getEmulatorNumber().toString();
+	public VipTask(DTOProfiles profile, TpDailyTaskEnum tpDailyTask) {
+		super(profile, tpDailyTask);
 	}
 
 	@Override
@@ -34,7 +24,7 @@ public class VipTask extends DelayedTask {
 		DTOImageSearchResult homeResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90);
 		DTOImageSearchResult worldResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 0, 0, 720, 1280, 90);
 		if (homeResult.isFound() || worldResult.isFound()) {
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "Going to VIP menu");
+			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Going to VIP menu");
 			EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(430, 48), new DTOPoint(530, 85));
 			sleepTask(3000);
 
@@ -46,11 +36,11 @@ public class VipTask extends DelayedTask {
 
 			reschedule(UtilTime.getGameReset());
 			ServScheduler.getServices().updateDailyTaskStatus(profile, TpDailyTaskEnum.VIP_POINTS, UtilTime.getGameReset());
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "rescheduled task for tomorrow");
+			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "rescheduled task for tomorrow");
 			EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
 
 		} else {
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, TASK_NAME, profile.getName(), "Home not found");
+			ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, taskName, profile.getName(), "Home not found");
 			EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
 
 		}

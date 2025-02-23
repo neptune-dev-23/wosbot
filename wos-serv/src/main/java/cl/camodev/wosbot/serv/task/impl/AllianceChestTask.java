@@ -16,14 +16,8 @@ import cl.camodev.wosbot.serv.task.DelayedTask;
 
 public class AllianceChestTask extends DelayedTask {
 
-	private final DTOProfiles profile;
-
-	private final String EMULATOR_NUMBER;
-
 	public AllianceChestTask(DTOProfiles profile, TpDailyTaskEnum heroRecruitment) {
-		super(heroRecruitment, LocalDateTime.now());
-		this.profile = profile;
-		this.EMULATOR_NUMBER = profile.getEmulatorNumber().toString();
+		super(profile, heroRecruitment);
 	}
 
 	@Override

@@ -1,7 +1,5 @@
 package cl.camodev.wosbot.serv.task.impl;
 
-import java.time.LocalDateTime;
-
 import cl.camodev.utiles.UtilTime;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
@@ -16,22 +14,16 @@ import cl.camodev.wosbot.serv.task.DelayedTask;
 
 public class PetAllianceTreasuresTask extends DelayedTask {
 
-	private final DTOProfiles profile;
-
-	private final String EMULATOR_NUMBER;
-
 	private int attempts = 0;
 
-	public PetAllianceTreasuresTask(DTOProfiles profile, TpDailyTaskEnum heroRecruitment) {
-		super(heroRecruitment, LocalDateTime.now());
-		this.profile = profile;
-		this.EMULATOR_NUMBER = profile.getEmulatorNumber().toString();
+	public PetAllianceTreasuresTask(DTOProfiles profile, TpDailyTaskEnum tpDailyTask) {
+		super(profile, tpDailyTask);
 	}
 
 	@Override
 	protected void execute() {
-		if (attempts > 3) {
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, taskName, profile.getName(), "menu not found, removing task from scheduler");
+		if (attempts >= 3) {
+			ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, taskName, profile.getName(), "Menu not found, removing task from scheduler");
 			this.setRecurring(false);
 			return;
 		}
@@ -78,13 +70,12 @@ public class PetAllianceTreasuresTask extends DelayedTask {
 
 				} else {
 					ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, taskName, profile.getName(), "beast cage not found retrying later");
-					attempts++;
 
 				}
 
 			} else {
 				ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, taskName, profile.getName(), "button pets not found retrying later");
-
+				attempts++;
 			}
 
 		} else {

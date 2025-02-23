@@ -4,6 +4,7 @@ public enum EnumConfigurationKey {
 
 	//@formatter:off
 	BOOL_DEBUG("false", Boolean.class ), 
+	
 	INT_TASK_OFFSET("5", Integer.class),
 	BOOL_NOMADIC_MERCHANT("false", Boolean.class), 
 	BOOL_NOMADIC_MERCHANT_VIP_POINTS("false", Boolean.class), 
@@ -26,7 +27,24 @@ public enum EnumConfigurationKey {
 	BOOL_ALLIANCE_AUTOJOIN("false",Boolean.class),
 	INT_ALLIANCE_AUTOJOIN_QUEUES("1",Integer.class),
 	
+	GATHERING_COAL_BOOL("false",Boolean.class),
+	GATHERING_WOOD_BOOL("false",Boolean.class),
+	GATHERING_MEAT_BOOL("false",Boolean.class),
+	GATHERING_STONE_BOOL("false",Boolean.class),
+	
+	LIFE_ESSENCE_BOOL("false",Boolean.class),
+	LIFE_ESSENCE_OFFSET_INT("1",Integer.class),
+
+	PET_SKILL_STAMINA_BOOL("false",Boolean.class),
+	PET_SKILL_FOOD_BOOL("false",Boolean.class),
+	PET_SKILL_TRESURE_BOOL("false",Boolean.class),
+	PET_SKILL_GATHERING_BOOL("false",Boolean.class),
+	PET_PERSONAL_TREASURE_BOOL("false",Boolean.class),
+	
 	BOOL_ALLIANCE_PET_TREASURE("false",Boolean.class),
+	
+	BOOL_BANK("false",Boolean.class),
+	INT_BANK_DELAY("1",Integer.class),
 	;
 	//@formatter:on
 	private final String defaultValue;

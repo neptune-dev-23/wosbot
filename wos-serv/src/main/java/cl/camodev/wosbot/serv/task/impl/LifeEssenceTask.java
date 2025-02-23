@@ -1,7 +1,5 @@
 package cl.camodev.wosbot.serv.task.impl;
 
-import java.time.LocalDateTime;
-
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
@@ -14,14 +12,8 @@ import cl.camodev.wosbot.serv.task.DelayedTask;
 
 public class LifeEssenceTask extends DelayedTask {
 
-	private final DTOProfiles profile;
-
-	private final String EMULATOR_NUMBER;
-
-	public LifeEssenceTask(DTOProfiles list, TpDailyTaskEnum allianceTech) {
-		super(allianceTech, LocalDateTime.now());
-		this.profile = list;
-		this.EMULATOR_NUMBER = list.getEmulatorNumber().toString();
+	public LifeEssenceTask(DTOProfiles profile, TpDailyTaskEnum tpDailyTask) {
+		super(profile, tpDailyTask);
 	}
 
 	@Override

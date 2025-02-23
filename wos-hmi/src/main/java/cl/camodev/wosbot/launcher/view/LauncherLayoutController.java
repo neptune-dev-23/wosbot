@@ -15,11 +15,13 @@ import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.view.ConsoleLogLayoutController;
 import cl.camodev.wosbot.ot.DTOBotState;
 import cl.camodev.wosbot.ot.DTOLogMessage;
+import cl.camodev.wosbot.pets.view.PetsLayoutController;
 import cl.camodev.wosbot.profile.model.IProfileChangeObserver;
 import cl.camodev.wosbot.profile.model.IProfileLoadListener;
 import cl.camodev.wosbot.profile.model.IProfileObserverInjectable;
 import cl.camodev.wosbot.profile.model.ProfileAux;
 import cl.camodev.wosbot.profile.view.ProfileManagerLayoutController;
+import cl.camodev.wosbot.serv.impl.ServDiscord;
 import cl.camodev.wosbot.training.view.TrainingLayoutController;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -84,7 +86,7 @@ public class LauncherLayoutController implements IProfileLoadListener {
 	}
 
 	private void initializeDiscordBot() {
-//		ServDiscord.getServices();
+		ServDiscord.getServices();
 
 	}
 
@@ -115,7 +117,8 @@ public class LauncherLayoutController implements IProfileLoadListener {
 		List<ModuleDefinition> modules = Arrays.asList(				
 				new ModuleDefinition("CityEventsLayout", "City Events", CityEventsLayoutController::new),
 				new ModuleDefinition("AllianceLayout", "Alliance", AllianceLayoutController::new),
-				new ModuleDefinition("TrainingLayout", "Training", TrainingLayoutController::new)
+				new ModuleDefinition("TrainingLayout", "Training", TrainingLayoutController::new),
+				new ModuleDefinition("PetsLayout", "Pets", PetsLayoutController::new)
 				);
 		//@formatter:on
 

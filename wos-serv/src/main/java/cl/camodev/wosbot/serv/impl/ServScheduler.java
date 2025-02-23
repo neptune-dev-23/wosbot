@@ -33,6 +33,8 @@ import cl.camodev.wosbot.serv.task.impl.HeroRecruitmentTask;
 import cl.camodev.wosbot.serv.task.impl.InitializeTask;
 import cl.camodev.wosbot.serv.task.impl.NomadicMerchantTask;
 import cl.camodev.wosbot.serv.task.impl.PetAllianceTreasuresTask;
+import cl.camodev.wosbot.serv.task.impl.PetSkillsTask;
+import cl.camodev.wosbot.serv.task.impl.PetSkillsTask.PetSkill;
 import cl.camodev.wosbot.serv.task.impl.TrainingTroopsTask;
 import cl.camodev.wosbot.serv.task.impl.TrainingTroopsTask.TroopType;
 import cl.camodev.wosbot.serv.task.impl.VipTask;
@@ -115,7 +117,6 @@ public class ServScheduler {
 				    () -> new AllianceChestTask(profile, TpDailyTaskEnum.ALLIANCE_CHESTS)
 				));
 
-				// Manejo de las tareas de entrenamiento de tropas
 				taskMappings.put(EnumConfigurationKey.BOOL_TRAINING_TROOPS, List.of(
 				    () -> new TrainingTroopsTask(profile, TpDailyTaskEnum.TRAINING_TROOPS, TroopType.INFANTRY),
 				    () -> new TrainingTroopsTask(profile, TpDailyTaskEnum.TRAINING_TROOPS, TroopType.LANCER),
@@ -125,6 +126,24 @@ public class ServScheduler {
 				taskMappings.put(EnumConfigurationKey.BOOL_ALLIANCE_PET_TREASURE, List.of(
 				    () -> new PetAllianceTreasuresTask(profile, TpDailyTaskEnum.ALLIANCE_PET_TREASURE)
 				));
+				
+				taskMappings.put(EnumConfigurationKey.PET_SKILL_FOOD_BOOL, List.of(
+					() -> new PetSkillsTask(profile, TpDailyTaskEnum.PET_SKILL_FOOD, PetSkill.FOOD)
+				));
+				
+				taskMappings.put(EnumConfigurationKey.PET_SKILL_GATHERING_BOOL, List.of(
+					() -> new PetSkillsTask(profile, TpDailyTaskEnum.PET_SKILL_GATHERING, PetSkill.GATHERING)
+				));
+				
+				taskMappings.put(EnumConfigurationKey.PET_SKILL_STAMINA_BOOL, List.of(
+					() -> new PetSkillsTask(profile, TpDailyTaskEnum.PET_SKILL_STAMINA, PetSkill.STAMINA)
+				));
+				
+				taskMappings.put(EnumConfigurationKey.PET_SKILL_TRESURE_BOOL, List.of(
+					() -> new PetSkillsTask(profile, TpDailyTaskEnum.PET_SKILL_TREASURE, PetSkill.TREASURE)
+				));
+				
+				
 				
 				//@formatter:on
 
@@ -152,6 +171,7 @@ public class ServScheduler {
 						}
 					}
 				});
+
 				queueManager.startQueue(queueName);
 			});
 

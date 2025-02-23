@@ -15,7 +15,10 @@ A bot for automating tasks in **Whiteout Survival**. This project is a work in p
 ✅ Gathers **Fire Crystals** from the **Crystal Laboratory**  
 ✅ Opens **Exploration Chests**  
 ✅ Claims **Daily VIP Points**  
-✅ Contributes to **Alliance Tech**  
+✅ Contributes to **Alliance Tech**
+✅ Collects to **Alliance Chests** 
+✅ Auto **Training Troops** (only training for the moment not upgrade)
+✅ Auto **Pet Skills** (Food, Treasure and Stamina)
 
 ---
 
@@ -25,7 +28,8 @@ The bot is designed to run on **Mumu Player** with the following settings:
 
 - **Resolution:** 720x1280 (320 DPI)  
 - **CPU:** 2 Cores  
-- **RAM:** 2GB  
+- **RAM:** 2GB 
+- **Lang:** ENGLISH
 
 ---
 
@@ -53,7 +57,10 @@ Simply double-click `wos-bot-x.x.x.jar`.
 
 ![image1](https://raw.githubusercontent.com/camoloqlo/wosbot/refs/heads/master/images/picture1.png)  
 ![image2](https://raw.githubusercontent.com/camoloqlo/wosbot/refs/heads/master/images/picture2.png)  
-![image3](https://raw.githubusercontent.com/camoloqlo/wosbot/refs/heads/master/images/picture3.png)  
+![image3](https://raw.githubusercontent.com/camoloqlo/wosbot/refs/heads/master/images/picture3.png)
+![image4](https://raw.githubusercontent.com/camoloqlo/wosbot/refs/heads/master/images/picture4.png)  
+![image5](https://raw.githubusercontent.com/camoloqlo/wosbot/refs/heads/master/images/picture5.png)  
+![image6](https://raw.githubusercontent.com/camoloqlo/wosbot/refs/heads/master/images/picture6.png)  
 
 ---
 
@@ -67,7 +74,6 @@ Simply double-click `wos-bot-x.x.x.jar`.
 🔹 **Mail Rewards** – Auto-collect rewards from mail.  
 🔹 **Online Rewards** – Automatically claim online rewards.  
 🔹 **Pet Adventure** – Automate pet adventure tasks.  
-🔹 **Training Troops** – Implement troop training automation.  
 🔹 **and more ofc** 🔥
 
 

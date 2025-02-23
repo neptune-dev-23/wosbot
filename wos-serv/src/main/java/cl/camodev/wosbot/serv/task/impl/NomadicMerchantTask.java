@@ -1,7 +1,5 @@
 package cl.camodev.wosbot.serv.task.impl;
 
-import java.time.LocalDateTime;
-
 import cl.camodev.utiles.UtilTime;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
@@ -16,12 +14,6 @@ import cl.camodev.wosbot.serv.task.DelayedTask;
 
 public class NomadicMerchantTask extends DelayedTask {
 
-	private static final String TASK_NAME = "Nomadic Merchant Task";
-
-	private final DTOProfiles profile;
-
-	private final String EMULATOR_NUMBER;
-
 	private boolean isVipEnabled = true;
 
 	private final int[][] SQUARES = { { 40, 432 }, { 261, 432 }, { 481, 432 }, { 40, 741 }, { 261, 741 }, { 481, 741 } };
@@ -30,11 +22,8 @@ public class NomadicMerchantTask extends DelayedTask {
 
 	private final EnumTemplates[] TEMPLATES = { EnumTemplates.NOMADIC_MERCHANT_COAL, EnumTemplates.NOMADIC_MERCHANT_MEAT, EnumTemplates.NOMADIC_MERCHANT_STONE, EnumTemplates.NOMADIC_MERCHANT_WOOD };
 
-	public NomadicMerchantTask(DTOProfiles list, TpDailyTaskEnum nomadicMerchant) {
-		super(nomadicMerchant, LocalDateTime.now());
-		this.profile = list;
-		this.EMULATOR_NUMBER = list.getEmulatorNumber().toString();
-
+	public NomadicMerchantTask(DTOProfiles profile, TpDailyTaskEnum tpDailyTask) {
+		super(profile, tpDailyTask);
 	}
 
 	/**
@@ -47,7 +36,7 @@ public class NomadicMerchantTask extends DelayedTask {
 		DTOImageSearchResult homeResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90);
 		DTOImageSearchResult worldResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 0, 0, 720, 1280, 90);
 		if (homeResult.isFound() || worldResult.isFound()) {
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, TASK_NAME, profile.getName(), "HOME FOUND GOING TO SHOP");
+			ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, taskName, profile.getName(), "HOME FOUND GOING TO SHOP");
 			EmulatorManager.getInstance().tapAtPoint(EMULATOR_NUMBER, new DTOPoint(420, 1220));
 			sleepTask(3000);
 			EmulatorManager.getInstance().tapAtPoint(EMULATOR_NUMBER, new DTOPoint(70, 1220));
@@ -57,7 +46,7 @@ public class NomadicMerchantTask extends DelayedTask {
 			this.reschedule(UtilTime.getGameReset());
 
 		} else {
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "HOME NOT FOUND");
+			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "HOME NOT FOUND");
 			EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
 
 		}
@@ -77,14 +66,14 @@ public class NomadicMerchantTask extends DelayedTask {
 		while (continueTask) {
 			// Recorremos cada cuadrado utilizando un índice para el log
 			for (int i = 0; i < SQUARES.length; i++) {
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "Evaluating square " + (i + 1));
+				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Evaluating square " + (i + 1));
 				processSquare(SQUARES[i]);
 			}
 			if (!isRefreshGemRefresh()) {
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "Refreshing...");
+				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Refreshing...");
 				EmulatorManager.getInstance().tapAtPoint(EMULATOR_NUMBER, new DTOPoint(600, 270));
 			} else {
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "Refresh button not found, finishing task.");
+				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Refresh button not found, finishing task.");
 				continueTask = false;
 				EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
 			}
@@ -102,7 +91,7 @@ public class NomadicMerchantTask extends DelayedTask {
 			if (isVipEnabled) {
 
 				if (isVipFound(square)) {
-					ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "Button VIP found, tapping...");
+					ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Button VIP found, tapping...");
 					handleVipSquare(square);
 					sleepTask(2000);
 
@@ -126,7 +115,7 @@ public class NomadicMerchantTask extends DelayedTask {
 		if (isAnyTemplateFound(square, 200, 250)) {
 			// Repetir taps hasta que ya no se detecte ninguno de los templates
 			while (isAnyTemplateFound(square, 200, 250)) {
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "Resource found, tapping...");
+				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Resource found, tapping...");
 				EmulatorManager.getInstance().tapAtPoint(EMULATOR_NUMBER, new DTOPoint(square[0] + 100, square[1] + 220));
 				sleepTask(1500);
 			}
@@ -146,11 +135,11 @@ public class NomadicMerchantTask extends DelayedTask {
 
 			DTOImageSearchResult result = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, templateName.getTemplate(), square[0], square[1], width, height, 90);
 			if (result.isFound()) {
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "Resource found: " + templateName.name());
+				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Resource found: " + templateName.name());
 				return true;
 			}
 		}
-		ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "Resource not found, skipping...");
+		ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Resource not found, skipping...");
 		return false;
 
 	}

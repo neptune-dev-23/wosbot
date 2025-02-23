@@ -15,6 +15,13 @@ public enum TpDailyTaskEnum {
 	ALLIANCE_PET_TREASURE(10, "Alliance Pet Treasure"),
 	ALLIANCE_CHESTS(11, "Alliance Chests"),
 	TRAINING_TROOPS(12, "Training"),
+	GATHERING_RESOURCES(13, "Gathering"),
+	BANK(14, "Bank"),
+	BEAST_SLAY(15, "Beast Slay"),
+	PET_SKILL_STAMINA(16, "Pet Skill Stamina"),
+	PET_SKILL_FOOD(17, "Pet Skill Food"),
+	PET_SKILL_TREASURE(18, "Pet Skill Treasure"),
+	PET_SKILL_GATHERING(19, "Pet Skill Gathering"),
 	
 	INITIALIZE(100, "Initialize");
 	//@formatter:on

@@ -1,7 +1,6 @@
 package cl.camodev.wosbot.serv.task.impl;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -20,16 +19,8 @@ import net.sourceforge.tess4j.TesseractException;
 
 public class CrystalLaboratoryTask extends DelayedTask {
 
-	private final DTOProfiles profile;
-
-	private final String EMULATOR_NUMBER;
-
-	private final static String TASK_NAME = "Crystal Laboratory";
-
-	public CrystalLaboratoryTask(DTOProfiles profile, TpDailyTaskEnum crystalLaboratory) {
-		super(crystalLaboratory, LocalDateTime.now());
-		this.profile = profile;
-		this.EMULATOR_NUMBER = profile.getEmulatorNumber().toString();
+	public CrystalLaboratoryTask(DTOProfiles profile, TpDailyTaskEnum tpDailyTask) {
+		super(profile, tpDailyTask);
 	}
 
 	@Override
@@ -38,7 +29,7 @@ public class CrystalLaboratoryTask extends DelayedTask {
 		DTOImageSearchResult homeResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90);
 		DTOImageSearchResult worldResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 0, 0, 720, 1280, 90);
 		if (homeResult.isFound() || worldResult.isFound()) {
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "going to crystal laboratory");
+			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "going to crystal laboratory");
 			EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(1, 500), new DTOPoint(25, 590));
 			sleepTask(2000);
 			EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(391, 618), new DTOPoint(417, 644));
@@ -56,10 +47,10 @@ public class CrystalLaboratoryTask extends DelayedTask {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), rem);
+			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), rem);
 			int total = parseRemainingToday(rem);
 			if (total > 0) {
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "claiming crystals");
+				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "claiming crystals");
 				for (int i = 0; i < total; i++) {
 					EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(230, 1135), new DTOPoint(390, 1200));
 					sleepTask(1000);
@@ -67,12 +58,12 @@ public class CrystalLaboratoryTask extends DelayedTask {
 			}
 
 			reschedule(UtilTime.getGameReset());
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "rescheduled task for tomorrow");
+			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "rescheduled task for tomorrow");
 			ServScheduler.getServices().updateDailyTaskStatus(profile, TpDailyTaskEnum.CRYSTAL_LABORATORY, UtilTime.getGameReset());
 			EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
 
 		} else {
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, TASK_NAME, profile.getName(), "Home not found");
+			ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, taskName, profile.getName(), "Home not found");
 			EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
 
 		}

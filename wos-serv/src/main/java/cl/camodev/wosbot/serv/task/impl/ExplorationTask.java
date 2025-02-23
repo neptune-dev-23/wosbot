@@ -15,14 +15,8 @@ import cl.camodev.wosbot.serv.task.DelayedTask;
 
 public class ExplorationTask extends DelayedTask {
 
-	private final DTOProfiles profile;
-
-	private final String EMULATOR_NUMBER;
-
-	public ExplorationTask(DTOProfiles list, TpDailyTaskEnum tpTask) {
-		super(tpTask, LocalDateTime.now());
-		this.profile = list;
-		this.EMULATOR_NUMBER = list.getEmulatorNumber().toString();
+	public ExplorationTask(DTOProfiles profile, TpDailyTaskEnum tpDailyTask) {
+		super(profile, tpDailyTask);
 	}
 
 	@Override

@@ -21,10 +21,6 @@ import net.sourceforge.tess4j.TesseractException;
 
 public class TrainingTroopsTask extends DelayedTask {
 
-	private final DTOProfiles profile;
-
-	private final String EMULATOR_NUMBER;
-
 	private final TroopType troopType;
 
 	public enum TroopType {
@@ -47,10 +43,8 @@ public class TrainingTroopsTask extends DelayedTask {
 	}
 
 	public TrainingTroopsTask(DTOProfiles profile, TpDailyTaskEnum heroRecruitment, TroopType troopType) {
-		super(heroRecruitment, LocalDateTime.now());
-		this.profile = profile;
+		super(profile, heroRecruitment);
 		this.troopType = troopType;
-		this.EMULATOR_NUMBER = profile.getEmulatorNumber().toString();
 	}
 
 	@Override

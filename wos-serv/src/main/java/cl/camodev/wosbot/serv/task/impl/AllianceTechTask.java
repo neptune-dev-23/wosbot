@@ -15,16 +15,8 @@ import cl.camodev.wosbot.serv.task.DelayedTask;
 
 public class AllianceTechTask extends DelayedTask {
 
-	private final DTOProfiles profile;
-
-	private final String EMULATOR_NUMBER;
-
-	private final static String TASK_NAME = "Alliance Tech";
-
-	public AllianceTechTask(DTOProfiles list, TpDailyTaskEnum allianceTech) {
-		super(allianceTech, LocalDateTime.now());
-		this.profile = list;
-		this.EMULATOR_NUMBER = list.getEmulatorNumber().toString();
+	public AllianceTechTask(DTOProfiles profile, TpDailyTaskEnum tpDailyTask) {
+		super(profile, tpDailyTask);
 	}
 
 	@Override
@@ -34,7 +26,7 @@ public class AllianceTechTask extends DelayedTask {
 		DTOImageSearchResult homeResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90);
 		DTOImageSearchResult worldResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 0, 0, 720, 1280, 90);
 		if (homeResult.isFound() || worldResult.isFound()) {
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "going alliance tech");
+			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "going alliance tech");
 			EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(493, 1187), new DTOPoint(561, 1240));
 			sleepTask(3000);
 
@@ -57,10 +49,10 @@ public class AllianceTechTask extends DelayedTask {
 
 			Integer offset = profile.getConfig(EnumConfigurationKey.INT_ALLIANCE_TECH_OFFSET, Integer.class);
 			this.reschedule(LocalDateTime.now().plusHours(offset));
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "rescheduled for " + offset + " hours");
+			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "rescheduled for " + offset + " hours");
 
 		} else {
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, TASK_NAME, profile.getName(), "Home not found");
+			ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, taskName, profile.getName(), "Home not found");
 			EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
 
 		}

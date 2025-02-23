@@ -1,7 +1,5 @@
 package cl.camodev.wosbot.serv.task.impl;
 
-import java.time.LocalDateTime;
-
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
@@ -15,14 +13,8 @@ import cl.camodev.wosbot.serv.task.DelayedTask;
 public class InitializeTask extends DelayedTask {
 	boolean isStarted = false;
 
-	private final DTOProfiles profile;
-
-	private final String EMULATOR_NUMBER;
-
-	public InitializeTask(DTOProfiles profile, TpDailyTaskEnum tpTask) {
-		super(tpTask, LocalDateTime.now());
-		this.profile = profile;
-		this.EMULATOR_NUMBER = profile.getEmulatorNumber().toString();
+	public InitializeTask(DTOProfiles profile, TpDailyTaskEnum tpDailyTask) {
+		super(profile, tpDailyTask);
 	}
 
 	@Override
@@ -44,7 +36,7 @@ public class InitializeTask extends DelayedTask {
 		}
 
 		if (!EmulatorManager.getInstance().isWhiteoutSurvivalInstalled(EMULATOR_NUMBER)) {
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "whiteout survival not installed, stopping queue");
+			ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(), "whiteout survival not installed, stopping queue");
 			throw new StopExecutionException("Game not installed");
 		} else {
 
@@ -64,12 +56,12 @@ public class InitializeTask extends DelayedTask {
 				} else {
 					ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "screen not found, waiting 5 seconds before checking again");
 					EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
-					sleepTask(3000);
+					sleepTask(5000);
 					attempts++;
 				}
 
 				if (attempts > 5) {
-					ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "screen not found after 5 attempts, restarting emulator");
+					ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(), "screen not found after 5 attempts, restarting emulator");
 					EmulatorManager.getInstance().closePlayer(EMULATOR_NUMBER);
 					EmulatorManager.getInstance().restartAdbServer();
 					isStarted = false;

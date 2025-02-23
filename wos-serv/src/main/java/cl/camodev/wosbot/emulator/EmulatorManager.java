@@ -25,7 +25,7 @@ public class EmulatorManager {
 
 	private static EmulatorManager instance;
 
-	private final int MAX_RUNNING_EMULATORS = 2; // Número máximo de emuladores abiertos simultáneamente
+	private final int MAX_RUNNING_EMULATORS = 3; // Número máximo de emuladores abiertos simultáneamente
 	private final Semaphore emulatorSlots = new Semaphore(MAX_RUNNING_EMULATORS, true);
 	private final ConcurrentHashMap<String, Boolean> activeEmulators = new ConcurrentHashMap<>();
 
@@ -568,6 +568,8 @@ public class EmulatorManager {
 		Tesseract tesseract = new Tesseract();
 		tesseract.setDatapath("tessdata"); // Ruta a los datos de entrenamiento de Tesseract
 		tesseract.setLanguage("eng"); // Cambia a "spa" si necesitas OCR en español
+		tesseract.setOcrEngineMode(1);
+//		tesseract.setVariable("tessedit_char_whitelist", "0123456789:/");
 
 		// Ejecutar OCR sobre la subimagen y devolver el texto extraído
 		return tesseract.doOCR(subImage);
@@ -634,19 +636,45 @@ public class EmulatorManager {
 	}
 
 	public void executeSwipe(String emulatorNumber, DTOPoint startPoint, DTOPoint endPoint) {
+		if (startPoint == null || endPoint == null) {
+			System.err.println("Alguno de los DTOPoint es null.");
+			return;
+		}
+
 		// Obtener la IP del dispositivo usando el método getAdbIp
 		String adbIp = getAdbIp(emulatorNumber);
 		if (adbIp == null) {
 			System.err.println("No se pudo obtener la IP para el emulador: " + emulatorNumber);
 			return;
 		}
+		// comando: adb -s <adbIp> shell input swipe <x1> <y1> <x2> <y2>
+		ProcessBuilder pb = new ProcessBuilder(ADB_PATH, "-s", adbIp, "shell", "input", "swipe", String.valueOf(startPoint.getX()), String.valueOf(startPoint.getY()), String.valueOf(endPoint.getX()), String.valueOf(endPoint.getY()));
+		pb.redirectErrorStream(true);
 
-		String devicePrefix = "-s " + adbIp + " ";
+		try {
+			System.out.println("Ejecutando swipe desde (" + startPoint.getX() + ", " + startPoint.getY() + ") hasta (" + endPoint.getX() + ", " + endPoint.getY() + ")...");
+			Process process = pb.start();
 
-		// Simula un gesto de swipe desde el punto de inicio al punto de fin
-		executeCommand(ADB_PATH + " " + devicePrefix + "shell input swipe " + startPoint.getX() + " " + startPoint.getY() + " " + endPoint.getX() + " " + endPoint.getY());
+			// Leer la salida del comando (opcional, para depuración)
+			try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+				String line;
+				while ((line = reader.readLine()) != null) {
+					System.out.println(line);
+				}
+			}
 
-		System.out.println("Swipe ejecutado correctamente en el dispositivo: " + adbIp);
+			int exitCode = process.waitFor();
+			if (exitCode == 0) {
+				System.out.println("Swipe ejecutado correctamente desde (" + startPoint.getX() + ", " + startPoint.getY() + ") hasta (" + endPoint.getX() + ", " + endPoint.getY() + ").");
+
+			} else {
+				System.err.println("Error al ejecutar el tap. Código de salida: " + exitCode);
+
+			}
+		} catch (IOException | InterruptedException e) {
+			e.printStackTrace();
+			return;
+		}
 	}
 
 	public int getRunningEmulators() {

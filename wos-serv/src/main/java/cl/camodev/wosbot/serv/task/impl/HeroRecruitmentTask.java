@@ -21,16 +21,8 @@ import net.sourceforge.tess4j.TesseractException;
 
 public class HeroRecruitmentTask extends DelayedTask {
 
-	private final DTOProfiles profile;
-
-	private final String EMULATOR_NUMBER;
-
-	private final static String TASK_NAME = "Hero Recruitment Task";
-
-	public HeroRecruitmentTask(DTOProfiles profile, TpDailyTaskEnum heroRecruitment) {
-		super(heroRecruitment, LocalDateTime.now());
-		this.profile = profile;
-		this.EMULATOR_NUMBER = profile.getEmulatorNumber().toString();
+	public HeroRecruitmentTask(DTOProfiles profile, TpDailyTaskEnum tpDailyTask) {
+		super(profile, tpDailyTask);
 	}
 
 	@Override
@@ -42,17 +34,17 @@ public class HeroRecruitmentTask extends DelayedTask {
 		DTOImageSearchResult homeResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90);
 		DTOImageSearchResult worldResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 0, 0, 720, 1280, 90);
 		if (homeResult.isFound() || worldResult.isFound()) {
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "going hero recruitment");
+			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "going hero recruitment");
 			EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(160, 1190), new DTOPoint(217, 1250));
 			sleepTask(3000);
 			EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(400, 1190), new DTOPoint(660, 1250));
 			sleepTask(3000);
 
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "evaluating advanced recruitment");
+			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "evaluating advanced recruitment");
 			DTOImageSearchResult claimResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.HERO_RECRUIT_CLAIM.getTemplate(), 40, 800, 300, 95, 95);
 			LocalDateTime nextAdvanced = null;
 			if (claimResult.isFound()) {
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "advanced recruitment available, tapping");
+				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "advanced recruitment available, tapping");
 				EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(80, 827), new DTOPoint(315, 875));
 				sleepTask(3000);
 				EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(80, 90), new DTOPoint(140, 130));
@@ -65,7 +57,7 @@ public class HeroRecruitmentTask extends DelayedTask {
 				sleepTask(300);
 				EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(80, 90), new DTOPoint(140, 130));
 				sleepTask(3000);
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "getting next recruitment time");
+				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "getting next recruitment time");
 				String text = "";
 				try {
 					text = EmulatorManager.getInstance().ocrRegionText(EMULATOR_NUMBER, new DTOPoint(40, 770), new DTOPoint(350, 810));
@@ -76,10 +68,10 @@ public class HeroRecruitmentTask extends DelayedTask {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), text + " rescheduling task");
+				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), text + " rescheduling task");
 				nextAdvanced = parseNextFree(text);
 			} else {
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "no rewards to claim, getting next recruitment time");
+				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "no rewards to claim, getting next recruitment time");
 				String text = "";
 				try {
 					text = EmulatorManager.getInstance().ocrRegionText(EMULATOR_NUMBER, new DTOPoint(40, 770), new DTOPoint(350, 810));
@@ -87,15 +79,15 @@ public class HeroRecruitmentTask extends DelayedTask {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), text + " rescheduling task");
+				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), text + " rescheduling task");
 				nextAdvanced = parseNextFree(text);
 			}
 
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "evaluating epic recruitment");
+			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "evaluating epic recruitment");
 			DTOImageSearchResult claimResultEpic = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.HERO_RECRUIT_CLAIM.getTemplate(), 40, 1160, 300, 95, 95);
 			LocalDateTime nextEpic;
 			if (claimResultEpic.isFound()) {
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "epic recruitment available, tapping");
+				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "epic recruitment available, tapping");
 				EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(70, 1180), new DTOPoint(315, 1230));
 				sleepTask(3000);
 				EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(80, 90), new DTOPoint(140, 130));
@@ -108,7 +100,7 @@ public class HeroRecruitmentTask extends DelayedTask {
 				sleepTask(300);
 				EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(80, 90), new DTOPoint(140, 130));
 				sleepTask(3000);
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "getting next recruitment time");
+				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "getting next recruitment time");
 				String text = "";
 				try {
 					text = EmulatorManager.getInstance().ocrRegionText(EMULATOR_NUMBER, new DTOPoint(53, 1130), new DTOPoint(330, 1160));
@@ -116,10 +108,10 @@ public class HeroRecruitmentTask extends DelayedTask {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), text);
+				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), text);
 				nextEpic = parseNextFree(text);
 			} else {
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "no rewards to claim, getting next recruitment time");
+				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "no rewards to claim, getting next recruitment time");
 				String text = "";
 				try {
 					text = EmulatorManager.getInstance().ocrRegionText(EMULATOR_NUMBER, new DTOPoint(53, 1130), new DTOPoint(330, 1160));
@@ -127,7 +119,7 @@ public class HeroRecruitmentTask extends DelayedTask {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), text);
+				ServLogs.getServices().appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), text);
 				nextEpic = parseNextFree(text);
 			}
 
@@ -140,13 +132,12 @@ public class HeroRecruitmentTask extends DelayedTask {
 			String formattedTime = nextExecution.format(formatter);
 
 			// Luego, lo usas en el log.
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, TASK_NAME, profile.getName(), "rescheduling task at " + formattedTime);
-			EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
+			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "rescheduling task at " + formattedTime);
 			EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
 			EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
 
 		} else {
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, TASK_NAME, profile.getName(), "Home not found");
+			ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, taskName, profile.getName(), "Home not found");
 			EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
 
 		}
