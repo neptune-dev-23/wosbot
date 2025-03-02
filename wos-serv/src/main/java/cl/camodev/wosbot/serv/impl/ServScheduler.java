@@ -32,8 +32,11 @@ import cl.camodev.wosbot.serv.task.impl.CrystalLaboratoryTask;
 import cl.camodev.wosbot.serv.task.impl.ExplorationTask;
 import cl.camodev.wosbot.serv.task.impl.HeroRecruitmentTask;
 import cl.camodev.wosbot.serv.task.impl.InitializeTask;
+import cl.camodev.wosbot.serv.task.impl.IntelligenceTask;
 import cl.camodev.wosbot.serv.task.impl.MailRewardsTask;
 import cl.camodev.wosbot.serv.task.impl.NomadicMerchantTask;
+import cl.camodev.wosbot.serv.task.impl.OnlineRewardTask;
+import cl.camodev.wosbot.serv.task.impl.PetAdventureChestTask;
 import cl.camodev.wosbot.serv.task.impl.PetAllianceTreasuresTask;
 import cl.camodev.wosbot.serv.task.impl.PetSkillsTask;
 import cl.camodev.wosbot.serv.task.impl.PetSkillsTask.PetSkill;
@@ -149,6 +152,25 @@ public class ServScheduler {
 						() -> new AllianceAutojoinTask(profile, TpDailyTaskEnum.ALLIANCE_AUTOJOIN)
 					));
 				
+				taskMappings.put(EnumConfigurationKey.STOREHOUSE_CHEST_BOOL, List.of(
+						() -> new OnlineRewardTask(profile, TpDailyTaskEnum.STOREHOUSE_CHEST)
+					));
+				
+				taskMappings.put(EnumConfigurationKey.MAIL_REWARDS_BOOL, List.of(
+						() -> new MailRewardsTask(profile, TpDailyTaskEnum.MAIL_REWARDS)
+					));
+				
+				taskMappings.put(EnumConfigurationKey.PET_PERSONAL_TREASURE_BOOL, List.of(
+                        () -> new PetAdventureChestTask(profile, TpDailyTaskEnum.PET_ADVENTURE)
+                    ));
+				
+				taskMappings.put(EnumConfigurationKey.INTEL_BOOL, List.of(
+                        () -> new IntelligenceTask(profile, TpDailyTaskEnum.INTEL)
+                    ));
+				
+				
+				
+				
 				
 				
 				//@formatter:on
@@ -177,7 +199,6 @@ public class ServScheduler {
 						}
 					}
 				});
-				queue.addTask(new MailRewardsTask(profile, TpDailyTaskEnum.MAIL_REWARDS));
 
 				queueManager.startQueue(queueName);
 			});

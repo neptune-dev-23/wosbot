@@ -1,5 +1,184 @@
 package cl.camodev.wosbot.serv.task.impl;
 
-public class PetAdventureChestTask {
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import cl.camodev.utiles.UtilTime;
+import cl.camodev.wosbot.console.enumerable.EnumTemplates;
+import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
+import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
+import cl.camodev.wosbot.emulator.EmulatorManager;
+import cl.camodev.wosbot.ot.DTOImageSearchResult;
+import cl.camodev.wosbot.ot.DTOPoint;
+import cl.camodev.wosbot.ot.DTOProfiles;
+import cl.camodev.wosbot.serv.impl.ServLogs;
+import cl.camodev.wosbot.serv.impl.ServScheduler;
+import cl.camodev.wosbot.serv.task.DelayedTask;
+
+public class PetAdventureChestTask extends DelayedTask {
+
+	private final EmulatorManager emuManager = EmulatorManager.getInstance();
+	private final ServLogs servLogs = ServLogs.getServices();
+
+	private int attempts = 0;
+
+	public PetAdventureChestTask(DTOProfiles profile, TpDailyTaskEnum tpTask) {
+		super(profile, tpTask);
+	}
+
+	@Override
+	protected void execute() {
+		if (attempts >= 3) {
+			servLogs.appendLog(EnumTpMessageSeverity.WARNING, taskName, profile.getName(), "Menu not found, removing task from scheduler");
+			this.setRecurring(false);
+			return;
+		}
+
+		DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90);
+		DTOImageSearchResult worldResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 0, 0, 720, 1280, 90);
+		if (homeResult.isFound() || worldResult.isFound()) {
+			servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "going pet skills");
+
+			DTOImageSearchResult petsResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_PETS.getTemplate(), 0, 0, 720, 1280, 90);
+			if (petsResult.isFound()) {
+				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "button pets found, taping");
+				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, petsResult.getPoint(), petsResult.getPoint());
+				sleepTask(3000);
+
+				DTOImageSearchResult beastCageResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_BEAST_CAGE.getTemplate(), 0, 0, 720, 1280, 90);
+				if (beastCageResult.isFound()) {
+					emuManager.tapAtPoint(EMULATOR_NUMBER, beastCageResult.getPoint());
+					sleepTask(3000);
+					emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(547, 1150), new DTOPoint(650, 1210));
+
+					for (int i = 0; i < 10; i++) {
+						servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), "Searching completed chest");
+						DTOImageSearchResult doneChest = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_CHEST_COMPLETED.getTemplate(), 0, 0, 720, 1280, 90);
+						if (doneChest.isFound()) {
+							emuManager.tapAtRandomPoint(EMULATOR_NUMBER, doneChest.getPoint(), doneChest.getPoint());
+							sleepTask(1000);
+							emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(270, 735), new DTOPoint(450, 760), 20, 100);
+
+							DTOImageSearchResult share = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_CHEST_SHARE.getTemplate(), 0, 0, 720, 1280, 90);
+							if (share.isFound()) {
+								servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Sharing chest");
+								emuManager.tapAtRandomPoint(EMULATOR_NUMBER, share.getPoint(), share.getPoint());
+								sleepTask(1000);
+							}
+							emuManager.tapBackButton(EMULATOR_NUMBER);
+							sleepTask(500);
+						}
+					}
+
+					try {
+						String rem = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(180, 115), new DTOPoint(550, 153));
+
+						Integer remChest = extractRemainingAttempts(rem);
+						if (remChest != null) {
+							List<EnumTemplates> chests = List.of(EnumTemplates.PETS_CHEST_RED, EnumTemplates.PETS_CHEST_PURPLE, EnumTemplates.PETS_CHEST_BLUE);
+
+							while (remChest > 0) { // Mantener la búsqueda mientras haya intentos disponibles
+								boolean foundAnyChest = false; // Reiniciar la variable en cada ciclo
+
+								for (EnumTemplates enumTemplates : chests) {
+									for (int attempt = 0; attempt < 10; attempt++) {
+										ServLogs.getServices().appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), "Searching for " + enumTemplates + " attempt " + attempt);
+
+										DTOImageSearchResult result = emuManager.searchTemplate(EMULATOR_NUMBER, enumTemplates.getTemplate(), 0, 0, 720, 1280, 90);
+
+										if (result.isFound()) {
+											foundAnyChest = true; // Se encontró al menos un cofre
+
+											servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Found: " + enumTemplates);
+
+											emuManager.tapAtRandomPoint(EMULATOR_NUMBER, result.getPoint(), result.getPoint());
+											sleepTask(2000);
+
+											DTOImageSearchResult chestSelect = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_CHEST_SELECT.getTemplate(), 0, 0, 720, 1280, 90);
+
+											if (chestSelect.isFound()) {
+												emuManager.tapAtPoint(EMULATOR_NUMBER, chestSelect.getPoint());
+												sleepTask(2000);
+
+												DTOImageSearchResult chestStart = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_CHEST_START.getTemplate(), 0, 0, 720, 1280, 90);
+
+												if (chestStart.isFound()) {
+													emuManager.tapAtPoint(EMULATOR_NUMBER, chestStart.getPoint());
+													sleepTask(2000);
+													emuManager.tapBackButton(EMULATOR_NUMBER);
+													sleepTask(1000);
+
+													remChest--; // Reducimos intentos restantes
+
+													if (remChest == 0) {
+														servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "All attempts used. Scheduling on reset.");
+														reschedule(UtilTime.getGameReset());
+														ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, scheduledTime);
+														return;
+													}
+
+													// Reiniciar la búsqueda desde el inicio si aún hay intentos disponibles
+													break;
+												}
+											}
+										}
+									}
+								}
+
+								if (!foundAnyChest) {
+									servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "No chests found. Scheduling next check in 1 hour.");
+									this.reschedule(LocalDateTime.now().plusHours(1));
+									return;
+								}
+							}
+						} else {
+							servLogs.appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(), "Remaining attempts not found. Scheduling in 1 minute");
+							this.reschedule(LocalDateTime.now().plusMinutes(1));
+						}
+
+					} catch (Exception e) {
+						// TODO: handle exception
+					}
+				}
+
+			} else {
+				ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, taskName, profile.getName(), "button pets not found retrying later");
+				attempts++;
+			}
+
+		} else
+
+		{
+			ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, taskName, profile.getName(), "Home not found");
+			emuManager.tapBackButton(EMULATOR_NUMBER);
+
+		}
+
+	}
+
+	public Integer extractRemainingAttempts(String ocrText) {
+		if (ocrText == null || ocrText.isEmpty()) {
+			return null; // Manejo de casos nulos o vacíos
+		}
+
+		// Normalizar texto para reducir errores OCR
+		String normalizedText = ocrText.replaceAll("[^a-zA-Z0-9: ]", "").trim();
+
+		// Expresión regular para buscar un número después de "attempts"
+		Pattern pattern = Pattern.compile("(?i)attempts.*?\\b(\\d+)\\b");
+		Matcher matcher = pattern.matcher(normalizedText);
+
+		if (matcher.find()) {
+			try {
+				return Integer.parseInt(matcher.group(1));
+			} catch (NumberFormatException e) {
+				return null; // Retorna null si el número no se puede parsear
+			}
+		}
+
+		return null; // Retorna null si no se encuentra el número
+	}
 
 }

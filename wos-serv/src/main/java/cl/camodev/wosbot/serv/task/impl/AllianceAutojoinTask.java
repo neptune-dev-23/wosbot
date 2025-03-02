@@ -63,6 +63,7 @@ public class AllianceAutojoinTask extends DelayedTask {
 		emulator.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(380, 1070), new DTOPoint(640, 1120));
 
 		this.reschedule(LocalDateTime.now().plusHours(7));
+		logs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Rescheduled to 7 hours");
 		emulator.tapBackButton(EMULATOR_NUMBER);
 		emulator.tapBackButton(EMULATOR_NUMBER);
 		emulator.tapBackButton(EMULATOR_NUMBER);

@@ -158,12 +158,4 @@ public class TaskQueue {
 		System.out.println("TaskQueue detenida de inmediato.");
 	}
 
-	public DTOProfiles getProfile() {
-		return profile;
-	}
-
-	public boolean isRunning() {
-		return running;
-	}
-
 }

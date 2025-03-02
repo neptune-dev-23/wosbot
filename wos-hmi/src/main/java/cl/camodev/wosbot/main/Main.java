@@ -11,5 +11,6 @@ public class Main {
 //
 //		// Iniciar JavaFX
 		FXApp.main(args);
+
 	}
 }

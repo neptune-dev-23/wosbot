@@ -1,6 +1,7 @@
 package cl.camodev.wosbot.serv.task.impl;
 
 import cl.camodev.utiles.UtilTime;
+import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
@@ -27,6 +28,23 @@ public class VipTask extends DelayedTask {
 			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Going to VIP menu");
 			EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(430, 48), new DTOPoint(530, 85));
 			sleepTask(3000);
+
+			if (profile.getConfig(EnumConfigurationKey.VIP_BUY_MONTHLY, Boolean.class)) {
+				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Verifying vip status");
+				DTOImageSearchResult monthlyVip = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.VIP_UNLOCK_BUTTON.getTemplate(), 0, 0, 720, 1280, 90);
+				if (monthlyVip.isFound()) {
+					ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "VIP not active, buying monthly vip");
+					EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, monthlyVip.getPoint(), monthlyVip.getPoint());
+					sleepTask(3000);
+					EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(520, 810), new DTOPoint(650, 850));
+					sleepTask(2000);
+					EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(250, 770), new DTOPoint(480, 800));
+					sleepTask(1000);
+					EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
+					sleepTask(1000);
+
+				}
+			}
 
 			EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(540, 813), new DTOPoint(624, 835), 7, 300);
 			sleepTask(5000);

@@ -187,12 +187,12 @@ public class ImageSearchUtil {
 				return new DTOImageSearchResult(false, null, matchPercentage);
 			}
 
-			// Dibujar rectángulo en la imagen para marcar la coincidencia
+			// Ajustar la coordenada para que esté en el centro de la coincidencia
 			Point matchLoc = mmr.maxLoc;
-			matchLoc.x += roi.x;
-			matchLoc.y += roi.y;
+			double centerX = matchLoc.x + roi.x + (template.cols() / 2.0);
+			double centerY = matchLoc.y + roi.y + (template.rows() / 2.0);
 
-			return new DTOImageSearchResult(true, new DTOPoint(matchLoc.x, matchLoc.y), matchPercentage);
+			return new DTOImageSearchResult(true, new DTOPoint(centerX, centerY), matchPercentage);
 
 		} catch (IOException e) {
 			e.printStackTrace();

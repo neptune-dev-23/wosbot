@@ -27,8 +27,9 @@ public class MailRewardsTask extends DelayedTask {
 		DTOImageSearchResult worldResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 0, 0, 720, 1280, 90);
 
 		if (homeResult.isFound() || worldResult.isFound()) {
+			sleepTask(1000);
 			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "going to mail");
-			EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(660, 1050), new DTOPoint(690, 1170));
+			EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(640, 1033), new DTOPoint(686, 1064));
 			sleepTask(3000);
 			for (DTOPoint button : buttons) {
 				EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, button, button);

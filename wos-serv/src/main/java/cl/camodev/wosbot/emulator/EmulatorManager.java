@@ -25,7 +25,7 @@ public class EmulatorManager {
 
 	private static EmulatorManager instance;
 
-	private final int MAX_RUNNING_EMULATORS = 3; // Número máximo de emuladores abiertos simultáneamente
+	private final int MAX_RUNNING_EMULATORS = 3;
 	private final Semaphore emulatorSlots = new Semaphore(MAX_RUNNING_EMULATORS, true);
 	private final ConcurrentHashMap<String, Boolean> activeEmulators = new ConcurrentHashMap<>();
 

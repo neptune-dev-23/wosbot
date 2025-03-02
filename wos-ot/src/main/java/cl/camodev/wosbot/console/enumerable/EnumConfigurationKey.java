@@ -15,6 +15,7 @@ public enum EnumConfigurationKey {
 	INT_EXPLORATION_CHEST_OFFSET("1",Integer.class),
 	BOOL_HERO_RECRUITMENT("false",Boolean.class),
 	BOOL_VIP_POINTS("false",Boolean.class),
+	VIP_BUY_MONTHLY("false",Boolean.class),
 	
 	BOOL_TRAINING_TROOPS("false",Boolean.class),
 	BOOL_TRAINING_RESOURCES("false",Boolean.class),
@@ -33,6 +34,13 @@ public enum EnumConfigurationKey {
 	GATHERING_MEAT_BOOL("false",Boolean.class),
 	GATHERING_STONE_BOOL("false",Boolean.class),
 	
+	INTEL_BOOL("false",Boolean.class),
+	INTEL_FIRE_BEAST_BOOL("false",Boolean.class),
+	INTEL_BEASTS_BOOL("false",Boolean.class),
+	INTEL_CAMP_BOOL("false",Boolean.class),
+	INTEL_EXPLORATION_BOOL("false",Boolean.class),
+	INTEL_BEASTS_EVENT_BOOL("false",Boolean.class),
+	
 	LIFE_ESSENCE_BOOL("false",Boolean.class),
 	LIFE_ESSENCE_OFFSET_INT("1",Integer.class),
 	
@@ -41,6 +49,8 @@ public enum EnumConfigurationKey {
 	
 	DAILY_TASKS_BOOL("false",Boolean.class),
 	DAILY_TASKS_OFFSET_INT("1",Integer.class),
+	
+	STOREHOUSE_CHEST_BOOL("false",Boolean.class),
 
 	PET_SKILL_STAMINA_BOOL("false",Boolean.class),
 	PET_SKILL_FOOD_BOOL("false",Boolean.class),

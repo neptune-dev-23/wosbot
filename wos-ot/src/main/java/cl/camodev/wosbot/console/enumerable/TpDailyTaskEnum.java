@@ -27,6 +27,8 @@ public enum TpDailyTaskEnum {
 	
 	MAIL_REWARDS(30, "Mail Rewards"),
 	DAILY_TASKS(31, "Daily Tasks"),
+	STOREHOUSE_CHEST(32, "Storehouse Chest"),
+	INTEL(33, "Intel"),
 	
 	ALLIANCE_AUTOJOIN(40, "Alliance Autojoin"),
 	

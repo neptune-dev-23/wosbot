@@ -1,6 +1,5 @@
 package cl.camodev.wosbot.serv.task.impl;
 
-import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -15,7 +14,6 @@ import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.serv.impl.ServLogs;
 import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.task.DelayedTask;
-import net.sourceforge.tess4j.TesseractException;
 
 public class CrystalLaboratoryTask extends DelayedTask {
 
@@ -37,24 +35,11 @@ public class CrystalLaboratoryTask extends DelayedTask {
 			EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(530, 860), new DTOPoint(600, 1000));
 			sleepTask(3000);
 
-			String rem = null;
-			try {
-				rem = EmulatorManager.getInstance().ocrRegionText(EMULATOR_NUMBER, new DTOPoint(210, 1070), new DTOPoint(450, 1113));
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (TesseractException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), rem);
-			int total = parseRemainingToday(rem);
-			if (total > 0) {
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "claiming crystals");
-				for (int i = 0; i < total; i++) {
-					EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(230, 1135), new DTOPoint(390, 1200));
-					sleepTask(1000);
-				}
+			DTOImageSearchResult claim = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.CRYSTAL_LAB_FC_BUTTON.getTemplate(), 0, 0, 720, 1280, 90);
+			while (claim.isFound()) {
+				EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, claim.getPoint(), claim.getPoint());
+				sleepTask(100);
+				claim = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.CRYSTAL_LAB_FC_BUTTON.getTemplate(), 0, 0, 720, 1280, 90);
 			}
 
 			reschedule(UtilTime.getGameReset());

@@ -35,7 +35,6 @@ public class PetsLayoutController extends AbstractProfileController {
 
 		initializeChangeEvents();
 		checkboxGatheringSkill.setDisable(true);
-		checkBoxPetPersonalTreasure.setDisable(true);
 
 	}
 
