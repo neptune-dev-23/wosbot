@@ -7,16 +7,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import cl.camodev.wosbot.almac.entity.Config;
 import cl.camodev.wosbot.almac.entity.DailyTask;
 import cl.camodev.wosbot.almac.entity.Profile;
+import cl.camodev.wosbot.almac.entity.TpConfig;
 import cl.camodev.wosbot.almac.entity.TpDailyTask;
+import cl.camodev.wosbot.almac.repo.ConfigRepository;
 import cl.camodev.wosbot.almac.repo.DailyTaskRepository;
+import cl.camodev.wosbot.almac.repo.IConfigRepository;
 import cl.camodev.wosbot.almac.repo.IDailyTaskRepository;
 import cl.camodev.wosbot.almac.repo.IProfileRepository;
 import cl.camodev.wosbot.almac.repo.ProfileRepository;
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
+import cl.camodev.wosbot.console.enumerable.TpConfigEnum;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
+import cl.camodev.wosbot.emulator.EmulatorManager;
 import cl.camodev.wosbot.ot.DTOBotState;
 import cl.camodev.wosbot.ot.DTODailyTaskStatus;
 import cl.camodev.wosbot.ot.DTOProfileStatus;
@@ -55,6 +61,8 @@ public class ServScheduler {
 	private IDailyTaskRepository iDailyTaskRepository = DailyTaskRepository.getRepository();
 
 	private IProfileRepository iProfileRepository = ProfileRepository.getRepository();
+
+	private IConfigRepository iConfigRepository = ConfigRepository.getRepository();
 
 	private ServScheduler() {
 
@@ -167,12 +175,7 @@ public class ServScheduler {
 				taskMappings.put(EnumConfigurationKey.INTEL_BOOL, List.of(
                         () -> new IntelligenceTask(profile, TpDailyTaskEnum.INTEL)
                     ));
-				
-				
-				
-				
-				
-				
+
 				//@formatter:on
 
 				// Obtener el estado de las tareas desde la base de datos
@@ -199,6 +202,8 @@ public class ServScheduler {
 						}
 					}
 				});
+
+//				queue.addTask(new BankTask(profile, TpDailyTaskEnum.BANK));
 
 				queueManager.startQueue(queueName);
 			});
@@ -265,6 +270,38 @@ public class ServScheduler {
 
 		// Guardar la entidad (ya sea nueva o existente)
 		iDailyTaskRepository.saveDailyTask(dailyTask);
+	}
+
+	public boolean isEmuManagerReady() {
+		List<Config> configs = iConfigRepository.getGlobalConfigs();
+
+		Config config = configs.stream().filter(c -> c.getKey().equals(EnumConfigurationKey.MUMU_PATH_STRING.name())).findFirst().orElse(null);
+
+		if (config == null) {
+			return false;
+		} else {
+			EmulatorManager.getInstance().setMUMU_PATH(config.getValor());
+			return true;
+		}
+	}
+
+	public void saveEmuManagerPath(String filePath) {
+		List<Config> configs = iConfigRepository.getGlobalConfigs();
+
+		Config config = configs.stream().filter(c -> c.getKey().equals(EnumConfigurationKey.MUMU_PATH_STRING.name())).findFirst().orElse(null);
+		if (config == null) {
+			TpConfig tpConfig = iConfigRepository.getTpConfig(TpConfigEnum.GLOBAL_CONFIG);
+			config = new Config();
+			config.setKey(EnumConfigurationKey.MUMU_PATH_STRING.name());
+			config.setValor(filePath);
+			config.setTpConfig(tpConfig);
+			iConfigRepository.addConfig(config);
+		} else {
+			config.setValor(filePath);
+			iConfigRepository.saveConfig(config);
+		}
+		EmulatorManager.getInstance().setMUMU_PATH(filePath);
+
 	}
 
 }

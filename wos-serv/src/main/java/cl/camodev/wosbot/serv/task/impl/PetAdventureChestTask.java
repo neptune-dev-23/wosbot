@@ -14,7 +14,6 @@ import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.serv.impl.ServLogs;
-import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 
 public class PetAdventureChestTask extends DelayedTask {
@@ -72,75 +71,64 @@ public class PetAdventureChestTask extends DelayedTask {
 						}
 					}
 
-					try {
-						String rem = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(180, 115), new DTOPoint(550, 153));
+					List<EnumTemplates> chests = List.of(EnumTemplates.PETS_CHEST_RED, EnumTemplates.PETS_CHEST_PURPLE, EnumTemplates.PETS_CHEST_BLUE);
 
-						Integer remChest = extractRemainingAttempts(rem);
-						if (remChest != null) {
-							List<EnumTemplates> chests = List.of(EnumTemplates.PETS_CHEST_RED, EnumTemplates.PETS_CHEST_PURPLE, EnumTemplates.PETS_CHEST_BLUE);
+					boolean foundAnyChest; // Variable de control
 
-							while (remChest > 0) { // Mantener la búsqueda mientras haya intentos disponibles
-								boolean foundAnyChest = false; // Reiniciar la variable en cada ciclo
+					do {
+						foundAnyChest = false; // Reiniciar en cada iteración
 
-								for (EnumTemplates enumTemplates : chests) {
-									for (int attempt = 0; attempt < 10; attempt++) {
-										ServLogs.getServices().appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), "Searching for " + enumTemplates + " attempt " + attempt);
+						for (EnumTemplates enumTemplates : chests) {
+							for (int attempt = 0; attempt < 5; attempt++) {
+								ServLogs.getServices().appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), "Searching for " + enumTemplates + " attempt " + attempt);
 
-										DTOImageSearchResult result = emuManager.searchTemplate(EMULATOR_NUMBER, enumTemplates.getTemplate(), 0, 0, 720, 1280, 90);
+								DTOImageSearchResult result = emuManager.searchTemplate(EMULATOR_NUMBER, enumTemplates.getTemplate(), 0, 0, 720, 1280, 90);
+								if (result.isFound()) {
+									foundAnyChest = true; // Se encontró un cofre, el bucle se repetirá
 
-										if (result.isFound()) {
-											foundAnyChest = true; // Se encontró al menos un cofre
+									servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Found: " + enumTemplates);
 
-											servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Found: " + enumTemplates);
+									emuManager.tapAtRandomPoint(EMULATOR_NUMBER, result.getPoint(), result.getPoint());
+									sleepTask(2000);
 
-											emuManager.tapAtRandomPoint(EMULATOR_NUMBER, result.getPoint(), result.getPoint());
+									DTOImageSearchResult chestSelect = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_CHEST_SELECT.getTemplate(), 0, 0, 720, 1280, 90);
+
+									if (chestSelect.isFound()) {
+										emuManager.tapAtPoint(EMULATOR_NUMBER, chestSelect.getPoint());
+										sleepTask(2000);
+
+										DTOImageSearchResult chestStart = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_CHEST_START.getTemplate(), 0, 0, 720, 1280, 90);
+
+										if (chestStart.isFound()) {
+											emuManager.tapAtPoint(EMULATOR_NUMBER, chestStart.getPoint());
 											sleepTask(2000);
 
-											DTOImageSearchResult chestSelect = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_CHEST_SELECT.getTemplate(), 0, 0, 720, 1280, 90);
-
-											if (chestSelect.isFound()) {
-												emuManager.tapAtPoint(EMULATOR_NUMBER, chestSelect.getPoint());
-												sleepTask(2000);
-
-												DTOImageSearchResult chestStart = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_CHEST_START.getTemplate(), 0, 0, 720, 1280, 90);
-
-												if (chestStart.isFound()) {
-													emuManager.tapAtPoint(EMULATOR_NUMBER, chestStart.getPoint());
-													sleepTask(2000);
-													emuManager.tapBackButton(EMULATOR_NUMBER);
-													sleepTask(1000);
-
-													remChest--; // Reducimos intentos restantes
-
-													if (remChest == 0) {
-														servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "All attempts used. Scheduling on reset.");
-														reschedule(UtilTime.getGameReset());
-														ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, scheduledTime);
-														return;
-													}
-
-													// Reiniciar la búsqueda desde el inicio si aún hay intentos disponibles
-													break;
-												}
+											emuManager.tapBackButton(EMULATOR_NUMBER);
+											sleepTask(1000);
+											break; // Sale del intento, pero no del ciclo principal
+										} else {
+											DTOImageSearchResult attempts = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_CHEST_ATTEMPT.getTemplate(), 0, 0, 720, 1280, 90);
+											if (attempts.isFound()) {
+												servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "No more attempts");
+												this.reschedule(UtilTime.getGameReset());
+												return;
 											}
 										}
 									}
 								}
-
-								if (!foundAnyChest) {
-									servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "No chests found. Scheduling next check in 1 hour.");
-									this.reschedule(LocalDateTime.now().plusHours(1));
-									return;
-								}
 							}
-						} else {
-							servLogs.appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(), "Remaining attempts not found. Scheduling in 1 minute");
-							this.reschedule(LocalDateTime.now().plusMinutes(1));
 						}
 
-					} catch (Exception e) {
-						// TODO: handle exception
-					}
+						if (foundAnyChest) {
+							servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "At least one chest was found. Restarting search...");
+							sleepTask(5000); // Espera 5 segundos antes de repetir
+						}
+
+					} while (foundAnyChest); // El bucle se repite hasta que no se encuentren más cofres
+
+					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "No chests found. Scheduling next check in 1 hour.");
+					this.reschedule(LocalDateTime.now().plusHours(1));
+
 				}
 
 			} else {

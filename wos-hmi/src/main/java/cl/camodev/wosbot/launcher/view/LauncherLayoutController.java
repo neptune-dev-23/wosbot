@@ -22,18 +22,22 @@ import cl.camodev.wosbot.profile.model.IProfileLoadListener;
 import cl.camodev.wosbot.profile.model.IProfileObserverInjectable;
 import cl.camodev.wosbot.profile.model.ProfileAux;
 import cl.camodev.wosbot.profile.view.ProfileManagerLayoutController;
+import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.training.view.TrainingLayoutController;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 public class LauncherLayoutController implements IProfileLoadListener {
@@ -82,7 +86,44 @@ public class LauncherLayoutController implements IProfileLoadListener {
 		initializeProfileModule();
 		initializeModules();
 		initializeExternalLibraries();
+		initializeEmulatorManager();
 
+	}
+
+	private void initializeEmulatorManager() {
+		String defaultPath = "C:\\Program Files\\Netease\\MuMuPlayerGlobal-12.0\\shell\\MuMuManager.exe";
+		File defaultFile = new File(defaultPath);
+
+		if (defaultFile.exists()) {
+			// Si el archivo existe en la ruta predeterminada, se usa esta ruta directamente
+			ServScheduler.getServices().saveEmuManagerPath(defaultFile.getParent());
+		} else {
+			// Si no existe, se solicita al usuario que seleccione el archivo manualmente
+			if (!ServScheduler.getServices().isEmuManagerReady()) {
+				FileChooser fileChooser = new FileChooser();
+				fileChooser.setTitle("Select MuMuManager.exe");
+
+				FileChooser.ExtensionFilter exeFilter = new FileChooser.ExtensionFilter("MuMuManager Executable", "*.exe");
+				fileChooser.getExtensionFilters().add(exeFilter);
+
+				fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+
+				File selectedFile = fileChooser.showOpenDialog(stage);
+
+				if (selectedFile != null && selectedFile.getName().equals("MuMuManager.exe")) {
+					String directoryPath = selectedFile.getParent(); // Obtener la carpeta contenedora
+					ServScheduler.getServices().saveEmuManagerPath(directoryPath);
+				} else {
+					Alert alert = new Alert(AlertType.ERROR);
+					alert.setTitle("ERROR");
+					alert.setHeaderText(null);
+					alert.setContentText("MuMuManager.exe not found, please select the correct file");
+					alert.showAndWait();
+
+					System.exit(0); // Cerrar la aplicación después de mostrar la alerta
+				}
+			}
+		}
 	}
 
 	private void initializeDiscordBot() {

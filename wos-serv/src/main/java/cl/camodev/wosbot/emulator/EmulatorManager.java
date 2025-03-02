@@ -29,12 +29,11 @@ public class EmulatorManager {
 	private final Semaphore emulatorSlots = new Semaphore(MAX_RUNNING_EMULATORS, true);
 	private final ConcurrentHashMap<String, Boolean> activeEmulators = new ConcurrentHashMap<>();
 
-	private final String MUMU_PATH = "\"C:\\Program Files\\Netease\\MuMuPlayerGlobal-12.0\\shell\\MuMuManager.exe\"";
-	private final String ADB_PATH = "C:/Program Files/Netease/MuMuPlayerGlobal-12.0/shell/adb";
+	private String MUMU_PATH;
+	private String ADB_PATH;
 	private final String WHITEOUT_PACKAGE = "com.gof.global";
 
 	private EmulatorManager() {
-		// Constructor privado para evitar instanciación
 	}
 
 	public static EmulatorManager getInstance() {
@@ -681,4 +680,8 @@ public class EmulatorManager {
 		return activeEmulators.size();
 	}
 
+	public void setMUMU_PATH(String path) {
+		MUMU_PATH = "\"" + path + "\\MuMuManager.exe\"";
+		ADB_PATH = "\"" + path + "\\adb\"";
+	}
 }

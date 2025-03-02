@@ -35,6 +35,7 @@ public enum EnumTemplates {
 	EVENTS_DEALS_BANK("/templates/events/deals/bank.png"),
 	EVENTS_DEALS_BANK_INDEPOSIT("/templates/events/deals/bankInDeposit.png"),
 	EVENTS_DEALS_BANK_DEPOSIT("/templates/events/deals/bankDeposit.png"),
+	EVENTS_DEALS_BANK_WITHDRAW("/templates/events/deals/bankWithdraw.png"),
 	
 	INTEL_COMPLETED("/templates/intel/completed.png"),
 	INTEL_VIEW("/templates/intel/beastView.png"),
@@ -72,6 +73,7 @@ public enum EnumTemplates {
 	PETS_CHEST_COMPLETED("/templates/pets/chestCompleted.png"),
 	PETS_CHEST_SELECT("/templates/pets/chestSelect.png"),
 	PETS_CHEST_START("/templates/pets/chestStart.png"),
+	PETS_CHEST_ATTEMPT("/templates/pets/chestAttempt.png"),
 	PETS_CHEST_SHARE("/templates/pets/chestShare.png"),
 	PETS_CHEST_RED("/templates/pets/chestRed.png"),
 	PETS_CHEST_PURPLE("/templates/pets/chestPurple.png"),

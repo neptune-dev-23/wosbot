@@ -52,6 +52,14 @@ public class BankTask extends DelayedTask {
 
 				emulatorManager.tapAtRandomPoint(EMULATOR_NUMBER, bankResult.getPoint(), bankResult.getPoint());
 
+				sleepTask(2000);
+				DTOImageSearchResult bankDepositResult = emulatorManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.EVENTS_DEALS_BANK_WITHDRAW.getTemplate(), 0, 0, 720, 1280, 90);
+
+				if (bankDepositResult.isFound()) {
+					emulatorManager.tapAtRandomPoint(EMULATOR_NUMBER, bankDepositResult.getPoint(), bankDepositResult.getPoint());
+					emulatorManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(670, 40), new DTOPoint(670, 40), 15, 100);
+				}
+
 				// Verificar si el depósito está disponible
 				DTOImageSearchResult isAvailableResult = emulatorManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.EVENTS_DEALS_BANK_DEPOSIT.getTemplate(), 0, 0, 720, 1280, 90);
 				if (isAvailableResult.isFound()) {

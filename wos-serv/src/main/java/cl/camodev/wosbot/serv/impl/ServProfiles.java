@@ -1,6 +1,7 @@
 package cl.camodev.wosbot.serv.impl;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -11,6 +12,7 @@ import cl.camodev.wosbot.almac.repo.ConfigRepository;
 import cl.camodev.wosbot.almac.repo.IConfigRepository;
 import cl.camodev.wosbot.almac.repo.IProfileRepository;
 import cl.camodev.wosbot.almac.repo.ProfileRepository;
+import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.console.enumerable.TpConfigEnum;
 import cl.camodev.wosbot.ot.DTOProfileStatus;
 import cl.camodev.wosbot.ot.DTOProfiles;
@@ -42,6 +44,20 @@ public class ServProfiles implements IServProfile {
 	@Override
 	public List<DTOProfiles> getProfiles() {
 		return iProfileRepository.getProfiles();
+	}
+
+	public HashMap<EnumConfigurationKey, String> getGlobalSettings() {
+		List<Config> configs = iConfigRepository.getGlobalConfigs();
+		if (configs != null) {
+			HashMap<EnumConfigurationKey, String> settings = new HashMap<EnumConfigurationKey, String>();
+			for (Config config : configs) {
+				settings.put(EnumConfigurationKey.valueOf(config.getKey()), config.getValor());
+			}
+			return settings;
+		} else {
+			return null;
+		}
+
 	}
 
 	@Override
@@ -149,4 +165,5 @@ public class ServProfiles implements IServProfile {
 		}
 		listeners.add(listener);
 	}
+
 }

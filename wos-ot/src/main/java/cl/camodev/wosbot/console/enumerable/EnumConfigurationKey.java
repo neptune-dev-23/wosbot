@@ -5,6 +5,7 @@ public enum EnumConfigurationKey {
 	//@formatter:off
 	BOOL_DEBUG("false", Boolean.class ),
 	DISCORD_TOKEN_STRING("", String.class),
+	MUMU_PATH_STRING("", String.class),
 	
 	INT_TASK_OFFSET("5", Integer.class),
 	BOOL_NOMADIC_MERCHANT("false", Boolean.class), 

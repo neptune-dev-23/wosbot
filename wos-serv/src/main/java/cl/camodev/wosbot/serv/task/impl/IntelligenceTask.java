@@ -49,7 +49,7 @@ public class IntelligenceTask extends DelayedTask {
 			sleepTask(2000);
 
 			servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Searching for completed missions");
-			for (int i = 0; i < 10; i++) {
+			for (int i = 0; i < 5; i++) {
 				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), "Searching for completed missions attempt " + i);
 				DTOImageSearchResult completed = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_COMPLETED.getTemplate(), 0, 0, 720, 1280, 90);
 				if (completed.isFound()) {
@@ -65,7 +65,7 @@ public class IntelligenceTask extends DelayedTask {
 				);
 				servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Searching for beasts");
 				for (EnumTemplates beast : beastPriorities) {
-					if (searchAndProcessBeast(beast, 10)) {
+					if (searchAndProcessBeast(beast, 5)) {
 						this.reschedule(LocalDateTime.now().plusMinutes(3));
 						return;
 					}
@@ -76,7 +76,7 @@ public class IntelligenceTask extends DelayedTask {
 				List<EnumTemplates> priorities = Arrays.asList(EnumTemplates.INTEL_SURVIVOR_YELLOW, EnumTemplates.INTEL_SURVIVOR_PURPLE, EnumTemplates.INTEL_SURVIVOR_BLUE);
 				servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Searching for survivors");
 				for (EnumTemplates beast : priorities) {
-					if (searchAndProcessSurvivor(beast, 10)) {
+					if (searchAndProcessSurvivor(beast, 5)) {
 						this.reschedule(LocalDateTime.now());
 						return;
 					}
@@ -88,7 +88,7 @@ public class IntelligenceTask extends DelayedTask {
 				List<EnumTemplates> priorities = Arrays.asList(EnumTemplates.INTEL_JOURNEY_YELLOW, EnumTemplates.INTEL_JOURNEY_PURPLE, EnumTemplates.INTEL_JOURNEY_BLUE);
 				servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Searching for explorations");
 				for (EnumTemplates beast : priorities) {
-					if (searchAndProcessExploration(beast, 10)) {
+					if (searchAndProcessExploration(beast, 5)) {
 						this.reschedule(LocalDateTime.now());
 						return;
 					}
