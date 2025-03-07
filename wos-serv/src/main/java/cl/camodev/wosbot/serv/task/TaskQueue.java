@@ -122,8 +122,7 @@ public class TaskQueue {
 
 	// Métodos auxiliares
 	private void ejecutarFragmentoEspecifico(long minDelay) {
-		EmulatorManager.getInstance().closeGame(profile.getEmulatorNumber());
-		EmulatorManager.getInstance().closePlayer(profile.getEmulatorNumber());
+		EmulatorManager.getInstance().closeEmulator(profile.getEmulatorNumber());
 		ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueue", profile.getName(), "Closing game due to large inactivity");
 		LocalDateTime scheduledTime = LocalDateTime.now().plusSeconds(minDelay);
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");

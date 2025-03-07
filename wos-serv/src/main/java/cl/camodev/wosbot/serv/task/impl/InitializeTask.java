@@ -23,12 +23,12 @@ public class InitializeTask extends DelayedTask {
 		ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Checking emulator status");
 		while (!isStarted) {
 
-			if (EmulatorManager.getInstance().getPlayerState(EMULATOR_NUMBER)) {
+			if (EmulatorManager.getInstance().isRunning(EMULATOR_NUMBER)) {
 				isStarted = true;
 				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "emulator found");
 			} else {
 				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "emulator not found, trying to start it");
-				EmulatorManager.getInstance().launchPlayer(EMULATOR_NUMBER);
+				EmulatorManager.getInstance().launchEmulator(EMULATOR_NUMBER);
 				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "waiting 15 seconds before checking again");
 				sleepTask(15000);
 			}
@@ -42,8 +42,8 @@ public class InitializeTask extends DelayedTask {
 
 //			EmulatorManager.getInstance().
 			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "launching game");
-			EmulatorManager.getInstance().connectADB(profile.getEmulatorNumber().toString());
-			EmulatorManager.getInstance().launchGame(EMULATOR_NUMBER);
+//			EmulatorManager.getInstance().connectADB(profile.getEmulatorNumber().toString());
+			EmulatorManager.getInstance().launchApp(EMULATOR_NUMBER, EmulatorManager.WHITEOUT_PACKAGE);
 			sleepTask(25000);
 
 			boolean homeScreen = false;
@@ -62,8 +62,8 @@ public class InitializeTask extends DelayedTask {
 
 				if (attempts > 5) {
 					ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(), "screen not found after 5 attempts, restarting emulator");
-					EmulatorManager.getInstance().closePlayer(EMULATOR_NUMBER);
-					EmulatorManager.getInstance().restartAdbServer();
+					EmulatorManager.getInstance().closeEmulator(EMULATOR_NUMBER);
+//					EmulatorManager.getInstance().restartAdbServer();
 					isStarted = false;
 					this.setRecurring(true);
 					break;

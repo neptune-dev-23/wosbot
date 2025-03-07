@@ -25,7 +25,7 @@
         <HBox GridPane.rowIndex="0">
             <children>
                
-                <VBox fx:id="buttonsContainer" prefHeight="325.0" prefWidth="99.0" style="-fx-border-color: black;">
+                <VBox fx:id="buttonsContainer" prefHeight="325.0" prefWidth="110.0" style="-fx-border-color: black;">
                <HBox.margin>
                   <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
                </HBox.margin></VBox>

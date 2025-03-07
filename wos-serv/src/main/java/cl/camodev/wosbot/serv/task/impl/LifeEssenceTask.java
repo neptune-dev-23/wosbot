@@ -33,7 +33,7 @@ public class LifeEssenceTask extends DelayedTask {
 			if (lifeEssenceResult.isFound()) {
 				EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, lifeEssenceResult.getPoint(), lifeEssenceResult.getPoint());
 				sleepTask(10000);
-				EmulatorManager.getInstance().ejecutarZoom(EMULATOR_NUMBER);
+//				EmulatorManager.getInstance().ejecutarZoom(EMULATOR_NUMBER);
 				sleepTask(11000);
 			} else {
 				System.out.println("Life essence menu not found");

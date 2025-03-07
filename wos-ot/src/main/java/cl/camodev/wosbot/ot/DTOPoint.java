@@ -1,19 +1,19 @@
 package cl.camodev.wosbot.ot;
 
 public class DTOPoint {
-	private double x;
-	private double y;
+	private int x;
+	private int y;
 
-	public DTOPoint(double x, double y) {
+	public DTOPoint(int x, int y) {
 		this.x = x;
 		this.y = y;
 	}
 
-	public double getX() {
+	public int getX() {
 		return x;
 	}
 
-	public double getY() {
+	public int getY() {
 		return y;
 	}
 

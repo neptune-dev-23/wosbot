@@ -20,6 +20,36 @@
 	-fx-text-fill: white; /* Color del texto */
 }
 
+/* Estilo para los RadioButton */
+.radio-button {
+    -fx-text-fill: #FFFFFF; /* Color del texto */
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-opacity: 1; /* Asegura que sean visibles */
+}
+
+/* Cambia el color del punto del RadioButton cuando está seleccionado */
+.radio-button .radio {
+    -fx-background-color: transparent;
+    -fx-border-color: #FFA726;
+    -fx-border-width: 2px;
+    -fx-border-radius: 10px;
+    -fx-padding: 5px;
+}
+
+/* Cuando el RadioButton está seleccionado */
+.radio-button:selected .radio {
+    -fx-background-color: #FFA726;
+    -fx-border-color: #FFA726;
+}
+
+/* Ajusta el tamaño del radio */
+.radio-button .dot {
+    -fx-background-radius: 5px;
+    -fx-pref-width: 8px;
+    -fx-pref-height: 8px;
+}
+
 /* Estilo base para todos los botones */
 .button {
 	-fx-background-color: linear-gradient(#f87e00, #d96800);

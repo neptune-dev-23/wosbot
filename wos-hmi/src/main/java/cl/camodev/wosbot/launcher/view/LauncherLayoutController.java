@@ -2,17 +2,21 @@ package cl.camodev.wosbot.launcher.view;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import cl.camodev.utiles.UtilCV;
 import cl.camodev.wosbot.alliance.view.AllianceLayoutController;
 import cl.camodev.wosbot.city.view.CityEventsLayoutController;
+import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.view.ConsoleLogLayoutController;
+import cl.camodev.wosbot.emulator.view.EmuConfigLayoutController;
 import cl.camodev.wosbot.intel.view.IntelLayoutController;
 import cl.camodev.wosbot.ot.DTOBotState;
 import cl.camodev.wosbot.ot.DTOLogMessage;
@@ -22,6 +26,7 @@ import cl.camodev.wosbot.profile.model.IProfileLoadListener;
 import cl.camodev.wosbot.profile.model.IProfileObserverInjectable;
 import cl.camodev.wosbot.profile.model.ProfileAux;
 import cl.camodev.wosbot.profile.view.ProfileManagerLayoutController;
+import cl.camodev.wosbot.serv.impl.ServConfig;
 import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.training.view.TrainingLayoutController;
 import javafx.event.ActionEvent;
@@ -30,8 +35,9 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
@@ -82,6 +88,7 @@ public class LauncherLayoutController implements IProfileLoadListener {
 	@FXML
 	private void initialize() {
 		initializeDiscordBot();
+		initializeEmulatorManager();
 		initializeLogModule();
 		initializeProfileModule();
 		initializeModules();
@@ -90,40 +97,140 @@ public class LauncherLayoutController implements IProfileLoadListener {
 
 	}
 
+	public enum EmulatorType {
+		MUMU("MuMuPlayer", EnumConfigurationKey.MUMU_PATH_STRING, "C:\\Program Files\\Netease\\MuMuPlayerGlobal-12.0\\shell\\MuMuManager.exe"), LDPLAYER("LDPlayer", EnumConfigurationKey.LDPLAYER_PATH_STRING, "C:\\LDPlayer\\LDPlayer9\\ldconsole.exe");
+
+		private final String displayName;
+		private final EnumConfigurationKey configKey;
+		private final String defaultPath;
+
+		EmulatorType(String displayName, EnumConfigurationKey configKey, String defaultPath) {
+			this.displayName = displayName;
+			this.configKey = configKey;
+			this.defaultPath = defaultPath;
+		}
+
+		public String getDisplayName() {
+			return displayName;
+		}
+
+		public EnumConfigurationKey getConfigKey() {
+			return configKey;
+		}
+
+		public String getDefaultPath() {
+			return defaultPath;
+		}
+	}
+
 	private void initializeEmulatorManager() {
-		String defaultPath = "C:\\Program Files\\Netease\\MuMuPlayerGlobal-12.0\\shell\\MuMuManager.exe";
-		File defaultFile = new File(defaultPath);
+		HashMap<String, String> globalConfig = ServConfig.getServices().getGlobalConfig();
 
-		if (defaultFile.exists()) {
-			// Si el archivo existe en la ruta predeterminada, se usa esta ruta directamente
-			ServScheduler.getServices().saveEmuManagerPath(defaultFile.getParent());
-		} else {
-			// Si no existe, se solicita al usuario que seleccione el archivo manualmente
-			if (!ServScheduler.getServices().isEmuManagerReady()) {
-				FileChooser fileChooser = new FileChooser();
-				fileChooser.setTitle("Select MuMuManager.exe");
+		if (globalConfig == null || globalConfig.isEmpty()) {
+			globalConfig = new HashMap<>();
+		}
 
-				FileChooser.ExtensionFilter exeFilter = new FileChooser.ExtensionFilter("MuMuManager Executable", "*.exe");
-				fileChooser.getExtensionFilters().add(exeFilter);
+		// Verificar si hay un emulador activo y validar su path
+		String savedActiveEmulator = globalConfig.get(EnumConfigurationKey.CURRENT_EMULATOR_STRING.name());
+		EmulatorType activeEmulator = savedActiveEmulator != null ? EmulatorType.valueOf(savedActiveEmulator) : null;
+		boolean activeEmulatorValid = false;
 
-				fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+		if (activeEmulator != null) {
+			String activePath = globalConfig.get(activeEmulator.getConfigKey().name());
+			if (activePath != null && new File(activePath).exists()) {
+				activeEmulatorValid = true;
+			} else {
+				ServScheduler.getServices().saveEmulatorPath(activeEmulator.getConfigKey(), null); // Invalidar path no válido
+			}
+		}
 
-				File selectedFile = fileChooser.showOpenDialog(stage);
+		// Validar el otro emulador si el activo no es válido
+		List<EmulatorType> foundEmulators = new ArrayList<>();
+		for (EmulatorType emulator : EmulatorType.values()) {
+			if (activeEmulator == emulator)
+				continue;
 
-				if (selectedFile != null && selectedFile.getName().equals("MuMuManager.exe")) {
-					String directoryPath = selectedFile.getParent(); // Obtener la carpeta contenedora
-					ServScheduler.getServices().saveEmuManagerPath(directoryPath);
-				} else {
-					Alert alert = new Alert(AlertType.ERROR);
-					alert.setTitle("ERROR");
-					alert.setHeaderText(null);
-					alert.setContentText("MuMuManager.exe not found, please select the correct file");
-					alert.showAndWait();
-
-					System.exit(0); // Cerrar la aplicación después de mostrar la alerta
+			String emulatorPath = globalConfig.get(emulator.getConfigKey().name());
+			if (emulatorPath != null && new File(emulatorPath).exists()) {
+				foundEmulators.add(emulator);
+			} else {
+				File emulatorFile = new File(emulator.getDefaultPath());
+				if (emulatorFile.exists()) {
+					ServScheduler.getServices().saveEmulatorPath(emulator.getConfigKey(), emulatorFile.getParent());
+					foundEmulators.add(emulator);
 				}
 			}
 		}
+
+		if (!activeEmulatorValid) {
+			if (foundEmulators.size() == 1) {
+				ServScheduler.getServices().saveEmulatorPath(EnumConfigurationKey.CURRENT_EMULATOR_STRING, foundEmulators.get(0).name());
+				return;
+			} else if (foundEmulators.isEmpty()) {
+				selectEmulatorManually();
+			} else {
+				EmulatorType selectedEmulator = askUserForPreferredEmulator(foundEmulators);
+				ServScheduler.getServices().saveEmulatorPath(EnumConfigurationKey.CURRENT_EMULATOR_STRING, selectedEmulator.name());
+			}
+		}
+	}
+
+	private EmulatorType askUserForPreferredEmulator(List<EmulatorType> emulators) {
+		Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+		alert.setTitle("Select Emulator");
+		alert.setHeaderText("Multiple emulators found. Please select which one to use.");
+
+		List<ButtonType> buttons = new ArrayList<>();
+		for (EmulatorType emulator : emulators) {
+			buttons.add(new ButtonType(emulator.getDisplayName()));
+		}
+		ButtonType cancelButton = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+		buttons.add(cancelButton);
+
+		alert.getButtonTypes().setAll(buttons);
+		Optional<ButtonType> result = alert.showAndWait();
+
+		for (EmulatorType emulator : emulators) {
+			if (result.isPresent() && result.get().getText().equals(emulator.getDisplayName())) {
+				return emulator;
+			}
+		}
+
+		showErrorAndExit("No emulator selected. The application will close.");
+		return null; // Nunca debería llegar aquí porque el sistema se cerrará antes.
+	}
+
+	private void selectEmulatorManually() {
+		FileChooser fileChooser = new FileChooser();
+		fileChooser.setTitle("Select Emulator Executable");
+
+		FileChooser.ExtensionFilter exeFilter = new FileChooser.ExtensionFilter("Emulator Executable", "*.exe");
+		fileChooser.getExtensionFilters().add(exeFilter);
+		fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+
+		File selectedFile = fileChooser.showOpenDialog(stage);
+
+		if (selectedFile != null) {
+			for (EmulatorType emulator : EmulatorType.values()) {
+				if (selectedFile.getName().equals(new File(emulator.getDefaultPath()).getName())) {
+					ServScheduler.getServices().saveEmulatorPath(emulator.getConfigKey(), selectedFile.getParent());
+					ServScheduler.getServices().saveEmulatorPath(EnumConfigurationKey.CURRENT_EMULATOR_STRING, emulator.name());
+					return;
+				}
+			}
+			showErrorAndExit("Invalid emulator file selected. Please select a valid emulator executable.");
+		} else {
+			showErrorAndExit("No emulator selected. The application will close.");
+		}
+	}
+
+	private void showErrorAndExit(String message) {
+		Alert alert = new Alert(Alert.AlertType.ERROR);
+		alert.setTitle("ERROR");
+		alert.setHeaderText(null);
+		alert.setContentText(message);
+		alert.showAndWait();
+		System.exit(0);
 	}
 
 	private void initializeDiscordBot() {
@@ -160,7 +267,8 @@ public class LauncherLayoutController implements IProfileLoadListener {
 				new ModuleDefinition("AllianceLayout", "Alliance", AllianceLayoutController::new),
 				new ModuleDefinition("TrainingLayout", "Training", TrainingLayoutController::new),
 				new ModuleDefinition("PetsLayout", "Pets", PetsLayoutController::new),
-				new ModuleDefinition("IntelLayout", "Intel", IntelLayoutController::new)
+				new ModuleDefinition("IntelLayout", "Intel", IntelLayoutController::new),
+				new ModuleDefinition("EmuConfigLayout", "Emulator Config", EmuConfigLayoutController::new)
 				);
 		//@formatter:on
 
@@ -198,7 +306,11 @@ public class LauncherLayoutController implements IProfileLoadListener {
 
 	@FXML
 	void handleButtonPhoto(ActionEvent event) {
-//		EmulatorManager.getInstance().captureScrenshotViaADB("0");
+//		Emulator emu = EmulatorFactory.createEmulator(EmulatorType.LDPLAYER, "C:\\LDPlayer\\LDPlayer9");
+//
+////		Emulator emu = EmulatorFactory.createEmulator(EmulatorType.MEMU, "C:\\Program Files\\Netease\\MuMuPlayerGlobal-12.0\\shell");
+//		emu.swipe("0", new DTOPoint(0, 450), new DTOPoint(720, 450));
+
 	}
 
 	@FXML

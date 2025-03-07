@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<GridPane xmlns:fx="http://javafx.com/fxml"
+          hgap="10" vgap="10">
+    
+    <!-- Define las columnas para que ocupen todo el espacio -->
+    <columnConstraints>
+        <ColumnConstraints minWidth="100" hgrow="NEVER"/>
+        <ColumnConstraints hgrow="ALWAYS"/>
+        <ColumnConstraints minWidth="100" hgrow="NEVER"/>
+    </columnConstraints>
+
+    <!-- Define las filas para que ocupen todo el espacio -->
+    <rowConstraints>
+        <RowConstraints vgrow="ALWAYS"/>
+        <RowConstraints vgrow="ALWAYS"/>
+        <RowConstraints vgrow="ALWAYS"/>
+        <RowConstraints vgrow="ALWAYS"/>
+        <RowConstraints vgrow="ALWAYS"/>
+    </rowConstraints>
+
+    <!-- Etiquetas -->
+    <Label text="MuMu Player Path:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+    <Label text="LD Player Path:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+    
+    <!-- Campos de texto para mostrar los paths -->
+    <TextField fx:id="muMuPathField" editable="false" GridPane.rowIndex="0" GridPane.columnIndex="1" 
+               maxWidth="Infinity"/>
+    <TextField fx:id="ldPlayerPathField" editable="false" GridPane.rowIndex="1" GridPane.columnIndex="1"
+               maxWidth="Infinity"/>
+    
+    <!-- Botones de selección -->
+    <Button text="Select" onAction="#handleSelectMuMuPath" GridPane.rowIndex="0" GridPane.columnIndex="2"
+            maxWidth="Infinity"/>
+    <Button text="Select" onAction="#handleSelectLDPlayerPath" GridPane.rowIndex="1" GridPane.columnIndex="2"
+            maxWidth="Infinity"/>
+    
+    <!-- Selector de emulador activo -->
+    <Label text="Active Emulator:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+
+    <VBox spacing="10" GridPane.rowIndex="2" GridPane.columnIndex="1">
+        <RadioButton text="MuMuPlayer" fx:id="muMuRadio"/>
+        <RadioButton text="LDPlayer" fx:id="ldPlayerRadio"/>
+    </VBox>
+    
+    <!-- Botón para guardar configuración -->
+    <Button text="Save Configuration" onAction="#handleSaveConfiguration"
+            GridPane.rowIndex="4" GridPane.columnIndex="1" maxWidth="Infinity"/>
+</GridPane>

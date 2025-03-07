@@ -34,6 +34,7 @@ import cl.camodev.wosbot.serv.task.TaskQueueManager;
 import cl.camodev.wosbot.serv.task.impl.AllianceAutojoinTask;
 import cl.camodev.wosbot.serv.task.impl.AllianceChestTask;
 import cl.camodev.wosbot.serv.task.impl.AllianceTechTask;
+import cl.camodev.wosbot.serv.task.impl.BankTask;
 import cl.camodev.wosbot.serv.task.impl.CrystalLaboratoryTask;
 import cl.camodev.wosbot.serv.task.impl.ExplorationTask;
 import cl.camodev.wosbot.serv.task.impl.HeroRecruitmentTask;
@@ -76,6 +77,22 @@ public class ServScheduler {
 	}
 
 	public void startBot() {
+		EmulatorManager emulator = EmulatorManager.getInstance();
+
+		try {
+			emulator.initialze();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return;
+		}
+
+		ServConfig.getServices().getGlobalConfig().forEach((key, value) -> {
+			if (key.equals(EnumConfigurationKey.MUMU_PATH_STRING.name())) {
+				saveEmulatorPath(EnumConfigurationKey.MUMU_PATH_STRING, value);
+			} else if (key.equals(EnumConfigurationKey.LDPLAYER_PATH_STRING.name())) {
+				saveEmulatorPath(EnumConfigurationKey.LDPLAYER_PATH_STRING, value);
+			}
+		});
 		List<DTOProfiles> profiles = ServProfiles.getServices().getProfiles();
 
 		if (profiles == null || profiles.isEmpty()) {
@@ -203,7 +220,7 @@ public class ServScheduler {
 					}
 				});
 
-//				queue.addTask(new BankTask(profile, TpDailyTaskEnum.BANK));
+				queue.addTask(new BankTask(profile, TpDailyTaskEnum.BANK));
 
 				queueManager.startQueue(queueName);
 			});
@@ -272,27 +289,15 @@ public class ServScheduler {
 		iDailyTaskRepository.saveDailyTask(dailyTask);
 	}
 
-	public boolean isEmuManagerReady() {
+	public void saveEmulatorPath(EnumConfigurationKey enumConfigurationKey, String filePath) {
 		List<Config> configs = iConfigRepository.getGlobalConfigs();
 
-		Config config = configs.stream().filter(c -> c.getKey().equals(EnumConfigurationKey.MUMU_PATH_STRING.name())).findFirst().orElse(null);
+		Config config = configs.stream().filter(c -> c.getKey().equals(enumConfigurationKey.name())).findFirst().orElse(null);
 
-		if (config == null) {
-			return false;
-		} else {
-			EmulatorManager.getInstance().setMUMU_PATH(config.getValor());
-			return true;
-		}
-	}
-
-	public void saveEmuManagerPath(String filePath) {
-		List<Config> configs = iConfigRepository.getGlobalConfigs();
-
-		Config config = configs.stream().filter(c -> c.getKey().equals(EnumConfigurationKey.MUMU_PATH_STRING.name())).findFirst().orElse(null);
 		if (config == null) {
 			TpConfig tpConfig = iConfigRepository.getTpConfig(TpConfigEnum.GLOBAL_CONFIG);
 			config = new Config();
-			config.setKey(EnumConfigurationKey.MUMU_PATH_STRING.name());
+			config.setKey(enumConfigurationKey.name());
 			config.setValor(filePath);
 			config.setTpConfig(tpConfig);
 			iConfigRepository.addConfig(config);
@@ -300,8 +305,6 @@ public class ServScheduler {
 			config.setValor(filePath);
 			iConfigRepository.saveConfig(config);
 		}
-		EmulatorManager.getInstance().setMUMU_PATH(filePath);
-
 	}
 
 }

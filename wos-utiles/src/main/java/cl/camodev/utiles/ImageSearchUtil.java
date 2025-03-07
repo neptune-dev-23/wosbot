@@ -116,7 +116,7 @@ public class ImageSearchUtil {
 		matchLoc.y += roi.y;
 
 		// Convertir la posición a un DTOPoint.
-		DTOPoint dtoPoint = new DTOPoint(matchLoc.x, matchLoc.y);
+		DTOPoint dtoPoint = new DTOPoint((int) matchLoc.x, (int) matchLoc.y);
 
 		// Retornar el resultado de la búsqueda, incluyendo el porcentaje de coincidencia.
 		return new DTOImageSearchResult(true, dtoPoint, matchPercentage);
@@ -192,7 +192,7 @@ public class ImageSearchUtil {
 			double centerX = matchLoc.x + roi.x + (template.cols() / 2.0);
 			double centerY = matchLoc.y + roi.y + (template.rows() / 2.0);
 
-			return new DTOImageSearchResult(true, new DTOPoint(centerX, centerY), matchPercentage);
+			return new DTOImageSearchResult(true, new DTOPoint((int) centerX, (int) centerY), matchPercentage);
 
 		} catch (IOException e) {
 			e.printStackTrace();

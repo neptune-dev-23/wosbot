@@ -6,6 +6,8 @@ public enum EnumConfigurationKey {
 	BOOL_DEBUG("false", Boolean.class ),
 	DISCORD_TOKEN_STRING("", String.class),
 	MUMU_PATH_STRING("", String.class),
+	LDPLAYER_PATH_STRING("", String.class),
+	CURRENT_EMULATOR_STRING("", String.class),
 	
 	INT_TASK_OFFSET("5", Integer.class),
 	BOOL_NOMADIC_MERCHANT("false", Boolean.class), 
