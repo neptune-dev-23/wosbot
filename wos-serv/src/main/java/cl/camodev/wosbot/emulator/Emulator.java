@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Base64;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
 
@@ -57,33 +58,85 @@ public abstract class Emulator {
 
 	// 🔹 Ejecuta un comando ADB con salida de texto
 	protected String executeAdbCommandWithOutput(String emulatorNumber, String command) {
-		try {
-			String[] fullCommand = buildAdbCommand(emulatorNumber, command);
+		int maxRetries = 10;
+		int retryDelay = 100;
+		String adbPath = consolePath + File.separator + "adb.exe"; // Ruta al ADB del emulador
 
-			ProcessBuilder pb = new ProcessBuilder(fullCommand);
-			pb.directory(new File(consolePath).getParentFile());
+		for (int attempt = 1; attempt <= maxRetries; attempt++) {
+			try {
+				String[] fullCommand = buildAdbCommand(emulatorNumber, command);
 
-			Process process = pb.start();
+				ProcessBuilder pb = new ProcessBuilder(fullCommand);
+				pb.directory(new File(consolePath)); // Establecemos el directorio donde está adb.exe
+				pb.redirectErrorStream(true); // Redirigir errores a la salida estándar
 
-			// Leer la salida del comando
-			StringBuilder output = new StringBuilder();
-			try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-				String line;
-				while ((line = reader.readLine()) != null) {
-					output.append(line).append("\n");
+				Process process = pb.start();
+
+				// Capturar salida en un hilo separado para evitar bloqueos
+				StringBuilder output = new StringBuilder();
+				Thread outputReader = new Thread(() -> {
+					try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+						String line;
+						while ((line = reader.readLine()) != null) {
+							output.append(line).append("\n");
+						}
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				});
+				outputReader.start();
+
+				int exitCode = process.waitFor();
+				outputReader.join(); // Asegurar que hemos leído toda la salida antes de continuar
+
+				String result = output.toString().trim();
+
+				// 📌 Verificar si ADB está en estado offline y reiniciarlo
+				if (result.contains("device offline") || result.isEmpty()) {
+					System.err.println("⚠ Dispositivo en estado OFFLINE o sin respuesta. Reiniciando ADB interno de MuMu...");
+					restartAdb(adbPath);
+					Thread.sleep(2000); // Esperar para que el servidor ADB se recupere
+					continue; // Reintentar el comando
 				}
-			}
 
-			int exitCode = process.waitFor();
-			if (exitCode == 0) {
-				return output.toString().trim();
-			} else {
-				System.err.println("❌ Error ejecutando el comando, código de salida: " + exitCode);
+				if (exitCode == 0 && !result.isEmpty()) {
+					return result;
+				} else {
+					System.out.println("🔄 Intento " + attempt + " - No se obtuvo una salida válida, reintentando...");
+					Thread.sleep(retryDelay);
+				}
+			} catch (IOException | InterruptedException e) {
+				e.printStackTrace();
 			}
+		}
+
+		System.err.println("❌ No se obtuvo una salida válida después de " + maxRetries + " intentos.");
+		return null;
+	}
+
+	private void restartAdb(String adbPath) {
+
+		try {
+			System.out.println("🔄 Reiniciando ADB del emulador...");
+
+			// Ejecutar "adb kill-server"
+			ProcessBuilder killServer = new ProcessBuilder(adbPath, "kill-server");
+			killServer.redirectErrorStream(true);
+			Process killProcess = killServer.start();
+			killProcess.waitFor();
+
+			// Ejecutar "adb start-server"
+			ProcessBuilder startServer = new ProcessBuilder(adbPath, "start-server");
+			startServer.redirectErrorStream(true);
+			Process startProcess = startServer.start();
+			startProcess.waitFor();
+
+			System.out.println("✅ ADB reiniciado con éxito.");
 		} catch (IOException | InterruptedException e) {
 			e.printStackTrace();
+			System.err.println("❌ Error al reiniciar el ADB interno de MuMu.");
 		}
-		return null;
+
 	}
 
 	// 🔹 Captura de pantalla y devuelve un `ByteArrayInputStream`
@@ -93,7 +146,10 @@ public abstract class Emulator {
 
 		if (base64String != null) {
 			try {
-				base64String = base64String.replaceAll("\\r|\\n", "");
+				// Eliminar líneas no deseadas antes de procesar la imagen
+				base64String = base64String.lines().filter(line -> !line.contains("already connected to") && !line.contains("device offline")).collect(Collectors.joining());
+
+				base64String = base64String.replaceAll("\\r|\\n", ""); // Quitar saltos de línea
 				byte[] imageBytes = Base64.getDecoder().decode(base64String);
 				return new ByteArrayInputStream(imageBytes);
 			} catch (IllegalArgumentException e) {
