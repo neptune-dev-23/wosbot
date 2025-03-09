@@ -3,6 +3,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.RadioButton?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
@@ -59,11 +60,6 @@
             <Insets />
          </GridPane.margin>
       </CheckBox>
-      <CheckBox fx:id="checkBoxStorehouseChest" graphicTextGap="3.0" mnemonicParsing="false" text="Claim storehouse chests" GridPane.rowIndex="4">
-         <GridPane.margin>
-            <Insets />
-         </GridPane.margin>
-      </CheckBox>
       <CheckBox fx:id="checkBoxMailRewards" graphicTextGap="3.0" mnemonicParsing="false" text="Claim mail rewards" GridPane.rowIndex="1" />
       <HBox prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="1">
          <children>
@@ -78,5 +74,15 @@
          </children>
       </HBox>
       <CheckBox fx:id="checkBoxBuyMonthlyVip" graphicTextGap="3.0" mnemonicParsing="false" text="Buy monthly vip (10k gems)" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+      <RadioButton fx:id="radioButtonStorehouseStamina" mnemonicParsing="false" text="Claim storehouse stamina" GridPane.columnIndex="1" GridPane.rowIndex="4">
+         <GridPane.margin>
+            <Insets />
+         </GridPane.margin>
+      </RadioButton>
+      <RadioButton fx:id="radioButtonStorehouseChest" mnemonicParsing="false" text="Claim storehouse chests + stamina" GridPane.rowIndex="4">
+         <GridPane.margin>
+            <Insets />
+         </GridPane.margin>
+      </RadioButton>
    </children>
 </GridPane>

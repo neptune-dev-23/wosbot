@@ -9,7 +9,9 @@ import cl.camodev.wosbot.profile.model.IProfileLoadListener;
 import cl.camodev.wosbot.profile.model.IProfileObserverInjectable;
 import cl.camodev.wosbot.profile.model.ProfileAux;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleGroup;
 
 public abstract class AbstractProfileController implements IProfileLoadListener, IProfileObserverInjectable {
 
@@ -18,6 +20,7 @@ public abstract class AbstractProfileController implements IProfileLoadListener,
 
 	protected final Map<CheckBox, EnumConfigurationKey> checkBoxMappings = new HashMap<>();
 	protected final Map<TextField, EnumConfigurationKey> textFieldMappings = new HashMap<>();
+	protected final Map<RadioButton, EnumConfigurationKey> radioButtonMappings = new HashMap<>();
 
 	@Override
 	public void setProfileObserver(IProfileChangeObserver observer) {
@@ -27,6 +30,22 @@ public abstract class AbstractProfileController implements IProfileLoadListener,
 	protected void initializeChangeEvents() {
 		checkBoxMappings.forEach(this::setupCheckBoxListener);
 		textFieldMappings.forEach(this::setupTextFieldUpdateOnFocusOrEnter);
+		radioButtonMappings.forEach(this::setupRadioButtonListener);
+	}
+
+	protected void createToggleGroup(RadioButton... radioButtons) {
+		ToggleGroup toggleGroup = new ToggleGroup();
+		for (RadioButton radioButton : radioButtons) {
+			radioButton.setToggleGroup(toggleGroup);
+		}
+	}
+
+	protected void setupRadioButtonListener(RadioButton radioButton, EnumConfigurationKey configKey) {
+		radioButton.selectedProperty().addListener((obs, oldVal, newVal) -> {
+			if (!isLoadingProfile) {
+				profileObserver.notifyProfileChange(configKey, newVal);
+			}
+		});
 	}
 
 	protected void setupCheckBoxListener(CheckBox checkBox, EnumConfigurationKey configKey) {
@@ -84,6 +103,11 @@ public abstract class AbstractProfileController implements IProfileLoadListener,
 			textFieldMappings.forEach((textField, key) -> {
 				Integer value = profile.getConfig(key, Integer.class);
 				textField.setText(value != null ? String.valueOf(value) : key.getDefaultValue());
+			});
+
+			radioButtonMappings.forEach((radioButton, key) -> {
+				Boolean value = profile.getConfig(key, Boolean.class);
+				radioButton.setSelected(value != null && value);
 			});
 		} finally {
 			isLoadingProfile = false;

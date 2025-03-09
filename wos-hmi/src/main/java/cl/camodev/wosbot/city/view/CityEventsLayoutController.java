@@ -4,6 +4,7 @@ import cl.camodev.wosbot.common.view.AbstractProfileController;
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
 
 public class CityEventsLayoutController extends AbstractProfileController {
@@ -30,7 +31,10 @@ public class CityEventsLayoutController extends AbstractProfileController {
 	private CheckBox checkBoxNomadicMerchantVip;
 
 	@FXML
-	private CheckBox checkBoxStorehouseChest;
+	private RadioButton radioButtonStorehouseChest;
+
+	@FXML
+	private RadioButton radioButtonStorehouseStamina;
 
 	@FXML
 	private CheckBox checkBoxWarAcademyShards;
@@ -46,7 +50,7 @@ public class CityEventsLayoutController extends AbstractProfileController {
 
 	@FXML
 	private void initialize() {
-		checkBoxMappings.put(checkBoxStorehouseChest, EnumConfigurationKey.STOREHOUSE_CHEST_BOOL);
+
 		checkBoxMappings.put(checkBoxCrystalLabFC, EnumConfigurationKey.BOOL_CRYSTAL_LAB_FC);
 		checkBoxMappings.put(checkBoxExplorationChest, EnumConfigurationKey.BOOL_EXPLORATION_CHEST);
 		checkBoxMappings.put(checkBoxHeroRecruitment, EnumConfigurationKey.BOOL_HERO_RECRUITMENT);
@@ -59,6 +63,11 @@ public class CityEventsLayoutController extends AbstractProfileController {
 
 		textFieldMappings.put(textfieldExplorationOffset, EnumConfigurationKey.INT_EXPLORATION_CHEST_OFFSET);
 		textFieldMappings.put(textfieldMailOffset, EnumConfigurationKey.MAIL_REWARDS_OFFSET_INT);
+
+		radioButtonMappings.put(radioButtonStorehouseChest, EnumConfigurationKey.STOREHOUSE_CHEST_BOOL);
+		radioButtonMappings.put(radioButtonStorehouseStamina, EnumConfigurationKey.STOREHOUSE_STAMINA_BOOL);
+
+		createToggleGroup(radioButtonStorehouseChest, radioButtonStorehouseStamina);
 
 		initializeChangeEvents();
 	}

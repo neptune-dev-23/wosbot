@@ -1,11 +1,6 @@
 package cl.camodev.wosbot.serv.task.impl;
 
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-
+import cl.camodev.utiles.UtilTime;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
@@ -16,14 +11,14 @@ import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.serv.impl.ServLogs;
 import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.task.DelayedTask;
-import net.sourceforge.tess4j.TesseractException;
 
-public class OnlineRewardTask extends DelayedTask {
+public class DailyStaminaTask extends DelayedTask {
 
 	private final EmulatorManager emuManager = EmulatorManager.getInstance();
 	private final ServLogs servLogs = ServLogs.getServices();
+	private final ServScheduler scheduler = ServScheduler.getServices();
 
-	public OnlineRewardTask(DTOProfiles profile, TpDailyTaskEnum tpDailyTask) {
+	public DailyStaminaTask(DTOProfiles profile, TpDailyTaskEnum tpDailyTask) {
 		super(profile, tpDailyTask);
 	}
 
@@ -112,47 +107,14 @@ public class OnlineRewardTask extends DelayedTask {
 						}
 					}
 
-					// debo hacer ocr para verificar el proximo reward
-
-					try {
-						String nextRewardTime = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(285, 642), new DTOPoint(430, 666));
-						System.out.println("Next reward time: " + nextRewardTime);
-						servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Next reward time: " + nextRewardTime);
-						LocalDateTime nextReward = parseNextReward(nextRewardTime);
-						this.reschedule(nextReward.minusSeconds(5));
-						ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, nextReward.minusSeconds(5));
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (TesseractException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
+					this.reschedule(UtilTime.getNextReset());
+					scheduler.updateDailyTaskStatus(profile, tpTask, scheduledTime);
 
 				}
 			}
 
 		} else {
 			emuManager.tapBackButton(EMULATOR_NUMBER);
-		}
-	}
-
-	public static LocalDateTime parseNextReward(String ocrTime) {
-		LocalDateTime now = LocalDateTime.now();
-
-		if (ocrTime == null || ocrTime.isEmpty()) {
-			return now;
-		}
-
-		// Corrección de errores OCR comunes
-		String correctedTime = ocrTime.replaceAll("[Oo]", "0").replaceAll("[lI]", "1").replaceAll("S", "5").replaceAll("[^0-9:]", "");
-
-		try {
-			LocalTime parsedTime = LocalTime.parse(correctedTime, DateTimeFormatter.ofPattern("HH:mm:ss"));
-			return now.plusHours(parsedTime.getHour()).plusMinutes(parsedTime.getMinute()).plusSeconds(parsedTime.getSecond());
-		} catch (DateTimeParseException e) {
-			System.err.println("Error al parsear la hora: " + correctedTime);
-			return now;
 		}
 	}
 

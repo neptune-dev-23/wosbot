@@ -3,7 +3,6 @@ package cl.camodev.wosbot.emulator;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.concurrent.Semaphore;
 
 import cl.camodev.utiles.ImageSearchUtil;
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
@@ -18,8 +17,8 @@ public class EmulatorManager {
 
 	private static EmulatorManager instance;
 	private Emulator emulator;
-	private final int MAX_RUNNING_EMULATORS = 3;
-	private final Semaphore emulatorSlots = new Semaphore(MAX_RUNNING_EMULATORS, true);
+//	private final int MAX_RUNNING_EMULATORS = 3;
+//	private final Semaphore emulatorSlots = new Semaphore(MAX_RUNNING_EMULATORS, true);
 	public static String WHITEOUT_PACKAGE = "com.gof.global";
 
 	private EmulatorManager() {
@@ -77,7 +76,7 @@ public class EmulatorManager {
 	 */
 	private void checkEmulatorInitialized() {
 		if (emulator == null) {
-			throw new IllegalStateException("⚠ No se ha configurado el emulador. Llama a setEmulator() primero.");
+			throw new IllegalStateException();
 		}
 	}
 
@@ -157,6 +156,11 @@ public class EmulatorManager {
 
 	public void launchEmulator(String emulatorNumber) {
 		checkEmulatorInitialized();
+//		try {
+//			emulatorSlots.acquire();
+//		} catch (InterruptedException e) {
+//			e.printStackTrace();
+//		}
 		emulator.launchEmulator(emulatorNumber);
 	}
 
@@ -165,6 +169,7 @@ public class EmulatorManager {
 	 */
 	public void closeEmulator(String emulatorNumber) {
 		checkEmulatorInitialized();
+//		emulatorSlots.release();
 		emulator.closeEmulator(emulatorNumber);
 	}
 

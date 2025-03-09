@@ -2,6 +2,7 @@ package cl.camodev.wosbot.serv.impl;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,8 +35,8 @@ import cl.camodev.wosbot.serv.task.TaskQueueManager;
 import cl.camodev.wosbot.serv.task.impl.AllianceAutojoinTask;
 import cl.camodev.wosbot.serv.task.impl.AllianceChestTask;
 import cl.camodev.wosbot.serv.task.impl.AllianceTechTask;
-import cl.camodev.wosbot.serv.task.impl.BankTask;
 import cl.camodev.wosbot.serv.task.impl.CrystalLaboratoryTask;
+import cl.camodev.wosbot.serv.task.impl.DailyStaminaTask;
 import cl.camodev.wosbot.serv.task.impl.ExplorationTask;
 import cl.camodev.wosbot.serv.task.impl.HeroRecruitmentTask;
 import cl.camodev.wosbot.serv.task.impl.InitializeTask;
@@ -104,7 +105,7 @@ public class ServScheduler {
 			return;
 		} else {
 
-			profiles.stream().filter(DTOProfiles::getEnabled).forEach(profile -> {
+			profiles.stream().filter(DTOProfiles::getEnabled).sorted(Comparator.comparing(DTOProfiles::getId)).forEach(profile -> {
 				String queueName = profile.getName();
 				ServLogs.getServices().appendLog(EnumTpMessageSeverity.DEBUG, "ServScheduler", "-", "starting queue ");
 				queueManager.createQueue(profile);
@@ -181,6 +182,10 @@ public class ServScheduler {
 						() -> new OnlineRewardTask(profile, TpDailyTaskEnum.STOREHOUSE_CHEST)
 					));
 				
+				taskMappings.put(EnumConfigurationKey.STOREHOUSE_STAMINA_BOOL, List.of(
+						() -> new DailyStaminaTask(profile, TpDailyTaskEnum.STOREHOUSE_STAMINA)
+					));
+				
 				taskMappings.put(EnumConfigurationKey.MAIL_REWARDS_BOOL, List.of(
 						() -> new MailRewardsTask(profile, TpDailyTaskEnum.MAIL_REWARDS)
 					));
@@ -201,15 +206,14 @@ public class ServScheduler {
 				// Recorrer el mapa y programar las tareas según la configuración del perfil
 				taskMappings.forEach((key, taskSuppliers) -> {
 					if (profile.getConfig(key, Boolean.class)) {
+//						ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Scheduling tasks");
 						for (Supplier<DelayedTask> taskSupplier : taskSuppliers) {
 							DelayedTask task = taskSupplier.get();
-
-							ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Scheduling tasks");
 
 							if (taskSchedules.containsKey(task.getTpDailyTaskId())) {
 								LocalDateTime nextSchedule = taskSchedules.get(task.getTpDailyTaskId()).getNextSchedule();
 								task.reschedule(nextSchedule);
-								ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Task is completed, rescheduling for tomorrow");
+								ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Scheduled time: ");
 							} else {
 								ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Task not completed, scheduling for today");
 								task.reschedule(LocalDateTime.now());
@@ -220,7 +224,7 @@ public class ServScheduler {
 					}
 				});
 
-				queue.addTask(new BankTask(profile, TpDailyTaskEnum.BANK));
+//				queue.addTask(new BankTask(profile, TpDailyTaskEnum.BANK));
 
 				queueManager.startQueue(queueName);
 			});

@@ -29,6 +29,7 @@ public enum TpDailyTaskEnum {
 	DAILY_TASKS(31, "Daily Tasks"),
 	STOREHOUSE_CHEST(32, "Storehouse Chest"),
 	INTEL(33, "Intel"),
+	STOREHOUSE_STAMINA(34, "Storehouse Stamina"),
 	
 	ALLIANCE_AUTOJOIN(40, "Alliance Autojoin"),
 	

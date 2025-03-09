@@ -40,9 +40,7 @@ public class InitializeTask extends DelayedTask {
 			throw new StopExecutionException("Game not installed");
 		} else {
 
-//			EmulatorManager.getInstance().
 			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "launching game");
-//			EmulatorManager.getInstance().connectADB(profile.getEmulatorNumber().toString());
 			EmulatorManager.getInstance().launchApp(EMULATOR_NUMBER, EmulatorManager.WHITEOUT_PACKAGE);
 			sleepTask(25000);
 
@@ -63,7 +61,6 @@ public class InitializeTask extends DelayedTask {
 				if (attempts > 5) {
 					ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(), "screen not found after 5 attempts, restarting emulator");
 					EmulatorManager.getInstance().closeEmulator(EMULATOR_NUMBER);
-//					EmulatorManager.getInstance().restartAdbServer();
 					isStarted = false;
 					this.setRecurring(true);
 					break;

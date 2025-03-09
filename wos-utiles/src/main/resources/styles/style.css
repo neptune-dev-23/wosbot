@@ -20,35 +20,69 @@
 	-fx-text-fill: white; /* Color del texto */
 }
 
-/* Estilo para los RadioButton */
 .radio-button {
-    -fx-text-fill: #FFFFFF; /* Color del texto */
-    -fx-font-size: 14px;
-    -fx-font-weight: bold;
-    -fx-opacity: 1; /* Asegura que sean visibles */
+	-fx-font-size: 14px; /* Tamaño del texto */
+	-fx-font-weight: bold; /* Negrita */
+	-fx-text-fill: #ffa500; /* Color naranja para el texto */
+	-fx-padding: 5 10; /* Espaciado */
 }
 
-/* Cambia el color del punto del RadioButton cuando está seleccionado */
+/* Personalizar la caja del RadioButton */
 .radio-button .radio {
-    -fx-background-color: transparent;
-    -fx-border-color: #FFA726;
-    -fx-border-width: 2px;
-    -fx-border-radius: 10px;
-    -fx-padding: 5px;
+	-fx-background-color: transparent;
+	-fx-border-color: #ffa500; /* Borde naranja */
+	-fx-border-width: 2; /* Grosor del borde */
+	-fx-border-radius: 50%; /* Bordes redondeados para un círculo */
+	-fx-min-width: 18px;
+	-fx-min-height: 18px;
+	-fx-max-width: 18px;
+	-fx-max-height: 18px;
 }
 
-/* Cuando el RadioButton está seleccionado */
+/* Efecto al pasar el mouse sobre el RadioButton */
+.radio-button:hover .radio {
+	-fx-border-color: #ffcc80; /* Un tono más claro al pasar el mouse */
+}
+
+/* Estilo cuando el RadioButton está seleccionado */
 .radio-button:selected .radio {
-    -fx-background-color: #FFA726;
-    -fx-border-color: #FFA726;
+	-fx-background-color: #ffa500; /* Fondo naranja al seleccionar */
+	-fx-border-color: #ff6d00; /* Borde más oscuro */
 }
 
-/* Ajusta el tamaño del radio */
-.radio-button .dot {
-    -fx-background-radius: 5px;
-    -fx-pref-width: 8px;
-    -fx-pref-height: 8px;
+/* Personalizar el punto dentro del RadioButton */
+.radio-button:selected .dot {
+	-fx-background-color: white; /* Color blanco para el punto de selección */
+	-fx-shape: "M5,10 A5,5 0 1,1 15,10 A5,5 0 1,1 5,10"; /* Forma circular */
+	-fx-scale-x: 0.8; /* Escalado del punto */
+	-fx-scale-y: 0.8;
 }
+
+/* RadioButton deshabilitado */
+.radio-button:disabled {
+	-fx-opacity: 0.5; /* Reducir opacidad */
+}
+
+/* RadioButton deshabilitado sin fondo */
+.radio-button:disabled .radio {
+	-fx-border-color: #757575; /* Borde gris */
+	-fx-background-color: #424242; /* Fondo gris oscuro */
+}
+
+/* RadioButton deshabilitado pero seleccionado */
+.radio-button:disabled:selected .radio {
+	-fx-background-color: #a5a5a5; /* Fondo gris */
+	-fx-border-color: #757575; /* Borde gris */
+}
+
+/* RadioButton de título o categoría */
+.radio-button.title {
+	-fx-font-size: 16px;
+	-fx-text-fill: white;
+	-fx-font-weight: bold;
+	-fx-padding: 10;
+}
+ 
 
 /* Estilo base para todos los botones */
 .button {
@@ -169,7 +203,7 @@
 .check-box:selected .mark {
 	-fx-background-color: white;
 	/* Color blanco para la marca de selección */
-	-fx-shape: "M4,6 L8,12 L14,2"; /* Personaliza la forma del check */
+	-fx-shape: "M3,6 L8,11 L13,1"; /* Personaliza la forma del check */
 	-fx-scale-x: 1.2; /* Escalado del check */
 	-fx-scale-y: 1.2;
 }

@@ -54,6 +54,7 @@ public enum EnumConfigurationKey {
 	DAILY_TASKS_OFFSET_INT("1",Integer.class),
 	
 	STOREHOUSE_CHEST_BOOL("false",Boolean.class),
+	STOREHOUSE_STAMINA_BOOL("false",Boolean.class),
 
 	PET_SKILL_STAMINA_BOOL("false",Boolean.class),
 	PET_SKILL_FOOD_BOOL("false",Boolean.class),

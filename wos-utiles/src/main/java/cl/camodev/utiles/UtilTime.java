@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 
 public class UtilTime {
 
@@ -12,6 +13,21 @@ public class UtilTime {
 		ZonedDateTime nextUtcMidnight = nowUtc.toLocalDate().plusDays(1).atStartOfDay(ZoneId.of("UTC"));
 		ZonedDateTime localNextMidnight = nextUtcMidnight.withZoneSameInstant(ZoneId.systemDefault());
 		return localNextMidnight.toLocalDateTime();
+	}
+
+	public static LocalDateTime getNextReset() {
+		ZonedDateTime nowUtc = ZonedDateTime.now(ZoneId.of("UTC"));
+
+		ZonedDateTime nextMidnightUtc = nowUtc.toLocalDate().plusDays(1).atStartOfDay(ZoneId.of("UTC"));
+		ZonedDateTime nextNoonUtc = nowUtc.toLocalDate().atTime(12, 0).atZone(ZoneId.of("UTC"));
+
+		if (nowUtc.isAfter(nextNoonUtc)) {
+			nextNoonUtc = nextNoonUtc.plusDays(1);
+		}
+
+		ZonedDateTime nextResetUtc = nowUtc.until(nextMidnightUtc, ChronoUnit.SECONDS) < nowUtc.until(nextNoonUtc, ChronoUnit.SECONDS) ? nextMidnightUtc : nextNoonUtc;
+		ZonedDateTime localNextReset = nextResetUtc.withZoneSameInstant(ZoneId.systemDefault());
+		return localNextReset.toLocalDateTime();
 	}
 
 	public static String localDateTimeToDDHHMMSS(LocalDateTime dateTime) {
