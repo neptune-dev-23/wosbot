@@ -29,8 +29,8 @@ public class InitializeTask extends DelayedTask {
 			} else {
 				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "emulator not found, trying to start it");
 				EmulatorManager.getInstance().launchEmulator(EMULATOR_NUMBER);
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "waiting 15 seconds before checking again");
-				sleepTask(15000);
+				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "waiting 30 seconds before checking again");
+				sleepTask(30000);
 			}
 
 		}

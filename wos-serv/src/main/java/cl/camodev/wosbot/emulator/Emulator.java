@@ -3,12 +3,13 @@ package cl.camodev.wosbot.emulator;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Base64;
 import java.util.Random;
-import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.imageio.ImageIO;
 
@@ -37,30 +38,36 @@ public abstract class Emulator {
 
 	// 🔹 Ejecuta un comando ADB sin salida
 	protected void executeAdbCommand(String emulatorNumber, String command) {
-		try {
-			String[] fullCommand = buildAdbCommand(emulatorNumber, command);
+		int maxRetries = 10;
+		int retryDelay = 3000;
+		for (int attempt = 1; attempt <= maxRetries; attempt++) {
+			try {
+				String[] fullCommand = buildAdbCommand(emulatorNumber, command);
 
-			ProcessBuilder pb = new ProcessBuilder(fullCommand);
-			pb.directory(new File(consolePath).getParentFile());
+				ProcessBuilder pb = new ProcessBuilder(fullCommand);
+				pb.directory(new File(consolePath).getParentFile());
 
-			Process process = pb.start();
-			int exitCode = process.waitFor();
+				Process process = pb.start();
+				int exitCode = process.waitFor();
 
-			if (exitCode == 0) {
-				System.out.println("✅ Comando ejecutado con éxito: " + command);
-			} else {
-				System.err.println("❌ Error ejecutando el comando, código de salida: " + exitCode);
+				if (exitCode == 0) {
+					System.out.println("✅ Comando ejecutado con éxito: " + command);
+					return;
+				} else {
+					System.err.println("❌ Error ejecutando el comando, código de salida: " + exitCode);
+					restartAdb();
+					Thread.sleep(retryDelay);
+				}
+			} catch (IOException | InterruptedException e) {
+				e.printStackTrace();
 			}
-		} catch (IOException | InterruptedException e) {
-			e.printStackTrace();
 		}
 	}
 
 	// 🔹 Ejecuta un comando ADB con salida de texto
 	protected String executeAdbCommandWithOutput(String emulatorNumber, String command) {
 		int maxRetries = 10;
-		int retryDelay = 100;
-		String adbPath = consolePath + File.separator + "adb.exe"; // Ruta al ADB del emulador
+		int retryDelay = 3000;
 
 		for (int attempt = 1; attempt <= maxRetries; attempt++) {
 			try {
@@ -94,7 +101,7 @@ public abstract class Emulator {
 				// 📌 Verificar si ADB está en estado offline y reiniciarlo
 				if (result.contains("device offline") || result.isEmpty()) {
 					System.err.println("⚠ Dispositivo en estado OFFLINE o sin respuesta. Reiniciando ADB interno de MuMu...");
-					restartAdb(adbPath);
+					restartAdb();
 					Thread.sleep(2000); // Esperar para que el servidor ADB se recupere
 					continue; // Reintentar el comando
 				}
@@ -114,11 +121,100 @@ public abstract class Emulator {
 		return null;
 	}
 
-	private void restartAdb(String adbPath) {
+	protected byte[] captureScreenshot(String emulatorNumber, String command) {
+		int maxRetries = 10;
+		int retryDelay = 3000;
+
+		for (int attempt = 1; attempt <= maxRetries; attempt++) {
+			try {
+				String[] fullCommand = buildAdbCommand(emulatorNumber, command);
+
+				ProcessBuilder pb = new ProcessBuilder(fullCommand);
+				pb.directory(new File(consolePath)); // Establecemos el directorio donde está adb.exe
+				pb.redirectErrorStream(true); // Redirigir errores a la salida estándar
+
+				Process process = pb.start();
+
+				// Capturar salida en un hilo separado para evitar bloqueos
+
+				AtomicReference<byte[]> outputBytesRef = new AtomicReference<>();
+				Thread outputReader = new Thread(() -> {
+					try (InputStream inputStream = process.getInputStream(); ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
+
+						byte[] buffer = new byte[4096];
+						int bytesRead;
+						boolean pngStartFound = false;
+
+						while ((bytesRead = inputStream.read(buffer)) != -1) {
+							String output = new String(buffer, 0, bytesRead);
+//							System.out.print(output);
+							if (!pngStartFound) {
+								// Buscar la firma PNG en los datos leídos
+								int pngIndex = findPNGHeader(buffer, bytesRead);
+								if (pngIndex != -1) {
+									pngStartFound = true;
+									// Guardar solo los datos a partir del inicio del PNG
+									byteArrayOutputStream.write(buffer, pngIndex, bytesRead - pngIndex);
+								}
+							} else {
+								// Si ya encontramos el PNG, seguir guardando todos los bytes
+								byteArrayOutputStream.write(buffer, 0, bytesRead);
+							}
+						}
+
+						// Guardar los bytes en outputBytesRef
+						outputBytesRef.set(byteArrayOutputStream.toByteArray());
+
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				});
+
+				outputReader.start();
+
+				int exitCode = process.waitFor();
+				outputReader.join();
+
+				byte[] outputBytes = outputBytesRef.get();
+				if (exitCode == 0 && (outputBytes != null)) {
+					return outputBytes;
+				} else {
+					System.out.println("🔄 Intento " + attempt + " - No se obtuvo una salida válida, reintentando...");
+					restartAdb();
+					Thread.sleep(retryDelay);
+				}
+			} catch (IOException | InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+
+		System.err.println("❌ No se obtuvo una salida válida después de " + maxRetries + " intentos.");
+		return null;
+	}
+
+	private int findPNGHeader(byte[] buffer, int length) {
+		byte[] pngSignature = { (byte) 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A };
+
+		for (int i = 0; i <= length - pngSignature.length; i++) {
+			boolean match = true;
+			for (int j = 0; j < pngSignature.length; j++) {
+				if (buffer[i + j] != pngSignature[j]) {
+					match = false;
+					break;
+				}
+			}
+			if (match) {
+				return i; // Retorna la posición donde empieza el PNG
+			}
+		}
+		return -1; // No encontrado
+	}
+
+	public void restartAdb() {
 
 		try {
 			System.out.println("🔄 Reiniciando ADB del emulador...");
-
+			String adbPath = consolePath + File.separator + "adb.exe";
 			// Ejecutar "adb kill-server"
 			ProcessBuilder killServer = new ProcessBuilder(adbPath, "kill-server");
 			killServer.redirectErrorStream(true);
@@ -140,18 +236,13 @@ public abstract class Emulator {
 	}
 
 	// 🔹 Captura de pantalla y devuelve un `ByteArrayInputStream`
-	public ByteArrayInputStream captureScreenshot(String emulatorNumber) {
-		String command = "shell screencap -p | base64";
-		String base64String = executeAdbCommandWithOutput(emulatorNumber, command);
+	public byte[] captureScreenshot(String emulatorNumber) {
+		String command = "exec-out screencap -p";
+		byte[] imageBytes = captureScreenshot(emulatorNumber, command);
 
-		if (base64String != null) {
+		if (imageBytes != null) {
 			try {
-				// Eliminar líneas no deseadas antes de procesar la imagen
-				base64String = base64String.lines().filter(line -> !line.contains("already connected to") && !line.contains("device offline")).collect(Collectors.joining());
-
-				base64String = base64String.replaceAll("\\r|\\n", ""); // Quitar saltos de línea
-				byte[] imageBytes = Base64.getDecoder().decode(base64String);
-				return new ByteArrayInputStream(imageBytes);
+				return imageBytes;
 			} catch (IllegalArgumentException e) {
 				System.err.println("❌ Error al decodificar la imagen.");
 			}
@@ -160,7 +251,7 @@ public abstract class Emulator {
 	}
 
 	public String ocrRegionText(String emulatorNumber, DTOPoint p1, DTOPoint p2) throws IOException, TesseractException {
-		BufferedImage image = ImageIO.read(captureScreenshot(emulatorNumber));
+		BufferedImage image = ImageIO.read(new ByteArrayInputStream(captureScreenshot(emulatorNumber)));
 		if (image == null)
 			throw new IOException("No se pudo capturar la imagen.");
 

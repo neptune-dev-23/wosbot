@@ -6,6 +6,7 @@ public enum EnumTemplates {
 	GAME_HOME_FURNACE("/templates/city.png"),
 	GAME_HOME_WORLD("/templates/world.png"),
 	GAME_HOME_PETS("/templates/home/petsButton.png"),
+	GAME_HOME_INTEL("/templates/home/intelButton.png"),
 	
 	GAME_HOME_SHORTCUTS_INFANTRY("/templates/shortcuts/infantry.png"),
 	GAME_HOME_SHORTCUTS_LANCER("/templates/shortcuts/lancer.png"),
@@ -44,6 +45,7 @@ public enum EnumTemplates {
 	INTEL_EXPLORE("/templates/intel/journeyExplore.png"),
 	INTEL_ATTACK_CONFIRM("/templates/intel/beastAttackConfirm.png"),
 	
+	INTEL_FIRE_BEAST("/templates/intel/beastFire.png"),
 	INTEL_BEAST_YELLOW("/templates/intel/beastYellow.png"),
 	INTEL_BEAST_PURPLE("/templates/intel/beastPurple.png"),
 	INTEL_BEAST_BLUE("/templates/intel/beastBlue.png"),

@@ -1,6 +1,5 @@
 package cl.camodev.wosbot.emulator;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.HashMap;
 
@@ -65,6 +64,7 @@ public class EmulatorManager {
 			}
 
 			System.out.println("✅ Emulator set from configuration: " + emulatorType.getDisplayName());
+			restartAdbServer();
 
 		} catch (IllegalArgumentException e) {
 			throw new IllegalStateException("Invalid emulator type found in configuration: " + savedActiveEmulator, e);
@@ -83,7 +83,7 @@ public class EmulatorManager {
 	/**
 	 * Captura una pantalla del emulador.
 	 */
-	public ByteArrayInputStream captureScreenshotViaADB(String emulatorNumber) {
+	public byte[] captureScreenshotViaADB(String emulatorNumber) {
 		checkEmulatorInitialized();
 		return emulator.captureScreenshot(emulatorNumber);
 	}
@@ -150,14 +150,14 @@ public class EmulatorManager {
 	 */
 	public DTOImageSearchResult searchTemplate(String emulatorNumber, String templatePath, int x, int y, int width, int height, double threshold) {
 		checkEmulatorInitialized();
-		ByteArrayInputStream screenshot = captureScreenshotViaADB(emulatorNumber);
+		byte[] screenshot = captureScreenshotViaADB(emulatorNumber);
 		return ImageSearchUtil.buscarTemplate(screenshot, templatePath, x, y, width, height, threshold);
 	}
 
 	public void launchEmulator(String emulatorNumber) {
 		checkEmulatorInitialized();
 //		try {
-//			emulatorSlots.acquire();
+////			emulatorSlots.acquire();
 //		} catch (InterruptedException e) {
 //			e.printStackTrace();
 //		}
@@ -178,8 +178,24 @@ public class EmulatorManager {
 		emulator.launchApp(emulatorNumber, packageName);
 	}
 
-	public boolean isRunning(String eMULATOR_NUMBER) {
+	public boolean isRunning(String emulatorNumber) {
 		checkEmulatorInitialized();
-		return emulator.isRunning(eMULATOR_NUMBER);
+		boolean run = emulator.isRunning(emulatorNumber);
+		if (run) {
+//			try {
+////				emulatorSlots.acquire();
+//			} catch (InterruptedException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+		} else {
+//			emulatorSlots.release();
+		}
+		return run;
+	}
+
+	public void restartAdbServer() {
+		checkEmulatorInitialized();
+		emulator.restartAdb();
 	}
 }

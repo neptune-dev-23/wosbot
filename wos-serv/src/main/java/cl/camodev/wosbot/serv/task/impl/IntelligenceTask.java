@@ -45,73 +45,85 @@ public class IntelligenceTask extends DelayedTask {
 				servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Going to intelligence");
 			}
 
-			emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(660, 864));
-			sleepTask(2000);
-
-			servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Searching for completed missions");
-			for (int i = 0; i < 5; i++) {
-				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), "Searching for completed missions attempt " + i);
-				DTOImageSearchResult completed = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_COMPLETED.getTemplate(), 0, 0, 720, 1280, 90);
-				if (completed.isFound()) {
-					emuManager.tapAtPoint(EMULATOR_NUMBER, completed.getPoint());
-					emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(700, 1270), new DTOPoint(710, 1280), 10, 100);
+			DTOImageSearchResult intelligence = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_INTEL.getTemplate(), 0, 0, 720, 1280, 90);
+			if (intelligence.isFound()) {
+				emuManager.tapAtPoint(EMULATOR_NUMBER, intelligence.getPoint());
+				servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Searching for completed missions");
+				for (int i = 0; i < 5; i++) {
+					servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), "Searching for completed missions attempt " + i);
+					DTOImageSearchResult completed = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_COMPLETED.getTemplate(), 0, 0, 720, 1280, 90);
+					if (completed.isFound()) {
+						emuManager.tapAtPoint(EMULATOR_NUMBER, completed.getPoint());
+						emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(700, 1270), new DTOPoint(710, 1280), 10, 100);
+					}
 				}
-			}
-
-			if (profile.getConfig(EnumConfigurationKey.INTEL_BEASTS_BOOL, Boolean.class)) {
-				List<EnumTemplates> beastPriorities = Arrays.asList(EnumTemplates.INTEL_BEAST_YELLOW, EnumTemplates.INTEL_BEAST_PURPLE, EnumTemplates.INTEL_BEAST_BLUE
-//						EnumTemplates.INTEL_BEAST_GREEN, 
-//						EnumTemplates.INTEL_BEAST_GREY
-				);
-				servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Searching for beasts");
-				for (EnumTemplates beast : beastPriorities) {
-					if (searchAndProcessBeast(beast, 5)) {
+				if (profile.getConfig(EnumConfigurationKey.INTEL_FIRE_BEAST_BOOL, Boolean.class)) {
+					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Searching for fire beasts");
+					if (searchAndProcessBeast(EnumTemplates.INTEL_FIRE_BEAST, 5)) {
 						this.reschedule(LocalDateTime.now().plusMinutes(3));
 						return;
 					}
-				}
-			}
 
-			if (profile.getConfig(EnumConfigurationKey.INTEL_CAMP_BOOL, Boolean.class)) {
-				List<EnumTemplates> priorities = Arrays.asList(EnumTemplates.INTEL_SURVIVOR_YELLOW, EnumTemplates.INTEL_SURVIVOR_PURPLE, EnumTemplates.INTEL_SURVIVOR_BLUE);
-				servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Searching for survivors");
-				for (EnumTemplates beast : priorities) {
-					if (searchAndProcessSurvivor(beast, 5)) {
-						this.reschedule(LocalDateTime.now());
-						return;
+				}
+
+				if (profile.getConfig(EnumConfigurationKey.INTEL_BEASTS_BOOL, Boolean.class)) {
+					List<EnumTemplates> beastPriorities = Arrays.asList(EnumTemplates.INTEL_BEAST_YELLOW, EnumTemplates.INTEL_BEAST_PURPLE, EnumTemplates.INTEL_BEAST_BLUE
+//							EnumTemplates.INTEL_BEAST_GREEN, 
+//							EnumTemplates.INTEL_BEAST_GREY
+					);
+					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Searching for beasts");
+					for (EnumTemplates beast : beastPriorities) {
+						if (searchAndProcessBeast(beast, 5)) {
+							this.reschedule(LocalDateTime.now().plusMinutes(3));
+							return;
+						}
 					}
 				}
 
-			}
-
-			if (profile.getConfig(EnumConfigurationKey.INTEL_EXPLORATION_BOOL, Boolean.class)) {
-				List<EnumTemplates> priorities = Arrays.asList(EnumTemplates.INTEL_JOURNEY_YELLOW, EnumTemplates.INTEL_JOURNEY_PURPLE, EnumTemplates.INTEL_JOURNEY_BLUE);
-				servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Searching for explorations");
-				for (EnumTemplates beast : priorities) {
-					if (searchAndProcessExploration(beast, 5)) {
-						this.reschedule(LocalDateTime.now());
-						return;
+				if (profile.getConfig(EnumConfigurationKey.INTEL_CAMP_BOOL, Boolean.class)) {
+					List<EnumTemplates> priorities = Arrays.asList(EnumTemplates.INTEL_SURVIVOR_YELLOW, EnumTemplates.INTEL_SURVIVOR_PURPLE, EnumTemplates.INTEL_SURVIVOR_BLUE);
+					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Searching for survivors");
+					for (EnumTemplates beast : priorities) {
+						if (searchAndProcessSurvivor(beast, 5)) {
+							this.reschedule(LocalDateTime.now());
+							return;
+						}
 					}
+
 				}
 
-			}
+				if (profile.getConfig(EnumConfigurationKey.INTEL_EXPLORATION_BOOL, Boolean.class)) {
+					List<EnumTemplates> priorities = Arrays.asList(EnumTemplates.INTEL_JOURNEY_YELLOW, EnumTemplates.INTEL_JOURNEY_PURPLE, EnumTemplates.INTEL_JOURNEY_BLUE);
+					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Searching for explorations");
+					for (EnumTemplates beast : priorities) {
+						if (searchAndProcessExploration(beast, 5)) {
+							this.reschedule(LocalDateTime.now());
+							return;
+						}
+					}
 
-			try {
-				String rescheduleTime = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(120, 110), new DTOPoint(600, 146));
-				LocalDateTime reshchedule = parseAndAddTime(rescheduleTime);
-				this.reschedule(reshchedule);
-				servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Rescheduled to " + UtilTime.localDateTimeToDDHHMMSS(reshchedule));
+				}
+
+				try {
+					String rescheduleTime = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(120, 110), new DTOPoint(600, 146));
+					LocalDateTime reshchedule = parseAndAddTime(rescheduleTime);
+					this.reschedule(reshchedule);
+					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Rescheduled to " + UtilTime.localDateTimeToDDHHMMSS(reshchedule));
+					emuManager.tapBackButton(EMULATOR_NUMBER);
+					ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, reshchedule);
+				} catch (IOException | TesseractException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
+			} else {
 				emuManager.tapBackButton(EMULATOR_NUMBER);
-				ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, reshchedule);
-			} catch (IOException | TesseractException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				reschedule(LocalDateTime.now());
+
 			}
 
-		} else {
-			emuManager.tapBackButton(EMULATOR_NUMBER);
-			reschedule(LocalDateTime.now());
 		}
+
 	}
 
 	private boolean searchAndProcessExploration(EnumTemplates exploration, int maxAttempts) {
