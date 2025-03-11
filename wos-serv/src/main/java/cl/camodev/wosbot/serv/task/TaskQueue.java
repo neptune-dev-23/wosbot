@@ -3,8 +3,9 @@ package cl.camodev.wosbot.serv.task;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.Iterator;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
@@ -18,7 +19,19 @@ import cl.camodev.wosbot.serv.task.impl.InitializeTask;
 
 public class TaskQueue {
 	// Cola que contendrá todas las tareas (no necesariamente ordenadas por tiempo).
-	private final ConcurrentLinkedQueue<DelayedTask> taskQueue = new ConcurrentLinkedQueue<>();
+	private final PriorityBlockingQueue<DelayedTask> taskQueue = new PriorityBlockingQueue<>(11, new Comparator<DelayedTask>() {
+		@Override
+		public int compare(DelayedTask t1, DelayedTask t2) {
+			// Si t1 es InitializeTask y t2 no lo es, t1 tiene mayor prioridad.
+			if (t1 instanceof InitializeTask && !(t2 instanceof InitializeTask)) {
+				return -1;
+			} else if (!(t1 instanceof InitializeTask) && t2 instanceof InitializeTask) {
+				return 1;
+			}
+			// Si ambos son (o ninguno), se ordena según el delay.
+			return Long.compare(t1.getDelay(TimeUnit.SECONDS), t2.getDelay(TimeUnit.SECONDS));
+		}
+	});
 
 	// Bandera para detener el loop del scheduler.
 	private volatile boolean running = false;
@@ -50,7 +63,15 @@ public class TaskQueue {
 		schedulerThread = new Thread(() -> {
 
 			boolean moreThan30Minutes = false; // Indica si la demora mínima superó los 30 minutos
-
+			ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "Getting queue slot"));
+			try {
+				EmulatorManager.getInstance().adquireEmulatorSlot(profile.getId(), (thread, position) -> {
+					ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "Waiting for slot, position: " + position));
+				});
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			while (running) {
 				boolean executedTask = false;
 				long minDelay = Long.MAX_VALUE; // Para rastrear la tarea con menor delay
@@ -127,11 +148,20 @@ public class TaskQueue {
 		LocalDateTime scheduledTime = LocalDateTime.now().plusSeconds(minDelay);
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 		ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "Idling till " + formatter.format(scheduledTime)));
+		EmulatorManager.getInstance().releaseEmulatorSlot();
 	}
 
 	private void encolarNuevaTarea() {
 		ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueue", profile.getName(), "shcheduled task's will start soon");
-		ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "resuming execution"));
+
+		try {
+			EmulatorManager.getInstance().adquireEmulatorSlot(profile.getId(), (thread, position) -> {
+				ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "Waiting for slot, position: " + position));
+			});
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		addTask(new InitializeTask(profile, TpDailyTaskEnum.INITIALIZE));
 	}
 

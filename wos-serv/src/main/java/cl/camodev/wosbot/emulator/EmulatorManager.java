@@ -2,6 +2,11 @@ package cl.camodev.wosbot.emulator;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.PriorityQueue;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 import cl.camodev.utiles.ImageSearchUtil;
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
@@ -10,14 +15,20 @@ import cl.camodev.wosbot.emulator.impl.MuMuEmulator;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.serv.impl.ServConfig;
+import cl.camodev.wosbot.serv.task.WaitingThread;
 import net.sourceforge.tess4j.TesseractException;
 
 public class EmulatorManager {
 
 	private static EmulatorManager instance;
 	private Emulator emulator;
-//	private final int MAX_RUNNING_EMULATORS = 3;
-//	private final Semaphore emulatorSlots = new Semaphore(MAX_RUNNING_EMULATORS, true);
+
+	private final ReentrantLock lock = new ReentrantLock();
+	private final Condition permitsAvailable = lock.newCondition();
+	private final PriorityQueue<WaitingThread> waitingQueue = new PriorityQueue<>();
+
+	private int MAX_RUNNING_EMULATORS = 2;
+	private final Semaphore emulatorSlots = new Semaphore(MAX_RUNNING_EMULATORS, true);
 	public static String WHITEOUT_PACKAGE = "com.gof.global";
 
 	private EmulatorManager() {
@@ -169,7 +180,6 @@ public class EmulatorManager {
 	 */
 	public void closeEmulator(String emulatorNumber) {
 		checkEmulatorInitialized();
-//		emulatorSlots.release();
 		emulator.closeEmulator(emulatorNumber);
 	}
 
@@ -180,22 +190,67 @@ public class EmulatorManager {
 
 	public boolean isRunning(String emulatorNumber) {
 		checkEmulatorInitialized();
-		boolean run = emulator.isRunning(emulatorNumber);
-		if (run) {
-//			try {
-////				emulatorSlots.acquire();
-//			} catch (InterruptedException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
-		} else {
-//			emulatorSlots.release();
-		}
-		return run;
+		return emulator.isRunning(emulatorNumber);
 	}
 
 	public void restartAdbServer() {
 		checkEmulatorInitialized();
 		emulator.restartAdb();
 	}
+
+	public void adquireEmulatorSlot(Long threadPriority, PositionCallback callback) throws InterruptedException {
+		lock.lock();
+		try {
+			// Si hay slot disponible y nadie espera, se adquiere inmediatamente.
+			if (MAX_RUNNING_EMULATORS > 0 && waitingQueue.isEmpty()) {
+				MAX_RUNNING_EMULATORS--;
+				return;
+			}
+
+			// Crear el objeto que representa al hilo actual con su prioridad
+			WaitingThread currentWaiting = new WaitingThread(Thread.currentThread(), threadPriority);
+			waitingQueue.add(currentWaiting);
+
+			// Esperar con timeout para poder notificar la posición periódicamente.
+			while (waitingQueue.peek() != currentWaiting || MAX_RUNNING_EMULATORS <= 0) {
+				// Esperar hasta 1 segundo.
+				permitsAvailable.await(1, TimeUnit.SECONDS);
+
+				// Consultar y notificar la posición actual del hilo en la cola.
+				int position = getPosition(currentWaiting);
+				callback.onPositionUpdate(Thread.currentThread(), position);
+			}
+
+			// Es el turno y hay slot disponible.
+			waitingQueue.poll(); // Remover el hilo de la cola.
+			MAX_RUNNING_EMULATORS--; // Adquirir el slot.
+
+			// Notificar a los demás hilos para que vuelvan a evaluar la condición.
+			permitsAvailable.signalAll();
+		} finally {
+			lock.unlock();
+		}
+	}
+
+	public void releaseEmulatorSlot() {
+		lock.lock();
+		try {
+			MAX_RUNNING_EMULATORS++;
+			permitsAvailable.signalAll();
+		} finally {
+			lock.unlock();
+		}
+	}
+
+	private int getPosition(WaitingThread target) {
+		int pos = 1;
+		for (WaitingThread wt : waitingQueue) {
+			if (wt.equals(target)) {
+				break;
+			}
+			pos++;
+		}
+		return pos;
+	}
+
 }
