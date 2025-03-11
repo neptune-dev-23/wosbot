@@ -17,6 +17,7 @@ import javafx.animation.TranslateTransition;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
@@ -41,6 +42,8 @@ public class ProfileManagerLayoutController implements IProfileChangeObserver {
 	private ProfileManagerActionController profileManagerActionController;
 
 	private ObservableList<ProfileAux> profiles;
+
+	private SortedList<ProfileAux> sortedProfiles;
 
 	@FXML
 	private TableView<ProfileAux> tableviewLogMessages;
@@ -262,7 +265,9 @@ public class ProfileManagerLayoutController implements IProfileChangeObserver {
 			}
 		});
 
-		tableviewLogMessages.setItems(profiles);
+		sortedProfiles = new SortedList<>(profiles);
+		sortedProfiles.comparatorProperty().bind(tableviewLogMessages.comparatorProperty());
+		tableviewLogMessages.setItems(sortedProfiles);
 
 	}
 
@@ -308,10 +313,12 @@ public class ProfileManagerLayoutController implements IProfileChangeObserver {
 	}
 
 	public void handleProfileStatusChange(DTOProfileStatus status) {
-		profiles.stream().filter(p -> p.getId() == status.getId()).forEach(p -> {
-			p.setStatus(status.getStatus());
+		Platform.runLater(() -> {
+			profiles.stream().filter(p -> p.getId() == status.getId()).forEach(p -> {
+				p.setStatus(status.getStatus());
+			});
+			tableviewLogMessages.refresh();
 		});
-		tableviewLogMessages.refresh();
 
 	}
 

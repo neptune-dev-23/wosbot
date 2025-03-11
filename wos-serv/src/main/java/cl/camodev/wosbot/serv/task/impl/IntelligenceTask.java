@@ -116,11 +116,11 @@ public class IntelligenceTask extends DelayedTask {
 					e.printStackTrace();
 				}
 
-			} else {
-				emuManager.tapBackButton(EMULATOR_NUMBER);
-				reschedule(LocalDateTime.now());
-
 			}
+
+		} else {
+			emuManager.tapBackButton(EMULATOR_NUMBER);
+			reschedule(LocalDateTime.now());
 
 		}
 
