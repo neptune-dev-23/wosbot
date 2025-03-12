@@ -32,10 +32,15 @@ public enum EnumConfigurationKey {
 	ALLIANCE_PET_TREASURE_BOOL("false",Boolean.class),
 	
 	
-	GATHERING_COAL_BOOL("false",Boolean.class),
-	GATHERING_WOOD_BOOL("false",Boolean.class),
-	GATHERING_MEAT_BOOL("false",Boolean.class),
-	GATHERING_STONE_BOOL("false",Boolean.class),
+	GATHER_COAL_BOOL("false",Boolean.class),
+	GATHER_WOOD_BOOL("false",Boolean.class),
+	GATHER_MEAT_BOOL("false",Boolean.class),
+	GATHER_IRON_BOOL("false",Boolean.class),
+	
+	GATHER_COAL_LEVEL_INT("1",Integer.class),
+	GATHER_WOOD_LEVEL_INT("1",Integer.class),
+	GATHER_MEAT_LEVEL_INT("1",Integer.class),
+	GATHER_IRON_LEVEL_INT("1",Integer.class),
 	
 	INTEL_BOOL("false",Boolean.class),
 	INTEL_FIRE_BEAST_BOOL("false",Boolean.class),

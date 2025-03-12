@@ -5,8 +5,12 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
 
+import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
+import cl.camodev.wosbot.emulator.EmulatorManager;
+import cl.camodev.wosbot.ex.HomeNotFoundException;
 import cl.camodev.wosbot.ot.DTOProfiles;
+import cl.camodev.wosbot.serv.task.impl.InitializeTask;
 
 public abstract class DelayedTask implements Runnable {
 
@@ -16,6 +20,7 @@ public abstract class DelayedTask implements Runnable {
 	protected DTOProfiles profile;
 	protected String EMULATOR_NUMBER;
 	protected TpDailyTaskEnum tpTask;
+	protected int homeAttemps = 0;
 
 	public DelayedTask(DTOProfiles profile, TpDailyTaskEnum tpTask) {
 		this.profile = profile;
@@ -27,7 +32,30 @@ public abstract class DelayedTask implements Runnable {
 
 	@Override
 	public void run() {
-		execute();
+		if (this instanceof InitializeTask) {
+			execute();
+			return;
+		}
+
+		if (!EmulatorManager.getInstance().isPackageRunning(EMULATOR_NUMBER, EmulatorManager.WHITEOUT_PACKAGE)) {
+			homeAttemps = 0;
+			throw new HomeNotFoundException("Game is not running");
+		}
+
+		if (isGameHomeFound()) {
+			execute();
+		} else {
+			EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
+			if (++homeAttemps >= 10) {
+				homeAttemps = 0;
+				throw new HomeNotFoundException("Home not found after 10 attempts");
+			}
+		}
+	}
+
+	private boolean isGameHomeFound() {
+		EmulatorManager emulator = EmulatorManager.getInstance();
+		return emulator.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90).isFound() || emulator.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 0, 0, 720, 1280, 90).isFound();
 	}
 
 	protected abstract void execute();

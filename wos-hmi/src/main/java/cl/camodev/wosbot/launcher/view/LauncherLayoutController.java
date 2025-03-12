@@ -17,6 +17,7 @@ import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.view.ConsoleLogLayoutController;
 import cl.camodev.wosbot.emulator.view.EmuConfigLayoutController;
+import cl.camodev.wosbot.gather.view.GatherLayoutController;
 import cl.camodev.wosbot.intel.view.IntelLayoutController;
 import cl.camodev.wosbot.ot.DTOBotState;
 import cl.camodev.wosbot.ot.DTOLogMessage;
@@ -268,7 +269,8 @@ public class LauncherLayoutController implements IProfileLoadListener {
 				new ModuleDefinition("TrainingLayout", "Training", TrainingLayoutController::new),
 				new ModuleDefinition("PetsLayout", "Pets", PetsLayoutController::new),
 				new ModuleDefinition("IntelLayout", "Intel", IntelLayoutController::new),
-				new ModuleDefinition("EmuConfigLayout", "Emulator Config", EmuConfigLayoutController::new)
+				new ModuleDefinition("EmuConfigLayout", "Emulator Config", EmuConfigLayoutController::new),
+				new ModuleDefinition("GatherLayout", "Profiles", GatherLayoutController::new)
 				);
 		//@formatter:on
 

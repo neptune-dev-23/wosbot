@@ -196,7 +196,7 @@ public class IntelligenceTask extends DelayedTask {
 	private boolean searchAndProcessBeast(EnumTemplates beast, int maxAttempts) {
 		for (int attempt = 0; attempt < maxAttempts; attempt++) {
 			ServLogs.getServices().appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), "Searching for " + beast + " attempt " + attempt);
-			DTOImageSearchResult result = emuManager.searchTemplate(EMULATOR_NUMBER, beast.getTemplate(), 0, 0, 720, 1280, 95);
+			DTOImageSearchResult result = emuManager.searchTemplate(EMULATOR_NUMBER, beast.getTemplate(), 0, 0, 720, 1280, 80);
 
 			if (result.isFound()) {
 				servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Found :" + beast);

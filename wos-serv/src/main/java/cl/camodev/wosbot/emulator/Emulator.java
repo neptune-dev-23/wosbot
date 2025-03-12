@@ -36,6 +36,8 @@ public abstract class Emulator {
 	// 🔹 Método abstracto para verificar si el emulador está en ejecución
 	public abstract boolean isRunning(String emulatorNumber);
 
+	public abstract boolean isPackageRunning(String emulatorNumber, String packageName);
+
 	// 🔹 Ejecuta un comando ADB sin salida
 	protected void executeAdbCommand(String emulatorNumber, String command) {
 		int maxRetries = 10;

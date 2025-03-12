@@ -193,6 +193,11 @@ public class EmulatorManager {
 		return emulator.isRunning(emulatorNumber);
 	}
 
+	public boolean isPackageRunning(String emulatorNumber, String packageName) {
+		checkEmulatorInitialized();
+		return emulator.isPackageRunning(emulatorNumber, packageName);
+	}
+
 	public void restartAdbServer() {
 		checkEmulatorInitialized();
 		emulator.restartAdb();

@@ -15,7 +15,7 @@ public enum TpDailyTaskEnum {
 	ALLIANCE_PET_TREASURE(10, "Alliance Pet Treasure"),
 	ALLIANCE_CHESTS(11, "Alliance Chests"),
 	TRAINING_TROOPS(12, "Training"),
-	GATHERING_RESOURCES(13, "Gathering"),
+	GATHER_RESOURCES(13, "Gathering"),
 	BANK(14, "Bank"),
 	BEAST_SLAY(15, "Beast Slay"),
 	PET_SKILL_STAMINA(16, "Pet Skill Stamina"),

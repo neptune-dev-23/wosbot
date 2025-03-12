@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.emulator.EmulatorManager;
+import cl.camodev.wosbot.ex.HomeNotFoundException;
 import cl.camodev.wosbot.ot.DTOProfileStatus;
 import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.serv.impl.ServLogs;
@@ -74,7 +75,9 @@ public class TaskQueue {
 			}
 			while (running) {
 				boolean executedTask = false;
-				long minDelay = Long.MAX_VALUE; // Para rastrear la tarea con menor delay
+				long minDelay = Long.MAX_VALUE;
+
+				// realizar preverificacion de que el jeugo esta coriendo
 
 				Iterator<DelayedTask> it = taskQueue.iterator();
 				while (it.hasNext()) {
@@ -89,12 +92,28 @@ public class TaskQueue {
 					// Si la tarea está lista para ejecutarse (delay <= 0)
 					if (delayInSeconds <= 0) {
 						it.remove();
+//						if (!EmulatorManager.getInstance().isPackageRunning(profile.getEmulatorNumber(), EmulatorManager.WHITEOUT_PACKAGE)) {
+//							if (taskQueue.stream().noneMatch(t -> t instanceof InitializeTask)) {
+//								
+//							}
+//							if (task.isRecurring()) {
+//								addTask(task);
+//							}
+//
+//							executedTask = true;
+//							break;
+//
+//						}
+
 						try {
 							ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Starting task execution");
 							ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "Executing " + task.getTaskName()));
 							task.run();
+						} catch (HomeNotFoundException e) {
+							ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, task.getTaskName(), profile.getName(), e.getMessage());
+							addTask(new InitializeTask(profile, TpDailyTaskEnum.INITIALIZE));
 						} catch (Exception e) {
-							e.printStackTrace();
+							ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, task.getTaskName(), profile.getName(), e.getMessage());
 						}
 
 						if (task.isRecurring()) {

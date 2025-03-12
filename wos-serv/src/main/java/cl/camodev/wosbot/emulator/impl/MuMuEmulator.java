@@ -65,4 +65,28 @@ public class MuMuEmulator extends Emulator {
 		}
 		return false;
 	}
+
+	@Override
+	public boolean isPackageRunning(String emulatorNumber, String packageName) {
+		try {
+			String[] command = { consolePath + File.separator + "MuMuManager.exe", "api", "-v", emulatorNumber, "app_state", packageName };
+			ProcessBuilder pb = new ProcessBuilder(command);
+			pb.directory(new File(consolePath).getParentFile());
+
+			Process process = pb.start();
+			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+			String line;
+
+			while ((line = reader.readLine()) != null) {
+				if (line.contains("state=running")) {
+					return true;
+				}
+			}
+
+			process.waitFor();
+		} catch (IOException | InterruptedException e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
 }

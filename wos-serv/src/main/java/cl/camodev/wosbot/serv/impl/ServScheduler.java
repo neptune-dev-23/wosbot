@@ -39,6 +39,8 @@ import cl.camodev.wosbot.serv.task.impl.AllianceTechTask;
 import cl.camodev.wosbot.serv.task.impl.CrystalLaboratoryTask;
 import cl.camodev.wosbot.serv.task.impl.DailyStaminaTask;
 import cl.camodev.wosbot.serv.task.impl.ExplorationTask;
+import cl.camodev.wosbot.serv.task.impl.GatherTask;
+import cl.camodev.wosbot.serv.task.impl.GatherTask.GatherType;
 import cl.camodev.wosbot.serv.task.impl.HeroRecruitmentTask;
 import cl.camodev.wosbot.serv.task.impl.InitializeTask;
 import cl.camodev.wosbot.serv.task.impl.IntelligenceTask;
@@ -197,6 +199,22 @@ public class ServScheduler {
 				
 				taskMappings.put(EnumConfigurationKey.INTEL_BOOL, List.of(
                         () -> new IntelligenceTask(profile, TpDailyTaskEnum.INTEL)
+                    ));
+				
+				taskMappings.put(EnumConfigurationKey.GATHER_MEAT_BOOL, List.of(
+                        () -> new GatherTask(profile, TpDailyTaskEnum.GATHER_RESOURCES, GatherType.MEAT)
+                    ));
+				
+				taskMappings.put(EnumConfigurationKey.GATHER_WOOD_BOOL, List.of(
+                        () -> new GatherTask(profile, TpDailyTaskEnum.GATHER_RESOURCES, GatherType.WOOD)
+                    ));
+				
+				taskMappings.put(EnumConfigurationKey.GATHER_COAL_BOOL, List.of(
+                        () -> new GatherTask(profile, TpDailyTaskEnum.GATHER_RESOURCES, GatherType.COAL)
+                    ));
+				
+				taskMappings.put(EnumConfigurationKey.GATHER_IRON_BOOL, List.of(
+                        () -> new GatherTask(profile, TpDailyTaskEnum.GATHER_RESOURCES, GatherType.IRON)
                     ));
 
 				//@formatter:on

@@ -14,6 +14,23 @@ public enum EnumTemplates {
 	GAME_HOME_SHORTCUTS_RESEARCH_CENTER("/templates/shortcuts/researchCenter.png"),
 	GAME_HOME_CAMP_TRAIN("/templates/home/camp/train.png"),
 	
+	GAME_HOME_SHORTCUTS_MEAT("/templates/shortcuts/meat.png"),
+	GAME_HOME_SHORTCUTS_WOOD("/templates/shortcuts/wood.png"),
+	GAME_HOME_SHORTCUTS_COAL("/templates/shortcuts/coal.png"),
+	GAME_HOME_SHORTCUTS_IRON("/templates/shortcuts/iron.png"),
+	
+	GAME_HOME_SHORTCUTS_FARM_MEAT("/templates/shortcuts/farmMeat.png"),
+	GAME_HOME_SHORTCUTS_FARM_WOOD("/templates/shortcuts/farmWood.png"),
+	GAME_HOME_SHORTCUTS_FARM_COAL("/templates/shortcuts/farmCoal.png"),
+	GAME_HOME_SHORTCUTS_FARM_IRON("/templates/shortcuts/farmIron.png"),
+	
+	GAME_HOME_SHORTCUTS_FARM_TICK("/templates/shortcuts/farmTick.png"),
+	GAME_HOME_SHORTCUTS_FARM_GATHER("/templates/shortcuts/farmGather.png"),
+	
+	RALLY_REMOVE_HERO_BUTTON("/templates/rally/removeHeroButton.png"),
+	RALLY_GATHER_BUTTON("/templates/rally/gatherButton.png"),
+	RALLY_GATHER_ALREADY_MARCHING("/templates/rally/gatherAlreadyMarching.png"),
+	
 	HOME_DEALS_BUTTON("/templates/home/dealsButton.png"),
 	HOME_EVENTS_BUTTON("/templates/home/eventsButton.png"),
 	

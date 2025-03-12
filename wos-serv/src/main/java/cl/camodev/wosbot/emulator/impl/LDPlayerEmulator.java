@@ -63,4 +63,10 @@ public class LDPlayerEmulator extends Emulator {
 		}
 		return false;
 	}
+
+	@Override
+	public boolean isPackageRunning(String emulatorNumber, String packageName) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }
