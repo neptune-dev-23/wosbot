@@ -318,6 +318,7 @@ public class ProfileManagerLayoutController implements IProfileChangeObserver {
 				p.setStatus(status.getStatus());
 			});
 			tableviewLogMessages.refresh();
+			tableviewLogMessages.sort();
 		});
 
 	}
