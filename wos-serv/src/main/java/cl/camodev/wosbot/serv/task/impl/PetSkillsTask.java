@@ -87,6 +87,15 @@ public class PetSkillsTask extends DelayedTask {
 					return;
 				}
 
+				DTOImageSearchResult unlockText = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_UNLOCK_TEXT.getTemplate(), 0, 0, 720, 1280, 90);
+
+				if (unlockText.isFound()) {
+					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "skill is locked, removing task from scheduler");
+					EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
+					this.setRecurring(false);
+					return;
+				}
+
 				DTOImageSearchResult skillButton = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_SKILL_USE.getTemplate(), 0, 0, 720, 1280, 90);
 				if (skillButton.isFound()) {
 					EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, skillButton.getPoint(), skillButton.getPoint(), 10, 100);

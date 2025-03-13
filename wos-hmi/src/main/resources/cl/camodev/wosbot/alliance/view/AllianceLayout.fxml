@@ -23,17 +23,17 @@
    <children>
       <CheckBox fx:id="checkBoxTechContribution" mnemonicParsing="false" text="Tech contribution">
          <GridPane.margin>
-            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+            <Insets />
          </GridPane.margin>
       </CheckBox>
       <CheckBox fx:id="checkBoxChests" mnemonicParsing="false" text="Claim chests" GridPane.rowIndex="1">
          <GridPane.margin>
-            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+            <Insets />
          </GridPane.margin>
       </CheckBox>
       <CheckBox fx:id="checkBoxAutojoin" mnemonicParsing="false" text="Enable Autojoin" GridPane.rowIndex="2">
          <GridPane.margin>
-            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+            <Insets />
          </GridPane.margin>
       </CheckBox>
       <Label text="Offset Time" GridPane.columnIndex="1">

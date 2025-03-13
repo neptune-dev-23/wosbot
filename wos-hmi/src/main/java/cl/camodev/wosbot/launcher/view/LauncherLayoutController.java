@@ -29,6 +29,7 @@ import cl.camodev.wosbot.profile.model.ProfileAux;
 import cl.camodev.wosbot.profile.view.ProfileManagerLayoutController;
 import cl.camodev.wosbot.serv.impl.ServConfig;
 import cl.camodev.wosbot.serv.impl.ServScheduler;
+import cl.camodev.wosbot.shop.view.ShopLayoutController;
 import cl.camodev.wosbot.training.view.TrainingLayoutController;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -265,12 +266,14 @@ public class LauncherLayoutController implements IProfileLoadListener {
 		//@formatter:off
 		List<ModuleDefinition> modules = Arrays.asList(				
 				new ModuleDefinition("CityEventsLayout", "City Events", CityEventsLayoutController::new),
+				new ModuleDefinition("ShopLayout", "Shop", ShopLayoutController::new),
+				new ModuleDefinition("GatherLayout", "Gather", GatherLayoutController::new),
+				new ModuleDefinition("IntelLayout", "Intel", IntelLayoutController::new),
 				new ModuleDefinition("AllianceLayout", "Alliance", AllianceLayoutController::new),
 				new ModuleDefinition("TrainingLayout", "Training", TrainingLayoutController::new),
 				new ModuleDefinition("PetsLayout", "Pets", PetsLayoutController::new),
-				new ModuleDefinition("IntelLayout", "Intel", IntelLayoutController::new),
-				new ModuleDefinition("EmuConfigLayout", "Emulator Config", EmuConfigLayoutController::new),
-				new ModuleDefinition("GatherLayout", "Profiles", GatherLayoutController::new)
+				new ModuleDefinition("EmuConfigLayout", "Config", EmuConfigLayoutController::new)
+				
 				);
 		//@formatter:on
 

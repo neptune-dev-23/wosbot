@@ -57,6 +57,8 @@ public class TrainingTroopsTask extends DelayedTask {
 			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "going training " + troopType);
 			EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(3, 513), new DTOPoint(26, 588));
 			sleepTask(2000);
+			EmulatorManager.getInstance().tapAtPoint(EMULATOR_NUMBER, new DTOPoint(110, 270));
+			sleepTask(1000);
 
 			DTOImageSearchResult troopsResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, troopType.getTemplate(), 0, 0, 720, 1280, 90);
 

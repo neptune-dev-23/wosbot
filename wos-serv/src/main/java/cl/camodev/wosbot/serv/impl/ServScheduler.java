@@ -33,28 +33,8 @@ import cl.camodev.wosbot.serv.IBotStateListener;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 import cl.camodev.wosbot.serv.task.TaskQueue;
 import cl.camodev.wosbot.serv.task.TaskQueueManager;
-import cl.camodev.wosbot.serv.task.impl.AllianceAutojoinTask;
-import cl.camodev.wosbot.serv.task.impl.AllianceChestTask;
-import cl.camodev.wosbot.serv.task.impl.AllianceTechTask;
-import cl.camodev.wosbot.serv.task.impl.CrystalLaboratoryTask;
-import cl.camodev.wosbot.serv.task.impl.DailyStaminaTask;
-import cl.camodev.wosbot.serv.task.impl.ExplorationTask;
-import cl.camodev.wosbot.serv.task.impl.GatherTask;
-import cl.camodev.wosbot.serv.task.impl.GatherTask.GatherType;
-import cl.camodev.wosbot.serv.task.impl.HeroRecruitmentTask;
 import cl.camodev.wosbot.serv.task.impl.InitializeTask;
-import cl.camodev.wosbot.serv.task.impl.IntelligenceTask;
-import cl.camodev.wosbot.serv.task.impl.MailRewardsTask;
-import cl.camodev.wosbot.serv.task.impl.NomadicMerchantTask;
-import cl.camodev.wosbot.serv.task.impl.OnlineRewardTask;
-import cl.camodev.wosbot.serv.task.impl.PetAdventureChestTask;
-import cl.camodev.wosbot.serv.task.impl.PetAllianceTreasuresTask;
-import cl.camodev.wosbot.serv.task.impl.PetSkillsTask;
-import cl.camodev.wosbot.serv.task.impl.PetSkillsTask.PetSkill;
-import cl.camodev.wosbot.serv.task.impl.TrainingTroopsTask;
-import cl.camodev.wosbot.serv.task.impl.TrainingTroopsTask.TroopType;
-import cl.camodev.wosbot.serv.task.impl.VipTask;
-import cl.camodev.wosbot.serv.task.impl.WarAcademyTask;
+import cl.camodev.wosbot.serv.task.impl.LifeEssenceTask;
 
 public class ServScheduler {
 	private static ServScheduler instance;
@@ -120,101 +100,105 @@ public class ServScheduler {
 				Map<EnumConfigurationKey, List<Supplier<DelayedTask>>> taskMappings = new HashMap<>();
 
 				// Agregar tareas al mapa
-				taskMappings.put(EnumConfigurationKey.BOOL_EXPLORATION_CHEST, List.of(
-				    () -> new ExplorationTask(profile, TpDailyTaskEnum.EXPLORATION_CHEST)
-				));
-
-				taskMappings.put(EnumConfigurationKey.BOOL_HERO_RECRUITMENT, List.of(
-				    () -> new HeroRecruitmentTask(profile, TpDailyTaskEnum.HERO_RECRUITMENT)
-				));
-
-				taskMappings.put(EnumConfigurationKey.BOOL_WAR_ACADEMY_SHARDS, List.of(
-				    () -> new WarAcademyTask(profile, TpDailyTaskEnum.WAR_ACADEMY_SHARDS)
-				));
-
-				taskMappings.put(EnumConfigurationKey.BOOL_CRYSTAL_LAB_FC, List.of(
-				    () -> new CrystalLaboratoryTask(profile, TpDailyTaskEnum.CRYSTAL_LABORATORY)
-				));
-
-				taskMappings.put(EnumConfigurationKey.BOOL_NOMADIC_MERCHANT, List.of(
-				    () -> new NomadicMerchantTask(profile, TpDailyTaskEnum.NOMADIC_MERCHANT)
-				));
-
-				taskMappings.put(EnumConfigurationKey.BOOL_VIP_POINTS, List.of(() -> new VipTask(profile, TpDailyTaskEnum.VIP_POINTS)
-				));
-
-				taskMappings.put(EnumConfigurationKey.ALLIANCE_TECH_BOOL, List.of(
-				    () -> new AllianceTechTask(profile, TpDailyTaskEnum.ALLIANCE_TECH)
-				));
-
-				taskMappings.put(EnumConfigurationKey.ALLIANCE_CHESTS_BOOL, List.of(
-				    () -> new AllianceChestTask(profile, TpDailyTaskEnum.ALLIANCE_CHESTS)
-				));
-
-				taskMappings.put(EnumConfigurationKey.BOOL_TRAINING_TROOPS, List.of(
-				    () -> new TrainingTroopsTask(profile, TpDailyTaskEnum.TRAINING_TROOPS, TroopType.INFANTRY),
-				    () -> new TrainingTroopsTask(profile, TpDailyTaskEnum.TRAINING_TROOPS, TroopType.LANCER),
-				    () -> new TrainingTroopsTask(profile, TpDailyTaskEnum.TRAINING_TROOPS, TroopType.MARKSMAN)
-				));
-
-				taskMappings.put(EnumConfigurationKey.ALLIANCE_PET_TREASURE_BOOL, List.of(
-				    () -> new PetAllianceTreasuresTask(profile, TpDailyTaskEnum.ALLIANCE_PET_TREASURE)
-				));
+//				taskMappings.put(EnumConfigurationKey.BOOL_EXPLORATION_CHEST, List.of(
+//				    () -> new ExplorationTask(profile, TpDailyTaskEnum.EXPLORATION_CHEST)
+//				));
+//
+//				taskMappings.put(EnumConfigurationKey.BOOL_HERO_RECRUITMENT, List.of(
+//				    () -> new HeroRecruitmentTask(profile, TpDailyTaskEnum.HERO_RECRUITMENT)
+//				));
+//
+//				taskMappings.put(EnumConfigurationKey.BOOL_WAR_ACADEMY_SHARDS, List.of(
+//				    () -> new WarAcademyTask(profile, TpDailyTaskEnum.WAR_ACADEMY_SHARDS)
+//				));
+//
+//				taskMappings.put(EnumConfigurationKey.BOOL_CRYSTAL_LAB_FC, List.of(
+//				    () -> new CrystalLaboratoryTask(profile, TpDailyTaskEnum.CRYSTAL_LABORATORY)
+//				));
+//
+//				taskMappings.put(EnumConfigurationKey.BOOL_NOMADIC_MERCHANT, List.of(
+//				    () -> new NomadicMerchantTask(profile, TpDailyTaskEnum.NOMADIC_MERCHANT)
+//				));
+//
+//				taskMappings.put(EnumConfigurationKey.BOOL_VIP_POINTS, List.of(() -> new VipTask(profile, TpDailyTaskEnum.VIP_POINTS)
+//				));
+//
+//				taskMappings.put(EnumConfigurationKey.ALLIANCE_TECH_BOOL, List.of(
+//				    () -> new AllianceTechTask(profile, TpDailyTaskEnum.ALLIANCE_TECH)
+//				));
+//
+//				taskMappings.put(EnumConfigurationKey.ALLIANCE_CHESTS_BOOL, List.of(
+//				    () -> new AllianceChestTask(profile, TpDailyTaskEnum.ALLIANCE_CHESTS)
+//				));
+//
+//				taskMappings.put(EnumConfigurationKey.BOOL_TRAINING_TROOPS, List.of(
+//				    () -> new TrainingTroopsTask(profile, TpDailyTaskEnum.TRAINING_TROOPS, TroopType.INFANTRY),
+//				    () -> new TrainingTroopsTask(profile, TpDailyTaskEnum.TRAINING_TROOPS, TroopType.LANCER),
+//				    () -> new TrainingTroopsTask(profile, TpDailyTaskEnum.TRAINING_TROOPS, TroopType.MARKSMAN)
+//				));
+//
+//				taskMappings.put(EnumConfigurationKey.ALLIANCE_PET_TREASURE_BOOL, List.of(
+//				    () -> new PetAllianceTreasuresTask(profile, TpDailyTaskEnum.ALLIANCE_PET_TREASURE)
+//				));
+//				
+//				taskMappings.put(EnumConfigurationKey.PET_SKILL_FOOD_BOOL, List.of(
+//					() -> new PetSkillsTask(profile, TpDailyTaskEnum.PET_SKILL_FOOD, PetSkill.FOOD)
+//				));
+//				
+//				taskMappings.put(EnumConfigurationKey.PET_SKILL_GATHERING_BOOL, List.of(
+//					() -> new PetSkillsTask(profile, TpDailyTaskEnum.PET_SKILL_GATHERING, PetSkill.GATHERING)
+//				));
+//				
+//				taskMappings.put(EnumConfigurationKey.PET_SKILL_STAMINA_BOOL, List.of(
+//					() -> new PetSkillsTask(profile, TpDailyTaskEnum.PET_SKILL_STAMINA, PetSkill.STAMINA)
+//				));
+//				
+//				taskMappings.put(EnumConfigurationKey.PET_SKILL_TRESURE_BOOL, List.of(
+//					() -> new PetSkillsTask(profile, TpDailyTaskEnum.PET_SKILL_TREASURE, PetSkill.TREASURE)
+//				));
+//				
+//				taskMappings.put(EnumConfigurationKey.ALLIANCE_AUTOJOIN_BOOL, List.of(
+//						() -> new AllianceAutojoinTask(profile, TpDailyTaskEnum.ALLIANCE_AUTOJOIN)
+//					));
+//				
+//				taskMappings.put(EnumConfigurationKey.STOREHOUSE_CHEST_BOOL, List.of(
+//						() -> new OnlineRewardTask(profile, TpDailyTaskEnum.STOREHOUSE_CHEST)
+//					));
+//				
+//				taskMappings.put(EnumConfigurationKey.STOREHOUSE_STAMINA_BOOL, List.of(
+//						() -> new DailyStaminaTask(profile, TpDailyTaskEnum.STOREHOUSE_STAMINA)
+//					));
+//				
+//				taskMappings.put(EnumConfigurationKey.MAIL_REWARDS_BOOL, List.of(
+//						() -> new MailRewardsTask(profile, TpDailyTaskEnum.MAIL_REWARDS)
+//					));
+//				
+//				taskMappings.put(EnumConfigurationKey.PET_PERSONAL_TREASURE_BOOL, List.of(
+//                        () -> new PetAdventureChestTask(profile, TpDailyTaskEnum.PET_ADVENTURE)
+//                    ));
+//				
+//				taskMappings.put(EnumConfigurationKey.INTEL_BOOL, List.of(
+//                        () -> new IntelligenceTask(profile, TpDailyTaskEnum.INTEL)
+//                    ));
+//				
+//				taskMappings.put(EnumConfigurationKey.GATHER_MEAT_BOOL, List.of(
+//                        () -> new GatherTask(profile, TpDailyTaskEnum.GATHER_RESOURCES, GatherType.MEAT)
+//                    ));
+//				
+//				taskMappings.put(EnumConfigurationKey.GATHER_WOOD_BOOL, List.of(
+//                        () -> new GatherTask(profile, TpDailyTaskEnum.GATHER_RESOURCES, GatherType.WOOD)
+//                    ));
+//				
+//				taskMappings.put(EnumConfigurationKey.GATHER_COAL_BOOL, List.of(
+//                        () -> new GatherTask(profile, TpDailyTaskEnum.GATHER_RESOURCES, GatherType.COAL)
+//                    ));
+//				
+//				taskMappings.put(EnumConfigurationKey.GATHER_IRON_BOOL, List.of(
+//                        () -> new GatherTask(profile, TpDailyTaskEnum.GATHER_RESOURCES, GatherType.IRON)
+//                    ));
 				
-				taskMappings.put(EnumConfigurationKey.PET_SKILL_FOOD_BOOL, List.of(
-					() -> new PetSkillsTask(profile, TpDailyTaskEnum.PET_SKILL_FOOD, PetSkill.FOOD)
-				));
-				
-				taskMappings.put(EnumConfigurationKey.PET_SKILL_GATHERING_BOOL, List.of(
-					() -> new PetSkillsTask(profile, TpDailyTaskEnum.PET_SKILL_GATHERING, PetSkill.GATHERING)
-				));
-				
-				taskMappings.put(EnumConfigurationKey.PET_SKILL_STAMINA_BOOL, List.of(
-					() -> new PetSkillsTask(profile, TpDailyTaskEnum.PET_SKILL_STAMINA, PetSkill.STAMINA)
-				));
-				
-				taskMappings.put(EnumConfigurationKey.PET_SKILL_TRESURE_BOOL, List.of(
-					() -> new PetSkillsTask(profile, TpDailyTaskEnum.PET_SKILL_TREASURE, PetSkill.TREASURE)
-				));
-				
-				taskMappings.put(EnumConfigurationKey.ALLIANCE_AUTOJOIN_BOOL, List.of(
-						() -> new AllianceAutojoinTask(profile, TpDailyTaskEnum.ALLIANCE_AUTOJOIN)
-					));
-				
-				taskMappings.put(EnumConfigurationKey.STOREHOUSE_CHEST_BOOL, List.of(
-						() -> new OnlineRewardTask(profile, TpDailyTaskEnum.STOREHOUSE_CHEST)
-					));
-				
-				taskMappings.put(EnumConfigurationKey.STOREHOUSE_STAMINA_BOOL, List.of(
-						() -> new DailyStaminaTask(profile, TpDailyTaskEnum.STOREHOUSE_STAMINA)
-					));
-				
-				taskMappings.put(EnumConfigurationKey.MAIL_REWARDS_BOOL, List.of(
-						() -> new MailRewardsTask(profile, TpDailyTaskEnum.MAIL_REWARDS)
-					));
-				
-				taskMappings.put(EnumConfigurationKey.PET_PERSONAL_TREASURE_BOOL, List.of(
-                        () -> new PetAdventureChestTask(profile, TpDailyTaskEnum.PET_ADVENTURE)
-                    ));
-				
-				taskMappings.put(EnumConfigurationKey.INTEL_BOOL, List.of(
-                        () -> new IntelligenceTask(profile, TpDailyTaskEnum.INTEL)
-                    ));
-				
-				taskMappings.put(EnumConfigurationKey.GATHER_MEAT_BOOL, List.of(
-                        () -> new GatherTask(profile, TpDailyTaskEnum.GATHER_RESOURCES, GatherType.MEAT)
-                    ));
-				
-				taskMappings.put(EnumConfigurationKey.GATHER_WOOD_BOOL, List.of(
-                        () -> new GatherTask(profile, TpDailyTaskEnum.GATHER_RESOURCES, GatherType.WOOD)
-                    ));
-				
-				taskMappings.put(EnumConfigurationKey.GATHER_COAL_BOOL, List.of(
-                        () -> new GatherTask(profile, TpDailyTaskEnum.GATHER_RESOURCES, GatherType.COAL)
-                    ));
-				
-				taskMappings.put(EnumConfigurationKey.GATHER_IRON_BOOL, List.of(
-                        () -> new GatherTask(profile, TpDailyTaskEnum.GATHER_RESOURCES, GatherType.IRON)
+				taskMappings.put(EnumConfigurationKey.LIFE_ESSENCE_BOOL, List.of(
+                        () -> new LifeEssenceTask(profile, TpDailyTaskEnum.LIFE_ESSENCE)
                     ));
 
 				//@formatter:on

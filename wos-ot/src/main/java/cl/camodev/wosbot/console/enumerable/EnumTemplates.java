@@ -88,6 +88,7 @@ public enum EnumTemplates {
 	PETS_BEAST_ALLIANCE_CLAIM("/templates/pets/claimButton.png"),
 	PETS_INFO_SKILLS("/templates/pets/infoSkill.png"),
 	PETS_SKILL_USE("/templates/pets/useSkill.png"),
+	PETS_UNLOCK_TEXT("/templates/pets/unlockSkillText.png"),
 	
 	PETS_CHEST_COMPLETED("/templates/pets/chestCompleted.png"),
 	PETS_CHEST_SELECT("/templates/pets/chestSelect.png"),
@@ -101,6 +102,8 @@ public enum EnumTemplates {
 	
 	
 	LIFE_ESSENCE_MENU("/templates/essence/threeMenu.png"),
+	LIFE_ESSENCE_CLAIM("/templates/essence/claim.png"),
+	
 	NOMADIC_MERCHANT_COAL("/templates/nomadicmerchant/coal.png"), 
 	NOMADIC_MERCHANT_WOOD("/templates/nomadicmerchant/wood.png"), 
 	NOMADIC_MERCHANT_MEAT("/templates/nomadicmerchant/meat.png"), 

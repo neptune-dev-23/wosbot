@@ -25,10 +25,7 @@ public class CityEventsLayoutController extends AbstractProfileController {
 	private CheckBox checkBoxMailRewards;
 
 	@FXML
-	private CheckBox checkBoxNomadicMerchant;
-
-	@FXML
-	private CheckBox checkBoxNomadicMerchantVip;
+	private CheckBox checkBoxLifeEssence;
 
 	@FXML
 	private RadioButton radioButtonStorehouseChest;
@@ -49,20 +46,23 @@ public class CityEventsLayoutController extends AbstractProfileController {
 	private TextField textfieldMailOffset;
 
 	@FXML
+	private TextField textfieldLifeEssenceOffset;
+
+	@FXML
 	private void initialize() {
 
 		checkBoxMappings.put(checkBoxCrystalLabFC, EnumConfigurationKey.BOOL_CRYSTAL_LAB_FC);
 		checkBoxMappings.put(checkBoxExplorationChest, EnumConfigurationKey.BOOL_EXPLORATION_CHEST);
 		checkBoxMappings.put(checkBoxHeroRecruitment, EnumConfigurationKey.BOOL_HERO_RECRUITMENT);
-		checkBoxMappings.put(checkBoxNomadicMerchant, EnumConfigurationKey.BOOL_NOMADIC_MERCHANT);
-		checkBoxMappings.put(checkBoxNomadicMerchantVip, EnumConfigurationKey.BOOL_NOMADIC_MERCHANT_VIP_POINTS);
 		checkBoxMappings.put(checkBoxWarAcademyShards, EnumConfigurationKey.BOOL_WAR_ACADEMY_SHARDS);
 		checkBoxMappings.put(checkBoxDailyVipRewards, EnumConfigurationKey.BOOL_VIP_POINTS);
 		checkBoxMappings.put(checkBoxMailRewards, EnumConfigurationKey.MAIL_REWARDS_BOOL);
 		checkBoxMappings.put(checkBoxBuyMonthlyVip, EnumConfigurationKey.VIP_BUY_MONTHLY);
+		checkBoxMappings.put(checkBoxLifeEssence, EnumConfigurationKey.LIFE_ESSENCE_BOOL);
 
 		textFieldMappings.put(textfieldExplorationOffset, EnumConfigurationKey.INT_EXPLORATION_CHEST_OFFSET);
 		textFieldMappings.put(textfieldMailOffset, EnumConfigurationKey.MAIL_REWARDS_OFFSET_INT);
+		textFieldMappings.put(textfieldLifeEssenceOffset, EnumConfigurationKey.LIFE_ESSENCE_OFFSET_INT);
 
 		radioButtonMappings.put(radioButtonStorehouseChest, EnumConfigurationKey.STOREHOUSE_CHEST_BOOL);
 		radioButtonMappings.put(radioButtonStorehouseStamina, EnumConfigurationKey.STOREHOUSE_STAMINA_BOOL);

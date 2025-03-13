@@ -1,5 +1,8 @@
 package cl.camodev.wosbot.serv.task.impl;
 
+import java.time.LocalDateTime;
+
+import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
@@ -12,31 +15,61 @@ import cl.camodev.wosbot.serv.task.DelayedTask;
 
 public class LifeEssenceTask extends DelayedTask {
 
+	private final EmulatorManager emuManager = EmulatorManager.getInstance();
+	private final ServLogs servLogs = ServLogs.getServices();
+
+	private int attempts = 0;
+
 	public LifeEssenceTask(DTOProfiles profile, TpDailyTaskEnum tpDailyTask) {
 		super(profile, tpDailyTask);
 	}
 
 	@Override
 	protected void execute() {
+		if (attempts > 5) {
+			this.setRecurring(false);
+			servLogs.appendLog(EnumTpMessageSeverity.WARNING, taskName, profile.getName(), "Too many fail attempts, removing task from scheduler");
+		}
 
 		// Buscar la plantilla de la pantalla HOME
-		DTOImageSearchResult homeResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90);
-		DTOImageSearchResult worldResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 0, 0, 720, 1280, 90);
+		DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90);
+		DTOImageSearchResult worldResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 0, 0, 720, 1280, 90);
 		if (homeResult.isFound() || worldResult.isFound()) {
 			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "going life essence");
-			EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(1, 509), new DTOPoint(24, 592));
-			sleepTask(3000);
-			EmulatorManager.getInstance().executeSwipe(EMULATOR_NUMBER, new DTOPoint(220, 845), new DTOPoint(220, 94));
+			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(1, 509), new DTOPoint(24, 592));
+			// asegurarse de esta en el shortcut de ciudad
+			sleepTask(2000);
+			emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(110, 270));
 			sleepTask(1000);
-			DTOImageSearchResult lifeEssenceResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.LIFE_ESSENCE_MENU.getTemplate(), 0, 0, 720, 1280, 90);
 
-			if (lifeEssenceResult.isFound()) {
-				EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, lifeEssenceResult.getPoint(), lifeEssenceResult.getPoint());
-				sleepTask(10000);
-//				EmulatorManager.getInstance().ejecutarZoom(EMULATOR_NUMBER);
-				sleepTask(11000);
+			// hacer swipe hacia abajo
+			emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(220, 845), new DTOPoint(220, 94));
+			sleepTask(1000);
+			DTOImageSearchResult lifeEssenceMenu = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.LIFE_ESSENCE_MENU.getTemplate(), 0, 0, 720, 1280, 90);
+			int claim = 0;
+			if (lifeEssenceMenu.isFound()) {
+				EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, lifeEssenceMenu.getPoint(), lifeEssenceMenu.getPoint());
+				sleepTask(5000);
+				emuManager.tapBackButton(EMULATOR_NUMBER);
+				emuManager.tapBackButton(EMULATOR_NUMBER);
+				servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Searching for life essence");
+				for (int i = 0; i < 10; i++) {
+					servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), "Searching for life essence attempt " + i);
+					DTOImageSearchResult lifeEssence = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.LIFE_ESSENCE_CLAIM.getTemplate(), 0, 0, 720, 1280, 90);
+					if (lifeEssence.isFound()) {
+						emuManager.tapAtPoint(EMULATOR_NUMBER, lifeEssence.getPoint());
+						sleepTask(100);
+						claim++;
+					}
+					if (claim > 4) {
+						break;
+					}
+				}
+				this.reschedule(LocalDateTime.now().plusHours(profile.getConfig(EnumConfigurationKey.LIFE_ESSENCE_OFFSET_INT, Integer.class)));
+
 			} else {
 				System.out.println("Life essence menu not found");
+				attempts++;
 			}
 
 		} else {

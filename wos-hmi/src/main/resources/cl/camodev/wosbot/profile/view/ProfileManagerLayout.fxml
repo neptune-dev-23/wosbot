@@ -20,7 +20,7 @@
    <children>
       <TableView fx:id="tableviewLogMessages" prefHeight="200.0" prefWidth="200.0">
          <GridPane.margin>
-            <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
+            <Insets />
          </GridPane.margin>
          <columnResizePolicy>
             <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
