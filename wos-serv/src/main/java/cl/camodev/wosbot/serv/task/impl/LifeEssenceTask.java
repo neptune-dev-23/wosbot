@@ -53,9 +53,9 @@ public class LifeEssenceTask extends DelayedTask {
 				emuManager.tapBackButton(EMULATOR_NUMBER);
 				emuManager.tapBackButton(EMULATOR_NUMBER);
 				servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Searching for life essence");
-				for (int i = 0; i < 10; i++) {
+				for (int i = 1; i < 11; i++) {
 					servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), "Searching for life essence attempt " + i);
-					DTOImageSearchResult lifeEssence = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.LIFE_ESSENCE_CLAIM.getTemplate(), 0, 0, 720, 1280, 90);
+					DTOImageSearchResult lifeEssence = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.LIFE_ESSENCE_CLAIM.getTemplate(), 0, 80, 720, 1200, 90);
 					if (lifeEssence.isFound()) {
 						emuManager.tapAtPoint(EMULATOR_NUMBER, lifeEssence.getPoint());
 						sleepTask(100);
@@ -66,6 +66,8 @@ public class LifeEssenceTask extends DelayedTask {
 					}
 				}
 				this.reschedule(LocalDateTime.now().plusHours(profile.getConfig(EnumConfigurationKey.LIFE_ESSENCE_OFFSET_INT, Integer.class)));
+				emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(40, 30));
+				sleepTask(3000);
 
 			} else {
 				System.out.println("Life essence menu not found");
