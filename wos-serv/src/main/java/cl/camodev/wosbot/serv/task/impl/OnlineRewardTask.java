@@ -42,6 +42,9 @@ public class OnlineRewardTask extends DelayedTask {
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(3, 513), new DTOPoint(26, 588));
 			sleepTask(2000);
 
+			EmulatorManager.getInstance().tapAtPoint(EMULATOR_NUMBER, new DTOPoint(110, 270));
+			sleepTask(1000);
+
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(20, 250), new DTOPoint(200, 280));
 			sleepTask(2000);
 

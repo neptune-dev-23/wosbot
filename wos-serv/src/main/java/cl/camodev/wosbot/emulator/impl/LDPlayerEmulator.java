@@ -66,7 +66,26 @@ public class LDPlayerEmulator extends Emulator {
 
 	@Override
 	public boolean isPackageRunning(String emulatorNumber, String packageName) {
-		// TODO Auto-generated method stub
+		try {
+			String com = "shell dumpsys activity activities | grep mResumedActivity";
+			String[] command = { consolePath + File.separator + "ldconsole.exe", "adb", "--index", emulatorNumber, "--command", com };
+			ProcessBuilder pb = new ProcessBuilder(command);
+			pb.directory(new File(consolePath).getParentFile());
+
+			Process process = pb.start();
+			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+			String line;
+
+			while ((line = reader.readLine()) != null) {
+				if (line.contains(packageName)) {
+					return true;
+				}
+			}
+
+			process.waitFor();
+		} catch (IOException | InterruptedException e) {
+			e.printStackTrace();
+		}
 		return false;
 	}
 }

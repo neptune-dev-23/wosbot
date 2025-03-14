@@ -14,6 +14,7 @@ import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.serv.impl.ServLogs;
+import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 
 public class PetAdventureChestTask extends DelayedTask {
@@ -111,6 +112,11 @@ public class PetAdventureChestTask extends DelayedTask {
 											if (attempts.isFound()) {
 												servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "No more attempts");
 												this.reschedule(UtilTime.getGameReset());
+												ServScheduler.getServices().updateDailyTaskStatus(profile, TpDailyTaskEnum.PET_ADVENTURE, UtilTime.getGameReset());
+												emuManager.tapBackButton(EMULATOR_NUMBER);
+												emuManager.tapBackButton(EMULATOR_NUMBER);
+												emuManager.tapBackButton(EMULATOR_NUMBER);
+												emuManager.tapBackButton(EMULATOR_NUMBER);
 												return;
 											}
 										}

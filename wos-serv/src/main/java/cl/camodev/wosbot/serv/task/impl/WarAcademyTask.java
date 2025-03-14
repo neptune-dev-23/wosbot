@@ -56,8 +56,10 @@ public class WarAcademyTask extends DelayedTask {
 	}
 
 	private void navigateToWarAcademy() {
-		EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(1, 500), new DTOPoint(25, 590));
+		EmulatorManager.getInstance().tapAtPoint(EMULATOR_NUMBER, new DTOPoint(1, 550));
 		sleepTask(2000);
+		EmulatorManager.getInstance().tapAtPoint(EMULATOR_NUMBER, new DTOPoint(110, 270));
+		sleepTask(1000);
 		EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(186, 533), new DTOPoint(265, 555));
 		sleepTask(5000);
 		EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(1, 787), new DTOPoint(38, 842));
@@ -92,7 +94,7 @@ public class WarAcademyTask extends DelayedTask {
 	}
 
 	/**
-	 * Parsea un String con el formato "Remaining : <número>" y retorna el número encontrado. Se consideran espacios extra y no distingue entre
+	 * Parsea un String con el formato "Remaining : <number>" y retorna el número encontrado. Se consideran espacios extra y no distingue entre
 	 * mayúsculas y minúsculas.
 	 *
 	 * @param input La cadena a parsear, por ejemplo: " Remaining today: 7 "
