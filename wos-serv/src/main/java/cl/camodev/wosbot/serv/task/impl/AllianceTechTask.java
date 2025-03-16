@@ -49,7 +49,6 @@ public class AllianceTechTask extends DelayedTask {
 
 			Integer offset = profile.getConfig(EnumConfigurationKey.ALLIANCE_TECH_OFFSET_INT, Integer.class);
 			this.reschedule(LocalDateTime.now().plusHours(offset));
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "rescheduled for " + offset + " hours");
 
 		} else {
 			ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, taskName, profile.getName(), "Home not found");

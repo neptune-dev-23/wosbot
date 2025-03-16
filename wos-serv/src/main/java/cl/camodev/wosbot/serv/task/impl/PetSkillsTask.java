@@ -2,7 +2,6 @@ package cl.camodev.wosbot.serv.task.impl;
 
 import java.time.LocalDateTime;
 
-import cl.camodev.utiles.UtilTime;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
@@ -81,7 +80,7 @@ public class PetSkillsTask extends DelayedTask {
 				DTOImageSearchResult infoSkill = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_INFO_SKILLS.getTemplate(), 0, 0, 720, 1280, 90);
 
 				if (!infoSkill.isFound()) {
-					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "skill not learned, removing task from scheduler");
+					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "skill not learned");
 					this.setRecurring(false);
 					EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
 					return;
@@ -90,7 +89,7 @@ public class PetSkillsTask extends DelayedTask {
 				DTOImageSearchResult unlockText = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_UNLOCK_TEXT.getTemplate(), 0, 0, 720, 1280, 90);
 
 				if (unlockText.isFound()) {
-					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "skill is locked, removing task from scheduler");
+					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "skill is locked");
 					EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
 					this.setRecurring(false);
 					return;
@@ -108,7 +107,6 @@ public class PetSkillsTask extends DelayedTask {
 					LocalDateTime nextSchedule = parseCooldown(nextSchedulteText);
 					this.reschedule(parseCooldown(nextSchedulteText));
 					ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, nextSchedule);
-					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "rescheduled task for " + UtilTime.localDateTimeToDDHHMMSS(nextSchedule));
 				} catch (Exception e) {
 					e.printStackTrace();
 					this.reschedule(LocalDateTime.now().plusMinutes(5));

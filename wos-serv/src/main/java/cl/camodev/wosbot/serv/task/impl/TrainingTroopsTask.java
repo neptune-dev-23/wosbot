@@ -7,7 +7,6 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import cl.camodev.utiles.UtilTime;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
@@ -89,8 +88,6 @@ public class TrainingTroopsTask extends DelayedTask {
 
 					if (optionalNextTime.isPresent()) {
 						this.reschedule(optionalNextTime.get());
-						ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Rescheduling for " + UtilTime.localDateTimeToDDHHMMSS(scheduledTime));
-
 					}
 
 					EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
@@ -109,7 +106,7 @@ public class TrainingTroopsTask extends DelayedTask {
 
 	private Optional<LocalDateTime> extractNextTime() {
 		try {
-			String text = EmulatorManager.getInstance().ocrRegionText(EMULATOR_NUMBER, new DTOPoint(410, 997), new DTOPoint(581, 1026));
+			String text = EmulatorManager.getInstance().ocrRegionText(EMULATOR_NUMBER, new DTOPoint(410, 997), new DTOPoint(586, 1048));
 			return Optional.of(addTimeToLocalDateTime(LocalDateTime.now(), text));
 		} catch (IOException | TesseractException e) {
 			ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(), "Error processing OCR text");

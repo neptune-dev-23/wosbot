@@ -94,4 +94,8 @@ public abstract class DelayedTask implements Runnable {
 		long delayMillis = ChronoUnit.MILLIS.between(LocalDateTime.now(), scheduledTime);
 		return unit.convert(delayMillis, TimeUnit.MILLISECONDS);
 	}
+
+	public LocalDateTime getScheduled() {
+		return scheduledTime;
+	}
 }

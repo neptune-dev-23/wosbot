@@ -112,7 +112,7 @@ public class PetAdventureChestTask extends DelayedTask {
 											if (attempts.isFound()) {
 												servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "No more attempts");
 												this.reschedule(UtilTime.getGameReset());
-												ServScheduler.getServices().updateDailyTaskStatus(profile, TpDailyTaskEnum.PET_ADVENTURE, UtilTime.getGameReset());
+												ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, UtilTime.getGameReset());
 												emuManager.tapBackButton(EMULATOR_NUMBER);
 												emuManager.tapBackButton(EMULATOR_NUMBER);
 												emuManager.tapBackButton(EMULATOR_NUMBER);
@@ -132,8 +132,8 @@ public class PetAdventureChestTask extends DelayedTask {
 
 					} while (foundAnyChest); // El bucle se repite hasta que no se encuentren más cofres
 
-					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "No chests found. Scheduling next check in 1 hour.");
-					this.reschedule(LocalDateTime.now().plusHours(1));
+					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "No chests found");
+					this.reschedule(LocalDateTime.now().plusHours(2));
 
 				}
 

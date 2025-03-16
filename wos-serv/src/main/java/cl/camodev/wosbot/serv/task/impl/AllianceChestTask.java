@@ -80,6 +80,5 @@ public class AllianceChestTask extends DelayedTask {
 		this.reschedule(nextExecutionTime);
 		ServScheduler.getServices().updateDailyTaskStatus(profile, TpDailyTaskEnum.ALLIANCE_CHESTS, nextExecutionTime);
 
-		ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Rescheduled for " + offset + " hours");
 	}
 }

@@ -79,7 +79,7 @@ public class HeroRecruitmentTask extends DelayedTask {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), text + " rescheduling task");
+
 				nextAdvanced = parseNextFree(text);
 			}
 
@@ -108,7 +108,6 @@ public class HeroRecruitmentTask extends DelayedTask {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), text);
 				nextEpic = parseNextFree(text);
 			} else {
 				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "no rewards to claim, getting next recruitment time");
@@ -119,20 +118,12 @@ public class HeroRecruitmentTask extends DelayedTask {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), text);
 				nextEpic = parseNextFree(text);
 			}
 
 			LocalDateTime nextExecution = getEarliest(nextAdvanced, nextEpic);
 			this.reschedule(nextExecution);
 			ServScheduler.getServices().updateDailyTaskStatus(profile, TpDailyTaskEnum.HERO_RECRUITMENT, nextExecution);
-			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-
-			// Formatea el LocalDateTime a String con el formato deseado.
-			String formattedTime = nextExecution.format(formatter);
-
-			// Luego, lo usas en el log.
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "rescheduling task at " + formattedTime);
 			EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
 			EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
 

@@ -170,9 +170,9 @@ public class GatherTask extends DelayedTask {
 								emuManager.tapBackButton(EMULATOR_NUMBER);
 								emuManager.tapBackButton(EMULATOR_NUMBER);
 								reschedule(LocalDateTime.now().plusMinutes(5));
-								ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "March already marching, rescheduling task");
+								ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "March already gathering");
 							} else {
-								servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "March started, rescheduling task in 5 minutes to get the remaining time");
+								servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "March started");
 								reschedule(LocalDateTime.now().plusMinutes(5));
 							}
 						}
@@ -180,7 +180,7 @@ public class GatherTask extends DelayedTask {
 					} else {
 						emuManager.tapBackButton(EMULATOR_NUMBER);
 						reschedule(LocalDateTime.now().plusMinutes(5));
-						ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(), "Tile not found, rescheduling task");
+						ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(), "Tile not found");
 					}
 				}
 			}

@@ -45,7 +45,6 @@ public class CrystalLaboratoryTask extends DelayedTask {
 			}
 
 			reschedule(UtilTime.getGameReset());
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "rescheduled task for tomorrow");
 			ServScheduler.getServices().updateDailyTaskStatus(profile, TpDailyTaskEnum.CRYSTAL_LABORATORY, UtilTime.getGameReset());
 			EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
 

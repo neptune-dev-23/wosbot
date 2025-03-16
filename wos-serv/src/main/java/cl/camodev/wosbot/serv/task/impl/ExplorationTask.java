@@ -46,12 +46,11 @@ public class ExplorationTask extends DelayedTask {
 
 				int offset = profile.getConfig(EnumConfigurationKey.INT_EXPLORATION_CHEST_OFFSET, Integer.class);
 				this.reschedule(LocalDateTime.now().plusHours(offset));
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "rescheduled for " + offset + " hours");
 
 			} else {
 				int offset = profile.getConfig(EnumConfigurationKey.INT_EXPLORATION_CHEST_OFFSET, Integer.class);
 				this.reschedule(LocalDateTime.now().plusHours(offset));
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "no rewards to claim, rescheduled for " + offset + " hours");
+				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "no rewards to claim");
 			}
 			EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
 
