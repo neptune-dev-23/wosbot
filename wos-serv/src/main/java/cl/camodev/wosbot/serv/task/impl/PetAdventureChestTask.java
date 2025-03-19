@@ -133,7 +133,10 @@ public class PetAdventureChestTask extends DelayedTask {
 					} while (foundAnyChest); // El bucle se repite hasta que no se encuentren más cofres
 
 					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "No chests found");
+					ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, LocalDateTime.now().plusHours(2));
 					this.reschedule(LocalDateTime.now().plusHours(2));
+					emuManager.tapBackButton(EMULATOR_NUMBER);
+					emuManager.tapBackButton(EMULATOR_NUMBER);
 
 				}
 

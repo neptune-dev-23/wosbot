@@ -2,7 +2,6 @@ package cl.camodev.wosbot.serv.task.impl;
 
 import java.time.LocalDateTime;
 
-import cl.camodev.utiles.UtilTime;
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
@@ -96,7 +95,6 @@ public class GatherTask extends DelayedTask {
 					try {
 						String time = emuManager.ocrRegionText(EMULATOR_NUMBER, queues[index][2], new DTOPoint(queues[index][2].getX() + 140, queues[index][2].getY() + 19));
 						this.reschedule(parseRemaining(time).plusMinutes(5));
-						servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Rescheduling task for " + UtilTime.localDateTimeToDDHHMMSS(parseRemaining(time).plusMinutes(5)));
 					} catch (Exception e) {
 
 					}

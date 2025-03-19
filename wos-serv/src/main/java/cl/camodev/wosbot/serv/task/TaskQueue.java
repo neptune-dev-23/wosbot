@@ -153,7 +153,7 @@ public class TaskQueue {
 						String formattedTime = LocalTime.ofSecondOfDay(minDelay).format(timeFormatter);
 
 						ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "Idling for " + formattedTime));
-						Thread.sleep(300);
+						Thread.sleep(999);
 					} catch (InterruptedException e) {
 						Thread.currentThread().interrupt();
 						break;

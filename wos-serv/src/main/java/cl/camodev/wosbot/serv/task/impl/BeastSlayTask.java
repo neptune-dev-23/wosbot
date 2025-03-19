@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import cl.camodev.utiles.UtilTime;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
@@ -65,7 +64,7 @@ public class BeastSlayTask extends DelayedTask {
 
 				if (stamina < 10) {
 					LocalDateTime fullStaminaTime = calculateFullStaminaTime(stamina, 100, 5);
-					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Stamina is less than 10, rescheduling to " + UtilTime.localDateTimeToDDHHMMSS(fullStaminaTime));
+//					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Stamina is less than 10, rescheduling to " + UtilTime.localDateTimeToDDHHMMSS(fullStaminaTime));
 					this.reschedule(fullStaminaTime);
 					return;
 				}
@@ -93,9 +92,9 @@ public class BeastSlayTask extends DelayedTask {
 				availableQueues = extractFirstNumber(queueText);
 
 				if (stamina < 10) {
-					LocalDateTime fullStaminaTime = calculateFullStaminaTime(stamina, 100, 5);
-					UtilTime.localDateTimeToDDHHMMSS(fullStaminaTime);
-					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Stamina is less than 10, rescheduling to " + UtilTime.localDateTimeToDDHHMMSS(fullStaminaTime));
+//					LocalDateTime fullStaminaTime = calculateFullStaminaTime(stamina, 100, 5);
+//					UtilTime.localDateTimeToDDHHMMSS(fullStaminaTime);
+//					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Stamina is less than 10, rescheduling to " + UtilTime.localDateTimeToDDHHMMSS(fullStaminaTime));
 					return;
 				}
 

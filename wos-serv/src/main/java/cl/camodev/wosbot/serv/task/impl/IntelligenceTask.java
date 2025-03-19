@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import cl.camodev.utiles.UtilTime;
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
@@ -108,7 +107,6 @@ public class IntelligenceTask extends DelayedTask {
 					String rescheduleTime = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(120, 110), new DTOPoint(600, 146));
 					LocalDateTime reshchedule = parseAndAddTime(rescheduleTime);
 					this.reschedule(reshchedule);
-					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Rescheduled to " + UtilTime.localDateTimeToDDHHMMSS(reshchedule));
 					emuManager.tapBackButton(EMULATOR_NUMBER);
 					ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, reshchedule);
 				} catch (IOException | TesseractException e) {

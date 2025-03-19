@@ -32,6 +32,11 @@ public class UtilTime {
 
 	public static String localDateTimeToDDHHMMSS(LocalDateTime dateTime) {
 		LocalDateTime now = LocalDateTime.now();
+
+		if (dateTime.isBefore(now)) {
+			return "ASAP";
+		}
+
 		Duration duration = Duration.between(now, dateTime);
 
 		long days = duration.toDays();
@@ -47,4 +52,5 @@ public class UtilTime {
 
 		return formattedString.toString();
 	}
+
 }
