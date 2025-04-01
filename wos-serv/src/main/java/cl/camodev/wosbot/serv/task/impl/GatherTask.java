@@ -75,9 +75,9 @@ public class GatherTask extends DelayedTask {
 		DTOImageSearchResult worldResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 0, 0, 720, 1280, 90);
 
 		if (homeResult.isFound() || worldResult.isFound()) {
-			if (homeResult.isFound()) {
-				emuManager.tapAtPoint(EMULATOR_NUMBER, homeResult.getPoint());
-				sleepTask(3000);
+			if (worldResult.isFound()) {
+				emuManager.tapAtPoint(EMULATOR_NUMBER, worldResult.getPoint());
+				sleepTask(4000);
 			}
 
 			// verificar marchas activas
@@ -102,10 +102,14 @@ public class GatherTask extends DelayedTask {
 				emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(110, 270));
 				emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(464, 551));
 			} else {
+				if (homeResult.isFound()) {
+					emuManager.tapAtPoint(EMULATOR_NUMBER, homeResult.getPoint());
+					sleepTask(4000);
+				}
 				// debo mandar un escuadro a recojer recursos
 				// ir a la lupa
 				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(25, 850), new DTOPoint(67, 898));
-				sleepTask(1000);
+				sleepTask(2000);
 
 				// hacer swhipe a la izquierda
 				emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(678, 913), new DTOPoint(40, 913));
@@ -115,6 +119,7 @@ public class GatherTask extends DelayedTask {
 				if (tile.isFound()) {
 					emuManager.tapAtPoint(EMULATOR_NUMBER, tile.getPoint());
 					// regresar al nivel 1
+					sleepTask(1000);
 					emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(435, 1052), new DTOPoint(40, 1052));
 					emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(487, 1055), new DTOPoint(487, 1055), (profile.getConfig(gatherType.getConfig(), Integer.class) - 1), 10);
 
@@ -168,7 +173,7 @@ public class GatherTask extends DelayedTask {
 								emuManager.tapBackButton(EMULATOR_NUMBER);
 								emuManager.tapBackButton(EMULATOR_NUMBER);
 								reschedule(LocalDateTime.now().plusMinutes(5));
-								ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "March already gathering");
+								servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "March already gathering");
 							} else {
 								servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "March started");
 								reschedule(LocalDateTime.now().plusMinutes(5));
@@ -178,8 +183,12 @@ public class GatherTask extends DelayedTask {
 					} else {
 						emuManager.tapBackButton(EMULATOR_NUMBER);
 						reschedule(LocalDateTime.now().plusMinutes(5));
-						ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(), "Tile not found");
+						servLogs.appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(), "Tile not found");
 					}
+				} else {
+					emuManager.tapBackButton(EMULATOR_NUMBER);
+					reschedule(LocalDateTime.now().plusMinutes(5));
+					servLogs.appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(), "resource not found");
 				}
 			}
 
@@ -230,7 +239,7 @@ public class GatherTask extends DelayedTask {
 			return now.plusHours(hours).plusMinutes(minutes).plusSeconds(seconds);
 		} catch (NumberFormatException e) {
 			// Si ocurre algún error durante el parseo, se retorna LocalDateTime.now()
-			return LocalDateTime.now();
+			return LocalDateTime.now().plusMinutes(3);
 		}
 	}
 

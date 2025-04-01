@@ -30,6 +30,7 @@ public enum EnumTemplates {
 	RALLY_REMOVE_HERO_BUTTON("/templates/rally/removeHeroButton.png"),
 	RALLY_GATHER_BUTTON("/templates/rally/gatherButton.png"),
 	RALLY_GATHER_ALREADY_MARCHING("/templates/rally/gatherAlreadyMarching.png"),
+	RALLY_POLAR_BUTTON("/templates/rally/rallyPolarButton.png"),
 	
 	HOME_DEALS_BUTTON("/templates/home/dealsButton.png"),
 	HOME_EVENTS_BUTTON("/templates/home/eventsButton.png"),
@@ -63,6 +64,13 @@ public enum EnumTemplates {
 	INTEL_ATTACK_CONFIRM("/templates/intel/beastAttackConfirm.png"),
 	
 	INTEL_FIRE_BEAST("/templates/intel/beastFire.png"),
+	
+	INTEL_PREFC_BEAST_YELLOW("/templates/intel/prefcBeastYellow.png"),
+	INTEL_PREFC_BEAST_PURPLE("/templates/intel/prefcBeastPurple.png"),
+	INTEL_PREFC_BEAST_BLUE("/templates/intel/prefcBeastBlue.png"),
+	INTEL_PREFC_BEAST_GREEN("/templates/intel/prefcBeastGreen.png"),
+	INTEL_PREFC_BEAST_GREY("/templates/intel/prefcBeastGrey.png"),
+	
 	INTEL_BEAST_YELLOW("/templates/intel/beastYellow.png"),
 	INTEL_BEAST_PURPLE("/templates/intel/beastPurple.png"),
 	INTEL_BEAST_BLUE("/templates/intel/beastBlue.png"),
