@@ -21,10 +21,10 @@ A bot for automating tasks in **Whiteout Survival**. This project is a work in p
 ✅ Auto **Pet Skills** (Food, Treasure and Stamina)  
 ✅ Claim **Online Rewards**   
 ✅ Auto claim **Pet Adventure** chests   
-✅ Auto-collect rewards from mail
-✅ **Alliance Auto Join**  for rallys
-✅ Automatically **gathering** resources
-✅ Automate **intelligence task** completion.  
+✅ Auto-collect rewards from mail  
+✅ **Alliance Auto Join**  for rallys  
+✅ Automatically **gathering** resources  
+✅ Automate **intelligence task** completion  
 
 ---
 
