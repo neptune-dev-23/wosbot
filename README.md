@@ -1,4 +1,6 @@
-# Whiteout Survival Bot (WIP)
+# Whiteout Survival Bot (PAUSED)
+
+**The development of the project is currently on pause due to issues I'm experiencing with the emulator**
 
 A bot for automating tasks in **Whiteout Survival**. This project is a work in progress and is developed in my free time. If you have any requests or suggestions, feel free to ask—I’ll try to respond as soon as possible.
 
@@ -19,8 +21,12 @@ A bot for automating tasks in **Whiteout Survival**. This project is a work in p
 ✅ Collects to **Alliance Chests**  
 ✅ Auto **Training Troops** (only training for the moment not upgrade)  
 ✅ Auto **Pet Skills** (Food, Treasure and Stamina)  
-✅ Claim **Online Rewards**  
-✅ **Alliance Auto Join**  for rallys
+✅ Claim **Online Rewards**   
+✅ Auto claim **Pet Adventure** chests   
+✅ Auto-collect rewards from mail  
+✅ **Alliance Auto Join**  for rallys  
+✅ Automatically **gathering** resources  
+✅ Automate **intelligence task** completion  
 
 ---
 
@@ -76,10 +82,7 @@ Simply double-click `wos-bot-x.x.x.jar`.
 ### 🚀 Future Features (Planned)
 🔹 **Arena Battles** – Manage arena battles automatically.  
 🔹 **Beast Slay** – Implement automatic beast hunting.  
-🔹 **Gathering Resouces** – Automatically gathering resources.  
-🔹 **Intelligence Missions** – Automate intelligence task completion.  
-🔹 **Mail Rewards** – Auto-collect rewards from mail.  
-🔹 **Pet Adventure** – Automate pet adventure tasks.  
+
 🔹 **and more ofc** 🔥
 
 
