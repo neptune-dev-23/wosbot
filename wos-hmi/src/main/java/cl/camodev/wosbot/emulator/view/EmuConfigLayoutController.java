@@ -5,105 +5,159 @@ import java.util.HashMap;
 
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.emulator.EmulatorType;
+import cl.camodev.wosbot.emulator.model.EmulatorAux;
 import cl.camodev.wosbot.serv.impl.ServConfig;
 import cl.camodev.wosbot.serv.impl.ServScheduler;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.RadioButton;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.FileChooser;
 
 public class EmuConfigLayoutController {
 
 	@FXML
-	private TextField muMuPathField;
+	private TableView<EmulatorAux> tableviewEmulators;
 
 	@FXML
-	private TextField ldPlayerPathField;
+	private TableColumn<EmulatorAux, Boolean> tableColumnActive;
 
 	@FXML
-	private RadioButton muMuRadio;
+	private TableColumn<EmulatorAux, String> tableColumnEmulatorName;
 
 	@FXML
-	private RadioButton ldPlayerRadio;
+	private TableColumn<EmulatorAux, String> tableColumnEmulatorPath;
 
-	private final ToggleGroup emulatorToggleGroup = new ToggleGroup();
+	@FXML
+	private TableColumn<EmulatorAux, Void> tableColumnEmulatorAction;
+
+	@FXML
+	private TextField textfieldMaxConcurrentInstances;
+
+	@FXML
+	private TextField textfieldMaxIdleTime;
 
 	private final FileChooser fileChooser = new FileChooser();
 
-	public void initialize() {
-		muMuRadio.setToggleGroup(emulatorToggleGroup);
-		ldPlayerRadio.setToggleGroup(emulatorToggleGroup);
+	// Lista fija de emuladores que se derivan del enum
+	private final ObservableList<EmulatorAux> emulatorList = FXCollections.observableArrayList();
 
+	public void initialize() {
+		// Se obtiene la configuración global
 		HashMap<String, String> globalConfig = ServConfig.getServices().getGlobalConfig();
-		String muMuPath = globalConfig.get(EnumConfigurationKey.MUMU_PATH_STRING.name());
-		String ldPlayerPath = globalConfig.get(EnumConfigurationKey.LDPLAYER_PATH_STRING.name());
+		// Se recupera el emulador activo en la configuración
 		String currentEmulator = globalConfig.get(EnumConfigurationKey.CURRENT_EMULATOR_STRING.name());
 
-		if (EmulatorType.MUMU.name().equals(currentEmulator)) {
-			muMuRadio.setSelected(true);
-		} else {
-			ldPlayerRadio.setSelected(true);
+		// Se llena la lista recorriendo los valores del enum
+		for (EmulatorType type : EmulatorType.values()) {
+			String defaultPath = globalConfig.getOrDefault(type.getConfigKey(), "");
+			EmulatorAux emulator = new EmulatorAux(type, defaultPath);
+			emulator.setActive(type.name().equals(currentEmulator));
+			emulatorList.add(emulator);
 		}
 
-		muMuPathField.setText(muMuPath);
-		ldPlayerPathField.setText(ldPlayerPath);
+		// Configurar columna de nombre (lectura únicamente)
+		tableColumnEmulatorName.setCellValueFactory(new PropertyValueFactory<>("name"));
+		// Configurar columna que muestra la ruta
+		tableColumnEmulatorPath.setCellValueFactory(new PropertyValueFactory<>("path"));
+
+		// Configurar la columna de selección con RadioButton para elegir el emulador activo
+		tableColumnActive.setCellValueFactory(cellData -> cellData.getValue().activeProperty());
+
+		final ToggleGroup toggleGroup = new ToggleGroup();
+		tableColumnActive.setCellFactory(column -> new TableCell<EmulatorAux, Boolean>() {
+			private final RadioButton radioButton = new RadioButton();
+			{
+				radioButton.setToggleGroup(toggleGroup);
+				radioButton.setOnAction(event -> {
+					EmulatorAux selected = getTableView().getItems().get(getIndex());
+					// Desactiva la bandera activa en todos
+					for (EmulatorAux e : emulatorList) {
+						e.setActive(false);
+					}
+					selected.setActive(true);
+					tableviewEmulators.refresh();
+				});
+			}
+
+			@Override
+			protected void updateItem(Boolean item, boolean empty) {
+				super.updateItem(item, empty);
+				if (empty) {
+					setGraphic(null);
+				} else {
+					radioButton.setSelected(item != null && item);
+					setGraphic(radioButton);
+				}
+			}
+		});
+
+		// Configurar la columna de acción para actualizar la ruta
+		tableColumnEmulatorAction.setCellFactory(col -> new TableCell<EmulatorAux, Void>() {
+			private final Button btn = new Button("...");
+
+			{
+				btn.setOnAction(event -> {
+					EmulatorAux emulator = getTableView().getItems().get(getIndex());
+					// Se puede utilizar el executableName para filtrar o validar el archivo
+					File selectedFile = openFileChooser("Select" + emulator.getEmulatorType().getExecutableName());
+					if (selectedFile != null) {
+						// Verifica que el archivo seleccionado coincida con el esperado
+						if (!selectedFile.getName().equalsIgnoreCase(emulator.getEmulatorType().getExecutableName())) {
+							showError("File not valid, please select: " + emulator.getEmulatorType().getExecutableName());
+							return;
+						}
+						emulator.setPath(selectedFile.getParent());
+						tableviewEmulators.refresh();
+					}
+				});
+			}
+
+			@Override
+			protected void updateItem(Void item, boolean empty) {
+				super.updateItem(item, empty);
+				setGraphic(empty ? null : btn);
+			}
+		});
+
+		// Asignar la lista fija al TableView
+		tableviewEmulators.setItems(emulatorList);
+
+		textfieldMaxConcurrentInstances.setText(globalConfig.getOrDefault(EnumConfigurationKey.MAX_RUNNING_EMULATORS_INT.name(), "1"));
+		textfieldMaxIdleTime.setText(globalConfig.getOrDefault(EnumConfigurationKey.MAX_IDLE_TIME_INT.name(), "15"));
 	}
 
-	@FXML
-	private void handleSelectMuMuPath() {
-		File selectedFile = openFileChooser("Select MuMuManager.exe");
-		if (selectedFile != null && selectedFile.getName().equals("MuMuManager.exe")) {
-			muMuPathField.setText(selectedFile.getParent());
-		} else {
-			showError("Invalid file. Please select MuMuManager.exe");
-		}
-	}
-
-	@FXML
-	private void handleSelectLDPlayerPath() {
-		File selectedFile = openFileChooser("Select ldconsole.exe");
-		if (selectedFile != null && selectedFile.getName().equals("ldconsole.exe")) {
-			ldPlayerPathField.setText(selectedFile.getParent());
-		} else {
-			showError("Invalid file. Please select ldconsole.exe");
-		}
-	}
-
+	// Guarda la configuración, recorriendo la lista para extraer la ruta y determinar el emulador activo
 	@FXML
 	private void handleSaveConfiguration() {
-		String muMuPath = muMuPathField.getText();
-		String ldPlayerPath = ldPlayerPathField.getText();
-		String activeEmulator;
-
-		if (muMuPath.isEmpty() && ldPlayerPath.isEmpty()) {
-			showError("Please select at least one valid emulator path before saving.");
+		String activeEmulatorName = null;
+		for (EmulatorAux emulator : emulatorList) {
+			if (emulator.isActive()) {
+				activeEmulatorName = emulator.getEmulatorType().name();
+				break;
+			}
+		}
+		if (activeEmulatorName == null) {
+			showError("Missing active emulator. Please select one.");
 			return;
 		}
 
-		if (muMuRadio.isSelected() && muMuPath.isEmpty()) {
-			showError("MuMuPlayer is selected, but its path is empty. Please provide a valid path.");
-			return;
+		// Guarda la configuración usando la clave definida en cada valor del enum
+		for (EmulatorAux emulator : emulatorList) {
+			ServScheduler.getServices().saveEmulatorPath(emulator.getEmulatorType().getConfigKey(), emulator.getPath());
 		}
+		// Guarda cuál es el emulador activo
+		ServScheduler.getServices().saveEmulatorPath(EnumConfigurationKey.CURRENT_EMULATOR_STRING.name(), activeEmulatorName);
 
-		if (!muMuRadio.isSelected() && ldPlayerPath.isEmpty()) {
-			showError("LDPlayer is selected, but its path is empty. Please provide a valid path.");
-			return;
-		}
-
-		if (muMuRadio.isSelected()) {
-			activeEmulator = EmulatorType.MUMU.name();
-			ServScheduler.getServices().saveEmulatorPath(EnumConfigurationKey.MUMU_PATH_STRING, muMuPath);
-		} else {
-			activeEmulator = EmulatorType.LDPLAYER.name();
-			ServScheduler.getServices().saveEmulatorPath(EnumConfigurationKey.LDPLAYER_PATH_STRING, ldPlayerPath);
-		}
-
-		ServScheduler.getServices().saveEmulatorPath(EnumConfigurationKey.CURRENT_EMULATOR_STRING, activeEmulator);
-
-		showInfo("Configuration saved successfully!");
-
+		showInfo("Config saved successfully");
 	}
 
 	private File openFileChooser(String title) {
@@ -123,7 +177,7 @@ public class EmuConfigLayoutController {
 
 	private void showInfo(String message) {
 		Alert alert = new Alert(Alert.AlertType.INFORMATION);
-		alert.setTitle("Success");
+		alert.setTitle("Éxito");
 		alert.setHeaderText(null);
 		alert.setContentText(message);
 		alert.showAndWait();

@@ -3,7 +3,6 @@ package cl.camodev.wosbot.emulator;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.PriorityQueue;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -28,7 +27,6 @@ public class EmulatorManager {
 	private final PriorityQueue<WaitingThread> waitingQueue = new PriorityQueue<>();
 
 	private int MAX_RUNNING_EMULATORS = 2;
-	private final Semaphore emulatorSlots = new Semaphore(MAX_RUNNING_EMULATORS, true);
 	public static String WHITEOUT_PACKAGE = "com.gof.global";
 
 	private EmulatorManager() {
@@ -57,7 +55,7 @@ public class EmulatorManager {
 
 		try {
 			EmulatorType emulatorType = EmulatorType.valueOf(savedActiveEmulator);
-			String consolePath = globalConfig.get(emulatorType.getConfigKey().name());
+			String consolePath = globalConfig.get(emulatorType.getConfigKey());
 
 			if (consolePath == null || consolePath.isEmpty()) {
 				throw new IllegalStateException("No path found for the selected emulator: " + emulatorType.getDisplayName());
@@ -67,6 +65,9 @@ public class EmulatorManager {
 			case MUMU:
 				this.emulator = new MuMuEmulator(consolePath);
 				break;
+//			case MEMU:
+//				this.emulator = new MEmuEmulator(consolePath);
+//				break;
 			case LDPLAYER:
 				this.emulator = new LDPlayerEmulator(consolePath);
 				break;
@@ -167,11 +168,6 @@ public class EmulatorManager {
 
 	public void launchEmulator(String emulatorNumber) {
 		checkEmulatorInitialized();
-//		try {
-////			emulatorSlots.acquire();
-//		} catch (InterruptedException e) {
-//			e.printStackTrace();
-//		}
 		emulator.launchEmulator(emulatorNumber);
 	}
 

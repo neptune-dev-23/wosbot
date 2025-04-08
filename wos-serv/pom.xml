@@ -9,6 +9,14 @@
 	</parent>
 	<artifactId>wos-serv</artifactId>
 	<name>Wos Bot Services</name>
+
+	<repositories>
+		<repository>
+			<id>google</id>
+			<name>Google Maven Repository</name>
+			<url>https://maven.google.com/</url>
+		</repository>
+	</repositories>
 	<dependencies>
 
 
@@ -17,7 +25,12 @@
 			<artifactId>JDA</artifactId>
 			<version>5.3.0</version>
 		</dependency>
-
+		<!-- https://mvnrepository.com/artifact/com.android.tools.ddms/ddmlib -->
+		<dependency>
+			<groupId>com.android.tools.ddms</groupId>
+			<artifactId>ddmlib</artifactId>
+			<version>31.11.0-alpha03</version>
+		</dependency>
 
 		<dependency>
 			<groupId>cl.camodev</groupId>

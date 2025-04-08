@@ -92,9 +92,9 @@ public class ServScheduler {
 
 		ServConfig.getServices().getGlobalConfig().forEach((key, value) -> {
 			if (key.equals(EnumConfigurationKey.MUMU_PATH_STRING.name())) {
-				saveEmulatorPath(EnumConfigurationKey.MUMU_PATH_STRING, value);
+				saveEmulatorPath(EnumConfigurationKey.MUMU_PATH_STRING.name(), value);
 			} else if (key.equals(EnumConfigurationKey.LDPLAYER_PATH_STRING.name())) {
-				saveEmulatorPath(EnumConfigurationKey.LDPLAYER_PATH_STRING, value);
+				saveEmulatorPath(EnumConfigurationKey.LDPLAYER_PATH_STRING.name(), value);
 			}
 		});
 		List<DTOProfiles> profiles = ServProfiles.getServices().getProfiles();
@@ -315,15 +315,15 @@ public class ServScheduler {
 		iDailyTaskRepository.saveDailyTask(dailyTask);
 	}
 
-	public void saveEmulatorPath(EnumConfigurationKey enumConfigurationKey, String filePath) {
+	public void saveEmulatorPath(String enumConfigurationKey, String filePath) {
 		List<Config> configs = iConfigRepository.getGlobalConfigs();
 
-		Config config = configs.stream().filter(c -> c.getKey().equals(enumConfigurationKey.name())).findFirst().orElse(null);
+		Config config = configs.stream().filter(c -> c.getKey().equals(enumConfigurationKey)).findFirst().orElse(null);
 
 		if (config == null) {
 			TpConfig tpConfig = iConfigRepository.getTpConfig(TpConfigEnum.GLOBAL_CONFIG);
 			config = new Config();
-			config.setKey(enumConfigurationKey.name());
+			config.setKey(enumConfigurationKey);
 			config.setValor(filePath);
 			config.setTpConfig(tpConfig);
 			iConfigRepository.addConfig(config);

@@ -102,6 +102,9 @@ public class GatherTask extends DelayedTask {
 				emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(110, 270));
 				emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(464, 551));
 			} else {
+				emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(110, 270));
+				emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(464, 551));
+				homeResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90);
 				if (homeResult.isFound()) {
 					emuManager.tapAtPoint(EMULATOR_NUMBER, homeResult.getPoint());
 					sleepTask(4000);

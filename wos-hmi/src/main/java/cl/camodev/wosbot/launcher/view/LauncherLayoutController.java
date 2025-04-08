@@ -16,6 +16,7 @@ import cl.camodev.wosbot.city.view.CityEventsLayoutController;
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.view.ConsoleLogLayoutController;
+import cl.camodev.wosbot.emulator.EmulatorType;
 import cl.camodev.wosbot.emulator.view.EmuConfigLayoutController;
 import cl.camodev.wosbot.gather.view.GatherLayoutController;
 import cl.camodev.wosbot.intel.view.IntelLayoutController;
@@ -99,31 +100,31 @@ public class LauncherLayoutController implements IProfileLoadListener {
 
 	}
 
-	public enum EmulatorType {
-		MUMU("MuMuPlayer", EnumConfigurationKey.MUMU_PATH_STRING, "C:\\Program Files\\Netease\\MuMuPlayerGlobal-12.0\\shell\\MuMuManager.exe"), LDPLAYER("LDPlayer", EnumConfigurationKey.LDPLAYER_PATH_STRING, "C:\\LDPlayer\\LDPlayer9\\ldconsole.exe");
-
-		private final String displayName;
-		private final EnumConfigurationKey configKey;
-		private final String defaultPath;
-
-		EmulatorType(String displayName, EnumConfigurationKey configKey, String defaultPath) {
-			this.displayName = displayName;
-			this.configKey = configKey;
-			this.defaultPath = defaultPath;
-		}
-
-		public String getDisplayName() {
-			return displayName;
-		}
-
-		public EnumConfigurationKey getConfigKey() {
-			return configKey;
-		}
-
-		public String getDefaultPath() {
-			return defaultPath;
-		}
-	}
+//	public enum EmulatorType {
+//		MUMU("MuMuPlayer", EnumConfigurationKey.MUMU_PATH_STRING, "C:\\Program Files\\Netease\\MuMuPlayerGlobal-12.0\\shell\\MuMuManager.exe"), LDPLAYER("LDPlayer", EnumConfigurationKey.LDPLAYER_PATH_STRING, "C:\\LDPlayer\\LDPlayer9\\ldconsole.exe");
+//
+//		private final String displayName;
+//		private final EnumConfigurationKey configKey;
+//		private final String defaultPath;
+//
+//		EmulatorType(String displayName, EnumConfigurationKey configKey, String defaultPath) {
+//			this.displayName = displayName;
+//			this.configKey = configKey;
+//			this.defaultPath = defaultPath;
+//		}
+//
+//		public String getDisplayName() {
+//			return displayName;
+//		}
+//
+//		public EnumConfigurationKey getConfigKey() {
+//			return configKey;
+//		}
+//
+//		public String getDefaultPath() {
+//			return defaultPath;
+//		}
+//	}
 
 	private void initializeEmulatorManager() {
 		HashMap<String, String> globalConfig = ServConfig.getServices().getGlobalConfig();
@@ -138,7 +139,7 @@ public class LauncherLayoutController implements IProfileLoadListener {
 		boolean activeEmulatorValid = false;
 
 		if (activeEmulator != null) {
-			String activePath = globalConfig.get(activeEmulator.getConfigKey().name());
+			String activePath = globalConfig.get(activeEmulator.getConfigKey());
 			if (activePath != null && new File(activePath).exists()) {
 				activeEmulatorValid = true;
 			} else {
@@ -152,7 +153,7 @@ public class LauncherLayoutController implements IProfileLoadListener {
 			if (activeEmulator == emulator)
 				continue;
 
-			String emulatorPath = globalConfig.get(emulator.getConfigKey().name());
+			String emulatorPath = globalConfig.get(emulator.getConfigKey());
 			if (emulatorPath != null && new File(emulatorPath).exists()) {
 				foundEmulators.add(emulator);
 			} else {
@@ -166,13 +167,13 @@ public class LauncherLayoutController implements IProfileLoadListener {
 
 		if (!activeEmulatorValid) {
 			if (foundEmulators.size() == 1) {
-				ServScheduler.getServices().saveEmulatorPath(EnumConfigurationKey.CURRENT_EMULATOR_STRING, foundEmulators.get(0).name());
+				ServScheduler.getServices().saveEmulatorPath(EnumConfigurationKey.CURRENT_EMULATOR_STRING.name(), foundEmulators.get(0).name());
 				return;
 			} else if (foundEmulators.isEmpty()) {
 				selectEmulatorManually();
 			} else {
 				EmulatorType selectedEmulator = askUserForPreferredEmulator(foundEmulators);
-				ServScheduler.getServices().saveEmulatorPath(EnumConfigurationKey.CURRENT_EMULATOR_STRING, selectedEmulator.name());
+				ServScheduler.getServices().saveEmulatorPath(EnumConfigurationKey.CURRENT_EMULATOR_STRING.name(), selectedEmulator.name());
 			}
 		}
 	}
@@ -216,7 +217,7 @@ public class LauncherLayoutController implements IProfileLoadListener {
 			for (EmulatorType emulator : EmulatorType.values()) {
 				if (selectedFile.getName().equals(new File(emulator.getDefaultPath()).getName())) {
 					ServScheduler.getServices().saveEmulatorPath(emulator.getConfigKey(), selectedFile.getParent());
-					ServScheduler.getServices().saveEmulatorPath(EnumConfigurationKey.CURRENT_EMULATOR_STRING, emulator.name());
+					ServScheduler.getServices().saveEmulatorPath(EnumConfigurationKey.CURRENT_EMULATOR_STRING.name(), emulator.name());
 					return;
 				}
 			}
