@@ -43,6 +43,7 @@ public enum EnumTemplates {
 	
 	ALLIANCE_CHEST_BUTTON("/templates/alliance/chestButton.png"),
 	ALLIANCE_TECH_BUTTON("/templates/alliance/techButton.png"),
+	ALLIANCE_TECH_THUMB_UP("/templates/alliance/techThumbUp.png"),
 	ALLIANCE_WAR_BUTTON("/templates/alliance/warButton.png"),
 	
 	ALLIANCE_CHEST_LOOT_CLAIM_BUTTON("/templates/alliance/lootClaimAllButton.png"),
