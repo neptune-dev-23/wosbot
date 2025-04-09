@@ -23,8 +23,8 @@ jobs:
 
       # Ejecutar el build desde la raíz, donde se encuentra el POM principal
       - name: Build with Maven from main POM
-        run: mvn clean install
-
+        run: mvn -f ./../pom.xml clean install
+        
       # Listar los archivos generados en el módulo hmi
       - name: List generated files in wos-hmi/target
         run: ls -R wos-hmi/target/
