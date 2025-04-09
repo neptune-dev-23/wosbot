@@ -22,7 +22,7 @@ jobs:
           cache: 'maven'
 
       - name: Build with Maven
-        run: mvn -f wos-hmi/pom.xml clean package
+        run: mvn clean install
 
       - name: List generated files
         run: ls -R wos-hmi/target/
