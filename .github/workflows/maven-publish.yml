@@ -21,12 +21,15 @@ jobs:
           java-version: '21'
           cache: 'maven'
 
-      - name: Build with Maven
+      # Ejecutar el build desde la raíz, donde se encuentra el POM principal
+      - name: Build with Maven from main POM
         run: mvn clean install
 
-      - name: List generated files
+      # Listar los archivos generados en el módulo hmi
+      - name: List generated files in wos-hmi/target
         run: ls -R wos-hmi/target/
 
+      # Subir el ZIP a GitHub Release (ajustar la ruta según se genere el artefacto)
       - name: Upload ZIP to Release
         uses: softprops/action-gh-release@v1
         with:
