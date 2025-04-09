@@ -86,10 +86,11 @@ public class GatherTask extends DelayedTask {
 
 			emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(340, 265));
 			sleepTask(1000);
-
-			DTOImageSearchResult resource = emuManager.searchTemplate(EMULATOR_NUMBER, gatherType.getTemplate(), 10, 342, (425 - 10), (772 - 342), 90);
+			servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "looking for " + gatherType);
+			DTOImageSearchResult resource = emuManager.searchTemplate(EMULATOR_NUMBER, gatherType.getTemplate(), 10, 342, (425 - 10), 772, 90);
 
 			if (resource.isFound()) {
+				servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Resource found, getting remaining time");
 				int index = obtenerIndice(resource.getPoint());
 				if (index != -1) {
 					try {
@@ -116,7 +117,7 @@ public class GatherTask extends DelayedTask {
 
 				// hacer swhipe a la izquierda
 				emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(678, 913), new DTOPoint(40, 913));
-
+				sleepTask(300);
 				DTOImageSearchResult tile = emuManager.searchTemplate(EMULATOR_NUMBER, gatherType.getTile(), 0, 0, 720, 1280, 90);
 
 				if (tile.isFound()) {
@@ -124,7 +125,8 @@ public class GatherTask extends DelayedTask {
 					// regresar al nivel 1
 					sleepTask(1000);
 					emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(435, 1052), new DTOPoint(40, 1052));
-					emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(487, 1055), new DTOPoint(487, 1055), (profile.getConfig(gatherType.getConfig(), Integer.class) - 1), 10);
+					sleepTask(300);
+					emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(487, 1055), new DTOPoint(487, 1055), (profile.getConfig(gatherType.getConfig(), Integer.class) - 1), 50);
 
 					DTOImageSearchResult tick = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_SHORTCUTS_FARM_TICK.getTemplate(), 0, 0, 720, 1280, 90);
 					if (!tick.isFound()) {

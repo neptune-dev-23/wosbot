@@ -48,8 +48,20 @@
 			<artifactId>hibernate-community-dialects</artifactId>
 			<version>6.2.7.Final</version>
 		</dependency>
-					
-		
+
+		<dependency>
+			<groupId>jakarta.xml.bind</groupId>
+			<artifactId>jakarta.xml.bind-api</artifactId>
+			<version>3.0.1</version>
+		</dependency>
+
+		<!-- JAXB Runtime (necesario para ejecución y algunos usos en
+		compilación) -->
+		<dependency>
+			<groupId>org.glassfish.jaxb</groupId>
+			<artifactId>jaxb-runtime</artifactId>
+			<version>3.0.1</version>
+		</dependency>
 
 		<dependency>
 			<groupId>cl.camodev</groupId>
