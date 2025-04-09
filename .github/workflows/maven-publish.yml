@@ -21,17 +21,12 @@ jobs:
           java-version: '21'
           cache: 'maven'
 
-      # Cambiamos el directorio de trabajo a "wos-hmi"
-      - name: Build with Maven in wos-hmi
-        working-directory: wos-hmi
-        run: mvn clean package
+      - name: Build with Maven
+        run: mvn -f wos-hmi/pom.xml clean package
 
-      # Listamos el contenido del directorio "target" dentro de "wos-hmi"
       - name: List generated files
-        working-directory: wos-hmi
-        run: ls -R target/
+        run: ls -R wos-hmi/target/
 
-      # Subir el ZIP a GitHub Release desde la carpeta "wos-hmi/target"
       - name: Upload ZIP to Release
         uses: softprops/action-gh-release@v1
         with:
