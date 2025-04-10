@@ -23,7 +23,7 @@ jobs:
 
       # Ejecuta el build desde la raíz
       - name: Build all modules
-        run: pwd && mvn clean install
+        run: mvn -f ./pom.xml clean install
 
       # (Opcional) Listar archivos generados en wos-hmi o donde sea
       - name: List generated files
