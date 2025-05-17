@@ -34,6 +34,7 @@ import cl.camodev.wosbot.serv.task.TaskQueue;
 import cl.camodev.wosbot.serv.task.TaskQueueManager;
 import cl.camodev.wosbot.serv.task.impl.AllianceAutojoinTask;
 import cl.camodev.wosbot.serv.task.impl.AllianceChestTask;
+import cl.camodev.wosbot.serv.task.impl.AllianceHelpTask;
 import cl.camodev.wosbot.serv.task.impl.AllianceTechTask;
 import cl.camodev.wosbot.serv.task.impl.CrystalLaboratoryTask;
 import cl.camodev.wosbot.serv.task.impl.DailyStaminaTask;
@@ -89,8 +90,8 @@ public class ServScheduler {
 			e.printStackTrace();
 			return;
 		}
-
-		ServConfig.getServices().getGlobalConfig().forEach((key, value) -> {
+		HashMap<String, String> globalsettings = ServConfig.getServices().getGlobalConfig();
+		globalsettings.forEach((key, value) -> {
 			if (key.equals(EnumConfigurationKey.MUMU_PATH_STRING.name())) {
 				saveEmulatorPath(EnumConfigurationKey.MUMU_PATH_STRING.name(), value);
 			} else if (key.equals(EnumConfigurationKey.LDPLAYER_PATH_STRING.name())) {
@@ -107,8 +108,8 @@ public class ServScheduler {
 			ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, "ServScheduler", "-", "No Enabled profiles");
 			return;
 		} else {
-
 			profiles.stream().filter(DTOProfiles::getEnabled).sorted(Comparator.comparing(DTOProfiles::getId)).forEach(profile -> {
+				profile.setGlobalSettings(globalsettings);
 				String queueName = profile.getName();
 				ServLogs.getServices().appendLog(EnumTpMessageSeverity.DEBUG, "ServScheduler", "-", "starting queue ");
 				queueManager.createQueue(profile);
@@ -150,6 +151,10 @@ public class ServScheduler {
 				taskMappings.put(EnumConfigurationKey.ALLIANCE_CHESTS_BOOL, List.of(
 				    () -> new AllianceChestTask(profile, TpDailyTaskEnum.ALLIANCE_CHESTS)
 				));
+				
+				taskMappings.put(EnumConfigurationKey.ALLIANCE_HELP_REQUESTS_BOOL, List.of(
+                    () -> new AllianceHelpTask(profile, TpDailyTaskEnum.ALLIANCE_HELP)
+                ));
 
 				taskMappings.put(EnumConfigurationKey.BOOL_TRAINING_TROOPS, List.of(
 				    () -> new TrainingTroopsTask(profile, TpDailyTaskEnum.TRAINING_TROOPS, TroopType.INFANTRY),

@@ -55,15 +55,6 @@ public class LauncherLayoutController implements IProfileLoadListener {
 	private VBox buttonsContainer;
 
 	@FXML
-	private Button buttonHideShow;
-
-	@FXML
-	private Button buttonPause;
-
-	@FXML
-	private Button buttonPhoto;
-
-	@FXML
 	private Button buttonStartStop;
 
 	@FXML
@@ -99,32 +90,6 @@ public class LauncherLayoutController implements IProfileLoadListener {
 		initializeEmulatorManager();
 
 	}
-
-//	public enum EmulatorType {
-//		MUMU("MuMuPlayer", EnumConfigurationKey.MUMU_PATH_STRING, "C:\\Program Files\\Netease\\MuMuPlayerGlobal-12.0\\shell\\MuMuManager.exe"), LDPLAYER("LDPlayer", EnumConfigurationKey.LDPLAYER_PATH_STRING, "C:\\LDPlayer\\LDPlayer9\\ldconsole.exe");
-//
-//		private final String displayName;
-//		private final EnumConfigurationKey configKey;
-//		private final String defaultPath;
-//
-//		EmulatorType(String displayName, EnumConfigurationKey configKey, String defaultPath) {
-//			this.displayName = displayName;
-//			this.configKey = configKey;
-//			this.defaultPath = defaultPath;
-//		}
-//
-//		public String getDisplayName() {
-//			return displayName;
-//		}
-//
-//		public EnumConfigurationKey getConfigKey() {
-//			return configKey;
-//		}
-//
-//		public String getDefaultPath() {
-//			return defaultPath;
-//		}
-//	}
 
 	private void initializeEmulatorManager() {
 		HashMap<String, String> globalConfig = ServConfig.getServices().getGlobalConfig();
@@ -301,25 +266,6 @@ public class LauncherLayoutController implements IProfileLoadListener {
 	}
 
 	@FXML
-	void handleButtonHideShow(ActionEvent event) {
-
-	}
-
-	@FXML
-	void handleButtonPause(ActionEvent event) {
-
-	}
-
-	@FXML
-	void handleButtonPhoto(ActionEvent event) {
-//		Emulator emu = EmulatorFactory.createEmulator(EmulatorType.LDPLAYER, "C:\\LDPlayer\\LDPlayer9");
-//
-////		Emulator emu = EmulatorFactory.createEmulator(EmulatorType.MEMU, "C:\\Program Files\\Netease\\MuMuPlayerGlobal-12.0\\shell");
-//		emu.swipe("0", new DTOPoint(0, 450), new DTOPoint(720, 450));
-
-	}
-
-	@FXML
 	public void handleButtonStartStop(ActionEvent event) {
 		if (!estado) {
 			actionController.startBot();
@@ -410,7 +356,6 @@ public class LauncherLayoutController implements IProfileLoadListener {
 	public void onProfileLoad(ProfileAux profile) {
 		stage.setTitle("Whiteout Survival Bot - " + profile.getName());
 		buttonStartStop.setDisable(false);
-		buttonPhoto.setDisable(false);
 
 	}
 
@@ -418,18 +363,12 @@ public class LauncherLayoutController implements IProfileLoadListener {
 		if (botState != null) {
 			if (botState.getRunning()) {
 				buttonStartStop.setText("Stop");
-				buttonHideShow.setDisable(false);
-				buttonPause.setDisable(false);
-				buttonPhoto.setDisable(false);
 				estado = true;
 
 //				startTime = LocalDateTime.now();
 //				startUpdatingExecutionTime();
 			} else {
 				buttonStartStop.setText("Start");
-				buttonHideShow.setDisable(true);
-				buttonPause.setDisable(true);
-				buttonPhoto.setDisable(true);
 				estado = false;
 
 //				stopUpdatingExecutionTime();

@@ -19,12 +19,12 @@
    <children>
       <CheckBox fx:id="checkBoxTrainingTroops" mnemonicParsing="false" text="Enable Training Troops">
          <GridPane.margin>
-            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+            <Insets />
          </GridPane.margin>
       </CheckBox>
       <CheckBox fx:id="checkBoxUseResources" mnemonicParsing="false" text="Use Resources to fill" GridPane.rowIndex="1">
          <GridPane.margin>
-            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+            <Insets />
          </GridPane.margin>
       </CheckBox>
    </children>

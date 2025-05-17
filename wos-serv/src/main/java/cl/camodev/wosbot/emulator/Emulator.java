@@ -229,6 +229,11 @@ public abstract class Emulator {
 			Process startProcess = startServer.start();
 			startProcess.waitFor();
 
+			ProcessBuilder devices = new ProcessBuilder(adbPath, "devices");
+			devices.redirectErrorStream(true);
+			Process devicesProcess = devices.start();
+			devicesProcess.waitFor();
+
 			System.out.println("✅ ADB reiniciado con éxito.");
 		} catch (IOException | InterruptedException e) {
 			e.printStackTrace();

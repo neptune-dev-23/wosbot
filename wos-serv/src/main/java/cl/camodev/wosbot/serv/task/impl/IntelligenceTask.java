@@ -66,8 +66,19 @@ public class IntelligenceTask extends DelayedTask {
 				}
 
 				if (profile.getConfig(EnumConfigurationKey.INTEL_BEASTS_BOOL, Boolean.class)) {
-					List<EnumTemplates> beastPriorities = Arrays.asList(EnumTemplates.INTEL_BEAST_YELLOW, EnumTemplates.INTEL_BEAST_PURPLE, EnumTemplates.INTEL_BEAST_BLUE, EnumTemplates.INTEL_BEAST_GREEN, EnumTemplates.INTEL_BEAST_GREY, EnumTemplates.INTEL_PREFC_BEAST_BLUE,
-							EnumTemplates.INTEL_PREFC_BEAST_GREEN, EnumTemplates.INTEL_PREFC_BEAST_GREY, EnumTemplates.INTEL_PREFC_BEAST_PURPLE, EnumTemplates.INTEL_PREFC_BEAST_YELLOW);
+					// @formatter:off
+					List<EnumTemplates> beastPriorities = Arrays.asList(
+							EnumTemplates.INTEL_BEAST_YELLOW, 
+							EnumTemplates.INTEL_BEAST_PURPLE, 
+							EnumTemplates.INTEL_BEAST_BLUE, 
+							EnumTemplates.INTEL_BEAST_GREEN, 
+							EnumTemplates.INTEL_BEAST_GREY, 
+							EnumTemplates.INTEL_PREFC_BEAST_BLUE,
+							EnumTemplates.INTEL_PREFC_BEAST_GREEN, 
+							EnumTemplates.INTEL_PREFC_BEAST_GREY, 
+							EnumTemplates.INTEL_PREFC_BEAST_PURPLE, 
+							EnumTemplates.INTEL_PREFC_BEAST_YELLOW);
+					// @formatter:on
 					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Searching for beasts");
 					for (EnumTemplates beast : beastPriorities) {
 						if (searchAndProcessBeast(beast, 5)) {
@@ -78,7 +89,19 @@ public class IntelligenceTask extends DelayedTask {
 				}
 
 				if (profile.getConfig(EnumConfigurationKey.INTEL_CAMP_BOOL, Boolean.class)) {
-					List<EnumTemplates> priorities = Arrays.asList(EnumTemplates.INTEL_SURVIVOR_YELLOW, EnumTemplates.INTEL_SURVIVOR_PURPLE, EnumTemplates.INTEL_SURVIVOR_BLUE, EnumTemplates.INTEL_SURVIVOR_GREEN, EnumTemplates.INTEL_SURVIVOR_GREY);
+					// @formatter:off
+					List<EnumTemplates> priorities = Arrays.asList(
+							EnumTemplates.INTEL_SURVIVOR_YELLOW, 
+							EnumTemplates.INTEL_SURVIVOR_PURPLE, 
+							EnumTemplates.INTEL_SURVIVOR_BLUE, 
+							EnumTemplates.INTEL_SURVIVOR_GREEN, 
+							EnumTemplates.INTEL_SURVIVOR_GREY,
+							EnumTemplates.INTEL_PREFC_SURVIVOR_YELLOW,
+							EnumTemplates.INTEL_PREFC_SURVIVOR_PURPLE,
+							EnumTemplates.INTEL_PREFC_SURVIVOR_BLUE,
+							EnumTemplates.INTEL_PREFC_SURVIVOR_GREEN,
+							EnumTemplates.INTEL_PREFC_SURVIVOR_GREY);
+					// @formatter:on
 					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Searching for survivors");
 					for (EnumTemplates beast : priorities) {
 						if (searchAndProcessSurvivor(beast, 5)) {
@@ -90,7 +113,19 @@ public class IntelligenceTask extends DelayedTask {
 				}
 
 				if (profile.getConfig(EnumConfigurationKey.INTEL_EXPLORATION_BOOL, Boolean.class)) {
-					List<EnumTemplates> priorities = Arrays.asList(EnumTemplates.INTEL_JOURNEY_YELLOW, EnumTemplates.INTEL_JOURNEY_PURPLE, EnumTemplates.INTEL_JOURNEY_BLUE, EnumTemplates.INTEL_JOURNEY_GREEN, EnumTemplates.INTEL_JOURNEY_GREY);
+					// @formatter:off
+					List<EnumTemplates> priorities = Arrays.asList(
+							EnumTemplates.INTEL_JOURNEY_YELLOW, 
+							EnumTemplates.INTEL_JOURNEY_PURPLE, 
+							EnumTemplates.INTEL_JOURNEY_BLUE, 
+							EnumTemplates.INTEL_JOURNEY_GREEN, 
+							EnumTemplates.INTEL_JOURNEY_GREY,
+							EnumTemplates.INTEL_PREFC_JOURNEY_YELLOW,
+							EnumTemplates.INTEL_PREFC_JOURNEY_PURPLE,
+							EnumTemplates.INTEL_PREFC_JOURNEY_BLUE,
+							EnumTemplates.INTEL_PREFC_JOURNEY_GREEN,
+							EnumTemplates.INTEL_PREFC_JOURNEY_GREY);
+					// @formatter:on
 					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Searching for explorations");
 					for (EnumTemplates beast : priorities) {
 						if (searchAndProcessExploration(beast, 5)) {
@@ -108,7 +143,7 @@ public class IntelligenceTask extends DelayedTask {
 					emuManager.tapBackButton(EMULATOR_NUMBER);
 					ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, reshchedule);
 				} catch (IOException | TesseractException e) {
-					// TODO Auto-generated catch block
+					this.reschedule(LocalDateTime.now());
 					e.printStackTrace();
 				}
 

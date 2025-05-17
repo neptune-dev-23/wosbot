@@ -2,6 +2,7 @@ package cl.camodev.wosbot.emulator;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Optional;
 import java.util.PriorityQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
@@ -26,7 +27,7 @@ public class EmulatorManager {
 	private final Condition permitsAvailable = lock.newCondition();
 	private final PriorityQueue<WaitingThread> waitingQueue = new PriorityQueue<>();
 
-	private int MAX_RUNNING_EMULATORS = 2;
+	private int MAX_RUNNING_EMULATORS = 3;
 	public static String WHITEOUT_PACKAGE = "com.gof.global";
 
 	private EmulatorManager() {
@@ -52,7 +53,7 @@ public class EmulatorManager {
 		if (savedActiveEmulator == null) {
 			throw new IllegalStateException("No active emulator set. Ensure an emulator is selected.");
 		}
-
+		MAX_RUNNING_EMULATORS = Optional.ofNullable(globalConfig.get(EnumConfigurationKey.MAX_RUNNING_EMULATORS_INT.name())).map(Integer::parseInt).orElse(Integer.parseInt(EnumConfigurationKey.MAX_RUNNING_EMULATORS_INT.getDefaultValue()));
 		try {
 			EmulatorType emulatorType = EmulatorType.valueOf(savedActiveEmulator);
 			String consolePath = globalConfig.get(emulatorType.getConfigKey());
@@ -103,10 +104,10 @@ public class EmulatorManager {
 	/**
 	 * Realiza un tap en una coordenada específica.
 	 */
-	public boolean tapAtPoint(String emulatorNumber, DTOPoint point) {
+	public void tapAtPoint(String emulatorNumber, DTOPoint point) {
 		checkEmulatorInitialized();
 		emulator.tapAtRandomPoint(emulatorNumber, point, point);
-		return true;
+
 	}
 
 	/**

@@ -45,6 +45,8 @@ public enum EnumTemplates {
 	ALLIANCE_TECH_BUTTON("/templates/alliance/techButton.png"),
 	ALLIANCE_TECH_THUMB_UP("/templates/alliance/techThumbUp.png"),
 	ALLIANCE_WAR_BUTTON("/templates/alliance/warButton.png"),
+	ALLIANCE_HELP_BUTTON("/templates/alliance/helpButton.png"),
+	ALLIANCE_HELP_REQUESTS("/templates/alliance/helpRequests.png"),
 	
 	ALLIANCE_CHEST_LOOT_CLAIM_BUTTON("/templates/alliance/lootClaimAllButton.png"),
 	
@@ -78,11 +80,23 @@ public enum EnumTemplates {
 	INTEL_BEAST_GREEN("/templates/intel/beastGreen.png"),
 	INTEL_BEAST_GREY("/templates/intel/beastGrey.png"),
 	
+	INTEL_PREFC_SURVIVOR_YELLOW("/templates/intel/prefcSurvivorYellow.png"),
+	INTEL_PREFC_SURVIVOR_PURPLE("/templates/intel/prefcSurvivorPurple.png"),
+	INTEL_PREFC_SURVIVOR_BLUE("/templates/intel/prefcSurvivorBlue.png"),
+	INTEL_PREFC_SURVIVOR_GREEN("/templates/intel/prefcSurvivorGreen.png"),
+	INTEL_PREFC_SURVIVOR_GREY("/templates/intel/prefcSurvivorGrey.png"),
+	
 	INTEL_SURVIVOR_YELLOW("/templates/intel/survivorYellow.png"),
 	INTEL_SURVIVOR_PURPLE("/templates/intel/survivorPurple.png"),
 	INTEL_SURVIVOR_BLUE("/templates/intel/survivorBlue.png"),
 	INTEL_SURVIVOR_GREEN("/templates/intel/survivorGreen.png"),
 	INTEL_SURVIVOR_GREY("/templates/intel/survivorGrey.png"),
+	
+	INTEL_PREFC_JOURNEY_YELLOW("/templates/intel/prefcJourneyYellow.png"),
+	INTEL_PREFC_JOURNEY_PURPLE("/templates/intel/prefcJourneyPurple.png"),
+	INTEL_PREFC_JOURNEY_BLUE("/templates/intel/prefcJourneyBlue.png"),
+	INTEL_PREFC_JOURNEY_GREEN("/templates/intel/prefcJourneyGreen.png"),
+	INTEL_PREFC_JOURNEY_GREY("/templates/intel/prefcJourneyGrey.png"),
 	
 	INTEL_JOURNEY_YELLOW("/templates/intel/journeyYellow.png"),
 	INTEL_JOURNEY_PURPLE("/templates/intel/journeyPurple.png"),

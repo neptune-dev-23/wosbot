@@ -15,7 +15,6 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.ScrollBar;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 
@@ -48,10 +47,6 @@ public class ConsoleLogLayoutController {
 	private TableColumn<LogMessageAux, String> columnLevel;
 
 	private ObservableList<LogMessageAux> logMessages;
-
-	private ScrollBar verticalScrollBar;
-
-//	private boolean autoScrollEnabled = true;
 
 	@FXML
 	private void initialize() {
@@ -88,7 +83,7 @@ public class ConsoleLogLayoutController {
 		Platform.runLater(() -> {
 			logMessages.add(0, new LogMessageAux(formattedDate, dtoMessage.getSeverity().toString(), dtoMessage.getMessage(), dtoMessage.getTask(), dtoMessage.getProfile()));
 
-			if (logMessages.size() > 400) {
+			if (logMessages.size() > 600) {
 				logMessages.remove(logMessages.size() - 1);
 			}
 		});

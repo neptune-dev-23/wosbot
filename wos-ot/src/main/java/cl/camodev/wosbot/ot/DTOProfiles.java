@@ -2,6 +2,7 @@
 package cl.camodev.wosbot.ot;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,6 +15,7 @@ public class DTOProfiles {
 	private Boolean enabled;
 	private String status;
 	private List<DTOConfig> configs = new ArrayList<DTOConfig>();
+	private HashMap<String, String> globalsettings = new HashMap<String, String>();
 
 	/**
 	 * Constructor de la clase DTOProfiles.
@@ -72,6 +74,11 @@ public class DTOProfiles {
 		this.enabled = enabled;
 	}
 
+	public void setGlobalSettings(HashMap<String, String> globalsettings) {
+		this.setGlobalsettings(globalsettings);
+
+	}
+
 	/**
 	 * Obtiene el valor de una configuración específica utilizando EnumConfigurationKey. Es un método genérico que devuelve el tipo correcto
 	 * basado en la clave.
@@ -107,6 +114,14 @@ public class DTOProfiles {
 
 	public void setStatus(String status) {
 		this.status = status;
+	}
+
+	public HashMap<String, String> getGlobalsettings() {
+		return globalsettings;
+	}
+
+	public void setGlobalsettings(HashMap<String, String> globalsettings) {
+		this.globalsettings = globalsettings;
 	}
 
 }

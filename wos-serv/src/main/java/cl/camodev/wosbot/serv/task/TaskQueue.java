@@ -5,10 +5,12 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.Optional;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import cl.camodev.utiles.UtilTime;
+import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.emulator.EmulatorManager;
@@ -93,18 +95,6 @@ public class TaskQueue {
 					// Si la tarea está lista para ejecutarse (delay <= 0)
 					if (delayInSeconds <= 0) {
 						it.remove();
-//						if (!EmulatorManager.getInstance().isPackageRunning(profile.getEmulatorNumber(), EmulatorManager.WHITEOUT_PACKAGE)) {
-//							if (taskQueue.stream().noneMatch(t -> t instanceof InitializeTask)) {
-//								
-//							}
-//							if (task.isRecurring()) {
-//								addTask(task);
-//							}
-//
-//							executedTask = true;
-//							break;
-//
-//						}
 
 						try {
 							ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Starting task execution");
@@ -131,8 +121,10 @@ public class TaskQueue {
 
 				// Verificar condiciones según el delay mínimo de la cola de tareas
 				if (minDelay != Long.MAX_VALUE) { // Asegurar que hay tareas en la cola
-					// Si la demora mínima es mayor a 30 minutos y la condición no se ha cumplido aún
-					if (!moreThan30Minutes && minDelay > TimeUnit.MINUTES.toSeconds(15)) {
+
+					long maxIdle = Optional.ofNullable(profile.getGlobalsettings().get(EnumConfigurationKey.MAX_IDLE_TIME_INT.name())).map(Integer::parseInt).orElse(Integer.parseInt(EnumConfigurationKey.MAX_IDLE_TIME_INT.getDefaultValue()));
+					; // 30 minutos en segundos
+					if (!moreThan30Minutes && minDelay > TimeUnit.MINUTES.toSeconds(maxIdle)) {
 						moreThan30Minutes = true;
 						ejecutarFragmentoEspecifico(minDelay);
 					}

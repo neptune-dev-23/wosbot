@@ -59,7 +59,7 @@ public class PetAllianceTreasuresTask extends DelayedTask {
 						EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
 						EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
 					} else {
-						EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, claimButton.getPoint(), claimButton.getPoint());
+//						EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, claimButton.getPoint(), claimButton.getPoint());
 						ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, taskName, profile.getName(), "Reward not found, rescheduling for reset");
 						ServScheduler.getServices().updateDailyTaskStatus(profile, TpDailyTaskEnum.ALLIANCE_PET_TREASURE, UtilTime.getGameReset());
 						this.reschedule(UtilTime.getGameReset());

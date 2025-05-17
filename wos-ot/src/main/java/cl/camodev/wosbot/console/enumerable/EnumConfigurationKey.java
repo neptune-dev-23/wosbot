@@ -10,7 +10,7 @@ public enum EnumConfigurationKey {
 	LDPLAYER_PATH_STRING("", String.class),
 	CURRENT_EMULATOR_STRING("", String.class),
 	
-	MAX_RUNNING_EMULATORS_INT("2", Integer.class),
+	MAX_RUNNING_EMULATORS_INT("1", Integer.class),
 	MAX_IDLE_TIME_INT("1", Integer.class),
 	
 	BOOL_NOMADIC_MERCHANT("false", Boolean.class), 
@@ -33,6 +33,8 @@ public enum EnumConfigurationKey {
 	ALLIANCE_AUTOJOIN_BOOL("false",Boolean.class),
 	ALLIANCE_AUTOJOIN_QUEUES_INT("1",Integer.class),
 	ALLIANCE_PET_TREASURE_BOOL("false",Boolean.class),
+	ALLIANCE_HELP_REQUESTS_BOOL("false",Boolean.class),
+	ALLIANCE_HELP_REQUESTS_OFFSET_INT("1",Integer.class),
 	
 	
 	GATHER_COAL_BOOL("false",Boolean.class),

@@ -130,14 +130,14 @@ public class ImageSearchUtil {
 			Mat imagenPrincipal = Imgcodecs.imdecode(matOfByte, Imgcodecs.IMREAD_COLOR);
 
 			if (imagenPrincipal.empty()) {
-				System.err.println("Error al cargar la imagen capturada.");
+				System.err.println("Error while loading image from byte array.");
 				return new DTOImageSearchResult(false, null, 0.0);
 			}
 
 			// Cargar la plantilla desde los recursos
 			InputStream is = ImageSearchUtil.class.getResourceAsStream(templateResourcePath);
 			if (is == null) {
-				System.err.println("No se encontró el recurso del template: " + templateResourcePath);
+				System.err.println(templateResourcePath + " not found.");
 				return new DTOImageSearchResult(false, null, 0.0);
 			}
 
@@ -156,7 +156,7 @@ public class ImageSearchUtil {
 
 			// Validar la ROI
 			if (roiX + roiWidth > imagenPrincipal.cols() || roiY + roiHeight > imagenPrincipal.rows()) {
-				System.err.println("La región definida se sale de los límites de la imagen principal.");
+				System.err.println("Defined ROI is out of bounds.");
 				return new DTOImageSearchResult(false, null, 0.0);
 			}
 
@@ -168,7 +168,7 @@ public class ImageSearchUtil {
 			int resultCols = imagenROI.cols() - template.cols() + 1;
 			int resultRows = imagenROI.rows() - template.rows() + 1;
 			if (resultCols <= 0 || resultRows <= 0) {
-				System.err.println("La plantilla es más grande que la ROI.");
+				System.err.println("Template is larger than ROI.");
 				return new DTOImageSearchResult(false, null, 0.0);
 			}
 
@@ -181,7 +181,7 @@ public class ImageSearchUtil {
 			double matchPercentage = mmr.maxVal * 100.0;
 
 			if (matchPercentage < thresholdPercentage) {
-				System.out.println("No se encontró una coincidencia aceptable.");
+				System.out.println("Template " + templateResourcePath + " not found. Match percentage: " + matchPercentage);
 				return new DTOImageSearchResult(false, null, matchPercentage);
 			}
 

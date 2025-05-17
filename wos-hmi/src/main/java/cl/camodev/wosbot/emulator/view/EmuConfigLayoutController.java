@@ -150,13 +150,27 @@ public class EmuConfigLayoutController {
 			return;
 		}
 
+		// Guarda el número máximo de instancias
+		String maxInstances = textfieldMaxConcurrentInstances.getText();
+		if (maxInstances.isEmpty()) {
+			showError("Max instances cannot be empty.");
+			return;
+		}
+
+		// Guarda el tiempo máximo de inactividad
+		String maxIdleTime = textfieldMaxIdleTime.getText();
+		if (maxIdleTime.isEmpty()) {
+			showError("Max idle time cannot be empty.");
+			return;
+		}
 		// Guarda la configuración usando la clave definida en cada valor del enum
 		for (EmulatorAux emulator : emulatorList) {
 			ServScheduler.getServices().saveEmulatorPath(emulator.getEmulatorType().getConfigKey(), emulator.getPath());
 		}
-		// Guarda cuál es el emulador activo
-		ServScheduler.getServices().saveEmulatorPath(EnumConfigurationKey.CURRENT_EMULATOR_STRING.name(), activeEmulatorName);
 
+		ServScheduler.getServices().saveEmulatorPath(EnumConfigurationKey.MAX_IDLE_TIME_INT.name(), maxIdleTime);
+		ServScheduler.getServices().saveEmulatorPath(EnumConfigurationKey.MAX_RUNNING_EMULATORS_INT.name(), maxInstances);
+		ServScheduler.getServices().saveEmulatorPath(EnumConfigurationKey.CURRENT_EMULATOR_STRING.name(), activeEmulatorName);
 		showInfo("Config saved successfully");
 	}
 

@@ -39,7 +39,7 @@
    <HBox alignment="CENTER_RIGHT" GridPane.rowIndex="2">
       <children>
          <Label text="Max Concurrent Intances" />
-         <TextField fx:id="textfieldMaxConcurrentInstances" editable="false" maxWidth="50.0" minWidth="50.0" prefWidth="50.0">
+         <TextField fx:id="textfieldMaxConcurrentInstances" maxWidth="50.0" minWidth="50.0" prefWidth="50.0">
             <HBox.margin>
                <Insets right="5.0" />
             </HBox.margin>
@@ -49,7 +49,7 @@
    <HBox alignment="CENTER_RIGHT" GridPane.rowIndex="1">
       <children>
          <Label text="Max Idle Time (minutes)" />
-         <TextField fx:id="textfieldMaxIdleTime" editable="false" maxWidth="50.0" minWidth="50.0" prefWidth="50.0">
+         <TextField fx:id="textfieldMaxIdleTime" maxWidth="50.0" minWidth="50.0" prefWidth="50.0">
             <HBox.margin>
                <Insets right="5.0" />
             </HBox.margin>

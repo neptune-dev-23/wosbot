@@ -32,6 +32,7 @@ public enum TpDailyTaskEnum {
 	STOREHOUSE_STAMINA(34, "Storehouse Stamina"),
 	
 	ALLIANCE_AUTOJOIN(40, "Alliance Autojoin"),
+	ALLIANCE_HELP(41, "Alliance Help"),
 	
 	INITIALIZE(100, "Initialize");
 	//@formatter:on
