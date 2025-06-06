@@ -55,9 +55,14 @@ public class AllianceHelpTask extends DelayedTask {
 		if (allianceHelpResult.isFound()) {
 			logs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Helping alliance members");
 			emulator.tapAtRandomPoint(EMULATOR_NUMBER, allianceHelpResult.getPoint(), allianceHelpResult.getPoint());
+
 		} else {
 			logs.appendLog(EnumTpMessageSeverity.WARNING, taskName, profile.getName(), "Alliance help requests not found");
 		}
+		emulator.tapBackButton(EMULATOR_NUMBER);
+		sleepTask(100);
+		emulator.tapBackButton(EMULATOR_NUMBER);
+
 		rescheduleTask();
 	}
 
