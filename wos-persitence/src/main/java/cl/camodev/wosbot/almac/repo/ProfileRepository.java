@@ -1,5 +1,6 @@
 package cl.camodev.wosbot.almac.repo;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -58,13 +59,12 @@ public class ProfileRepository implements IProfileRepository {
 			Map<String, Object> parameters = new HashMap<>();
 			parameters.put("profileIds", profileIds);
 
-			List<DTOConfig> configs = persistence.getQueryResults(queryConfigs, DTOConfig.class, parameters);
-
 			// Agrupar configuraciones por ID de perfil
+			List<DTOConfig> configs = persistence.getQueryResults(queryConfigs, DTOConfig.class, parameters);
 			Map<Long, List<DTOConfig>> configMap = configs.stream().collect(Collectors.groupingBy(DTOConfig::getProfileId));
 
 			// Asignar configuraciones a los perfiles
-			profiles.forEach(profile -> profile.setConfigs(configMap.getOrDefault(profile.getId(), Collections.emptyList())));
+			profiles.forEach(profile -> profile.setConfigs(configMap.getOrDefault(profile.getId(), new ArrayList<>())));
 		}
 
 		return profiles;
