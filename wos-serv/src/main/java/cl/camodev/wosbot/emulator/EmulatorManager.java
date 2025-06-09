@@ -11,6 +11,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import cl.camodev.utiles.ImageSearchUtil;
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.emulator.impl.LDPlayerEmulator;
+import cl.camodev.wosbot.emulator.impl.MEmuEmulator;
 import cl.camodev.wosbot.emulator.impl.MuMuEmulator;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
@@ -66,9 +67,9 @@ public class EmulatorManager {
 			case MUMU:
 				this.emulator = new MuMuEmulator(consolePath);
 				break;
-//			case MEMU:
-//				this.emulator = new MEmuEmulator(consolePath);
-//				break;
+			case MEMU:
+				this.emulator = new MEmuEmulator(consolePath);
+				break;
 			case LDPLAYER:
 				this.emulator = new LDPlayerEmulator(consolePath);
 				break;
