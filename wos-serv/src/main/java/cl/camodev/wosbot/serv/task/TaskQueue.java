@@ -139,10 +139,15 @@ public class TaskQueue {
 				// Si no se ejecutó ninguna tarea, esperar un poco antes de volver a evaluar
 				if (!executedTask) {
 					try {
-						DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-
-						// Convertir minDelay (segundos) a formato HH:mm:ss
-						String formattedTime = LocalTime.ofSecondOfDay(minDelay).format(timeFormatter);
+						String formattedTime;
+						if (minDelay == Long.MAX_VALUE || minDelay > 86399) {
+							// Si no hay tareas o el delay es muy largo, mostrar un mensaje apropiado
+							formattedTime = "No tasks";
+						} else {
+							DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+							// Convertir minDelay (segundos) a formato HH:mm:ss
+							formattedTime = LocalTime.ofSecondOfDay(minDelay).format(timeFormatter);
+						}
 
 						ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "Idling for " + formattedTime));
 						Thread.sleep(999);
