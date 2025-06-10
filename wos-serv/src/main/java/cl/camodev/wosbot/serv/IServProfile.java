@@ -11,8 +11,9 @@ public interface IServProfile {
 	public boolean addProfile(DTOProfiles profile);
 
 	public boolean saveProfile(DTOProfiles profile);
-
 	public boolean deleteProfile(DTOProfiles profile);
+
+	public boolean bulkUpdateProfiles(DTOProfiles templateProfile);
 
 	public void addProfileStatusChangeListerner(IProfileStatusChangeListener listener);
 
