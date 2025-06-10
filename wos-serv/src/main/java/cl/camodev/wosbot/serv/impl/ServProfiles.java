@@ -150,6 +150,56 @@ public class ServProfiles implements IServProfile {
 		}
 	}
 
+	@Override
+	public boolean bulkUpdateProfiles(DTOProfiles templateProfile) {
+		try {
+			if (templateProfile == null) {
+				return false;
+			}
+
+			// Get all profiles
+			List<DTOProfiles> allProfiles = getProfiles();
+			
+			if (allProfiles == null || allProfiles.isEmpty()) {
+				return false;
+			}
+
+			boolean allSuccessful = true;
+
+			for (DTOProfiles profile : allProfiles) {
+				try {
+					// Create a copy of the profile with updated configurations
+					DTOProfiles updatedProfile = new DTOProfiles(
+						profile.getId(), 
+						profile.getName(), 
+						profile.getEmulatorNumber(), 
+						profile.getEnabled()
+					);
+					
+					// Copy all configurations from template profile
+					updatedProfile.getConfigs().clear();
+					updatedProfile.getConfigs().addAll(templateProfile.getConfigs());
+					
+					// Save the updated profile
+					boolean saved = saveProfile(updatedProfile);
+					if (!saved) {
+						allSuccessful = false;
+						System.err.println("Failed to update profile: " + profile.getName());
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+					allSuccessful = false;
+				}
+			}
+
+			return allSuccessful;
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
 	public void notifyProfileStatusChange(DTOProfileStatus statusDto) {
 		if (listeners != null) {
 			listeners.forEach(listener -> {

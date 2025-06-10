@@ -35,6 +35,11 @@
       </TableView>
       <HBox alignment="CENTER_RIGHT" prefHeight="100.0" prefWidth="200.0" GridPane.rowIndex="1">
          <children>
+            <Button fx:id="btnBulkUpdate" mnemonicParsing="false" onAction="#handleButtonBulkUpdateProfiles" text="BULK UPDATE PROFILES">
+               <HBox.margin>
+                  <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
+               </HBox.margin>
+            </Button>
             <Button fx:id="btnAddProfile" mnemonicParsing="false" onAction="#handleButtonAddProfile" text="ADD PROFILE">
                <HBox.margin>
                   <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />

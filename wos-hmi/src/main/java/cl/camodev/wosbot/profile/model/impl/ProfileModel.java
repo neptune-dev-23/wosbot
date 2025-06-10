@@ -41,4 +41,9 @@ public class ProfileModel implements IProfileModel {
 		return servProfile.deleteProfile(profile);
 	}
 
+	@Override
+	public boolean bulkUpdateProfiles(DTOProfiles templateProfile) {
+		return servProfile.bulkUpdateProfiles(templateProfile);
+	}
+
 }

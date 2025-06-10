@@ -72,6 +72,26 @@ public class ProfileManagerActionController implements IProfileStatusChangeListe
 		return iModel.saveProfile(dtoprofile);
 	}
 
+	public boolean bulkUpdateProfiles(ProfileAux templateProfile) {
+		if (templateProfile == null) {
+			return false;
+		}
+
+		DTOProfiles dtoTemplateProfile = new DTOProfiles(
+			templateProfile.getId(), 
+			templateProfile.getName(), 
+			templateProfile.getEmulatorNumber(), 
+			templateProfile.isEnabled()
+		);
+		
+		templateProfile.getConfigs().forEach(cfgAux -> {
+			DTOConfig dtoConfig = new DTOConfig(templateProfile.getId(), cfgAux.getName(), cfgAux.getValue());
+			dtoTemplateProfile.getConfigs().add(dtoConfig);
+		});
+		
+		return iModel.bulkUpdateProfiles(dtoTemplateProfile);
+	}
+
 	@Override
 	public void onProfileStatusChange(DTOProfileStatus status) {
 		if (status != null) {
