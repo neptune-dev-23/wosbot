@@ -14,7 +14,7 @@ public class MuMuEmulator extends Emulator {
 
 	@Override
 	protected String[] buildAdbCommand(String emulatorNumber, String command) {
-		return new String[] { consolePath + File.separator + "MuMuManager.exe", "adb", "-v", emulatorNumber, command };
+		return new String[] { consolePath + File.separator + "MuMuManager.exe", "adb", "-v", emulatorNumber, "-c", command };
 	}
 
 	@Override
