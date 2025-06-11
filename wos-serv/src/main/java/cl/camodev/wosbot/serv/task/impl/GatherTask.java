@@ -167,6 +167,11 @@ public class GatherTask extends DelayedTask {
 						emuManager.tapBackButton(EMULATOR_NUMBER);
 						// falta fverificar si esta el heroe adecuado
 						sleepTask(500);
+
+						// click equalize
+						emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(195, 1190));
+						sleepTask(500);
+
 						// click gather
 						DTOImageSearchResult gatherButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.RALLY_GATHER_BUTTON.getTemplate(), 0, 0, 720, 1280, 90);
 						if (gatherButton.isFound()) {
