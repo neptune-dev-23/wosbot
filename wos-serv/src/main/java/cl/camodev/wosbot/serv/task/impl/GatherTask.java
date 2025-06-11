@@ -167,11 +167,6 @@ public class GatherTask extends DelayedTask {
 						emuManager.tapBackButton(EMULATOR_NUMBER);
 						// falta fverificar si esta el heroe adecuado
 						sleepTask(500);
-
-						// click equalize
-						emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(195, 1190));
-						sleepTask(500);
-
 						// click gather
 						DTOImageSearchResult gatherButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.RALLY_GATHER_BUTTON.getTemplate(), 0, 0, 720, 1280, 90);
 						if (gatherButton.isFound()) {
@@ -182,7 +177,7 @@ public class GatherTask extends DelayedTask {
 							if (march.isFound()) {
 								emuManager.tapBackButton(EMULATOR_NUMBER);
 								emuManager.tapBackButton(EMULATOR_NUMBER);
-								reschedule(LocalDateTime.now());
+								reschedule(LocalDateTime.now().plusMinutes(5));
 								servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "March already gathering");
 							} else {
 								servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "March started");
