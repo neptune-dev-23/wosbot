@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import cl.camodev.wosbot.almac.entity.Config;
 import cl.camodev.wosbot.almac.entity.DailyTask;
@@ -106,12 +107,18 @@ public class ServScheduler {
 
 		if (profiles.stream().filter(DTOProfiles::getEnabled).findAny().isEmpty()) {
 			ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, "ServScheduler", "-", "No Enabled profiles");
-			return;
-		} else {
-			profiles.stream().filter(DTOProfiles::getEnabled).sorted(Comparator.comparing(DTOProfiles::getId)).forEach(profile -> {
+			return;		} else {
+			// Collect all enabled profiles for staggered startup
+			List<DTOProfiles> enabledProfiles = profiles.stream()
+				.filter(DTOProfiles::getEnabled)
+				.sorted(Comparator.comparing(DTOProfiles::getId))
+				.collect(Collectors.toList());
+
+			// Process each profile and setup their queues/tasks
+			enabledProfiles.forEach(profile -> {
 				profile.setGlobalSettings(globalsettings);
 				String queueName = profile.getName();
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.DEBUG, "ServScheduler", "-", "starting queue ");
+				ServLogs.getServices().appendLog(EnumTpMessageSeverity.DEBUG, "ServScheduler", "-", "preparing queue for " + queueName);
 				queueManager.createQueue(profile);
 				TaskQueue queue = queueManager.getQueue(queueName);
 				queue.addTask(new InitializeTask(profile, TpDailyTaskEnum.INITIALIZE));
@@ -250,18 +257,10 @@ public class ServScheduler {
 							queue.addTask(task);
 						}
 					}
-				});
+				});			});
 
-				queueManager.startQueue(queueName);
-
-			});
-
-			listeners.forEach(e -> {
-				DTOBotState state = new DTOBotState();
-				state.setRunning(true);
-				state.setActionTime(LocalDateTime.now());
-				e.onBotStateChange(state);
-			});
+			// Start queues with staggered delays to prevent synchronization issues
+			startQueuesWithDelay(enabledProfiles);
 
 		}
 
@@ -320,8 +319,7 @@ public class ServScheduler {
 		iDailyTaskRepository.saveDailyTask(dailyTask);
 	}
 
-	public void saveEmulatorPath(String enumConfigurationKey, String filePath) {
-		List<Config> configs = iConfigRepository.getGlobalConfigs();
+	public void saveEmulatorPath(String enumConfigurationKey, String filePath) {		List<Config> configs = iConfigRepository.getGlobalConfigs();
 
 		Config config = configs.stream().filter(c -> c.getKey().equals(enumConfigurationKey)).findFirst().orElse(null);
 
@@ -336,6 +334,50 @@ public class ServScheduler {
 			config.setValor(filePath);
 			iConfigRepository.saveConfig(config);
 		}
+	}
+
+	/**
+	 * Starts queues with a staggered delay to prevent profiles from starting simultaneously.
+	 * Each profile starts 10 seconds after the previous one to avoid synchronization issues
+	 * like multiple profiles marching to the same target.
+	 * 
+	 * @param profiles List of enabled profiles to start
+	 */
+	private void startQueuesWithDelay(List<DTOProfiles> profiles) {
+		Thread staggeredStartThread = new Thread(() -> {
+			for (int i = 0; i < profiles.size(); i++) {
+				DTOProfiles profile = profiles.get(i);
+				String queueName = profile.getName();
+				
+				try {
+					if (i > 0) {
+						// Wait 10 seconds before starting the next profile (except for the first one)
+						Thread.sleep(10000);
+					}
+					
+					ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "ServScheduler", queueName, 
+						"Starting queue" + (i > 0 ? " (delayed " + (i * 10) + " seconds)" : ""));
+					queueManager.startQueue(queueName);
+					
+				} catch (InterruptedException e) {
+					ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, "ServScheduler", queueName, 
+						"Interrupted while starting queue: " + e.getMessage());
+					Thread.currentThread().interrupt();
+					break;
+				}
+			}
+			
+			// Notify listeners after all queues are started
+			listeners.forEach(e -> {
+				DTOBotState state = new DTOBotState();
+				state.setRunning(true);
+				state.setActionTime(LocalDateTime.now());
+				e.onBotStateChange(state);
+			});
+		});
+		
+		staggeredStartThread.setName("StaggeredQueueStarter");
+		staggeredStartThread.start();
 	}
 
 }
