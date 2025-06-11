@@ -338,7 +338,7 @@ public class ServScheduler {
 
 	/**
 	 * Starts queues with a staggered delay to prevent profiles from starting simultaneously.
-	 * Each profile starts 10 seconds after the previous one to avoid synchronization issues
+	 * Each profile starts 3 seconds after the previous one to avoid synchronization issues
 	 * like multiple profiles marching to the same target.
 	 * 
 	 * @param profiles List of enabled profiles to start
@@ -351,12 +351,12 @@ public class ServScheduler {
 				
 				try {
 					if (i > 0) {
-						// Wait 10 seconds before starting the next profile (except for the first one)
-						Thread.sleep(10000);
+						// Wait 3 seconds before starting the next profile (except for the first one)
+						Thread.sleep(3000);
 					}
-					
-					ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "ServScheduler", queueName, 
-						"Starting queue" + (i > 0 ? " (delayed " + (i * 10) + " seconds)" : ""));
+
+					ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "ServScheduler", queueName,
+						"Starting queue" + (i > 0 ? " (delayed " + (i * 3) + " seconds)" : ""));
 					queueManager.startQueue(queueName);
 					
 				} catch (InterruptedException e) {
