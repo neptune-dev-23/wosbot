@@ -9,6 +9,7 @@ import cl.camodev.wosbot.profile.model.IProfileLoadListener;
 import cl.camodev.wosbot.profile.model.IProfileObserverInjectable;
 import cl.camodev.wosbot.profile.model.ProfileAux;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
@@ -17,20 +18,20 @@ public abstract class AbstractProfileController implements IProfileLoadListener,
 
 	protected IProfileChangeObserver profileObserver;
 	protected boolean isLoadingProfile = false;
-
 	protected final Map<CheckBox, EnumConfigurationKey> checkBoxMappings = new HashMap<>();
 	protected final Map<TextField, EnumConfigurationKey> textFieldMappings = new HashMap<>();
 	protected final Map<RadioButton, EnumConfigurationKey> radioButtonMappings = new HashMap<>();
+	protected final Map<ComboBox<Integer>, EnumConfigurationKey> comboBoxMappings = new HashMap<>();
 
 	@Override
 	public void setProfileObserver(IProfileChangeObserver observer) {
 		this.profileObserver = observer;
 	}
-
 	protected void initializeChangeEvents() {
 		checkBoxMappings.forEach(this::setupCheckBoxListener);
 		textFieldMappings.forEach(this::setupTextFieldUpdateOnFocusOrEnter);
 		radioButtonMappings.forEach(this::setupRadioButtonListener);
+		comboBoxMappings.forEach(this::setupComboBoxListener);
 	}
 
 	protected void createToggleGroup(RadioButton... radioButtons) {
@@ -66,6 +67,14 @@ public abstract class AbstractProfileController implements IProfileLoadListener,
 		textField.setOnAction(event -> {
 			if (!isLoadingProfile) {
 				updateProfile(textField, configKey);
+			}
+		});
+	}
+
+	protected void setupComboBoxListener(ComboBox<Integer> comboBox, EnumConfigurationKey configKey) {
+		comboBox.valueProperty().addListener((obs, oldVal, newVal) -> {
+			if (!isLoadingProfile && newVal != null) {
+				profileObserver.notifyProfileChange(configKey, newVal);
 			}
 		});
 	}
@@ -108,6 +117,9 @@ public abstract class AbstractProfileController implements IProfileLoadListener,
 			radioButtonMappings.forEach((radioButton, key) -> {
 				Boolean value = profile.getConfig(key, Boolean.class);
 				radioButton.setSelected(value != null && value);
+			});			comboBoxMappings.forEach((comboBox, key) -> {
+				Integer value = profile.getConfig(key, Integer.class);
+				comboBox.setValue(value != null ? value : Integer.valueOf(key.getDefaultValue()));
 			});
 		} finally {
 			isLoadingProfile = false;

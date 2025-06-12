@@ -83,11 +83,15 @@ public class GatherTask extends DelayedTask {
 			// verificar marchas activas
 			emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(2, 550));
 			sleepTask(1000);
-
 			emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(340, 265));
 			sleepTask(1000);
 			servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "looking for " + gatherType);
-			DTOImageSearchResult resource = emuManager.searchTemplate(EMULATOR_NUMBER, gatherType.getTemplate(), 10, 342, (425 - 10), 772, 90);
+			
+			// Get active march queue setting and calculate search region
+			int activeMarchQueues = profile.getConfig(EnumConfigurationKey.GATHER_ACTIVE_MARCH_QUEUE_INT, Integer.class);
+			int maxY = queues[Math.min(activeMarchQueues - 1, queues.length - 1)][1].getY(); // Use the Y coordinate of the last active queue
+			
+			DTOImageSearchResult resource = emuManager.searchTemplate(EMULATOR_NUMBER, gatherType.getTemplate(), 10, 342, (425 - 10), maxY, 90);
 
 			if (resource.isFound()) {
 				servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Resource found, getting remaining time");
@@ -204,9 +208,12 @@ public class GatherTask extends DelayedTask {
 		}
 
 	}
-
 	public int obtenerIndice(DTOPoint punto) {
-		for (int i = 0; i < queues.length; i++) {
+		// Get active march queue setting and limit the search to only active queues
+		int activeMarchQueues = profile.getConfig(EnumConfigurationKey.GATHER_ACTIVE_MARCH_QUEUE_INT, Integer.class);
+		int maxQueues = Math.min(activeMarchQueues, queues.length);
+		
+		for (int i = 0; i < maxQueues; i++) {
 			// Obtener los límites del rango (para asegurar el orden correcto, usamos Math.min y Math.max)
 			int minX = Math.min(queues[i][0].getX(), queues[i][1].getX());
 			int maxX = Math.max(queues[i][0].getX(), queues[i][1].getX());

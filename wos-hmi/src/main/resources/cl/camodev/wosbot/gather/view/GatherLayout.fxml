@@ -2,6 +2,7 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.ColumnConstraints?>
@@ -15,10 +16,11 @@
       <ColumnConstraints hgrow="SOMETIMES" percentWidth="50.0" />
   </columnConstraints>
   <rowConstraints>
-    <RowConstraints maxHeight="1.7976931348623157E308" minHeight="10.0" percentHeight="25.0" prefHeight="277.0" vgrow="SOMETIMES" />
-      <RowConstraints maxHeight="1.7976931348623157E308" minHeight="10.0" percentHeight="25.0" prefHeight="277.0" vgrow="SOMETIMES" />
-      <RowConstraints maxHeight="1.7976931348623157E308" minHeight="10.0" percentHeight="25.0" prefHeight="277.0" vgrow="SOMETIMES" />
-      <RowConstraints maxHeight="1.7976931348623157E308" minHeight="10.0" percentHeight="25.0" prefHeight="277.0" vgrow="SOMETIMES" />
+    <RowConstraints maxHeight="1.7976931348623157E308" minHeight="10.0" percentHeight="20.0" prefHeight="277.0" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="1.7976931348623157E308" minHeight="10.0" percentHeight="20.0" prefHeight="277.0" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="1.7976931348623157E308" minHeight="10.0" percentHeight="20.0" prefHeight="277.0" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="1.7976931348623157E308" minHeight="10.0" percentHeight="20.0" prefHeight="277.0" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="1.7976931348623157E308" minHeight="10.0" percentHeight="20.0" prefHeight="277.0" vgrow="SOMETIMES" />
   </rowConstraints>
    <children>
       <CheckBox fx:id="checkBoxGatherMeat" graphicTextGap="3.0" mnemonicParsing="false" text="Gather Meat">
@@ -56,6 +58,15 @@
             <Label text="Level" />
             <TextField fx:id="textfieldLevelIron" />
          </children>
+      </HBox>
+      <HBox alignment="CENTER_LEFT" prefHeight="100.0" prefWidth="200.0" spacing="10.0" GridPane.columnSpan="2" GridPane.rowIndex="4">
+         <children>
+            <Label text="Active March Queue:" />
+            <ComboBox fx:id="comboBoxActiveMarchQueue" prefWidth="150.0" />
+         </children>
+         <GridPane.margin>
+            <Insets left="10.0" />
+         </GridPane.margin>
       </HBox>
    </children>
 </GridPane>
