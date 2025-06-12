@@ -202,10 +202,6 @@ public class ServScheduler {
                         () -> new PetAdventureChestTask(profile, TpDailyTaskEnum.PET_ADVENTURE)
                     ));
 				
-				taskMappings.put(EnumConfigurationKey.INTEL_BOOL, List.of(
-                        () -> new IntelligenceTask(profile, TpDailyTaskEnum.INTEL)
-                    ));
-				
 				taskMappings.put(EnumConfigurationKey.GATHER_MEAT_BOOL, List.of(
                         () -> new GatherTask(profile, TpDailyTaskEnum.GATHER_RESOURCES, GatherType.MEAT)
                     ));
@@ -220,6 +216,10 @@ public class ServScheduler {
 				
 				taskMappings.put(EnumConfigurationKey.GATHER_IRON_BOOL, List.of(
                         () -> new GatherTask(profile, TpDailyTaskEnum.GATHER_RESOURCES, GatherType.IRON)
+                    ));
+				
+				taskMappings.put(EnumConfigurationKey.INTEL_BOOL, List.of(
+                        () -> new IntelligenceTask(profile, TpDailyTaskEnum.INTEL)
                     ));
 				
 				taskMappings.put(EnumConfigurationKey.LIFE_ESSENCE_BOOL, List.of(
