@@ -31,17 +31,19 @@ public class GatherLayoutController extends AbstractProfileController {
 	private TextField textfieldLevelMeat;
 	@FXML
 	private TextField textfieldLevelWood;
-
 	@FXML
 	private ComboBox<Integer> comboBoxActiveMarchQueue;
 
 	@FXML
-	private void initialize() {
+	private CheckBox checkBoxGatherSpeedBoost;
 
+	@FXML
+	private void initialize() {
 		checkBoxMappings.put(checkBoxGatherCoal, EnumConfigurationKey.GATHER_COAL_BOOL);
 		checkBoxMappings.put(checkBoxGatherIron, EnumConfigurationKey.GATHER_IRON_BOOL);
 		checkBoxMappings.put(checkBoxGatherMeat, EnumConfigurationKey.GATHER_MEAT_BOOL);
 		checkBoxMappings.put(checkBoxGatherWood, EnumConfigurationKey.GATHER_WOOD_BOOL);
+		checkBoxMappings.put(checkBoxGatherSpeedBoost, EnumConfigurationKey.GATHER_SPEED_BOOL);
 		textFieldMappings.put(textfieldLevelCoal, EnumConfigurationKey.GATHER_COAL_LEVEL_INT);
 		textFieldMappings.put(textfieldLevelIron, EnumConfigurationKey.GATHER_IRON_LEVEL_INT);
 		textFieldMappings.put(textfieldLevelMeat, EnumConfigurationKey.GATHER_MEAT_LEVEL_INT);

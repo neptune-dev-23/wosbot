@@ -41,7 +41,7 @@ import cl.camodev.wosbot.serv.task.impl.DailyStaminaTask;
 import cl.camodev.wosbot.serv.task.impl.ExplorationTask;
 import cl.camodev.wosbot.serv.task.impl.GatherTask;
 import cl.camodev.wosbot.serv.task.impl.GatherTask.GatherType;
-import cl.camodev.wosbot.serv.task.impl.GrowthSpeedTask;
+import cl.camodev.wosbot.serv.task.impl.GatherSpeedTask;
 import cl.camodev.wosbot.serv.task.impl.HeroRecruitmentTask;
 import cl.camodev.wosbot.serv.task.impl.InitializeTask;
 import cl.camodev.wosbot.serv.task.impl.IntelligenceTask;
@@ -121,8 +121,8 @@ public class ServScheduler {
 				// Mapa de tareas con listas para manejar múltiples instancias de tareas bajo la misma clave
 				Map<EnumConfigurationKey, List<Supplier<DelayedTask>>> taskMappings = new HashMap<>();
 				
-				taskMappings.put(EnumConfigurationKey.GROWTH_SPEED_BOOL, List.of(
-					() -> new GrowthSpeedTask(profile, TpDailyTaskEnum.GROWTH_SPEED)
+				taskMappings.put(EnumConfigurationKey.GATHER_SPEED_BOOL, List.of(
+					() -> new GatherSpeedTask(profile, TpDailyTaskEnum.GATHER_SPEED)
 				));
 
 				// Agregar tareas al mapa
@@ -247,9 +247,9 @@ public class ServScheduler {
 							if (taskSchedules.containsKey(task.getTpDailyTaskId())) {
 								LocalDateTime nextSchedule = taskSchedules.get(task.getTpDailyTaskId()).getNextSchedule();
 								task.reschedule(nextSchedule);
-//								ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Next Exceution in: " + UtilTime.localDateTimeToDDHHMMSS(nextSchedule));
+								ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Next Exceution: " + nextSchedule);
 							} else {
-//								ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Task not completed, scheduling for today");
+								ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Task not completed, scheduling for today");
 								task.reschedule(LocalDateTime.now());
 							}
 

@@ -11,6 +11,7 @@ import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.serv.impl.ServLogs;
+import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 
 public class ExplorationTask extends DelayedTask {
@@ -45,11 +46,15 @@ public class ExplorationTask extends DelayedTask {
 				sleepTask(200);
 
 				int offset = profile.getConfig(EnumConfigurationKey.INT_EXPLORATION_CHEST_OFFSET, Integer.class);
-				this.reschedule(LocalDateTime.now().plusHours(offset));
+				LocalDateTime nextSchedule = LocalDateTime.now().plusHours(offset);
+				this.reschedule(nextSchedule);
+				ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, nextSchedule);
 
 			} else {
 				int offset = profile.getConfig(EnumConfigurationKey.INT_EXPLORATION_CHEST_OFFSET, Integer.class);
-				this.reschedule(LocalDateTime.now().plusHours(offset));
+				LocalDateTime nextSchedule = LocalDateTime.now().plusHours(offset);
+				this.reschedule(nextSchedule);
+				ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, nextSchedule);
 				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "no rewards to claim");
 			}
 			EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);

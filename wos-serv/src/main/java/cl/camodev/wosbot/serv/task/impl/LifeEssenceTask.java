@@ -11,6 +11,7 @@ import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.serv.impl.ServLogs;
+import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 
 public class LifeEssenceTask extends DelayedTask {
@@ -65,7 +66,10 @@ public class LifeEssenceTask extends DelayedTask {
 						break;
 					}
 				}
-				this.reschedule(LocalDateTime.now().plusHours(profile.getConfig(EnumConfigurationKey.LIFE_ESSENCE_OFFSET_INT, Integer.class)));
+				LocalDateTime nextSchedule = LocalDateTime.now().plusHours(profile.getConfig(EnumConfigurationKey.LIFE_ESSENCE_OFFSET_INT, Integer.class));
+				this.reschedule(nextSchedule);
+				ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, nextSchedule);
+				
 				emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(40, 30));
 				sleepTask(3000);
 

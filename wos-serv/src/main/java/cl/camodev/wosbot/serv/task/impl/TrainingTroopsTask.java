@@ -15,6 +15,7 @@ import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.serv.impl.ServLogs;
+import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 import net.sourceforge.tess4j.TesseractException;
 
@@ -87,7 +88,9 @@ public class TrainingTroopsTask extends DelayedTask {
 					Optional<LocalDateTime> optionalNextTime = extractNextTime();
 
 					if (optionalNextTime.isPresent()) {
-						this.reschedule(optionalNextTime.get());
+						LocalDateTime nextSchedule = optionalNextTime.get();
+						this.reschedule(nextSchedule);
+						ServScheduler.getServices().updateDailyTaskStatus(profile, TpDailyTaskEnum.TRAINING_TROOPS, nextSchedule);
 					}
 
 					EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
