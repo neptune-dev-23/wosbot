@@ -57,14 +57,19 @@
                   <GridPane>
                      <columnConstraints>
                         <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
+                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
                      </columnConstraints>
                      <rowConstraints>
                         <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
                      </rowConstraints>
                      <children>
-                                <Button fx:id="buttonStartStop" disable="true" mnemonicParsing="false" onAction="#handleButtonStartStop" prefHeight="32.0" prefWidth="100.0" text="Start Bot">
+                        <Button fx:id="buttonStartStop" disable="true" mnemonicParsing="false" onAction="#handleButtonStartStop" prefHeight="32.0" prefWidth="100.0" text="Start Bot">
                            <GridPane.margin>
-                              <Insets bottom="3.0" left="3.0" right="3.0" top="3.0" />
+                              <Insets bottom="3.0" left="3.0" right="1.5" top="3.0" />
+                           </GridPane.margin></Button>
+                        <Button fx:id="buttonPauseResume" disable="true" mnemonicParsing="false" onAction="#handleButtonPauseResume" prefHeight="32.0" prefWidth="100.0" text="Pause Bot" GridPane.columnIndex="1">
+                           <GridPane.margin>
+                              <Insets bottom="3.0" left="1.5" right="3.0" top="3.0" />
                            </GridPane.margin></Button>
                      </children>
                   </GridPane>

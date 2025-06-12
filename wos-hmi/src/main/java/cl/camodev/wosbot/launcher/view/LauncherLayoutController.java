@@ -53,9 +53,11 @@ public class LauncherLayoutController implements IProfileLoadListener {
 
 	@FXML
 	private VBox buttonsContainer;
-
 	@FXML
 	private Button buttonStartStop;
+
+	@FXML
+	private Button buttonPauseResume;
 
 	@FXML
 	private AnchorPane mainContentPane;
@@ -264,7 +266,6 @@ public class LauncherLayoutController implements IProfileLoadListener {
 		addButton("ConsoleLogLayout", "Logs", consoleLogLayoutController).fire();
 
 	}
-
 	@FXML
 	public void handleButtonStartStop(ActionEvent event) {
 		if (!estado) {
@@ -272,7 +273,15 @@ public class LauncherLayoutController implements IProfileLoadListener {
 		} else {
 			actionController.stopBot();
 		}
+	}
 
+	@FXML
+	public void handleButtonPauseResume(ActionEvent event) {
+		if (buttonPauseResume.getText().equals("Pause Bot")) {
+			actionController.pauseBot();
+		} else {
+			actionController.resumeBot();
+		}
 	}
 
 	private Button addButton(String fxmlName, String title, Object controller) {
@@ -351,30 +360,40 @@ public class LauncherLayoutController implements IProfileLoadListener {
 		}
 
 	}
-
 	@Override
 	public void onProfileLoad(ProfileAux profile) {
 		stage.setTitle("Whiteout Survival Bot - " + profile.getName());
 		buttonStartStop.setDisable(false);
-
+		buttonPauseResume.setDisable(true);
 	}
 
 	public void onBotStateChange(DTOBotState botState) {
 		if (botState != null) {
 			if (botState.getRunning()) {
-				buttonStartStop.setText("Stop");
-				estado = true;
-
-//				startTime = LocalDateTime.now();
-//				startUpdatingExecutionTime();
+				if (botState.getPaused() != null && botState.getPaused()) {
+					// Bot is running but paused
+					buttonStartStop.setText("Stop");
+					buttonStartStop.setDisable(false);
+					buttonPauseResume.setText("Resume Bot");
+					buttonPauseResume.setDisable(false);
+					estado = true;
+				} else {
+					// Bot is running and active
+					buttonStartStop.setText("Stop");
+					buttonStartStop.setDisable(false);
+					buttonPauseResume.setText("Pause Bot");
+					buttonPauseResume.setDisable(false);
+					estado = true;
+				}
 			} else {
-				buttonStartStop.setText("Start");
+				// Bot is stopped
+				buttonStartStop.setText("Start Bot");
+				buttonStartStop.setDisable(false);
+				buttonPauseResume.setText("Pause Bot");
+				buttonPauseResume.setDisable(true);
 				estado = false;
-
-//				stopUpdatingExecutionTime();
 			}
 		}
-
 	}
 
 }

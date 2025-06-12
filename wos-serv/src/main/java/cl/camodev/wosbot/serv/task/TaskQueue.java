@@ -36,9 +36,11 @@ public class TaskQueue {
 			return Long.compare(t1.getDelay(TimeUnit.SECONDS), t2.getDelay(TimeUnit.SECONDS));
 		}
 	});
-
 	// Bandera para detener el loop del scheduler.
 	private volatile boolean running = false;
+	
+	// Bandera para pausar/reanudar el scheduler.
+	private volatile boolean paused = false;
 
 	// Hilo que se encargará de evaluar y ejecutar las tareas.
 	private Thread schedulerThread;
@@ -77,6 +79,18 @@ public class TaskQueue {
 				e.printStackTrace();
 			}
 			while (running) {
+				// Check if paused and skip execution if so
+				if (paused) {
+					try {
+						ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "Paused"));
+						Thread.sleep(1000); // Wait 1 second while paused
+						continue;
+					} catch (InterruptedException e) {
+						Thread.currentThread().interrupt();
+						break;
+					}
+				}
+
 				boolean executedTask = false;
 				long minDelay = Long.MAX_VALUE;
 
@@ -184,7 +198,6 @@ public class TaskQueue {
 		}
 		addTask(new InitializeTask(profile, TpDailyTaskEnum.INITIALIZE));
 	}
-
 	/**
 	 * Detiene inmediatamente el procesamiento de la cola, sin importar en qué estado esté.
 	 */
@@ -205,6 +218,22 @@ public class TaskQueue {
 		taskQueue.clear();
 
 		System.out.println("TaskQueue detenida de inmediato.");
+	}
+
+	/**
+	 * Pausa el procesamiento de la cola, manteniendo las tareas en la cola.
+	 */
+	public void pause() {
+		paused = true;
+		System.out.println("TaskQueue pausada.");
+	}
+
+	/**
+	 * Reanuda el procesamiento de la cola.
+	 */
+	public void resume() {
+		paused = false;
+		System.out.println("TaskQueue reanudada.");
 	}
 
 }

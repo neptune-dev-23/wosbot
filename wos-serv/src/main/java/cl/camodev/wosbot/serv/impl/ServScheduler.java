@@ -254,11 +254,10 @@ public class ServScheduler {
 
 				queueManager.startQueue(queueName);
 
-			});
-
-			listeners.forEach(e -> {
+			});			listeners.forEach(e -> {
 				DTOBotState state = new DTOBotState();
 				state.setRunning(true);
+				state.setPaused(false);
 				state.setActionTime(LocalDateTime.now());
 				e.onBotStateChange(state);
 			});
@@ -274,7 +273,6 @@ public class ServScheduler {
 		}
 		listeners.add(listener);
 	}
-
 	public void stopBot() {
 		queueManager.stopQueues();
 
@@ -291,6 +289,51 @@ public class ServScheduler {
 		listeners.forEach(e -> {
 			DTOBotState state = new DTOBotState();
 			state.setRunning(false);
+			state.setPaused(false);
+			state.setActionTime(LocalDateTime.now());
+			e.onBotStateChange(state);
+		});
+	}
+
+	public void pauseBot() {
+		queueManager.pauseQueues();
+
+		List<DTOProfiles> profiles = ServProfiles.getServices().getProfiles();
+
+		if (profiles == null || profiles.isEmpty()) {
+			return;
+		}
+
+		profiles.stream().forEach(profile -> {
+			ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "PAUSED"));
+		});
+
+		listeners.forEach(e -> {
+			DTOBotState state = new DTOBotState();
+			state.setRunning(true);
+			state.setPaused(true);
+			state.setActionTime(LocalDateTime.now());
+			e.onBotStateChange(state);
+		});
+	}
+
+	public void resumeBot() {
+		queueManager.resumeQueues();
+
+		List<DTOProfiles> profiles = ServProfiles.getServices().getProfiles();
+
+		if (profiles == null || profiles.isEmpty()) {
+			return;
+		}
+
+		profiles.stream().forEach(profile -> {
+			ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "RUNNING"));
+		});
+
+		listeners.forEach(e -> {
+			DTOBotState state = new DTOBotState();
+			state.setRunning(true);
+			state.setPaused(false);
 			state.setActionTime(LocalDateTime.now());
 			e.onBotStateChange(state);
 		});
