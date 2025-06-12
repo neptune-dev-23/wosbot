@@ -72,6 +72,7 @@ public enum EnumConfigurationKey {
 	PET_SKILL_GATHERING_BOOL("false",Boolean.class),
 	PET_PERSONAL_TREASURE_BOOL("false",Boolean.class),
 	
+	GROWTH_SPEED_BOOL("false",Boolean.class),
 	
 	BOOL_BANK("false",Boolean.class),
 	INT_BANK_DELAY("1",Integer.class),

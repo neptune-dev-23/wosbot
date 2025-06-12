@@ -41,6 +41,7 @@ import cl.camodev.wosbot.serv.task.impl.DailyStaminaTask;
 import cl.camodev.wosbot.serv.task.impl.ExplorationTask;
 import cl.camodev.wosbot.serv.task.impl.GatherTask;
 import cl.camodev.wosbot.serv.task.impl.GatherTask.GatherType;
+import cl.camodev.wosbot.serv.task.impl.GrowthSpeedTask;
 import cl.camodev.wosbot.serv.task.impl.HeroRecruitmentTask;
 import cl.camodev.wosbot.serv.task.impl.InitializeTask;
 import cl.camodev.wosbot.serv.task.impl.IntelligenceTask;
@@ -119,6 +120,10 @@ public class ServScheduler {
 				//@formatter:off
 				// Mapa de tareas con listas para manejar múltiples instancias de tareas bajo la misma clave
 				Map<EnumConfigurationKey, List<Supplier<DelayedTask>>> taskMappings = new HashMap<>();
+				
+				taskMappings.put(EnumConfigurationKey.GROWTH_SPEED_BOOL, List.of(
+					() -> new GrowthSpeedTask(profile, TpDailyTaskEnum.GROWTH_SPEED)
+				));
 
 				// Agregar tareas al mapa
 				taskMappings.put(EnumConfigurationKey.BOOL_EXPLORATION_CHEST, List.of(
@@ -173,6 +178,7 @@ public class ServScheduler {
 				taskMappings.put(EnumConfigurationKey.PET_SKILL_GATHERING_BOOL, List.of(
 					() -> new PetSkillsTask(profile, TpDailyTaskEnum.PET_SKILL_GATHERING, PetSkill.GATHERING)
 				));
+				
 				
 				taskMappings.put(EnumConfigurationKey.PET_SKILL_STAMINA_BOOL, List.of(
 					() -> new PetSkillsTask(profile, TpDailyTaskEnum.PET_SKILL_STAMINA, PetSkill.STAMINA)

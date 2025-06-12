@@ -23,6 +23,7 @@ public enum TpDailyTaskEnum {
 	PET_SKILL_TREASURE(18, "Pet Skill Treasure"),
 	PET_SKILL_GATHERING(19, "Pet Skill Gathering"),
 	
+	GROWTH_SPEED(20, "Growth Speed"),
 	
 	
 	MAIL_REWARDS(30, "Mail Rewards"),
