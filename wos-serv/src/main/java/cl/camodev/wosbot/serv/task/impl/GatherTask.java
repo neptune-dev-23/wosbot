@@ -99,7 +99,9 @@ public class GatherTask extends DelayedTask {
 				if (index != -1) {
 					try {
 						String time = emuManager.ocrRegionText(EMULATOR_NUMBER, queues[index][2], new DTOPoint(queues[index][2].getX() + 140, queues[index][2].getY() + 19));
-						this.reschedule(parseRemaining(time).plusMinutes(5));
+						LocalDateTime nextSchedule = parseRemaining(time).plusMinutes(5);
+						this.reschedule(nextSchedule);
+						servScheduler.updateDailyTaskStatus(profile, tpTask, nextSchedule);
 					} catch (Exception e) {
 
 					}
