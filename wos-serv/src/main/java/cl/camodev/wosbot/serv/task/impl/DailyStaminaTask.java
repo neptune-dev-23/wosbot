@@ -35,10 +35,10 @@ public class DailyStaminaTask extends DelayedTask {
 			}
 
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(3, 513), new DTOPoint(26, 588));
-			sleepTask(2000);
+			sleepTask(1000);
 
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(20, 250), new DTOPoint(200, 280));
-			sleepTask(2000);
+			sleepTask(500);
 
 			DTOImageSearchResult researchCenter = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_SHORTCUTS_RESEARCH_CENTER.getTemplate(), 0, 0, 720, 1280, 90);
 
@@ -47,7 +47,7 @@ public class DailyStaminaTask extends DelayedTask {
 					emuManager.tapAtRandomPoint(EMULATOR_NUMBER, researchCenter.getPoint(), researchCenter.getPoint());
 					sleepTask(2000);
 					emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(30, 430), new DTOPoint(50, 470));
-					sleepTask(2000);
+					sleepTask(500);
 
 					DTOImageSearchResult chest = null;
 					System.out.println("Searching for chest");
@@ -60,7 +60,7 @@ public class DailyStaminaTask extends DelayedTask {
 							System.out.println("Chest found, tapping");
 							servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Claiming chest");
 							emuManager.tapAtRandomPoint(EMULATOR_NUMBER, chest.getPoint(), chest.getPoint());
-							sleepTask(2000);
+							sleepTask(500);
 
 							emuManager.tapBackButton(EMULATOR_NUMBER);
 							for (int j = 0; j < 5; j++) {
@@ -69,9 +69,9 @@ public class DailyStaminaTask extends DelayedTask {
 								if (stamina.isFound()) {
 									servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Claiming stamina");
 									emuManager.tapAtRandomPoint(EMULATOR_NUMBER, stamina.getPoint(), stamina.getPoint());
-									sleepTask(2000);
+									sleepTask(500);
 									emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(250, 930), new DTOPoint(450, 950));
-									sleepTask(6000);
+									sleepTask(500);
 									break;
 								} else {
 									System.out.println("Stamina not found, sleeping");
@@ -96,9 +96,9 @@ public class DailyStaminaTask extends DelayedTask {
 							if (stamina.isFound()) {
 								servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Claiming stamina");
 								emuManager.tapAtRandomPoint(EMULATOR_NUMBER, stamina.getPoint(), stamina.getPoint());
-								sleepTask(2000);
+								sleepTask(500);
 								emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(250, 930), new DTOPoint(450, 950));
-								sleepTask(6000);
+								sleepTask(500);
 								break;
 							} else {
 								System.out.println("Stamina not found, sleeping");

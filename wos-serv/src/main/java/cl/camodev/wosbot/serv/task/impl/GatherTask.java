@@ -82,9 +82,9 @@ public class GatherTask extends DelayedTask {
 
 			// verificar marchas activas
 			emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(2, 550));
-			sleepTask(1000);
+			sleepTask(500);
 			emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(340, 265));
-			sleepTask(1000);
+			sleepTask(500);
 			servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "looking for " + gatherType);
 			
 			// Get active march queue setting and calculate search region
@@ -114,7 +114,7 @@ public class GatherTask extends DelayedTask {
 				homeResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90);
 				if (homeResult.isFound()) {
 					emuManager.tapAtPoint(EMULATOR_NUMBER, homeResult.getPoint());
-					sleepTask(4000);
+					sleepTask(3000);
 				}
 				// debo mandar un escuadro a recojer recursos
 				// ir a la lupa
@@ -129,7 +129,7 @@ public class GatherTask extends DelayedTask {
 				if (tile.isFound()) {
 					emuManager.tapAtPoint(EMULATOR_NUMBER, tile.getPoint());
 					// regresar al nivel 1
-					sleepTask(1000);
+					sleepTask(500);
 					emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(435, 1052), new DTOPoint(40, 1052));
 					sleepTask(300);
 					emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(487, 1055), new DTOPoint(487, 1055), (profile.getConfig(gatherType.getConfig(), Integer.class) - 1), 50);
@@ -152,32 +152,32 @@ public class GatherTask extends DelayedTask {
 
 						// verificar el heroe y remover restantes
 						emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(171, 430));
-						sleepTask(500);
+						sleepTask(200);
 						// remover restantes
 						emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(560, 348));
 
-						sleepTask(500);
+						sleepTask(200);
 						DTOImageSearchResult remove = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.RALLY_REMOVE_HERO_BUTTON.getTemplate(), 0, 0, 720, 1280, 90);
 						if (remove.isFound()) {
 							emuManager.tapAtPoint(EMULATOR_NUMBER, remove.getPoint());
-							sleepTask(500);
+							sleepTask(200);
 						}
 
 						emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(362, 348));
-						sleepTask(500);
+						sleepTask(200);
 						remove = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.RALLY_REMOVE_HERO_BUTTON.getTemplate(), 0, 0, 720, 1280, 90);
 						if (remove.isFound()) {
 							emuManager.tapAtPoint(EMULATOR_NUMBER, remove.getPoint());
-							sleepTask(500);
+							sleepTask(200);
 						}
 						emuManager.tapBackButton(EMULATOR_NUMBER);
 						// falta fverificar si esta el heroe adecuado
-						sleepTask(500);
+						sleepTask(200);
 						// click gather
 						DTOImageSearchResult gatherButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.RALLY_GATHER_BUTTON.getTemplate(), 0, 0, 720, 1280, 90);
 						if (gatherButton.isFound()) {
 							emuManager.tapAtPoint(EMULATOR_NUMBER, gatherButton.getPoint());
-							sleepTask(500);
+							sleepTask(200);
 							// verificar si ya hay un marcha en curso
 							DTOImageSearchResult march = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.RALLY_GATHER_ALREADY_MARCHING.getTemplate(), 0, 0, 720, 1280, 90);
 							if (march.isFound()) {

@@ -37,27 +37,27 @@ public class GatherSpeedTask extends DelayedTask {
 
             // Click the small icon under the profile picture
             emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(40, 118));
-            sleepTask(1000);
+            sleepTask(500);
 
             // Click gather tab
             emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(530, 122));
-            sleepTask(1000);
+            sleepTask(500);
 
             // Click gathering speed button
             emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(313, 406));
-            sleepTask(1000);
+            sleepTask(500);
 
             // Click use button
             emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(578, 568));
-            sleepTask(1000);
+            sleepTask(500);
 
             // Click buy button
             emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(585, 391));
-            sleepTask(1000);
+            sleepTask(500);
 
             // Click confirm buy button
             emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(382, 784));
-            sleepTask(1000);
+            sleepTask(500);
             
             servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Gather speed boost completed");
 

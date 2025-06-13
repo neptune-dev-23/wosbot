@@ -31,7 +31,7 @@ public class MailRewardsTask extends DelayedTask {
 			sleepTask(1000);
 			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "going to mail");
 			EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(640, 1033), new DTOPoint(686, 1064));
-			sleepTask(3000);
+			sleepTask(1000);
 			for (DTOPoint button : buttons) {
 				EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, button, button);
 				sleepTask(1000);

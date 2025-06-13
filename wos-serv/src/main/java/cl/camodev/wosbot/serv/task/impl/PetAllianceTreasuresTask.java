@@ -37,14 +37,14 @@ public class PetAllianceTreasuresTask extends DelayedTask {
 			if (petsResult.isFound()) {
 				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "button pets found, taping");
 				EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, petsResult.getPoint(), petsResult.getPoint());
-				sleepTask(5000);
+				sleepTask(3000);
 
 				DTOImageSearchResult beastCageResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_BEAST_CAGE.getTemplate(), 0, 0, 720, 1280, 90);
 				if (beastCageResult.isFound()) {
 					EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, beastCageResult.getPoint(), beastCageResult.getPoint());
-					sleepTask(3000);
+					sleepTask(500);
 					EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(547, 1150), new DTOPoint(650, 1210));
-					sleepTask(3000);
+					sleepTask(500);
 
 					EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(612, 1184), new DTOPoint(653, 1211));
 					sleepTask(500);

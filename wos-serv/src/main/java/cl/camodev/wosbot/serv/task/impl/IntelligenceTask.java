@@ -173,18 +173,18 @@ public class IntelligenceTask extends DelayedTask {
 
 	private void processJourney(DTOImageSearchResult result) {
 		emuManager.tapAtPoint(EMULATOR_NUMBER, result.getPoint());
-		sleepTask(3000);
+		sleepTask(2000);
 
 		DTOImageSearchResult view = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_VIEW.getTemplate(), 0, 0, 720, 1280, 90);
 		if (view.isFound()) {
 			emuManager.tapAtPoint(EMULATOR_NUMBER, view.getPoint());
-			sleepTask(3000);
+			sleepTask(500);
 			DTOImageSearchResult explore = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_EXPLORE.getTemplate(), 0, 0, 720, 1280, 90);
 			if (explore.isFound()) {
 				emuManager.tapAtPoint(EMULATOR_NUMBER, explore.getPoint());
-				sleepTask(2000);
+				sleepTask(500);
 				emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(520, 1200));
-				sleepTask(20000);
+				sleepTask(1000);
 				emuManager.tapBackButton(EMULATOR_NUMBER);
 
 			}
@@ -209,12 +209,12 @@ public class IntelligenceTask extends DelayedTask {
 
 	private void processSurvivor(DTOImageSearchResult result) {
 		emuManager.tapAtPoint(EMULATOR_NUMBER, result.getPoint());
-		sleepTask(3000);
+		sleepTask(2000);
 
 		DTOImageSearchResult view = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_VIEW.getTemplate(), 0, 0, 720, 1280, 90);
 		if (view.isFound()) {
 			emuManager.tapAtPoint(EMULATOR_NUMBER, view.getPoint());
-			sleepTask(3000);
+			sleepTask(500);
 			DTOImageSearchResult rescue = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_RESCUE.getTemplate(), 0, 0, 720, 1280, 90);
 			if (rescue.isFound()) {
 				emuManager.tapAtPoint(EMULATOR_NUMBER, rescue.getPoint());
@@ -240,16 +240,16 @@ public class IntelligenceTask extends DelayedTask {
 
 	private void processBeast(DTOImageSearchResult beast) {
 		emuManager.tapAtPoint(EMULATOR_NUMBER, beast.getPoint());
-		sleepTask(3000);
+		sleepTask(2000);
 
 		DTOImageSearchResult view = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_VIEW.getTemplate(), 0, 0, 720, 1280, 90);
 		if (view.isFound()) {
 			emuManager.tapAtPoint(EMULATOR_NUMBER, view.getPoint());
-			sleepTask(3000);
+			sleepTask(500);
 			DTOImageSearchResult attack = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_ATTACK.getTemplate(), 0, 0, 720, 1280, 90);
 			if (attack.isFound()) {
 				emuManager.tapAtPoint(EMULATOR_NUMBER, attack.getPoint());
-				sleepTask(3000);
+				sleepTask(500);
 				DTOImageSearchResult rally = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_ATTACK_CONFIRM.getTemplate(), 0, 0, 720, 1280, 90);
 				if (rally.isFound()) {
 					emuManager.tapAtPoint(EMULATOR_NUMBER, rally.getPoint());

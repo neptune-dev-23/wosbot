@@ -29,14 +29,14 @@ public class ExplorationTask extends DelayedTask {
 		if (homeResult.isFound() || worldResult.isFound()) {
 			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "going to exploration");
 			EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(40, 1190), new DTOPoint(100, 1250));
-			sleepTask(3000);
+			sleepTask(500);
 			DTOImageSearchResult claimResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.EXPLORATION_CLAIM.getTemplate(), 0, 0, 720, 1280, 95);
 			if (claimResult.isFound()) {
 				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "claiming rewards");
 				EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(560, 900), new DTOPoint(670, 940));
-				sleepTask(3000);
+				sleepTask(500);
 				EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(230, 890), new DTOPoint(490, 960));
-				sleepTask(3000);
+				sleepTask(500);
 
 				EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(230, 890), new DTOPoint(490, 960));
 				sleepTask(200);
@@ -64,7 +64,7 @@ public class ExplorationTask extends DelayedTask {
 			EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
 
 		}
-		sleepTask(3000);
+		sleepTask(500);
 
 	}
 

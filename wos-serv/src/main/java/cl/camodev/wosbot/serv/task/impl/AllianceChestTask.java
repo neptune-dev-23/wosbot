@@ -47,22 +47,22 @@ public class AllianceChestTask extends DelayedTask {
 		}
 
 		emulator.tapAtRandomPoint(EMULATOR_NUMBER, allianceChestResult.getPoint(), allianceChestResult.getPoint());
-		sleepTask(4000);
+		sleepTask(500);
 
 		// Abrir el cofre
 		emulator.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(56, 375), new DTOPoint(320, 420));
-		sleepTask(2000);
+		sleepTask(500);
 
 		// Buscar el botón de reclamar recompensas
 		DTOImageSearchResult claimButton = emulator.searchTemplate(EMULATOR_NUMBER, EnumTemplates.ALLIANCE_CHEST_LOOT_CLAIM_BUTTON.getTemplate(), 0, 0, 720, 1280, 90);
 		if (claimButton.isFound()) {
 			emulator.tapAtRandomPoint(EMULATOR_NUMBER, claimButton.getPoint(), claimButton.getPoint(), 10, 300);
-			sleepTask(1000);
+			sleepTask(500);
 		}
 
 		// Confirmar la acción
 		emulator.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(410, 375), new DTOPoint(626, 420));
-		sleepTask(2000);
+		sleepTask(500);
 
 		// Cerrar la ventana
 		emulator.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(578, 1180), new DTOPoint(641, 1200), 10, 300);

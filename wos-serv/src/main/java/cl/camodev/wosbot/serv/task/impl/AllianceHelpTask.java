@@ -49,7 +49,7 @@ public class AllianceHelpTask extends DelayedTask {
 		logs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Alliance help button found");
 		emulator.tapAtRandomPoint(EMULATOR_NUMBER, allianceChestResult.getPoint(), allianceChestResult.getPoint());
 
-		sleepTask(2000);
+		sleepTask(500);
 
 		DTOImageSearchResult allianceHelpResult = emulator.searchTemplate(EMULATOR_NUMBER, EnumTemplates.ALLIANCE_HELP_REQUESTS.getTemplate(), 0, 0, 720, 1280, 90);
 		if (allianceHelpResult.isFound()) {
