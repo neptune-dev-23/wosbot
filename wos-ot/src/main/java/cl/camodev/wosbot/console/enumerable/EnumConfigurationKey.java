@@ -36,16 +36,16 @@ public enum EnumConfigurationKey {
 	ALLIANCE_HELP_REQUESTS_BOOL("false",Boolean.class),
 	ALLIANCE_HELP_REQUESTS_OFFSET_INT("1",Integer.class),
 	
-	
+	GATHER_SPEED_BOOL("false",Boolean.class),
 	GATHER_COAL_BOOL("false",Boolean.class),
 	GATHER_WOOD_BOOL("false",Boolean.class),
 	GATHER_MEAT_BOOL("false",Boolean.class),
 	GATHER_IRON_BOOL("false",Boolean.class),
-	
 	GATHER_COAL_LEVEL_INT("1",Integer.class),
 	GATHER_WOOD_LEVEL_INT("1",Integer.class),
 	GATHER_MEAT_LEVEL_INT("1",Integer.class),
 	GATHER_IRON_LEVEL_INT("1",Integer.class),
+	GATHER_ACTIVE_MARCH_QUEUE_INT("6",Integer.class),
 	
 	INTEL_BOOL("false",Boolean.class),
 	INTEL_FIRE_BEAST_BOOL("false",Boolean.class),
@@ -71,7 +71,6 @@ public enum EnumConfigurationKey {
 	PET_SKILL_TRESURE_BOOL("false",Boolean.class),
 	PET_SKILL_GATHERING_BOOL("false",Boolean.class),
 	PET_PERSONAL_TREASURE_BOOL("false",Boolean.class),
-	
 	
 	BOOL_BANK("false",Boolean.class),
 	INT_BANK_DELAY("1",Integer.class),

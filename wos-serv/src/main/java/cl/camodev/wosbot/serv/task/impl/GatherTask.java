@@ -1,7 +1,11 @@
 package cl.camodev.wosbot.serv.task.impl;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
+import cl.camodev.wosbot.almac.entity.DailyTask;
+import cl.camodev.wosbot.almac.repo.DailyTaskRepository;
+import cl.camodev.wosbot.almac.repo.IDailyTaskRepository;
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
@@ -63,6 +67,7 @@ public class GatherTask extends DelayedTask {
 	private final ServScheduler servScheduler = ServScheduler.getServices();
 	private final ServLogs servLogs = ServLogs.getServices();
 	private final EmulatorManager emuManager = EmulatorManager.getInstance();
+	private final IDailyTaskRepository iDailyTaskRepository = DailyTaskRepository.getRepository();
 
 	public GatherTask(DTOProfiles profile, TpDailyTaskEnum tpTask, GatherType gatherType) {
 		super(profile, tpTask);
@@ -71,6 +76,24 @@ public class GatherTask extends DelayedTask {
 
 	@Override
 	protected void execute() {
+		// Check if IntelligenceTask is not processed yet or reschedule time is lower than 10 minutes
+		if (profile.getConfig(EnumConfigurationKey.INTEL_BOOL, Boolean.class) && 
+			!isIntelligenceTaskReadyForGathering()) {
+			servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), 
+				"Waiting for IntelligenceTask to be processed or reschedule time to exceed 10 minutes");
+			reschedule(LocalDateTime.now().plusMinutes(2)); // Check again in 2 minutes
+			return;
+		}
+
+		// Check if GatherSpeedTask is not processed yet
+		if (profile.getConfig(EnumConfigurationKey.GATHER_SPEED_BOOL, Boolean.class) && 
+			!isGatherSpeedTaskReadyForGathering()) {
+			servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(),
+				"Waiting for GatherSpeedTask to be processed or reschedule time to exceed 5 minutes");
+			reschedule(LocalDateTime.now().plusMinutes(2)); // Check again in 2 minutes
+			return;
+		}
+
 		DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90);
 		DTOImageSearchResult worldResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 0, 0, 720, 1280, 90);
 
@@ -82,12 +105,16 @@ public class GatherTask extends DelayedTask {
 
 			// verificar marchas activas
 			emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(2, 550));
-			sleepTask(1000);
-
+			sleepTask(500);
 			emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(340, 265));
-			sleepTask(1000);
+			sleepTask(500);
 			servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "looking for " + gatherType);
-			DTOImageSearchResult resource = emuManager.searchTemplate(EMULATOR_NUMBER, gatherType.getTemplate(), 10, 342, (425 - 10), 772, 90);
+			
+			// Get active march queue setting and calculate search region
+			int activeMarchQueues = profile.getConfig(EnumConfigurationKey.GATHER_ACTIVE_MARCH_QUEUE_INT, Integer.class);
+			int maxY = queues[Math.min(activeMarchQueues - 1, queues.length - 1)][1].getY(); // Use the Y coordinate of the last active queue
+			
+			DTOImageSearchResult resource = emuManager.searchTemplate(EMULATOR_NUMBER, gatherType.getTemplate(), 10, 342, (425 - 10), maxY, 90);
 
 			if (resource.isFound()) {
 				servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Resource found, getting remaining time");
@@ -95,7 +122,9 @@ public class GatherTask extends DelayedTask {
 				if (index != -1) {
 					try {
 						String time = emuManager.ocrRegionText(EMULATOR_NUMBER, queues[index][2], new DTOPoint(queues[index][2].getX() + 140, queues[index][2].getY() + 19));
-						this.reschedule(parseRemaining(time).plusMinutes(5));
+						LocalDateTime nextSchedule = parseRemaining(time).plusMinutes(5);
+						this.reschedule(nextSchedule);
+						servScheduler.updateDailyTaskStatus(profile, tpTask, nextSchedule);
 					} catch (Exception e) {
 
 					}
@@ -108,7 +137,7 @@ public class GatherTask extends DelayedTask {
 				homeResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90);
 				if (homeResult.isFound()) {
 					emuManager.tapAtPoint(EMULATOR_NUMBER, homeResult.getPoint());
-					sleepTask(4000);
+					sleepTask(3000);
 				}
 				// debo mandar un escuadro a recojer recursos
 				// ir a la lupa
@@ -123,7 +152,7 @@ public class GatherTask extends DelayedTask {
 				if (tile.isFound()) {
 					emuManager.tapAtPoint(EMULATOR_NUMBER, tile.getPoint());
 					// regresar al nivel 1
-					sleepTask(1000);
+					sleepTask(500);
 					emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(435, 1052), new DTOPoint(40, 1052));
 					sleepTask(300);
 					emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(487, 1055), new DTOPoint(487, 1055), (profile.getConfig(gatherType.getConfig(), Integer.class) - 1), 50);
@@ -142,42 +171,42 @@ public class GatherTask extends DelayedTask {
 					DTOImageSearchResult gather = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_SHORTCUTS_FARM_GATHER.getTemplate(), 0, 0, 720, 1280, 90);
 					if (gather.isFound()) {
 						emuManager.tapAtPoint(EMULATOR_NUMBER, gather.getPoint());
-						sleepTask(3000);
+						sleepTask(500);
 
 						// verificar el heroe y remover restantes
 						emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(171, 430));
-						sleepTask(1000);
+						sleepTask(200);
 						// remover restantes
 						emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(560, 348));
 
-						sleepTask(1000);
+						sleepTask(200);
 						DTOImageSearchResult remove = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.RALLY_REMOVE_HERO_BUTTON.getTemplate(), 0, 0, 720, 1280, 90);
 						if (remove.isFound()) {
 							emuManager.tapAtPoint(EMULATOR_NUMBER, remove.getPoint());
-							sleepTask(500);
+							sleepTask(200);
 						}
 
 						emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(362, 348));
-						sleepTask(500);
+						sleepTask(200);
 						remove = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.RALLY_REMOVE_HERO_BUTTON.getTemplate(), 0, 0, 720, 1280, 90);
 						if (remove.isFound()) {
 							emuManager.tapAtPoint(EMULATOR_NUMBER, remove.getPoint());
-							sleepTask(1000);
+							sleepTask(200);
 						}
 						emuManager.tapBackButton(EMULATOR_NUMBER);
 						// falta fverificar si esta el heroe adecuado
-						sleepTask(500);
+						sleepTask(200);
 						// click gather
 						DTOImageSearchResult gatherButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.RALLY_GATHER_BUTTON.getTemplate(), 0, 0, 720, 1280, 90);
 						if (gatherButton.isFound()) {
 							emuManager.tapAtPoint(EMULATOR_NUMBER, gatherButton.getPoint());
-							sleepTask(3000);
+							sleepTask(200);
 							// verificar si ya hay un marcha en curso
 							DTOImageSearchResult march = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.RALLY_GATHER_ALREADY_MARCHING.getTemplate(), 0, 0, 720, 1280, 90);
 							if (march.isFound()) {
 								emuManager.tapBackButton(EMULATOR_NUMBER);
 								emuManager.tapBackButton(EMULATOR_NUMBER);
-								reschedule(LocalDateTime.now().plusMinutes(5));
+								reschedule(LocalDateTime.now());
 								servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "March already gathering");
 							} else {
 								servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "March started");
@@ -204,9 +233,12 @@ public class GatherTask extends DelayedTask {
 		}
 
 	}
-
 	public int obtenerIndice(DTOPoint punto) {
-		for (int i = 0; i < queues.length; i++) {
+		// Get active march queue setting and limit the search to only active queues
+		int activeMarchQueues = profile.getConfig(EnumConfigurationKey.GATHER_ACTIVE_MARCH_QUEUE_INT, Integer.class);
+		int maxQueues = Math.min(activeMarchQueues, queues.length);
+		
+		for (int i = 0; i < maxQueues; i++) {
 			// Obtener los límites del rango (para asegurar el orden correcto, usamos Math.min y Math.max)
 			int minX = Math.min(queues[i][0].getX(), queues[i][1].getX());
 			int maxX = Math.max(queues[i][0].getX(), queues[i][1].getX());
@@ -219,6 +251,92 @@ public class GatherTask extends DelayedTask {
 			}
 		}
 		return -1; // Retorna -1 si el punto no se encuentra en ninguno de los rangos
+	}
+
+	/**
+	 * Checks if IntelligenceTask is ready for gathering to start.
+	 * Returns true if IntelligenceTask has been processed or if its reschedule time is more than 10 minutes from now.
+	 * Returns false if IntelligenceTask is not processed yet or reschedule time is less than 10 minutes.
+	 */
+	private boolean isIntelligenceTaskReadyForGathering() {
+		try {
+			DailyTask intelligenceTask = iDailyTaskRepository.findByProfileIdAndTaskName(profile.getId(), TpDailyTaskEnum.INTEL);
+			
+			if (intelligenceTask == null) {
+				// IntelligenceTask has never been executed, so gathering should wait
+				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), 
+					"IntelligenceTask has never been executed, waiting");
+				return false;
+			}
+			
+			LocalDateTime nextSchedule = intelligenceTask.getNextSchedule();
+			if (nextSchedule == null) {
+				// If there's no next schedule, assume it's processed
+				return true;
+			}
+			
+			// Check if the next schedule is more than 10 minutes from now
+			long minutesUntilNextSchedule = ChronoUnit.MINUTES.between(LocalDateTime.now(), nextSchedule);
+			
+			if (minutesUntilNextSchedule > 10) {
+				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), 
+					"IntelligenceTask next schedule is in " + minutesUntilNextSchedule + " minutes, gathering can start");
+				return true;
+			} else {
+				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), 
+					"IntelligenceTask next schedule is in " + minutesUntilNextSchedule + " minutes, waiting");
+				return false;
+			}
+			
+		} catch (Exception e) {
+			servLogs.appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(), 
+				"Error checking IntelligenceTask status: " + e.getMessage());
+			// In case of error, allow gathering to proceed
+			return true;
+		}
+	}
+
+	/**
+	 * Checks if GatherSpeedTask is ready for gathering to start.
+	 * Returns true if GatherSpeedTask has been processed.
+	 * Returns false if GatherSpeedTask is not processed yet.
+	 */
+	private boolean isGatherSpeedTaskReadyForGathering() {
+		try {
+			DailyTask gatherSpeedTask = iDailyTaskRepository.findByProfileIdAndTaskName(profile.getId(), TpDailyTaskEnum.GATHER_SPEED);
+
+			if (gatherSpeedTask == null) {
+				// GatherSpeedTask has never been executed, so gathering should wait
+				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(),
+				"GatherSpeedTask has never been executed, waiting");
+				return false;
+			}
+
+			LocalDateTime nextSchedule = gatherSpeedTask.getNextSchedule();
+			if (nextSchedule == null) {
+				// If there's no next schedule, assume it's processed
+				return true;
+			}
+			
+			// Check if the next schedule is more than 10 minutes from now
+			long minutesUntilNextSchedule = ChronoUnit.MINUTES.between(LocalDateTime.now(), nextSchedule);
+			
+			if (minutesUntilNextSchedule > 5) {
+				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(),
+					"GatherSpeedTask next schedule is in " + minutesUntilNextSchedule + " minutes, gathering can start");
+				return true;
+			} else {
+				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(),
+					"GatherSpeedTask next schedule is in " + minutesUntilNextSchedule + " minutes, waiting");
+				return false;
+			}
+
+		} catch (Exception e) {
+			servLogs.appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(),
+				"Error checking GatherSpeedTask status: " + e.getMessage());
+			// In case of error, allow gathering to proceed
+			return true;
+		}
 	}
 
 	public static LocalDateTime parseRemaining(String timeStr) {

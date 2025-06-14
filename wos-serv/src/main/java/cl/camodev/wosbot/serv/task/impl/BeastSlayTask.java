@@ -17,6 +17,7 @@ import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.serv.impl.ServLogs;
+import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 import net.sourceforge.tess4j.TesseractException;
 
@@ -66,6 +67,7 @@ public class BeastSlayTask extends DelayedTask {
 					LocalDateTime fullStaminaTime = calculateFullStaminaTime(stamina, 100, 5);
 //					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Stamina is less than 10, rescheduling to " + UtilTime.localDateTimeToDDHHMMSS(fullStaminaTime));
 					this.reschedule(fullStaminaTime);
+					ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, fullStaminaTime);
 					return;
 				}
 

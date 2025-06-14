@@ -14,6 +14,7 @@ import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.serv.impl.ServLogs;
+import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 import net.sourceforge.tess4j.TesseractException;
 
@@ -74,7 +75,7 @@ public class BankTask extends DelayedTask {
 					emulatorManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(168, 762), new DTOPoint(477, 760));
 					emulatorManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(410, 877), new DTOPoint(589, 919));
 
-					reschedule(LocalDateTime.now().plusDays(bankDelay));
+					this.reschedule(LocalDateTime.now().plusDays(bankDelay));
 					emulatorManager.tapBackButton(EMULATOR_NUMBER);
 					return;
 				}
@@ -83,7 +84,8 @@ public class BankTask extends DelayedTask {
 				try {
 					String timeLeft = emulatorManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(100, 585), new DTOPoint(290, 614));
 					LocalDateTime nextBank = parseAndAddToNow(timeLeft);
-					reschedule(nextBank);
+					this.reschedule(nextBank);
+					ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, nextBank);
 					return;
 				} catch (IOException | TesseractException e) {
 					ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(), "Error al procesar OCR del tiempo restante");

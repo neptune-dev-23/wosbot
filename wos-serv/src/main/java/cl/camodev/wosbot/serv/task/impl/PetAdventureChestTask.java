@@ -50,7 +50,7 @@ public class PetAdventureChestTask extends DelayedTask {
 				DTOImageSearchResult beastCageResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_BEAST_CAGE.getTemplate(), 0, 0, 720, 1280, 90);
 				if (beastCageResult.isFound()) {
 					emuManager.tapAtPoint(EMULATOR_NUMBER, beastCageResult.getPoint());
-					sleepTask(3000);
+					sleepTask(500);
 					emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(547, 1150), new DTOPoint(650, 1210));
 
 					for (int i = 0; i < 10; i++) {
@@ -58,14 +58,14 @@ public class PetAdventureChestTask extends DelayedTask {
 						DTOImageSearchResult doneChest = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_CHEST_COMPLETED.getTemplate(), 0, 0, 720, 1280, 90);
 						if (doneChest.isFound()) {
 							emuManager.tapAtRandomPoint(EMULATOR_NUMBER, doneChest.getPoint(), doneChest.getPoint());
-							sleepTask(1000);
+							sleepTask(500);
 							emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(270, 735), new DTOPoint(450, 760), 20, 100);
 
 							DTOImageSearchResult share = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_CHEST_SHARE.getTemplate(), 0, 0, 720, 1280, 90);
 							if (share.isFound()) {
 								servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Sharing chest");
 								emuManager.tapAtRandomPoint(EMULATOR_NUMBER, share.getPoint(), share.getPoint());
-								sleepTask(1000);
+								sleepTask(500);
 							}
 							emuManager.tapBackButton(EMULATOR_NUMBER);
 							sleepTask(500);
@@ -90,22 +90,22 @@ public class PetAdventureChestTask extends DelayedTask {
 									servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Found: " + enumTemplates);
 
 									emuManager.tapAtRandomPoint(EMULATOR_NUMBER, result.getPoint(), result.getPoint());
-									sleepTask(2000);
+									sleepTask(500);
 
 									DTOImageSearchResult chestSelect = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_CHEST_SELECT.getTemplate(), 0, 0, 720, 1280, 90);
 
 									if (chestSelect.isFound()) {
 										emuManager.tapAtPoint(EMULATOR_NUMBER, chestSelect.getPoint());
-										sleepTask(2000);
+										sleepTask(500);
 
 										DTOImageSearchResult chestStart = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_CHEST_START.getTemplate(), 0, 0, 720, 1280, 90);
 
 										if (chestStart.isFound()) {
 											emuManager.tapAtPoint(EMULATOR_NUMBER, chestStart.getPoint());
-											sleepTask(2000);
+											sleepTask(500);
 
 											emuManager.tapBackButton(EMULATOR_NUMBER);
-											sleepTask(1000);
+											sleepTask(500);
 											break; // Sale del intento, pero no del ciclo principal
 										} else {
 											DTOImageSearchResult attempts = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_CHEST_ATTEMPT.getTemplate(), 0, 0, 720, 1280, 90);
@@ -127,7 +127,7 @@ public class PetAdventureChestTask extends DelayedTask {
 
 						if (foundAnyChest) {
 							servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "At least one chest was found. Restarting search...");
-							sleepTask(5000); // Espera 5 segundos antes de repetir
+							sleepTask(500); // Espera 5 segundos antes de repetir
 						}
 
 					} while (foundAnyChest); // El bucle se repite hasta que no se encuentren más cofres

@@ -41,6 +41,7 @@ import cl.camodev.wosbot.serv.task.impl.DailyStaminaTask;
 import cl.camodev.wosbot.serv.task.impl.ExplorationTask;
 import cl.camodev.wosbot.serv.task.impl.GatherTask;
 import cl.camodev.wosbot.serv.task.impl.GatherTask.GatherType;
+import cl.camodev.wosbot.serv.task.impl.GatherSpeedTask;
 import cl.camodev.wosbot.serv.task.impl.HeroRecruitmentTask;
 import cl.camodev.wosbot.serv.task.impl.InitializeTask;
 import cl.camodev.wosbot.serv.task.impl.IntelligenceTask;
@@ -119,6 +120,10 @@ public class ServScheduler {
 				//@formatter:off
 				// Mapa de tareas con listas para manejar múltiples instancias de tareas bajo la misma clave
 				Map<EnumConfigurationKey, List<Supplier<DelayedTask>>> taskMappings = new HashMap<>();
+				
+				taskMappings.put(EnumConfigurationKey.GATHER_SPEED_BOOL, List.of(
+					() -> new GatherSpeedTask(profile, TpDailyTaskEnum.GATHER_SPEED)
+				));
 
 				// Agregar tareas al mapa
 				taskMappings.put(EnumConfigurationKey.BOOL_EXPLORATION_CHEST, List.of(
@@ -174,6 +179,7 @@ public class ServScheduler {
 					() -> new PetSkillsTask(profile, TpDailyTaskEnum.PET_SKILL_GATHERING, PetSkill.GATHERING)
 				));
 				
+				
 				taskMappings.put(EnumConfigurationKey.PET_SKILL_STAMINA_BOOL, List.of(
 					() -> new PetSkillsTask(profile, TpDailyTaskEnum.PET_SKILL_STAMINA, PetSkill.STAMINA)
 				));
@@ -202,10 +208,6 @@ public class ServScheduler {
                         () -> new PetAdventureChestTask(profile, TpDailyTaskEnum.PET_ADVENTURE)
                     ));
 				
-				taskMappings.put(EnumConfigurationKey.INTEL_BOOL, List.of(
-                        () -> new IntelligenceTask(profile, TpDailyTaskEnum.INTEL)
-                    ));
-				
 				taskMappings.put(EnumConfigurationKey.GATHER_MEAT_BOOL, List.of(
                         () -> new GatherTask(profile, TpDailyTaskEnum.GATHER_RESOURCES, GatherType.MEAT)
                     ));
@@ -220,6 +222,10 @@ public class ServScheduler {
 				
 				taskMappings.put(EnumConfigurationKey.GATHER_IRON_BOOL, List.of(
                         () -> new GatherTask(profile, TpDailyTaskEnum.GATHER_RESOURCES, GatherType.IRON)
+                    ));
+				
+				taskMappings.put(EnumConfigurationKey.INTEL_BOOL, List.of(
+                        () -> new IntelligenceTask(profile, TpDailyTaskEnum.INTEL)
                     ));
 				
 				taskMappings.put(EnumConfigurationKey.LIFE_ESSENCE_BOOL, List.of(
@@ -241,9 +247,9 @@ public class ServScheduler {
 							if (taskSchedules.containsKey(task.getTpDailyTaskId())) {
 								LocalDateTime nextSchedule = taskSchedules.get(task.getTpDailyTaskId()).getNextSchedule();
 								task.reschedule(nextSchedule);
-//								ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Next Exceution in: " + UtilTime.localDateTimeToDDHHMMSS(nextSchedule));
+								ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Next Exceution: " + nextSchedule);
 							} else {
-//								ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Task not completed, scheduling for today");
+								ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Task not completed, scheduling for today");
 								task.reschedule(LocalDateTime.now());
 							}
 
@@ -255,10 +261,11 @@ public class ServScheduler {
 				queueManager.startQueue(queueName);
 
 			});
-
+			
 			listeners.forEach(e -> {
 				DTOBotState state = new DTOBotState();
 				state.setRunning(true);
+				state.setPaused(false);
 				state.setActionTime(LocalDateTime.now());
 				e.onBotStateChange(state);
 			});
@@ -274,7 +281,6 @@ public class ServScheduler {
 		}
 		listeners.add(listener);
 	}
-
 	public void stopBot() {
 		queueManager.stopQueues();
 
@@ -291,6 +297,51 @@ public class ServScheduler {
 		listeners.forEach(e -> {
 			DTOBotState state = new DTOBotState();
 			state.setRunning(false);
+			state.setPaused(false);
+			state.setActionTime(LocalDateTime.now());
+			e.onBotStateChange(state);
+		});
+	}
+
+	public void pauseBot() {
+		queueManager.pauseQueues();
+
+		List<DTOProfiles> profiles = ServProfiles.getServices().getProfiles();
+
+		if (profiles == null || profiles.isEmpty()) {
+			return;
+		}
+
+		profiles.stream().forEach(profile -> {
+			ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "PAUSED"));
+		});
+
+		listeners.forEach(e -> {
+			DTOBotState state = new DTOBotState();
+			state.setRunning(true);
+			state.setPaused(true);
+			state.setActionTime(LocalDateTime.now());
+			e.onBotStateChange(state);
+		});
+	}
+
+	public void resumeBot() {
+		queueManager.resumeQueues();
+
+		List<DTOProfiles> profiles = ServProfiles.getServices().getProfiles();
+
+		if (profiles == null || profiles.isEmpty()) {
+			return;
+		}
+
+		profiles.stream().forEach(profile -> {
+			ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "RUNNING"));
+		});
+
+		listeners.forEach(e -> {
+			DTOBotState state = new DTOBotState();
+			state.setRunning(true);
+			state.setPaused(false);
 			state.setActionTime(LocalDateTime.now());
 			e.onBotStateChange(state);
 		});

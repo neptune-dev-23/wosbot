@@ -22,6 +22,7 @@ import cl.camodev.wosbot.serv.task.DelayedTask;
 import net.sourceforge.tess4j.TesseractException;
 
 public class IntelligenceTask extends DelayedTask {
+	boolean intelFound = false;
 
 	private final EmulatorManager emuManager = EmulatorManager.getInstance();
 
@@ -59,12 +60,16 @@ public class IntelligenceTask extends DelayedTask {
 				if (profile.getConfig(EnumConfigurationKey.INTEL_FIRE_BEAST_BOOL, Boolean.class)) {
 					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Searching for fire beasts");
 					if (searchAndProcessBeast(EnumTemplates.INTEL_FIRE_BEAST, 5)) {
-						this.reschedule(LocalDateTime.now().plusMinutes(3));
-						return;
+						//this.reschedule(LocalDateTime.now());
+						//return;
+						intelFound = true;
 					}
-
 				}
+			}
 
+			if (intelligence.isFound()) {
+				sleepTask(1000);
+				emuManager.tapAtPoint(EMULATOR_NUMBER, intelligence.getPoint());
 				if (profile.getConfig(EnumConfigurationKey.INTEL_BEASTS_BOOL, Boolean.class)) {
 					// @formatter:off
 					List<EnumTemplates> beastPriorities = Arrays.asList(
@@ -82,12 +87,18 @@ public class IntelligenceTask extends DelayedTask {
 					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Searching for beasts");
 					for (EnumTemplates beast : beastPriorities) {
 						if (searchAndProcessBeast(beast, 5)) {
-							this.reschedule(LocalDateTime.now().plusMinutes(3));
-							return;
+							//this.reschedule(LocalDateTime.now());
+							//return;
+							intelFound = true;
+							sleepTask(500);
 						}
 					}
 				}
+			}
 
+			if (intelligence.isFound()) {
+				sleepTask(1000);
+				emuManager.tapAtPoint(EMULATOR_NUMBER, intelligence.getPoint());
 				if (profile.getConfig(EnumConfigurationKey.INTEL_CAMP_BOOL, Boolean.class)) {
 					// @formatter:off
 					List<EnumTemplates> priorities = Arrays.asList(
@@ -105,13 +116,18 @@ public class IntelligenceTask extends DelayedTask {
 					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Searching for survivors");
 					for (EnumTemplates beast : priorities) {
 						if (searchAndProcessSurvivor(beast, 5)) {
-							this.reschedule(LocalDateTime.now());
-							return;
+							//this.reschedule(LocalDateTime.now());
+							//return;
+							intelFound = true;
 						}
 					}
 
 				}
+			}
 
+			if (intelligence.isFound()) {
+				sleepTask(1000);
+				emuManager.tapAtPoint(EMULATOR_NUMBER, intelligence.getPoint());
 				if (profile.getConfig(EnumConfigurationKey.INTEL_EXPLORATION_BOOL, Boolean.class)) {
 					// @formatter:off
 					List<EnumTemplates> priorities = Arrays.asList(
@@ -129,13 +145,17 @@ public class IntelligenceTask extends DelayedTask {
 					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Searching for explorations");
 					for (EnumTemplates beast : priorities) {
 						if (searchAndProcessExploration(beast, 5)) {
-							this.reschedule(LocalDateTime.now());
-							return;
+							//this.reschedule(LocalDateTime.now());
+							//return;
+							intelFound = true;
 						}
 					}
 
 				}
+			}
 
+			sleepTask(1000);
+			if(intelFound == false) {
 				try {
 					String rescheduleTime = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(120, 110), new DTOPoint(600, 146));
 					LocalDateTime reshchedule = parseAndAddTime(rescheduleTime);
@@ -146,7 +166,8 @@ public class IntelligenceTask extends DelayedTask {
 					this.reschedule(LocalDateTime.now());
 					e.printStackTrace();
 				}
-
+			} else {
+				this.reschedule(LocalDateTime.now());
 			}
 
 		} else {
@@ -173,18 +194,18 @@ public class IntelligenceTask extends DelayedTask {
 
 	private void processJourney(DTOImageSearchResult result) {
 		emuManager.tapAtPoint(EMULATOR_NUMBER, result.getPoint());
-		sleepTask(3000);
+		sleepTask(2000);
 
 		DTOImageSearchResult view = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_VIEW.getTemplate(), 0, 0, 720, 1280, 90);
 		if (view.isFound()) {
 			emuManager.tapAtPoint(EMULATOR_NUMBER, view.getPoint());
-			sleepTask(3000);
+			sleepTask(500);
 			DTOImageSearchResult explore = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_EXPLORE.getTemplate(), 0, 0, 720, 1280, 90);
 			if (explore.isFound()) {
 				emuManager.tapAtPoint(EMULATOR_NUMBER, explore.getPoint());
-				sleepTask(2000);
+				sleepTask(500);
 				emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(520, 1200));
-				sleepTask(20000);
+				sleepTask(1000);
 				emuManager.tapBackButton(EMULATOR_NUMBER);
 
 			}
@@ -209,12 +230,12 @@ public class IntelligenceTask extends DelayedTask {
 
 	private void processSurvivor(DTOImageSearchResult result) {
 		emuManager.tapAtPoint(EMULATOR_NUMBER, result.getPoint());
-		sleepTask(3000);
+		sleepTask(2000);
 
 		DTOImageSearchResult view = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_VIEW.getTemplate(), 0, 0, 720, 1280, 90);
 		if (view.isFound()) {
 			emuManager.tapAtPoint(EMULATOR_NUMBER, view.getPoint());
-			sleepTask(3000);
+			sleepTask(500);
 			DTOImageSearchResult rescue = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_RESCUE.getTemplate(), 0, 0, 720, 1280, 90);
 			if (rescue.isFound()) {
 				emuManager.tapAtPoint(EMULATOR_NUMBER, rescue.getPoint());
@@ -240,16 +261,18 @@ public class IntelligenceTask extends DelayedTask {
 
 	private void processBeast(DTOImageSearchResult beast) {
 		emuManager.tapAtPoint(EMULATOR_NUMBER, beast.getPoint());
-		sleepTask(3000);
+		sleepTask(2000);
 
 		DTOImageSearchResult view = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_VIEW.getTemplate(), 0, 0, 720, 1280, 90);
 		if (view.isFound()) {
 			emuManager.tapAtPoint(EMULATOR_NUMBER, view.getPoint());
-			sleepTask(3000);
+			sleepTask(500);
 			DTOImageSearchResult attack = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_ATTACK.getTemplate(), 0, 0, 720, 1280, 90);
 			if (attack.isFound()) {
 				emuManager.tapAtPoint(EMULATOR_NUMBER, attack.getPoint());
-				sleepTask(3000);
+				sleepTask(500);
+				emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(198, 1188)); // Click equalize
+				sleepTask(500);
 				DTOImageSearchResult rally = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_ATTACK_CONFIRM.getTemplate(), 0, 0, 720, 1280, 90);
 				if (rally.isFound()) {
 					emuManager.tapAtPoint(EMULATOR_NUMBER, rally.getPoint());

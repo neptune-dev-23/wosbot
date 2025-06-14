@@ -11,6 +11,7 @@ import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.serv.impl.ServLogs;
+import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 
 public class LifeEssenceTask extends DelayedTask {
@@ -49,7 +50,7 @@ public class LifeEssenceTask extends DelayedTask {
 			int claim = 0;
 			if (lifeEssenceMenu.isFound()) {
 				EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, lifeEssenceMenu.getPoint(), lifeEssenceMenu.getPoint());
-				sleepTask(5000);
+				sleepTask(3000);
 				emuManager.tapBackButton(EMULATOR_NUMBER);
 				emuManager.tapBackButton(EMULATOR_NUMBER);
 				servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Searching for life essence");
@@ -65,9 +66,12 @@ public class LifeEssenceTask extends DelayedTask {
 						break;
 					}
 				}
-				this.reschedule(LocalDateTime.now().plusHours(profile.getConfig(EnumConfigurationKey.LIFE_ESSENCE_OFFSET_INT, Integer.class)));
+				LocalDateTime nextSchedule = LocalDateTime.now().plusHours(profile.getConfig(EnumConfigurationKey.LIFE_ESSENCE_OFFSET_INT, Integer.class));
+				this.reschedule(nextSchedule);
+				ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, nextSchedule);
+				
 				emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(40, 30));
-				sleepTask(3000);
+				sleepTask(1000);
 
 			} else {
 				System.out.println("Life essence menu not found");

@@ -28,10 +28,21 @@ public class TaskQueueManager {
 			queue.start();
 		}
 	}
-
 	public void stopQueues() {
 		taskQueues.forEach((k, v) -> {
 			v.stop();
+		});
+	}
+
+	public void pauseQueues() {
+		taskQueues.forEach((k, v) -> {
+			v.pause();
+		});
+	}
+
+	public void resumeQueues() {
+		taskQueues.forEach((k, v) -> {
+			v.resume();
 		});
 	}
 

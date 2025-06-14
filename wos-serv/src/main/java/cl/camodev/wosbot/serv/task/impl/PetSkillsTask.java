@@ -72,7 +72,7 @@ public class PetSkillsTask extends DelayedTask {
 			if (petsResult.isFound()) {
 				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "button pets found, taping");
 				EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, petsResult.getPoint(), petsResult.getPoint());
-				sleepTask(5000);
+				sleepTask(1000);
 
 				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, petSkill.getPoint1(), petSkill.getPoint2());
 				sleepTask(300);
@@ -98,7 +98,7 @@ public class PetSkillsTask extends DelayedTask {
 				DTOImageSearchResult skillButton = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_SKILL_USE.getTemplate(), 0, 0, 720, 1280, 90);
 				if (skillButton.isFound()) {
 					EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, skillButton.getPoint(), skillButton.getPoint(), 10, 100);
-					sleepTask(2000);
+					sleepTask(500);
 				}
 
 				try {

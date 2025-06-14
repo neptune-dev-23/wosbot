@@ -15,6 +15,7 @@ import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.serv.impl.ServLogs;
+import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 import net.sourceforge.tess4j.TesseractException;
 
@@ -55,9 +56,9 @@ public class TrainingTroopsTask extends DelayedTask {
 
 			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "going training " + troopType);
 			EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(3, 513), new DTOPoint(26, 588));
-			sleepTask(2000);
-			EmulatorManager.getInstance().tapAtPoint(EMULATOR_NUMBER, new DTOPoint(110, 270));
 			sleepTask(1000);
+			EmulatorManager.getInstance().tapAtPoint(EMULATOR_NUMBER, new DTOPoint(110, 270));
+			sleepTask(500);
 
 			DTOImageSearchResult troopsResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, troopType.getTemplate(), 0, 0, 720, 1280, 90);
 
@@ -71,7 +72,7 @@ public class TrainingTroopsTask extends DelayedTask {
 
 				if (trainingResult.isFound()) {
 					EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, trainingResult.getPoint(), trainingResult.getPoint());
-					sleepTask(2000);
+					sleepTask(500);
 
 					EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(222, 157), new DTOPoint(504, 231), 10, 100);
 
@@ -80,18 +81,20 @@ public class TrainingTroopsTask extends DelayedTask {
 					if (trainingButtonResult.isFound()) {
 						ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Training available, taping");
 						EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, trainingButtonResult.getPoint(), trainingButtonResult.getPoint());
-						sleepTask(3000);
+						sleepTask(500);
 					}
 
 					ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "getting next training schedule");
 					Optional<LocalDateTime> optionalNextTime = extractNextTime();
 
 					if (optionalNextTime.isPresent()) {
-						this.reschedule(optionalNextTime.get());
+						LocalDateTime nextSchedule = optionalNextTime.get();
+						this.reschedule(nextSchedule);
+						ServScheduler.getServices().updateDailyTaskStatus(profile, TpDailyTaskEnum.TRAINING_TROOPS, nextSchedule);
 					}
 
 					EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
-					sleepTask(2000);
+					sleepTask(500);
 				}
 			} else {
 				ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, taskName, profile.getName(), "Troops not found");

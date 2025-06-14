@@ -20,13 +20,12 @@ public class LauncherActionController implements IBotStateListener {
 	public void stopBot() {
 		ServScheduler.getServices().stopBot();
 	}
-
 	public void pauseBot() {
-//		ServScheduler.getServices().pauseBot();
+		ServScheduler.getServices().pauseBot();
 	}
 
 	public void resumeBot() {
-
+		ServScheduler.getServices().resumeBot();
 	}
 
 	public void captureScreenshots() {
