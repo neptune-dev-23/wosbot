@@ -154,24 +154,20 @@ public class IntelligenceTask extends DelayedTask {
 				}
 			}
 
-			if (intelligence.isFound()) {
-				sleepTask(1000);
-				emuManager.tapAtPoint(EMULATOR_NUMBER, intelligence.getPoint());
-				sleepTask(500);
-				if(intelFound == false) {
-					try {
-						String rescheduleTime = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(120, 110), new DTOPoint(600, 146));
-						LocalDateTime reshchedule = parseAndAddTime(rescheduleTime);
-						this.reschedule(reshchedule);
-						emuManager.tapBackButton(EMULATOR_NUMBER);
-						ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, reshchedule);
-					} catch (IOException | TesseractException e) {
-						this.reschedule(LocalDateTime.now());
-						e.printStackTrace();
-					}
-				} else {
+			sleepTask(1000);
+			if(intelFound == false) {
+				try {
+					String rescheduleTime = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(120, 110), new DTOPoint(600, 146));
+					LocalDateTime reshchedule = parseAndAddTime(rescheduleTime);
+					this.reschedule(reshchedule);
+					emuManager.tapBackButton(EMULATOR_NUMBER);
+					ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, reshchedule);
+				} catch (IOException | TesseractException e) {
 					this.reschedule(LocalDateTime.now());
+					e.printStackTrace();
 				}
+			} else {
+				this.reschedule(LocalDateTime.now());
 			}
 
 		} else {
