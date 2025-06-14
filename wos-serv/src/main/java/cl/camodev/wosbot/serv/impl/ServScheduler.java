@@ -260,7 +260,9 @@ public class ServScheduler {
 
 				queueManager.startQueue(queueName);
 
-			});			listeners.forEach(e -> {
+			});
+			
+			listeners.forEach(e -> {
 				DTOBotState state = new DTOBotState();
 				state.setRunning(true);
 				state.setPaused(false);
