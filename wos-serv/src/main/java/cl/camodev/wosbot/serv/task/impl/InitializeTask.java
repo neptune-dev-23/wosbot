@@ -42,7 +42,7 @@ public class InitializeTask extends DelayedTask {
 
 			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "launching game");
 			EmulatorManager.getInstance().launchApp(EMULATOR_NUMBER, EmulatorManager.WHITEOUT_PACKAGE);
-			sleepTask(25000);
+			sleepTask(15000);
 
 			boolean homeScreen = false;
 			int attempts = 0;

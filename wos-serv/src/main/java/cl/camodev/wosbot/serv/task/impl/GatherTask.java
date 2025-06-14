@@ -1,7 +1,11 @@
 package cl.camodev.wosbot.serv.task.impl;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
+import cl.camodev.wosbot.almac.entity.DailyTask;
+import cl.camodev.wosbot.almac.repo.DailyTaskRepository;
+import cl.camodev.wosbot.almac.repo.IDailyTaskRepository;
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
@@ -63,6 +67,7 @@ public class GatherTask extends DelayedTask {
 	private final ServScheduler servScheduler = ServScheduler.getServices();
 	private final ServLogs servLogs = ServLogs.getServices();
 	private final EmulatorManager emuManager = EmulatorManager.getInstance();
+	private final IDailyTaskRepository iDailyTaskRepository = DailyTaskRepository.getRepository();
 
 	public GatherTask(DTOProfiles profile, TpDailyTaskEnum tpTask, GatherType gatherType) {
 		super(profile, tpTask);
@@ -71,6 +76,24 @@ public class GatherTask extends DelayedTask {
 
 	@Override
 	protected void execute() {
+		// Check if IntelligenceTask is not processed yet or reschedule time is lower than 10 minutes
+		if (profile.getConfig(EnumConfigurationKey.INTEL_BOOL, Boolean.class) && 
+			!isIntelligenceTaskReadyForGathering()) {
+			servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), 
+				"Waiting for IntelligenceTask to be processed or reschedule time to exceed 10 minutes");
+			reschedule(LocalDateTime.now().plusMinutes(2)); // Check again in 2 minutes
+			return;
+		}
+
+		// Check if GatherSpeedTask is not processed yet
+		if (profile.getConfig(EnumConfigurationKey.GATHER_SPEED_BOOL, Boolean.class) && 
+			!isGatherSpeedTaskReadyForGathering()) {
+			servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(),
+				"Waiting for GatherSpeedTask to be processed or reschedule time to exceed 5 minutes");
+			reschedule(LocalDateTime.now().plusMinutes(2)); // Check again in 2 minutes
+			return;
+		}
+
 		DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90);
 		DTOImageSearchResult worldResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 0, 0, 720, 1280, 90);
 
@@ -228,6 +251,92 @@ public class GatherTask extends DelayedTask {
 			}
 		}
 		return -1; // Retorna -1 si el punto no se encuentra en ninguno de los rangos
+	}
+
+	/**
+	 * Checks if IntelligenceTask is ready for gathering to start.
+	 * Returns true if IntelligenceTask has been processed or if its reschedule time is more than 10 minutes from now.
+	 * Returns false if IntelligenceTask is not processed yet or reschedule time is less than 10 minutes.
+	 */
+	private boolean isIntelligenceTaskReadyForGathering() {
+		try {
+			DailyTask intelligenceTask = iDailyTaskRepository.findByProfileIdAndTaskName(profile.getId(), TpDailyTaskEnum.INTEL);
+			
+			if (intelligenceTask == null) {
+				// IntelligenceTask has never been executed, so gathering should wait
+				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), 
+					"IntelligenceTask has never been executed, waiting");
+				return false;
+			}
+			
+			LocalDateTime nextSchedule = intelligenceTask.getNextSchedule();
+			if (nextSchedule == null) {
+				// If there's no next schedule, assume it's processed
+				return true;
+			}
+			
+			// Check if the next schedule is more than 10 minutes from now
+			long minutesUntilNextSchedule = ChronoUnit.MINUTES.between(LocalDateTime.now(), nextSchedule);
+			
+			if (minutesUntilNextSchedule > 10) {
+				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), 
+					"IntelligenceTask next schedule is in " + minutesUntilNextSchedule + " minutes, gathering can start");
+				return true;
+			} else {
+				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), 
+					"IntelligenceTask next schedule is in " + minutesUntilNextSchedule + " minutes, waiting");
+				return false;
+			}
+			
+		} catch (Exception e) {
+			servLogs.appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(), 
+				"Error checking IntelligenceTask status: " + e.getMessage());
+			// In case of error, allow gathering to proceed
+			return true;
+		}
+	}
+
+	/**
+	 * Checks if GatherSpeedTask is ready for gathering to start.
+	 * Returns true if GatherSpeedTask has been processed.
+	 * Returns false if GatherSpeedTask is not processed yet.
+	 */
+	private boolean isGatherSpeedTaskReadyForGathering() {
+		try {
+			DailyTask gatherSpeedTask = iDailyTaskRepository.findByProfileIdAndTaskName(profile.getId(), TpDailyTaskEnum.GATHER_SPEED);
+
+			if (gatherSpeedTask == null) {
+				// GatherSpeedTask has never been executed, so gathering should wait
+				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(),
+				"GatherSpeedTask has never been executed, waiting");
+				return false;
+			}
+
+			LocalDateTime nextSchedule = gatherSpeedTask.getNextSchedule();
+			if (nextSchedule == null) {
+				// If there's no next schedule, assume it's processed
+				return true;
+			}
+			
+			// Check if the next schedule is more than 10 minutes from now
+			long minutesUntilNextSchedule = ChronoUnit.MINUTES.between(LocalDateTime.now(), nextSchedule);
+			
+			if (minutesUntilNextSchedule > 5) {
+				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(),
+					"GatherSpeedTask next schedule is in " + minutesUntilNextSchedule + " minutes, gathering can start");
+				return true;
+			} else {
+				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(),
+					"GatherSpeedTask next schedule is in " + minutesUntilNextSchedule + " minutes, waiting");
+				return false;
+			}
+
+		} catch (Exception e) {
+			servLogs.appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(),
+				"Error checking GatherSpeedTask status: " + e.getMessage());
+			// In case of error, allow gathering to proceed
+			return true;
+		}
 	}
 
 	public static LocalDateTime parseRemaining(String timeStr) {
