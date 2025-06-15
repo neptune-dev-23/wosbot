@@ -22,7 +22,6 @@ import cl.camodev.wosbot.serv.task.DelayedTask;
 import net.sourceforge.tess4j.TesseractException;
 
 public class IntelligenceTask extends DelayedTask {
-	boolean intelFound = false;
 
 	private final EmulatorManager emuManager = EmulatorManager.getInstance();
 
@@ -35,6 +34,8 @@ public class IntelligenceTask extends DelayedTask {
 
 	@Override
 	protected void execute() {
+		boolean intelFound = false;
+
 		DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90);
 		DTOImageSearchResult worldResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 0, 0, 720, 1280, 90);
 
@@ -162,18 +163,20 @@ public class IntelligenceTask extends DelayedTask {
 					this.reschedule(reshchedule);
 					emuManager.tapBackButton(EMULATOR_NUMBER);
 					ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, reshchedule);
+					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "No intelligence tasks found, rescheduling to: " + reshchedule);
 				} catch (IOException | TesseractException e) {
-					this.reschedule(LocalDateTime.now());
+					this.reschedule(LocalDateTime.now().plusMinutes(5));
+					servLogs.appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(), "Error occurred while processing: " + e.getMessage());
 					e.printStackTrace();
 				}
 			} else {
 				this.reschedule(LocalDateTime.now());
+				servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Intelligence tasks completed, rescheduling now to check for new tasks.");
 			}
 
 		} else {
 			emuManager.tapBackButton(EMULATOR_NUMBER);
 			reschedule(LocalDateTime.now());
-
 		}
 
 	}
