@@ -162,18 +162,20 @@ public class IntelligenceTask extends DelayedTask {
 					this.reschedule(reshchedule);
 					emuManager.tapBackButton(EMULATOR_NUMBER);
 					ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, reshchedule);
+					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "No intelligence tasks found, rescheduling to: " + reshchedule);
 				} catch (IOException | TesseractException e) {
-					this.reschedule(LocalDateTime.now());
+					this.reschedule(LocalDateTime.now().plusMinutes(5));
+					servLogs.appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(), "Error occurred while processing: " + e.getMessage());
 					e.printStackTrace();
 				}
 			} else {
 				this.reschedule(LocalDateTime.now());
+				servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Intelligence tasks completed successfully.");
 			}
 
 		} else {
 			emuManager.tapBackButton(EMULATOR_NUMBER);
 			reschedule(LocalDateTime.now());
-
 		}
 
 	}
