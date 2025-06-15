@@ -171,7 +171,7 @@ public class IntelligenceTask extends DelayedTask {
 				}
 			} else {
 				this.reschedule(LocalDateTime.now());
-				servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Intelligence tasks completed successfully.");
+				servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Intelligence tasks completed, rescheduling now to check for new tasks.");
 			}
 
 		} else {
