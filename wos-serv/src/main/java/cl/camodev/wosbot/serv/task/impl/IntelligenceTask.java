@@ -22,7 +22,6 @@ import cl.camodev.wosbot.serv.task.DelayedTask;
 import net.sourceforge.tess4j.TesseractException;
 
 public class IntelligenceTask extends DelayedTask {
-	boolean intelFound = false;
 
 	private final EmulatorManager emuManager = EmulatorManager.getInstance();
 
@@ -35,6 +34,8 @@ public class IntelligenceTask extends DelayedTask {
 
 	@Override
 	protected void execute() {
+		boolean intelFound = false;
+
 		DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90);
 		DTOImageSearchResult worldResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 0, 0, 720, 1280, 90);
 
