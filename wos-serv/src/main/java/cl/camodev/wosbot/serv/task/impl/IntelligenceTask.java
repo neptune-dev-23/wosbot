@@ -22,11 +22,6 @@ import cl.camodev.wosbot.serv.task.DelayedTask;
 import net.sourceforge.tess4j.TesseractException;
 
 public class IntelligenceTask extends DelayedTask {
-	private boolean fireBeastsDone = false;
-	private boolean beastsDone = false;
-	private boolean survivorsDone = false;
-	private boolean explorationsDone = false;
-
 	private final EmulatorManager emuManager = EmulatorManager.getInstance();
 
 	private final ServLogs servLogs = ServLogs.getServices();
@@ -64,7 +59,7 @@ public class IntelligenceTask extends DelayedTask {
 				}
 			}
 
-			if (intelligence.isFound() && !fireBeastsDone) {
+			if (intelligence.isFound()) {
 				sleepTask(1000);
 				emuManager.tapAtPoint(EMULATOR_NUMBER, intelligence.getPoint());
 				if (profile.getConfig(EnumConfigurationKey.INTEL_FIRE_BEAST_BOOL, Boolean.class)) {
@@ -74,13 +69,11 @@ public class IntelligenceTask extends DelayedTask {
 						//return;
 						intelFound = true;
 						sleepTask(500);
-					} else {
-						fireBeastsDone = true;
 					}
 				}
 			}
 
-			if (intelligence.isFound() && !beastsDone) {
+			if (intelligence.isFound()) {
 				sleepTask(1000);
 				emuManager.tapAtPoint(EMULATOR_NUMBER, intelligence.getPoint());
 				if (profile.getConfig(EnumConfigurationKey.INTEL_BEASTS_BOOL, Boolean.class)) {
@@ -104,14 +97,12 @@ public class IntelligenceTask extends DelayedTask {
 							//return;
 							intelFound = true;
 							sleepTask(500);
-						} else {
-							beastsDone = true;
 						}
 					}
 				}
 			}
 
-			if (intelligence.isFound() && !survivorsDone) {
+			if (intelligence.isFound()) {
 				sleepTask(1000);
 				emuManager.tapAtPoint(EMULATOR_NUMBER, intelligence.getPoint());
 				if (profile.getConfig(EnumConfigurationKey.INTEL_CAMP_BOOL, Boolean.class)) {
@@ -135,15 +126,13 @@ public class IntelligenceTask extends DelayedTask {
 							//return;
 							intelFound = true;
 							sleepTask(500);
-						} else {
-							survivorsDone = true;
 						}
 					}
 
 				}
 			}
 
-			if (intelligence.isFound() && !explorationsDone) {
+			if (intelligence.isFound()) {
 				sleepTask(1000);
 				emuManager.tapAtPoint(EMULATOR_NUMBER, intelligence.getPoint());
 				if (profile.getConfig(EnumConfigurationKey.INTEL_EXPLORATION_BOOL, Boolean.class)) {
@@ -167,8 +156,6 @@ public class IntelligenceTask extends DelayedTask {
 							//return;
 							intelFound = true;
 							sleepTask(500);
-						} else {
-							explorationsDone = true;
 						}
 					}
 
@@ -178,10 +165,6 @@ public class IntelligenceTask extends DelayedTask {
 			sleepTask(1000);
 			if(intelFound == false) {
 				try {
-					fireBeastsDone = false;
-					beastsDone = false;
-					survivorsDone = false;
-					explorationsDone = false;
 					String rescheduleTime = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(120, 110), new DTOPoint(600, 146));
 					LocalDateTime reshchedule = parseAndAddTime(rescheduleTime);
 					this.reschedule(reshchedule);
