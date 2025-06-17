@@ -206,7 +206,7 @@ public class GatherTask extends DelayedTask {
 							if (march.isFound()) {
 								emuManager.tapBackButton(EMULATOR_NUMBER);
 								emuManager.tapBackButton(EMULATOR_NUMBER);
-								reschedule(LocalDateTime.now());
+								reschedule(LocalDateTime.now().minusHours(1)); // Reschedule to 1 hour ago to avoid skipping to the next resource until this one is done
 								servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "March already gathering");
 							} else {
 								servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "March started");
