@@ -39,9 +39,9 @@ import cl.camodev.wosbot.serv.task.impl.AllianceTechTask;
 import cl.camodev.wosbot.serv.task.impl.CrystalLaboratoryTask;
 import cl.camodev.wosbot.serv.task.impl.DailyStaminaTask;
 import cl.camodev.wosbot.serv.task.impl.ExplorationTask;
+import cl.camodev.wosbot.serv.task.impl.GatherSpeedTask;
 import cl.camodev.wosbot.serv.task.impl.GatherTask;
 import cl.camodev.wosbot.serv.task.impl.GatherTask.GatherType;
-import cl.camodev.wosbot.serv.task.impl.GatherSpeedTask;
 import cl.camodev.wosbot.serv.task.impl.HeroRecruitmentTask;
 import cl.camodev.wosbot.serv.task.impl.InitializeTask;
 import cl.camodev.wosbot.serv.task.impl.IntelligenceTask;
@@ -162,9 +162,9 @@ public class ServScheduler {
                 ));
 
 				taskMappings.put(EnumConfigurationKey.BOOL_TRAINING_TROOPS, List.of(
-				    () -> new TrainingTroopsTask(profile, TpDailyTaskEnum.TRAINING_TROOPS, TroopType.INFANTRY),
-				    () -> new TrainingTroopsTask(profile, TpDailyTaskEnum.TRAINING_TROOPS, TroopType.LANCER),
-				    () -> new TrainingTroopsTask(profile, TpDailyTaskEnum.TRAINING_TROOPS, TroopType.MARKSMAN)
+				    () -> new TrainingTroopsTask(profile, TpDailyTaskEnum.TRAINING_INFANTRY, TroopType.INFANTRY),
+				    () -> new TrainingTroopsTask(profile, TpDailyTaskEnum.TRAINING_LANCER, TroopType.LANCER),
+				    () -> new TrainingTroopsTask(profile, TpDailyTaskEnum.TRAINING_MARKSMAN, TroopType.MARKSMAN)
 				));
 
 				taskMappings.put(EnumConfigurationKey.ALLIANCE_PET_TREASURE_BOOL, List.of(

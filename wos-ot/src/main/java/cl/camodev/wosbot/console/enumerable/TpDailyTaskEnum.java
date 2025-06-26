@@ -10,19 +10,14 @@ public enum TpDailyTaskEnum {
 	VIP_POINTS(5, "VIP Points"),
 	PET_ADVENTURE(6, "Pet Adventure"),
 	EXPLORATION_CHEST(7, "Exploration Chest"),
-	ALLIANCE_TECH(8, "Alliance Tech"),
+
 	LIFE_ESSENCE(9, "Life Essence"),
-	ALLIANCE_PET_TREASURE(10, "Alliance Pet Treasure"),
-	ALLIANCE_CHESTS(11, "Alliance Chests"),
-	TRAINING_TROOPS(12, "Training"),
+	
+	
 	GATHER_RESOURCES(13, "Gathering"),
 	BANK(14, "Bank"),
 	BEAST_SLAY(15, "Beast Slay"),
-	PET_SKILL_STAMINA(16, "Pet Skill Stamina"),
-	PET_SKILL_FOOD(17, "Pet Skill Food"),
-	PET_SKILL_TREASURE(18, "Pet Skill Treasure"),
-	PET_SKILL_GATHERING(19, "Pet Skill Gathering"),
-	
+
 	GATHER_SPEED(20, "Gather Speed Boost"),
 	
 	MAIL_REWARDS(30, "Mail Rewards"),
@@ -31,8 +26,24 @@ public enum TpDailyTaskEnum {
 	INTEL(33, "Intel"),
 	STOREHOUSE_STAMINA(34, "Storehouse Stamina"),
 	
+	
 	ALLIANCE_AUTOJOIN(40, "Alliance Autojoin"),
 	ALLIANCE_HELP(41, "Alliance Help"),
+	ALLIANCE_TECH(42, "Alliance Tech"),
+	ALLIANCE_PET_TREASURE(43, "Alliance Pet Treasure"),
+	ALLIANCE_CHESTS(44, "Alliance Chests"),
+	
+	PET_SKILL_STAMINA(51, "Pet Skill Stamina"),
+	PET_SKILL_FOOD(52, "Pet Skill Food"),
+	PET_SKILL_TREASURE(53, "Pet Skill Treasure"),
+	PET_SKILL_GATHERING(54, "Pet Skill Gathering"),
+	
+	TRAINING_INFANTRY(61, "Training Infantry"),
+	TRAINING_LANCER(62, "Training Lancer"),
+	TRAINING_MARKSMAN(63, "Training Marksman"),
+	
+
+	
 	
 	INITIALIZE(100, "Initialize");
 	//@formatter:on

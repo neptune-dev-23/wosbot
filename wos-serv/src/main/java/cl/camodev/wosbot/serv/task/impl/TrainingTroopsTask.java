@@ -90,7 +90,7 @@ public class TrainingTroopsTask extends DelayedTask {
 					if (optionalNextTime.isPresent()) {
 						LocalDateTime nextSchedule = optionalNextTime.get();
 						this.reschedule(nextSchedule);
-						ServScheduler.getServices().updateDailyTaskStatus(profile, TpDailyTaskEnum.TRAINING_TROOPS, nextSchedule);
+						ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, nextSchedule);
 					}
 
 					EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
