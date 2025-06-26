@@ -163,7 +163,7 @@ public class TaskQueue {
 							formattedTime = LocalTime.ofSecondOfDay(minDelay).format(timeFormatter);
 						}
 
-						ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "Idling for " + formattedTime));
+						ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "Idling for " + formattedTime + "\nNext task: " + (taskQueue.isEmpty() ? "None" : taskQueue.peek().getTaskName())));
 						Thread.sleep(999);
 					} catch (InterruptedException e) {
 						Thread.currentThread().interrupt();
