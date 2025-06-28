@@ -6,6 +6,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
+import cl.camodev.utiles.UtilTime;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
@@ -122,8 +123,13 @@ public class OnlineRewardTask extends DelayedTask {
 						System.out.println("Next reward time: " + nextRewardTime);
 						servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Next reward time: " + nextRewardTime);
 						LocalDateTime nextReward = parseNextReward(nextRewardTime);
-						this.reschedule(nextReward.minusSeconds(5));
-						ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, nextReward.minusSeconds(5));
+						LocalDateTime reset = UtilTime.getGameReset();
+
+						LocalDateTime scheduledTime = nextReward.isAfter(reset) ? reset : nextReward.minusSeconds(5);
+
+						this.reschedule(scheduledTime);
+						ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, scheduledTime);
+
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
