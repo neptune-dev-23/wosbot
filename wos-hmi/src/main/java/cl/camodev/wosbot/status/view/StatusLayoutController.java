@@ -89,13 +89,6 @@ public class StatusLayoutController implements IProfileLoadListener {
     private TableColumn<ProfileTaskRow, String> colVip;
     @FXML
     private TableColumn<ProfileTaskRow, String> colWarAcademy;
-    
-    @FXML
-    private Label labelActiveProfiles;
-    @FXML
-    private Label labelTotalProfiles;
-    @FXML
-    private Label labelLastUpdated;
 
     private IDailyTaskRepository dailyTaskRepository = DailyTaskRepository.getRepository();
     private Timeline updateTimeline;
@@ -283,7 +276,6 @@ public class StatusLayoutController implements IProfileLoadListener {
             
             List<DTOProfiles> profiles = ServProfiles.getServices().getProfiles();
             if (profiles == null || profiles.isEmpty()) {
-                updateSummaryLabels(0, 0);
                 return;
             }
 
@@ -297,11 +289,7 @@ public class StatusLayoutController implements IProfileLoadListener {
                 profileData.add(row);
             }
             
-            updateSummaryLabels(activeProfiles, profiles.size());
             updateTaskOverview(profiles);
-            
-            // Update last updated time
-            labelLastUpdated.setText("Last Updated: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
         });
     }
 
@@ -362,11 +350,6 @@ public class StatusLayoutController implements IProfileLoadListener {
         }
         
         return "--";
-    }
-
-    private void updateSummaryLabels(int activeProfiles, int totalProfiles) {
-        labelActiveProfiles.setText("Active: " + activeProfiles);
-        labelTotalProfiles.setText("Total: " + totalProfiles);
     }
 
     private void updateTaskOverview(List<DTOProfiles> profiles) {
