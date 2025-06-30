@@ -315,15 +315,18 @@ public class GatherTask extends DelayedTask {
 			// Check if the next schedule is more than 10 minutes from now
 			long minutesUntilNextSchedule = ChronoUnit.MINUTES.between(LocalDateTime.now(), nextSchedule);
 			
-			if (minutesUntilNextSchedule > 5) {
-				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(),
-					"GatherSpeedTask next schedule is in " + minutesUntilNextSchedule + " minutes, gathering can start");
-				return true;
-			} else {
+			// FIX: Sometimes for whatever reason, ServScheduler doesn't update the next schedule correctly
+			// Due to this error, minutesUntilNextSchedule can be less than 0 even though task already run
+			// We will skip if its less than 0 to make sure gathering can start
+			if(minutesUntilNextSchedule > 0 && minutesUntilNextSchedule < 5) {
 				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(),
 					"GatherSpeedTask next schedule is in " + minutesUntilNextSchedule + " minutes, waiting");
 				return false;
-			}
+			} else {
+				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(),
+					"GatherSpeedTask next schedule is in " + minutesUntilNextSchedule + " minutes, gathering can start");
+				return true;
+			} else 
 
 		} catch (Exception e) {
 			servLogs.appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(),
