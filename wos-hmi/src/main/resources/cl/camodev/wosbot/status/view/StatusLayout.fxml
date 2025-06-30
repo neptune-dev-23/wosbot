@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+
+<GridPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="600.0" prefWidth="1200.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
+  <columnConstraints>
+    <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+  </columnConstraints>
+  <rowConstraints>
+    <RowConstraints maxHeight="50.0" minHeight="50.0" prefHeight="50.0" vgrow="NEVER" />
+    <RowConstraints maxHeight="1.7976931348623157E308" minHeight="10.0" prefHeight="550.0" vgrow="SOMETIMES" />
+  </rowConstraints>
+   <children>
+      <!-- Header Section -->
+      <HBox alignment="CENTER_LEFT" prefHeight="50.0" prefWidth="1200.0" style="-fx-background-color: #2a2a3d; -fx-padding: 15px;">
+         <children>
+            <Label text="Task Status Dashboard" styleClass="title" />
+            <Region HBox.hgrow="ALWAYS" />
+            <Label fx:id="labelActiveProfiles" text="Active: 0" style="-fx-text-fill: #4CAF50; -fx-font-size: 12px; -fx-font-weight: bold;" />
+            <Label text=" | " style="-fx-text-fill: #666; -fx-font-size: 12px;" />
+            <Label fx:id="labelTotalProfiles" text="Total: 0" style="-fx-text-fill: #ffa500; -fx-font-size: 12px; -fx-font-weight: bold;" />
+            <Label text=" | " style="-fx-text-fill: #666; -fx-font-size: 12px;" />
+            <Label fx:id="labelLastUpdated" text="Last Updated: --:--:--" style="-fx-text-fill: #ffa500; -fx-font-size: 12px;" />
+         </children>
+      </HBox>
+      
+      <!-- Content Section -->
+      <VBox spacing="10.0" style="-fx-background-color: #2a2a3d; -fx-padding: 15px;" GridPane.rowIndex="1">
+         <children>
+            <!-- Task Status Overview Grid -->
+            <GridPane fx:id="gridTaskOverview" hgap="10.0" vgap="10.0" style="-fx-background-color: #3a3a4d; -fx-border-color: #ffa500; -fx-border-width: 1px; -fx-border-radius: 5px; -fx-background-radius: 5px; -fx-padding: 15px;">
+               <!-- Task overview will be populated dynamically -->
+            </GridPane>
+            
+            <!-- Profile Status Table -->
+            <TableView fx:id="tableProfiles" prefHeight="450.0" VBox.vgrow="ALWAYS" 
+                      style="-fx-background-color: #3a3a4d; -fx-control-inner-background: #3a3a4d; -fx-selection-bar: #ffa500; -fx-selection-bar-non-focused: #cc8400;">
+               <columns>
+                  <TableColumn fx:id="colEmulator" prefWidth="60.0" text="Emu" />
+                  <TableColumn fx:id="colProfileName" prefWidth="120.0" text="Profile" />
+                  <TableColumn fx:id="colHeroRecruit" prefWidth="70.0" text="Heroes" />
+                  <TableColumn fx:id="colNomadicMerchant" prefWidth="70.0" text="Merchant" />
+                  <TableColumn fx:id="colWarAcademy" prefWidth="70.0" text="Academy" />
+                  <TableColumn fx:id="colCrystalLab" prefWidth="70.0" text="Crystal" />
+                  <TableColumn fx:id="colVip" prefWidth="70.0" text="VIP" />
+                  <TableColumn fx:id="colPetAdventure" prefWidth="70.0" text="PetAdv" />
+                  <TableColumn fx:id="colExploration" prefWidth="70.0" text="Explore" />
+                  <TableColumn fx:id="colAllianceTech" prefWidth="70.0" text="Tech" />
+                  <TableColumn fx:id="colLifeEssence" prefWidth="70.0" text="Essence" />
+                  <TableColumn fx:id="colPetTreasure" prefWidth="70.0" text="PetTreas" />
+                  <TableColumn fx:id="colAllianceChests" prefWidth="70.0" text="Chests" />
+                  <TableColumn fx:id="colTrainingTroops" prefWidth="70.0" text="Training" />
+                  <TableColumn fx:id="colGatherRes" prefWidth="70.0" text="Gather" />
+                  <TableColumn fx:id="colBank" prefWidth="70.0" text="Bank" />
+                  <TableColumn fx:id="colBeastSlay" prefWidth="70.0" text="Beast" />
+                  <TableColumn fx:id="colPetSkills" prefWidth="70.0" text="PetSkill" />
+                  <TableColumn fx:id="colGatherSpeed" prefWidth="70.0" text="Speed" />
+                  <TableColumn fx:id="colMailRewards" prefWidth="70.0" text="Mail" />
+                  <TableColumn fx:id="colOnlineRewards" prefWidth="70.0" text="Online" />
+                  <TableColumn fx:id="colIntel" prefWidth="70.0" text="Intel" />
+                  <TableColumn fx:id="colAllianceAutojoin" prefWidth="70.0" text="Autojoin" />
+                  <TableColumn fx:id="colAllianceHelp" prefWidth="70.0" text="Help" />
+               </columns>
+            </TableView>
+         </children>
+      </VBox>
+   </children>
+</GridPane>
