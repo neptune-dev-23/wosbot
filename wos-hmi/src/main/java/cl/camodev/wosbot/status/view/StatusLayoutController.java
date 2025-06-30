@@ -262,8 +262,8 @@ public class StatusLayoutController implements IProfileLoadListener {
     }
 
     private void setupAutoRefresh() {
-        // Update every 5 seconds
-        updateTimeline = new Timeline(new KeyFrame(Duration.seconds(5), e -> {
+        // Update every 30 seconds
+        updateTimeline = new Timeline(new KeyFrame(Duration.seconds(30), e -> {
             Platform.runLater(this::loadTaskStatuses);
         }));
         updateTimeline.setCycleCount(Timeline.INDEFINITE);
