@@ -231,10 +231,10 @@ public class StatusLayoutController implements IProfileLoadListener {
         };
 
         String[] taskNames = {
-            "Heroes", "Merchant", "Academy", "Crystal", "VIP", "PetAdv",
-            "Explore", "Tech", "Essence", "PetTreas", "Chests", "Training",
-            "Gather", "Bank", "Beast", "Speed", "Mail", "Online",
-            "Intel", "Autojoin", "Help"
+            "Hero Recruitment", "Nomadic Merchant", "War Academy Shards", "Crystal Laboratory", "VIP Points", "Pet Adventure",
+            "Exploration Chest", "Alliance Tech", "Life Essence", "Alliance Pet Treasure", "Alliance Chests", "Training Troops",
+            "Gather Resources", "Bank", "Beast Slay", "Gather Speed", "Mail Rewards", "Daily Tasks",
+            "Intel", "Alliance Autojoin", "Alliance Help"
         };
 
         // Add pet skills as a combined row
