@@ -24,30 +24,8 @@
       <TableView fx:id="tableProfiles" prefHeight="450.0" VBox.vgrow="ALWAYS" 
                   style="-fx-background-color: #3a3a4d; -fx-control-inner-background: #3a3a4d; -fx-selection-bar: #ffa500; -fx-selection-bar-non-focused: #cc8400;">
          <columns>
-            <TableColumn fx:id="colEmulator" prefWidth="60.0" text="Emu" />
-            <TableColumn fx:id="colProfileName" prefWidth="120.0" text="Profile" />
-            <TableColumn fx:id="colHeroRecruit" prefWidth="70.0" text="Heroes" />
-            <TableColumn fx:id="colNomadicMerchant" prefWidth="70.0" text="Merchant" />
-            <TableColumn fx:id="colWarAcademy" prefWidth="70.0" text="Academy" />
-            <TableColumn fx:id="colCrystalLab" prefWidth="70.0" text="Crystal" />
-            <TableColumn fx:id="colVip" prefWidth="70.0" text="VIP" />
-            <TableColumn fx:id="colPetAdventure" prefWidth="70.0" text="PetAdv" />
-            <TableColumn fx:id="colExploration" prefWidth="70.0" text="Explore" />
-            <TableColumn fx:id="colAllianceTech" prefWidth="70.0" text="Tech" />
-            <TableColumn fx:id="colLifeEssence" prefWidth="70.0" text="Essence" />
-            <TableColumn fx:id="colPetTreasure" prefWidth="70.0" text="PetTreas" />
-            <TableColumn fx:id="colAllianceChests" prefWidth="70.0" text="Chests" />
-            <TableColumn fx:id="colTrainingTroops" prefWidth="70.0" text="Training" />
-            <TableColumn fx:id="colGatherRes" prefWidth="70.0" text="Gather" />
-            <TableColumn fx:id="colBank" prefWidth="70.0" text="Bank" />
-            <TableColumn fx:id="colBeastSlay" prefWidth="70.0" text="Beast" />
-            <TableColumn fx:id="colPetSkills" prefWidth="70.0" text="PetSkill" />
-            <TableColumn fx:id="colGatherSpeed" prefWidth="70.0" text="Speed" />
-            <TableColumn fx:id="colMailRewards" prefWidth="70.0" text="Mail" />
-            <TableColumn fx:id="colOnlineRewards" prefWidth="70.0" text="Online" />
-            <TableColumn fx:id="colIntel" prefWidth="70.0" text="Intel" />
-            <TableColumn fx:id="colAllianceAutojoin" prefWidth="70.0" text="Autojoin" />
-            <TableColumn fx:id="colAllianceHelp" prefWidth="70.0" text="Help" />
+            <TableColumn fx:id="colTaskName" prefWidth="120.0" text="Task" />
+            <!-- Profile columns will be added dynamically -->
          </columns>
       </TableView>
    </children>

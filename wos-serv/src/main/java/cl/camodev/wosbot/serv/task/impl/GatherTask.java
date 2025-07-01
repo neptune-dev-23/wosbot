@@ -80,7 +80,7 @@ public class GatherTask extends DelayedTask {
 		long intelRemainingMinutes = isIntelligenceTaskReadyForGathering();
 		if (profile.getConfig(EnumConfigurationKey.INTEL_BOOL, Boolean.class) && intelRemainingMinutes > 0) {
 			servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), 
-				"Waiting for IntelligenceTask to be processed or reschedule time to exceed 60 minutes");
+				"Waiting for IntelligenceTask to be processed or reschedule time to exceed intel remaining minutes");
 			reschedule(LocalDateTime.now().plusMinutes(intelRemainingMinutes)); // Check again in intelRemaining minutes
 			return;
 		}
@@ -265,14 +265,16 @@ public class GatherTask extends DelayedTask {
 			if (intelligenceTask == null) {
 				// IntelligenceTask has never been executed, so gathering should wait
 				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), 
-					"IntelligenceTask has never been executed, waiting");
-				return (long) 0; // Allow gathering to proceed
+					"IntelligenceTask has never been executed, should wait");
+				return (long) 2; // Wait for 2 minutes
 			}
 			
 			LocalDateTime nextSchedule = intelligenceTask.getNextSchedule();
 			if (nextSchedule == null) {
-				// If there's no next schedule, assume it's processed
-				return (long) 0; // Allow gathering to proceed
+				// If there's no next schedule, check again in 5 minutes
+				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), 
+					"IntelligenceTask has no next schedule, should wait");
+				return (long) 2; // Wait for 2 minutes
 			}
 			
 			// Check if the next schedule is more than 60 minutes from now
@@ -284,14 +286,14 @@ public class GatherTask extends DelayedTask {
 				return (long) 0; // Allow gathering to proceed
 			} else {
 				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), 
-					"IntelligenceTask next schedule is in " + minutesUntilNextSchedule + " minutes, waiting");
-				return minutesUntilNextSchedule;
+					"IntelligenceTask next schedule is in " + minutesUntilNextSchedule + " minutes, should wait");
+				return minutesUntilNextSchedule; // Wait for the remaining minutes
 			}
 			
 		} catch (Exception e) {
 			servLogs.appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(), 
-				"Error checking IntelligenceTask status: " + e.getMessage());
-			return (long) 0; // Allow gathering to proceed
+				"Error checking IntelligenceTask status: " + e.getMessage() + ", should wait");
+				return (long) 2; // Wait for 2 minutes
 		}
 	}
 
@@ -302,14 +304,16 @@ public class GatherTask extends DelayedTask {
 			if (gatherSpeedTask == null) {
 				// GatherSpeedTask has never been executed, so gathering should wait
 				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(),
-				"GatherSpeedTask has never been executed, waiting");
+				"GatherSpeedTask has never been executed, should wait");
 				return false;
 			}
 
 			LocalDateTime nextSchedule = gatherSpeedTask.getNextSchedule();
 			if (nextSchedule == null) {
-				// If there's no next schedule, assume it's processed
-				return true;
+				// If there's no next schedule, check again in 5 minutes
+				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(),
+					"GatherSpeedTask has no next schedule, should wait");
+				return false;
 			}
 			
 			// Check if the next schedule is more than 10 minutes from now
@@ -320,7 +324,7 @@ public class GatherTask extends DelayedTask {
 			// We will skip if its less than 0 to make sure gathering can start
 			if(minutesUntilNextSchedule > 0 && minutesUntilNextSchedule < 5) {
 				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(),
-					"GatherSpeedTask next schedule is in " + minutesUntilNextSchedule + " minutes, waiting");
+					"GatherSpeedTask next schedule is in " + minutesUntilNextSchedule + " minutes, should wait");
 				return false;
 			} else {
 				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(),
@@ -330,9 +334,8 @@ public class GatherTask extends DelayedTask {
 
 		} catch (Exception e) {
 			servLogs.appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(),
-				"Error checking GatherSpeedTask status: " + e.getMessage());
-			// In case of error, allow gathering to proceed
-			return true;
+				"Error checking GatherSpeedTask status: " + e.getMessage() + ", should wait");
+			return false; // Wait for 2 minutes
 		}
 	}
 

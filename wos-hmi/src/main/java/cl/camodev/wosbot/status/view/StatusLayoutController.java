@@ -3,6 +3,8 @@ package cl.camodev.wosbot.status.view;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -39,60 +41,15 @@ public class StatusLayoutController implements IProfileLoadListener {
     private GridPane gridTaskOverview;
     
     @FXML
-    private TableView<ProfileTaskRow> tableProfiles;
+    private TableView<TaskStatusRow> tableProfiles;
     
     @FXML
-    private TableColumn<ProfileTaskRow, String> colProfileName;
-    @FXML
-    private TableColumn<ProfileTaskRow, String> colEmulator;
-    @FXML
-    private TableColumn<ProfileTaskRow, String> colIntel;
-    @FXML
-    private TableColumn<ProfileTaskRow, String> colGatherRes;
-    @FXML
-    private TableColumn<ProfileTaskRow, String> colAllianceHelp;
-    @FXML
-    private TableColumn<ProfileTaskRow, String> colAllianceChests;
-    @FXML
-    private TableColumn<ProfileTaskRow, String> colCrystalLab;
-    @FXML
-    private TableColumn<ProfileTaskRow, String> colHeroRecruit;
-    @FXML
-    private TableColumn<ProfileTaskRow, String> colLifeEssence;
-    @FXML
-    private TableColumn<ProfileTaskRow, String> colMailRewards;
-    @FXML
-    private TableColumn<ProfileTaskRow, String> colAllianceAutojoin;
-    @FXML
-    private TableColumn<ProfileTaskRow, String> colAllianceTech;
-    @FXML
-    private TableColumn<ProfileTaskRow, String> colBank;
-    @FXML
-    private TableColumn<ProfileTaskRow, String> colBeastSlay;
-    @FXML
-    private TableColumn<ProfileTaskRow, String> colExploration;
-    @FXML
-    private TableColumn<ProfileTaskRow, String> colGatherSpeed;
-    @FXML
-    private TableColumn<ProfileTaskRow, String> colNomadicMerchant;
-    @FXML
-    private TableColumn<ProfileTaskRow, String> colOnlineRewards;
-    @FXML
-    private TableColumn<ProfileTaskRow, String> colPetAdventure;
-    @FXML
-    private TableColumn<ProfileTaskRow, String> colPetTreasure;
-    @FXML
-    private TableColumn<ProfileTaskRow, String> colPetSkills;
-    @FXML
-    private TableColumn<ProfileTaskRow, String> colTrainingTroops;
-    @FXML
-    private TableColumn<ProfileTaskRow, String> colVip;
-    @FXML
-    private TableColumn<ProfileTaskRow, String> colWarAcademy;
+    private TableColumn<TaskStatusRow, String> colTaskName;
 
     private IDailyTaskRepository dailyTaskRepository = DailyTaskRepository.getRepository();
     private Timeline updateTimeline;
-    private ObservableList<ProfileTaskRow> profileData = FXCollections.observableArrayList();
+    private ObservableList<TaskStatusRow> taskData = FXCollections.observableArrayList();
+    private List<TableColumn<TaskStatusRow, String>> profileColumns = new ArrayList<>();
     
     @FXML
     private void initialize() {
@@ -102,162 +59,110 @@ public class StatusLayoutController implements IProfileLoadListener {
     }
 
     private void setupTable() {
-        // Set up table columns
-        colEmulator.setCellValueFactory(cellData -> cellData.getValue().emulatorProperty());
-        colProfileName.setCellValueFactory(cellData -> cellData.getValue().profileNameProperty());
-        colHeroRecruit.setCellValueFactory(cellData -> cellData.getValue().heroRecruitProperty());
-        colNomadicMerchant.setCellValueFactory(cellData -> cellData.getValue().nomadicMerchantProperty());
-        colWarAcademy.setCellValueFactory(cellData -> cellData.getValue().warAcademyProperty());
-        colCrystalLab.setCellValueFactory(cellData -> cellData.getValue().crystalLabProperty());
-        colVip.setCellValueFactory(cellData -> cellData.getValue().vipProperty());
-        colPetAdventure.setCellValueFactory(cellData -> cellData.getValue().petAdventureProperty());
-        colExploration.setCellValueFactory(cellData -> cellData.getValue().explorationProperty());
-        colAllianceTech.setCellValueFactory(cellData -> cellData.getValue().allianceTechProperty());
-        colLifeEssence.setCellValueFactory(cellData -> cellData.getValue().lifeEssenceProperty());
-        colPetTreasure.setCellValueFactory(cellData -> cellData.getValue().petTreasureProperty());
-        colAllianceChests.setCellValueFactory(cellData -> cellData.getValue().allianceChestsProperty());
-        colTrainingTroops.setCellValueFactory(cellData -> cellData.getValue().trainingTroopsProperty());
-        colGatherRes.setCellValueFactory(cellData -> cellData.getValue().gatherResProperty());
-        colBank.setCellValueFactory(cellData -> cellData.getValue().bankProperty());
-        colBeastSlay.setCellValueFactory(cellData -> cellData.getValue().beastSlayProperty());
-        colPetSkills.setCellValueFactory(cellData -> cellData.getValue().petSkillsProperty());
-        colGatherSpeed.setCellValueFactory(cellData -> cellData.getValue().gatherSpeedProperty());
-        colMailRewards.setCellValueFactory(cellData -> cellData.getValue().mailRewardsProperty());
-        colOnlineRewards.setCellValueFactory(cellData -> cellData.getValue().onlineRewardsProperty());
-        colIntel.setCellValueFactory(cellData -> cellData.getValue().intelProperty());
-        colAllianceAutojoin.setCellValueFactory(cellData -> cellData.getValue().allianceAutojoinProperty());
-        colAllianceHelp.setCellValueFactory(cellData -> cellData.getValue().allianceHelpProperty());
-
-        // Set up custom cell factories for styling
-        setupProfileColumns();
-        setupTaskColumns();
+        // Set up the task name column
+        colTaskName.setCellValueFactory(cellData -> cellData.getValue().taskNameProperty());
+        colTaskName.setCellFactory(column -> new TableCell<TaskStatusRow, String>() {
+            @Override
+            protected void updateItem(String taskName, boolean empty) {
+                super.updateItem(taskName, empty);
+                if (empty || taskName == null) {
+                    setText(null);
+                    setStyle("");
+                } else {
+                    setText(taskName);
+                    setAlignment(Pos.CENTER_LEFT);
+                    setStyle("-fx-text-fill: white; -fx-font-size: 12px; -fx-font-weight: bold;");
+                }
+            }
+        });
 
         // Set table data
-        tableProfiles.setItems(profileData);
+        tableProfiles.setItems(taskData);
         
-        // Style the table rows to show active/inactive profiles
+        // Create profile columns dynamically
+        createProfileColumns();
+        
+        // Set up row styling
         tableProfiles.setRowFactory(tv -> {
-            javafx.scene.control.TableRow<ProfileTaskRow> row = new javafx.scene.control.TableRow<>();
-            row.itemProperty().addListener((obs, oldItem, newItem) -> {
-                if (newItem != null) {
-                    if (newItem.getStatus().equals("ACTIVE")) {
-                        row.setStyle("-fx-background-color: #2a2a3d; -fx-text-fill: white;");
-                    } else {
-                        row.setStyle("-fx-background-color: #1a1a2e; -fx-text-fill: #888; -fx-opacity: 0.6;");
-                    }
-                }
-            });
+            javafx.scene.control.TableRow<TaskStatusRow> row = new javafx.scene.control.TableRow<>();
+            row.setStyle("-fx-background-color: #2a2a3d;");
             return row;
         });
     }
 
-    private void setupProfileColumns() {
-        // Emulator column styling (first column now)
-        colEmulator.setCellFactory(column -> new TableCell<ProfileTaskRow, String>() {
-            @Override
-            protected void updateItem(String emulator, boolean empty) {
-                super.updateItem(emulator, empty);
-                if (empty || emulator == null) {
-                    setText(null);
-                    setStyle("");
-                } else {
-                    setText(emulator);
-                    setAlignment(Pos.CENTER);
-                    setStyle("-fx-text-fill: white; -fx-font-size: 11px; -fx-font-weight: bold;");
-                }
-            }
-        });
-
-        // Profile name column styling
-        colProfileName.setCellFactory(column -> new TableCell<ProfileTaskRow, String>() {
-            @Override
-            protected void updateItem(String profileName, boolean empty) {
-                super.updateItem(profileName, empty);
-                if (empty || profileName == null) {
-                    setText(null);
-                    setStyle("");
-                } else {
-                    setText(profileName);
-                    setAlignment(Pos.CENTER_LEFT);
-                    if (profileName.contains("(INACTIVE)")) {
-                        setStyle("-fx-text-fill: #888; -fx-font-size: 12px; -fx-font-weight: normal;");
-                    } else {
-                        setStyle("-fx-text-fill: white; -fx-font-size: 12px; -fx-font-weight: bold;");
-                    }
-                }
-            }
-        });
-    }
-
-    private void setupTaskColumns() {
-        TableColumn<ProfileTaskRow, String>[] taskColumns = new TableColumn[]{
-            colHeroRecruit, colNomadicMerchant, colWarAcademy, colCrystalLab,
-            colVip, colPetAdventure, colExploration, colAllianceTech,
-            colLifeEssence, colPetTreasure, colAllianceChests, colTrainingTroops,
-            colGatherRes, colBank, colBeastSlay, colPetSkills,
-            colGatherSpeed, colMailRewards, colOnlineRewards, colIntel,
-            colAllianceAutojoin, colAllianceHelp
-        };
-
-        for (TableColumn<ProfileTaskRow, String> column : taskColumns) {
-            column.setCellFactory(col -> new TableCell<ProfileTaskRow, String>() {
-                @Override
-                protected void updateItem(String taskInfo, boolean empty) {
-                    super.updateItem(taskInfo, empty);
-                    if (empty || taskInfo == null) {
-                        setText(null);
-                        setStyle("");
-                    } else {
-                        setText(taskInfo);
-                        setAlignment(Pos.CENTER);
-                        
-                        // Enhanced color coding based on task status and timing
-                        String style = "-fx-font-size: 12px; -fx-font-weight: bold; ";
-                        
-                        if (taskInfo.equals("Ready")) {
-                            style += "-fx-text-fill: #4CAF50;"; // Green - ready to execute
-                        } else if (taskInfo.contains("Never") || taskInfo.equals("--")) {
-                            style += "-fx-text-fill: #757575; -fx-font-weight: normal;"; // Gray - never executed
-                        } else if (taskInfo.contains("ago")) {
-                            style += "-fx-text-fill: #ffc107;"; // Yellow - executed in past
-                        } else if (taskInfo.contains("m") || taskInfo.contains("h") || taskInfo.contains("d")) {
-                            // Time-based coloring for upcoming tasks
-                            String timeStr = taskInfo.replaceAll("[^0-9]", "");
-                            if (!timeStr.isEmpty()) {
-                                int timeValue = Integer.parseInt(timeStr);
-                                if (taskInfo.contains("m")) {
-                                    // Minutes
-                                    if (timeValue <= 30) {
-                                        style += "-fx-text-fill: #4CAF50;"; // Green - very soon (≤30m)
-                                    } else if (timeValue <= 120) {
-                                        style += "-fx-text-fill: #ffc107;"; // Orange - soon (≤2h)
+    private void createProfileColumns() {
+        // Clear existing profile columns
+        tableProfiles.getColumns().removeAll(profileColumns);
+        profileColumns.clear();
+        
+        // Get profiles and create columns
+        List<DTOProfiles> profiles = ServProfiles.getServices().getProfiles();
+        if (profiles != null) {
+            for (DTOProfiles profile : profiles) {
+                TableColumn<TaskStatusRow, String> column = new TableColumn<>(String.valueOf(profile.getEmulatorNumber()));
+                column.setPrefWidth(80.0);
+                
+                // Set cell value factory to get the status for this profile
+                final Long profileId = profile.getId();
+                column.setCellValueFactory(cellData -> {
+                    TaskStatusRow row = cellData.getValue();
+                    return new SimpleStringProperty(row.getStatusForProfile(profileId));
+                });
+                
+                // Set cell factory for styling
+                final boolean isActive = profile.getEnabled();
+                column.setCellFactory(col -> new TableCell<TaskStatusRow, String>() {
+                    @Override
+                    protected void updateItem(String taskInfo, boolean empty) {
+                        super.updateItem(taskInfo, empty);
+                        if (empty || taskInfo == null) {
+                            setText(null);
+                            setStyle("");
+                        } else {
+                            setText(taskInfo);
+                            setAlignment(Pos.CENTER);
+                            
+                            // Enhanced color coding based on task status and timing
+                            String style = "-fx-font-size: 12px; -fx-font-weight: bold; ";
+                            
+                            if (!isActive) {
+                                style += "-fx-text-fill: #888; -fx-opacity: 0.6;"; // Dim inactive profiles
+                            } else if (taskInfo.equals("Ready")) {
+                                style += "-fx-text-fill: #4CAF50;"; // Green - ready to execute
+                            } else if (taskInfo.contains("Never") || taskInfo.equals("--")) {
+                                style += "-fx-text-fill: #757575; -fx-font-weight: normal;"; // Gray - never executed
+                            } else if (taskInfo.contains("ago")) {
+                                style += "-fx-text-fill: #ffc107;"; // Yellow - executed in past
+                            } else if (taskInfo.contains("m") || taskInfo.contains("h") || taskInfo.contains("d")) {
+                                // Time-based coloring for upcoming tasks
+                                String timeStr = taskInfo.replaceAll("[^0-9]", "");
+                                if (!timeStr.isEmpty()) {
+                                    int timeValue = Integer.parseInt(timeStr);
+                                    if (taskInfo.contains("m")) {
+                                        // Minutes
+                                        if (timeValue <= 15) {
+                                            style += "-fx-text-fill: #4CAF50;"; // Green - very soon (≤15m)
+                                        } else {
+                                            style += "-fx-text-fill: #ffc107;"; // Orange - far
+                                        }
                                     } else {
-                                        style += "-fx-text-fill: #ff5722;"; // Red - far (>2h in minutes)
+                                        style += "-fx-text-fill: #ff9800;"; // Orange - far
                                     }
-                                } else if (taskInfo.contains("h")) {
-                                    // Hours
-                                    if (timeValue <= 2) {
-                                        style += "-fx-text-fill: #ffc107;"; // Orange - soon (≤2h)
-                                    } else if (timeValue <= 6) {
-                                        style += "-fx-text-fill: #ff9800;"; // Red-orange - moderate (≤6h)
-                                    } else {
-                                        style += "-fx-text-fill: #ff5722;"; // Red - far (>6h)
-                                    }
-                                } else if (taskInfo.contains("d")) {
-                                    // Days
-                                    style += "-fx-text-fill: #ff5722;"; // Red - very far (days)
+                                } else {
+                                    style += "-fx-text-fill: white;"; // Default white
                                 }
                             } else {
                                 style += "-fx-text-fill: white;"; // Default white
                             }
-                        } else {
-                            style += "-fx-text-fill: white;"; // Default white
+                            
+                            setStyle(style);
                         }
-                        
-                        setStyle(style);
                     }
-                }
-            });
+                });
+                
+                profileColumns.add(column);
+                tableProfiles.getColumns().add(column);
+            }
         }
     }
 
@@ -272,62 +177,64 @@ public class StatusLayoutController implements IProfileLoadListener {
 
     private void loadTaskStatuses() {
         Platform.runLater(() -> {
-            profileData.clear();
+            taskData.clear();
             
             List<DTOProfiles> profiles = ServProfiles.getServices().getProfiles();
             if (profiles == null || profiles.isEmpty()) {
                 return;
             }
 
-            int activeProfiles = 0;
-            for (DTOProfiles profile : profiles) {
-                if (profile.getEnabled()) {
-                    activeProfiles++;
-                }
-                
-                ProfileTaskRow row = createProfileTaskRow(profile);
-                profileData.add(row);
-            }
+            // Recreate profile columns
+            createProfileColumns();
+            
+            // Create task rows
+            createTaskRows(profiles);
             
             updateTaskOverview(profiles);
         });
     }
 
-    private ProfileTaskRow createProfileTaskRow(DTOProfiles profile) {
-        Map<Integer, DTODailyTaskStatus> taskStatuses = dailyTaskRepository.findDailyTasksStatusByProfile(profile.getId());
-        
-        ProfileTaskRow row = new ProfileTaskRow();
-        row.setProfileName(profile.getName() + (profile.getEnabled() ? "" : " (INACTIVE)"));
-        row.setEmulator("#" + profile.getEmulatorNumber());
-        row.setStatus(profile.getEnabled() ? "ACTIVE" : "INACTIVE"); // Keep for row styling
-        
-        // Set task statuses
-        row.setIntel(formatTaskStatus(taskStatuses.get(TpDailyTaskEnum.INTEL.getId())));
-        row.setGatherRes(formatTaskStatus(taskStatuses.get(TpDailyTaskEnum.GATHER_RESOURCES.getId())));
-        row.setAllianceHelp(formatTaskStatus(taskStatuses.get(TpDailyTaskEnum.ALLIANCE_HELP.getId())));
-        row.setAllianceChests(formatTaskStatus(taskStatuses.get(TpDailyTaskEnum.ALLIANCE_CHESTS.getId())));
-        row.setCrystalLab(formatTaskStatus(taskStatuses.get(TpDailyTaskEnum.CRYSTAL_LABORATORY.getId())));
-        row.setHeroRecruit(formatTaskStatus(taskStatuses.get(TpDailyTaskEnum.HERO_RECRUITMENT.getId())));
-        row.setLifeEssence(formatTaskStatus(taskStatuses.get(TpDailyTaskEnum.LIFE_ESSENCE.getId())));
-        row.setMailRewards(formatTaskStatus(taskStatuses.get(TpDailyTaskEnum.MAIL_REWARDS.getId())));
-        
-        // Additional task columns
-        row.setAllianceAutojoin(formatTaskStatus(taskStatuses.get(TpDailyTaskEnum.ALLIANCE_AUTOJOIN.getId())));
-        row.setAllianceTech(formatTaskStatus(taskStatuses.get(TpDailyTaskEnum.ALLIANCE_TECH.getId())));
-        row.setBank(formatTaskStatus(taskStatuses.get(TpDailyTaskEnum.BANK.getId())));
-        row.setBeastSlay(formatTaskStatus(taskStatuses.get(TpDailyTaskEnum.BEAST_SLAY.getId())));
-        row.setExploration(formatTaskStatus(taskStatuses.get(TpDailyTaskEnum.EXPLORATION_CHEST.getId())));
-        row.setGatherSpeed(formatTaskStatus(taskStatuses.get(TpDailyTaskEnum.GATHER_SPEED.getId())));
-        row.setNomadicMerchant(formatTaskStatus(taskStatuses.get(TpDailyTaskEnum.NOMADIC_MERCHANT.getId())));
-        row.setOnlineRewards(formatTaskStatus(taskStatuses.get(TpDailyTaskEnum.DAILY_TASKS.getId())));
-        row.setPetAdventure(formatTaskStatus(taskStatuses.get(TpDailyTaskEnum.PET_ADVENTURE.getId())));
-        row.setPetTreasure(formatTaskStatus(taskStatuses.get(TpDailyTaskEnum.ALLIANCE_PET_TREASURE.getId())));
-        row.setPetSkills(formatCombinedPetSkillsStatus(taskStatuses));
-        row.setTrainingTroops(formatTaskStatus(taskStatuses.get(TpDailyTaskEnum.TRAINING_TROOPS.getId())));
-        row.setVip(formatTaskStatus(taskStatuses.get(TpDailyTaskEnum.VIP_POINTS.getId())));
-        row.setWarAcademy(formatTaskStatus(taskStatuses.get(TpDailyTaskEnum.WAR_ACADEMY_SHARDS.getId())));
-        
-        return row;
+    private void createTaskRows(List<DTOProfiles> profiles) {
+        // Define tasks in enum order
+        TpDailyTaskEnum[] tasks = {
+            TpDailyTaskEnum.HERO_RECRUITMENT, TpDailyTaskEnum.NOMADIC_MERCHANT, TpDailyTaskEnum.WAR_ACADEMY_SHARDS,
+            TpDailyTaskEnum.CRYSTAL_LABORATORY, TpDailyTaskEnum.VIP_POINTS, TpDailyTaskEnum.PET_ADVENTURE,
+            TpDailyTaskEnum.EXPLORATION_CHEST, TpDailyTaskEnum.ALLIANCE_TECH, TpDailyTaskEnum.LIFE_ESSENCE,
+            TpDailyTaskEnum.ALLIANCE_PET_TREASURE, TpDailyTaskEnum.ALLIANCE_CHESTS, TpDailyTaskEnum.TRAINING_TROOPS,
+            TpDailyTaskEnum.GATHER_RESOURCES, TpDailyTaskEnum.BANK, TpDailyTaskEnum.BEAST_SLAY,
+            TpDailyTaskEnum.GATHER_SPEED, TpDailyTaskEnum.MAIL_REWARDS, TpDailyTaskEnum.DAILY_TASKS,
+            TpDailyTaskEnum.INTEL, TpDailyTaskEnum.ALLIANCE_AUTOJOIN, TpDailyTaskEnum.ALLIANCE_HELP
+        };
+
+        String[] taskNames = {
+            "Heroes", "Merchant", "Academy", "Crystal", "VIP", "PetAdv",
+            "Explore", "Tech", "Essence", "PetTreas", "Chests", "Training",
+            "Gather", "Bank", "Beast", "Speed", "Mail", "Online",
+            "Intel", "Autojoin", "Help"
+        };
+
+        // Add pet skills as a combined row
+        TaskStatusRow petSkillsRow = new TaskStatusRow("PetSkill");
+        for (DTOProfiles profile : profiles) {
+            Map<Integer, DTODailyTaskStatus> taskStatuses = dailyTaskRepository.findDailyTasksStatusByProfile(profile.getId());
+            String combinedStatus = formatCombinedPetSkillsStatus(taskStatuses);
+            petSkillsRow.setStatusForProfile(profile.getId(), combinedStatus);
+        }
+        taskData.add(petSkillsRow);
+
+        // Create rows for each task
+        for (int i = 0; i < tasks.length; i++) {
+            TaskStatusRow row = new TaskStatusRow(taskNames[i]);
+            
+            for (DTOProfiles profile : profiles) {
+                Map<Integer, DTODailyTaskStatus> taskStatuses = dailyTaskRepository.findDailyTasksStatusByProfile(profile.getId());
+                DTODailyTaskStatus taskStatus = taskStatuses.get(tasks[i].getId());
+                String formattedStatus = formatTaskStatus(taskStatus);
+                row.setStatusForProfile(profile.getId(), formattedStatus);
+            }
+            
+            taskData.add(row);
+        }
     }
 
     private String formatTaskStatus(DTODailyTaskStatus taskStatus) {
@@ -466,133 +373,24 @@ public class StatusLayoutController implements IProfileLoadListener {
     }
 
     // Inner class for table data
-    public static class ProfileTaskRow {
-        private final SimpleStringProperty profileName = new SimpleStringProperty();
-        private final SimpleStringProperty emulator = new SimpleStringProperty();
-        private final SimpleStringProperty status = new SimpleStringProperty();
-        private final SimpleStringProperty intel = new SimpleStringProperty();
-        private final SimpleStringProperty gatherRes = new SimpleStringProperty();
-        private final SimpleStringProperty allianceHelp = new SimpleStringProperty();
-        private final SimpleStringProperty allianceChests = new SimpleStringProperty();
-        private final SimpleStringProperty crystalLab = new SimpleStringProperty();
-        private final SimpleStringProperty heroRecruit = new SimpleStringProperty();
-        private final SimpleStringProperty lifeEssence = new SimpleStringProperty();
-        private final SimpleStringProperty mailRewards = new SimpleStringProperty();
-        private final SimpleStringProperty allianceAutojoin = new SimpleStringProperty();
-        private final SimpleStringProperty allianceTech = new SimpleStringProperty();
-        private final SimpleStringProperty bank = new SimpleStringProperty();
-        private final SimpleStringProperty beastSlay = new SimpleStringProperty();
-        private final SimpleStringProperty exploration = new SimpleStringProperty();
-        private final SimpleStringProperty gatherSpeed = new SimpleStringProperty();
-        private final SimpleStringProperty nomadicMerchant = new SimpleStringProperty();
-        private final SimpleStringProperty onlineRewards = new SimpleStringProperty();
-        private final SimpleStringProperty petAdventure = new SimpleStringProperty();
-        private final SimpleStringProperty petTreasure = new SimpleStringProperty();
-        private final SimpleStringProperty petSkills = new SimpleStringProperty();
-        private final SimpleStringProperty trainingTroops = new SimpleStringProperty();
-        private final SimpleStringProperty vip = new SimpleStringProperty();
-        private final SimpleStringProperty warAcademy = new SimpleStringProperty();
+    public static class TaskStatusRow {
+        private final SimpleStringProperty taskName = new SimpleStringProperty();
+        private final Map<Long, String> profileStatuses = new HashMap<>();
 
-        // Getters and setters
-        public String getProfileName() { return profileName.get(); }
-        public void setProfileName(String value) { profileName.set(value); }
-        public SimpleStringProperty profileNameProperty() { return profileName; }
+        public TaskStatusRow(String taskName) {
+            this.taskName.set(taskName);
+        }
 
-        public String getEmulator() { return emulator.get(); }
-        public void setEmulator(String value) { emulator.set(value); }
-        public SimpleStringProperty emulatorProperty() { return emulator; }
+        public String getTaskName() { return taskName.get(); }
+        public SimpleStringProperty taskNameProperty() { return taskName; }
 
-        public String getStatus() { return status.get(); }
-        public void setStatus(String value) { status.set(value); }
-        public SimpleStringProperty statusProperty() { return status; }
+        public void setStatusForProfile(Long profileId, String status) {
+            profileStatuses.put(profileId, status);
+        }
 
-        public String getIntel() { return intel.get(); }
-        public void setIntel(String value) { intel.set(value); }
-        public SimpleStringProperty intelProperty() { return intel; }
-
-        public String getGatherRes() { return gatherRes.get(); }
-        public void setGatherRes(String value) { gatherRes.set(value); }
-        public SimpleStringProperty gatherResProperty() { return gatherRes; }
-
-        public String getAllianceHelp() { return allianceHelp.get(); }
-        public void setAllianceHelp(String value) { allianceHelp.set(value); }
-        public SimpleStringProperty allianceHelpProperty() { return allianceHelp; }
-
-        public String getAllianceChests() { return allianceChests.get(); }
-        public void setAllianceChests(String value) { allianceChests.set(value); }
-        public SimpleStringProperty allianceChestsProperty() { return allianceChests; }
-
-        public String getCrystalLab() { return crystalLab.get(); }
-        public void setCrystalLab(String value) { crystalLab.set(value); }
-        public SimpleStringProperty crystalLabProperty() { return crystalLab; }
-
-        public String getHeroRecruit() { return heroRecruit.get(); }
-        public void setHeroRecruit(String value) { heroRecruit.set(value); }
-        public SimpleStringProperty heroRecruitProperty() { return heroRecruit; }
-
-        public String getLifeEssence() { return lifeEssence.get(); }
-        public void setLifeEssence(String value) { lifeEssence.set(value); }
-        public SimpleStringProperty lifeEssenceProperty() { return lifeEssence; }
-
-        public String getMailRewards() { return mailRewards.get(); }
-        public void setMailRewards(String value) { mailRewards.set(value); }
-        public SimpleStringProperty mailRewardsProperty() { return mailRewards; }
-
-        public String getAllianceAutojoin() { return allianceAutojoin.get(); }
-        public void setAllianceAutojoin(String value) { allianceAutojoin.set(value); }
-        public SimpleStringProperty allianceAutojoinProperty() { return allianceAutojoin; }
-
-        public String getAllianceTech() { return allianceTech.get(); }
-        public void setAllianceTech(String value) { allianceTech.set(value); }
-        public SimpleStringProperty allianceTechProperty() { return allianceTech; }
-
-        public String getBank() { return bank.get(); }
-        public void setBank(String value) { bank.set(value); }
-        public SimpleStringProperty bankProperty() { return bank; }
-
-        public String getBeastSlay() { return beastSlay.get(); }
-        public void setBeastSlay(String value) { beastSlay.set(value); }
-        public SimpleStringProperty beastSlayProperty() { return beastSlay; }
-
-        public String getExploration() { return exploration.get(); }
-        public void setExploration(String value) { exploration.set(value); }
-        public SimpleStringProperty explorationProperty() { return exploration; }
-
-        public String getGatherSpeed() { return gatherSpeed.get(); }
-        public void setGatherSpeed(String value) { gatherSpeed.set(value); }
-        public SimpleStringProperty gatherSpeedProperty() { return gatherSpeed; }
-
-        public String getNomadicMerchant() { return nomadicMerchant.get(); }
-        public void setNomadicMerchant(String value) { nomadicMerchant.set(value); }
-        public SimpleStringProperty nomadicMerchantProperty() { return nomadicMerchant; }
-
-        public String getOnlineRewards() { return onlineRewards.get(); }
-        public void setOnlineRewards(String value) { onlineRewards.set(value); }
-        public SimpleStringProperty onlineRewardsProperty() { return onlineRewards; }
-
-        public String getPetAdventure() { return petAdventure.get(); }
-        public void setPetAdventure(String value) { petAdventure.set(value); }
-        public SimpleStringProperty petAdventureProperty() { return petAdventure; }
-
-        public String getPetTreasure() { return petTreasure.get(); }
-        public void setPetTreasure(String value) { petTreasure.set(value); }
-        public SimpleStringProperty petTreasureProperty() { return petTreasure; }
-
-        public String getPetSkills() { return petSkills.get(); }
-        public void setPetSkills(String value) { petSkills.set(value); }
-        public SimpleStringProperty petSkillsProperty() { return petSkills; }
-
-        public String getTrainingTroops() { return trainingTroops.get(); }
-        public void setTrainingTroops(String value) { trainingTroops.set(value); }
-        public SimpleStringProperty trainingTroopsProperty() { return trainingTroops; }
-
-        public String getVip() { return vip.get(); }
-        public void setVip(String value) { vip.set(value); }
-        public SimpleStringProperty vipProperty() { return vip; }
-
-        public String getWarAcademy() { return warAcademy.get(); }
-        public void setWarAcademy(String value) { warAcademy.set(value); }
-        public SimpleStringProperty warAcademyProperty() { return warAcademy; }
+        public String getStatusForProfile(Long profileId) {
+            return profileStatuses.getOrDefault(profileId, "--");
+        }
     }
     
     private String formatCombinedPetSkillsStatus(Map<Integer, DTODailyTaskStatus> taskStatuses) {
