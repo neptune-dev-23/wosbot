@@ -326,7 +326,7 @@ public class GatherTask extends DelayedTask {
 				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(),
 					"GatherSpeedTask next schedule is in " + minutesUntilNextSchedule + " minutes, gathering can start");
 				return true;
-			} else 
+			} 
 
 		} catch (Exception e) {
 			servLogs.appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(),
