@@ -59,8 +59,11 @@ public class StatusLayoutController implements IProfileLoadListener {
     }
 
     private void setupTable() {
-        // Set up the task name column
+        // Set up the task name column with auto-sizing
         colTaskName.setCellValueFactory(cellData -> cellData.getValue().taskNameProperty());
+        colTaskName.setMinWidth(80.0);
+        colTaskName.setPrefWidth(120.0);
+        colTaskName.setMaxWidth(Double.MAX_VALUE);
         colTaskName.setCellFactory(column -> new TableCell<TaskStatusRow, String>() {
             @Override
             protected void updateItem(String taskName, boolean empty) {
@@ -71,7 +74,7 @@ public class StatusLayoutController implements IProfileLoadListener {
                 } else {
                     setText(taskName);
                     setAlignment(Pos.CENTER_LEFT);
-                    setStyle("-fx-text-fill: white; -fx-font-size: 12px; -fx-font-weight: bold;");
+                    setStyle("-fx-text-fill: white; -fx-font-size: 12px; -fx-font-weight: bold; -fx-padding: 4px 15px 4px 15px;");
                 }
             }
         });
@@ -79,13 +82,31 @@ public class StatusLayoutController implements IProfileLoadListener {
         // Set table data
         tableProfiles.setItems(taskData);
         
+        // Enable constrained resize to fill 100% width
+        tableProfiles.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        
         // Create profile columns dynamically
         createProfileColumns();
         
-        // Set up row styling
+        // Set up row styling with reduced height and alternating colors
         tableProfiles.setRowFactory(tv -> {
-            javafx.scene.control.TableRow<TaskStatusRow> row = new javafx.scene.control.TableRow<>();
-            row.setStyle("-fx-background-color: #2a2a3d;");
+            javafx.scene.control.TableRow<TaskStatusRow> row = new javafx.scene.control.TableRow<TaskStatusRow>() {
+                @Override
+                protected void updateItem(TaskStatusRow item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty || item == null) {
+                        setStyle("");
+                    } else {
+                        if (getIndex() % 2 == 0) {
+                            // Even rows - matches CSS .table-row-cell:even
+                            setStyle("-fx-background-color: #2a2a3d; -fx-padding: 0;");
+                        } else {
+                            // Odd rows - matches CSS .table-row-cell:odd
+                            setStyle("-fx-background-color: #3a3a4d; -fx-padding: 0;");
+                        }
+                    }
+                }
+            };
             return row;
         });
     }
@@ -100,7 +121,10 @@ public class StatusLayoutController implements IProfileLoadListener {
         if (profiles != null) {
             for (DTOProfiles profile : profiles) {
                 TableColumn<TaskStatusRow, String> column = new TableColumn<>(String.valueOf(profile.getEmulatorNumber()));
-                column.setPrefWidth(80.0);
+                // Make profile columns as small as possible while readable
+                column.setMinWidth(45.0);
+                column.setPrefWidth(50.0);
+                column.setMaxWidth(60.0);
                 
                 // Set cell value factory to get the status for this profile
                 final Long profileId = profile.getId();
@@ -123,7 +147,7 @@ public class StatusLayoutController implements IProfileLoadListener {
                             setAlignment(Pos.CENTER);
                             
                             // Enhanced color coding based on task status and timing
-                            String style = "-fx-font-size: 12px; -fx-font-weight: bold; ";
+                            String style = "-fx-font-size: 12px; -fx-font-weight: bold; -fx-padding: 1px 2px 1px 2px; ";
                             
                             if (!isActive) {
                                 style += "-fx-text-fill: #888; -fx-opacity: 0.6;"; // Dim inactive profiles
