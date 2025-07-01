@@ -238,7 +238,7 @@ public class StatusLayoutController implements IProfileLoadListener {
         };
 
         // Add pet skills as a combined row
-        TaskStatusRow petSkillsRow = new TaskStatusRow("PetSkill");
+        TaskStatusRow petSkillsRow = new TaskStatusRow("Pet Skills");
         for (DTOProfiles profile : profiles) {
             Map<Integer, DTODailyTaskStatus> taskStatuses = dailyTaskRepository.findDailyTasksStatusByProfile(profile.getId());
             String combinedStatus = formatCombinedPetSkillsStatus(taskStatuses);
