@@ -271,7 +271,7 @@ public class GatherTask extends DelayedTask {
 			
 			LocalDateTime nextSchedule = intelligenceTask.getNextSchedule();
 			if (nextSchedule == null) {
-				// If there's no next schedule, check again in 5 minutes
+				// If there's no next schedule, check again in 2 minutes
 				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), 
 					"IntelligenceTask has no next schedule, should wait");
 				return (long) 2; // Wait for 2 minutes
@@ -280,6 +280,12 @@ public class GatherTask extends DelayedTask {
 			// Check if the next schedule is more than 60 minutes from now
 			long minutesUntilNextSchedule = ChronoUnit.MINUTES.between(LocalDateTime.now(), nextSchedule);
 			
+			if (minutesUntilNextSchedule <= 0) {
+				// If the next schedule is in the past, check again in 2 minutes
+				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), 
+					"IntelligenceTask next schedule is in the past and will start soon, should wait");
+				return (long) 2; // Wait for 2 minutes
+			}
 			if (minutesUntilNextSchedule > 60) {
 				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), 
 					"IntelligenceTask next schedule is in " + minutesUntilNextSchedule + " minutes, gathering can start");
