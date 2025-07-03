@@ -237,27 +237,112 @@ public class StatusLayoutController implements IProfileLoadListener {
             "Intel", "Alliance Autojoin", "Alliance Help"
         };
 
-        // Add pet skills as a combined row
+        // Create task rows and sort by nearest execution time
+        List<TaskRowData> taskRowDataList = new ArrayList<>();
+        
+        // Add pet skills as a combined row for sorting
         TaskStatusRow petSkillsRow = new TaskStatusRow("Pet Skills");
+        long petSkillsNearestMinutes = Long.MAX_VALUE;
+        boolean petSkillsHasReady = false;
+        boolean petSkillsHasScheduled = false;
+        
         for (DTOProfiles profile : profiles) {
+            if (!profile.getEnabled()) continue; // Skip disabled profiles
+            
             Map<Integer, DTODailyTaskStatus> taskStatuses = dailyTaskRepository.findDailyTasksStatusByProfile(profile.getId());
             String combinedStatus = formatCombinedPetSkillsStatus(taskStatuses);
             petSkillsRow.setStatusForProfile(profile.getId(), combinedStatus);
+            
+            // Calculate pet skills execution time for sorting
+            TpDailyTaskEnum[] petSkillTasks = {
+                TpDailyTaskEnum.PET_SKILL_STAMINA, TpDailyTaskEnum.PET_SKILL_FOOD,
+                TpDailyTaskEnum.PET_SKILL_TREASURE, TpDailyTaskEnum.PET_SKILL_GATHERING
+            };
+            
+            for (TpDailyTaskEnum petSkillTask : petSkillTasks) {
+                DTODailyTaskStatus taskStatus = taskStatuses.get(petSkillTask.getId());
+                if (taskStatus != null && taskStatus.getNextSchedule() != null) {
+                    long minutesUntil = ChronoUnit.MINUTES.between(LocalDateTime.now(), taskStatus.getNextSchedule());
+                    if (minutesUntil <= 0) {
+                        petSkillsHasReady = true;
+                        petSkillsNearestMinutes = 0;
+                        break; // If any pet skill is ready, that's the best we can get
+                    } else if (!petSkillsHasReady) {
+                        petSkillsHasScheduled = true;
+                        petSkillsNearestMinutes = Math.min(petSkillsNearestMinutes, minutesUntil);
+                    }
+                }
+            }
         }
-        taskData.add(petSkillsRow);
-
-        // Create rows for each task
+        
+        if (!petSkillsHasReady && !petSkillsHasScheduled) {
+            petSkillsNearestMinutes = Long.MAX_VALUE;
+        }
+        
+        taskRowDataList.add(new TaskRowData(petSkillsRow, petSkillsNearestMinutes, petSkillsHasReady));
+        
+        // Add other tasks
         for (int i = 0; i < tasks.length; i++) {
             TaskStatusRow row = new TaskStatusRow(taskNames[i]);
+            long nearestMinutesUntilExecution = Long.MAX_VALUE;
+            boolean hasReadyTask = false;
+            boolean hasScheduledTask = false;
             
             for (DTOProfiles profile : profiles) {
+                if (!profile.getEnabled()) continue; // Skip disabled profiles
+                
                 Map<Integer, DTODailyTaskStatus> taskStatuses = dailyTaskRepository.findDailyTasksStatusByProfile(profile.getId());
                 DTODailyTaskStatus taskStatus = taskStatuses.get(tasks[i].getId());
                 String formattedStatus = formatTaskStatus(taskStatus);
                 row.setStatusForProfile(profile.getId(), formattedStatus);
+                
+                // Calculate actual minutes until execution based on the task status
+                if (taskStatus != null && taskStatus.getNextSchedule() != null) {
+                    long minutesUntil = ChronoUnit.MINUTES.between(LocalDateTime.now(), taskStatus.getNextSchedule());
+                    if (minutesUntil <= 0) {
+                        hasReadyTask = true;
+                        nearestMinutesUntilExecution = 0;
+                    } else if (!hasReadyTask) {
+                        hasScheduledTask = true;
+                        nearestMinutesUntilExecution = Math.min(nearestMinutesUntilExecution, minutesUntil);
+                    }
+                }
             }
             
-            taskData.add(row);
+            // If no scheduled tasks found, set to max value for "Never" tasks
+            if (!hasReadyTask && !hasScheduledTask) {
+                nearestMinutesUntilExecution = Long.MAX_VALUE;
+            }
+            
+            taskRowDataList.add(new TaskRowData(row, nearestMinutesUntilExecution, hasReadyTask));
+        }
+        
+        // Sort by nearest execution time (Ready tasks first, then by schedule time)
+        taskRowDataList.sort((a, b) -> {
+            // Ready tasks always come first
+            if (a.hasReadyTask && !b.hasReadyTask) return -1;
+            if (!a.hasReadyTask && b.hasReadyTask) return 1;
+            
+            // If both are ready or both are not ready, sort by minutes until execution
+            return Long.compare(a.nearestMinutesUntilExecution, b.nearestMinutesUntilExecution);
+        });
+        
+        // Add sorted rows to table
+        for (TaskRowData taskRowData : taskRowDataList) {
+            taskData.add(taskRowData.row);
+        }
+    }
+    
+    // Helper class to hold task row data with execution time for sorting
+    private static class TaskRowData {
+        final TaskStatusRow row;
+        final long nearestMinutesUntilExecution;
+        final boolean hasReadyTask;
+        
+        TaskRowData(TaskStatusRow row, long nearestMinutesUntilExecution, boolean hasReadyTask) {
+            this.row = row;
+            this.nearestMinutesUntilExecution = nearestMinutesUntilExecution;
+            this.hasReadyTask = hasReadyTask;
         }
     }
 
