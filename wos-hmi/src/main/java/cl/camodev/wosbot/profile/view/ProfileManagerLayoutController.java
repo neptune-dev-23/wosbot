@@ -23,7 +23,6 @@ import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
-import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
@@ -293,10 +292,7 @@ public class ProfileManagerLayoutController implements IProfileChangeObserver {
 		}
 
 		// Find the currently loaded profile to use as template
-		ProfileAux templateProfile = profiles.stream()
-			.filter(p -> p.getId().equals(loadedProfileId))
-			.findFirst()
-			.orElse(null);
+		ProfileAux templateProfile = profiles.stream().filter(p -> p.getId().equals(loadedProfileId)).findFirst().orElse(null);
 
 		if (templateProfile == null) {
 			Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -311,8 +307,7 @@ public class ProfileManagerLayoutController implements IProfileChangeObserver {
 		Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
 		confirmAlert.setTitle("CONFIRM BULK UPDATE");
 		confirmAlert.setHeaderText("Bulk Update All Profiles");
-		confirmAlert.setContentText("This will apply the current settings from profile '" + 
-			templateProfile.getName() + "' to ALL profiles. This action cannot be undone. Continue?");
+		confirmAlert.setContentText("This will apply the current settings from profile '" + templateProfile.getName() + "' to ALL profiles. This action cannot be undone. Continue?");
 
 		if (confirmAlert.showAndWait().orElse(null) != ButtonType.OK) {
 			return;
@@ -326,8 +321,7 @@ public class ProfileManagerLayoutController implements IProfileChangeObserver {
 			resultAlert = new Alert(Alert.AlertType.INFORMATION);
 			resultAlert.setTitle("SUCCESS");
 			resultAlert.setHeaderText(null);
-			resultAlert.setContentText("All profiles have been updated successfully with settings from '" + 
-				templateProfile.getName() + "'.");
+			resultAlert.setContentText("All profiles have been updated successfully with settings from '" + templateProfile.getName() + "'.");
 			loadProfiles(); // Refresh the profiles
 		} else {
 			resultAlert = new Alert(Alert.AlertType.ERROR);
@@ -343,7 +337,7 @@ public class ProfileManagerLayoutController implements IProfileChangeObserver {
 			Platform.runLater(() -> {
 				profiles.clear();
 				dtoProfiles.forEach(dtoProfile -> {
-					ProfileAux profileAux = new ProfileAux(dtoProfile.getId(), dtoProfile.getName(), dtoProfile.getEmulatorNumber(), dtoProfile.getEnabled(), dtoProfile.getStatus());
+					ProfileAux profileAux = new ProfileAux(dtoProfile.getId(), dtoProfile.getName(), dtoProfile.getEmulatorNumber(), dtoProfile.getEnabled(), "NOT RUNNING");
 					dtoProfile.getConfigs().forEach(config -> {
 						profileAux.getConfigs().add(new ConfigAux(config.getNombreConfiguracion(), config.getValor()));
 					});

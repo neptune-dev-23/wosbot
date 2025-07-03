@@ -82,7 +82,7 @@ public class TaskQueue {
 				// Check if paused and skip execution if so
 				if (paused) {
 					try {
-						ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "Paused"));
+						ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "PAUSED"));
 						Thread.sleep(1000); // Wait 1 second while paused
 						continue;
 					} catch (InterruptedException e) {
@@ -216,7 +216,7 @@ public class TaskQueue {
 
 		// Eliminar todas las tareas pendientes en la cola
 		taskQueue.clear();
-
+		ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "NOT RUNNING "));
 		System.out.println("TaskQueue detenida de inmediato.");
 	}
 
@@ -225,6 +225,7 @@ public class TaskQueue {
 	 */
 	public void pause() {
 		paused = true;
+		ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "PAUSE REQUESTED"));
 		System.out.println("TaskQueue pausada.");
 	}
 
