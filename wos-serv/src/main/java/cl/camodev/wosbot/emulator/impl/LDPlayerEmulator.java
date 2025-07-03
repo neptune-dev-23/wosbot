@@ -26,6 +26,8 @@ public class LDPlayerEmulator extends Emulator {
 	public LDPlayerEmulator(String consolePath) {
 		super(consolePath);
 		if (bridge == null) {
+			AndroidDebugBridge.disconnectBridge(5000, TimeUnit.MILLISECONDS);
+			AndroidDebugBridge.terminate();
 			AndroidDebugBridge.init(false);
 			bridge = AndroidDebugBridge.createBridge(consolePath + File.separator + "adb.exe", false, 5000, TimeUnit.MILLISECONDS);
 		}
@@ -39,8 +41,7 @@ public class LDPlayerEmulator extends Emulator {
 		// Inicializa ddmlib
 		AndroidDebugBridge.init(false);
 		// Fuerza un servidor limpio
-		bridge = AndroidDebugBridge.createBridge(consolePath + File.separator + "adb.exe", false, // forceNewBridge = true
-				5000, TimeUnit.MILLISECONDS);
+		bridge = AndroidDebugBridge.createBridge(consolePath + File.separator + "adb.exe", true, 5000, TimeUnit.MILLISECONDS);
 	}
 
 	@Override
@@ -216,8 +217,9 @@ public class LDPlayerEmulator extends Emulator {
 
 				if (targetDevice == null) {
 					System.out.println("❌ No se encontró el dispositivo con serial: " + targetSerial);
-					restartAdb();
-					Thread.sleep(retryDelay);
+					closeEmulator(emulatorNumber);
+					Thread.sleep(retryDelay * 10);
+					launchEmulator(emulatorNumber);
 					continue;
 				}
 
