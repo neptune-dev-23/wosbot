@@ -9,38 +9,42 @@ import cl.camodev.wosbot.serv.impl.ServLogs;
 
 public class TaskQueueManager {
 
-	private final Map<String, TaskQueue> taskQueues = new HashMap<>();
+	private final Map<Long, TaskQueue> taskQueues = new HashMap<>();
 
 	public void createQueue(DTOProfiles profile) {
-		if (!taskQueues.containsKey(profile.getName())) {
-			taskQueues.put(profile.getName(), new TaskQueue(profile));
+		if (!taskQueues.containsKey(profile.getId())) {
+			taskQueues.put(profile.getId(), new TaskQueue(profile));
 		}
 	}
 
-	public TaskQueue getQueue(String queueName) {
+	public TaskQueue getQueue(Long queueName) {
 		return taskQueues.get(queueName);
 	}
 
-	public void startQueue(String queueName) {
-		TaskQueue queue = taskQueues.get(queueName);
-		if (queue != null) {
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueueManager", queueName, "Starting queue for profile");
-			queue.start();
-		}
-	}
-	public void stopQueues() {
+	public void startQueues() {
+		ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueueManager", "-", "Starting queues");
 		taskQueues.forEach((k, v) -> {
-			v.stop();
+			v.start();
 		});
 	}
 
+	public void stopQueues() {
+		ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueueManager", "-", "Stopping queues");
+		taskQueues.forEach((k, v) -> {
+			v.stop();
+		});
+		taskQueues.clear();
+	}
+
 	public void pauseQueues() {
+		ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueueManager", "-", "Pausing queues");
 		taskQueues.forEach((k, v) -> {
 			v.pause();
 		});
 	}
 
 	public void resumeQueues() {
+		ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueueManager", "-", "Resuming queues");
 		taskQueues.forEach((k, v) -> {
 			v.resume();
 		});

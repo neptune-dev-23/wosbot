@@ -1,6 +1,7 @@
 package cl.camodev.wosbot.serv.impl;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -26,7 +27,6 @@ import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.emulator.EmulatorManager;
 import cl.camodev.wosbot.ot.DTOBotState;
 import cl.camodev.wosbot.ot.DTODailyTaskStatus;
-import cl.camodev.wosbot.ot.DTOProfileStatus;
 import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.serv.IBotStateListener;
 import cl.camodev.wosbot.serv.task.DelayedTask;
@@ -111,10 +111,9 @@ public class ServScheduler {
 		} else {
 			profiles.stream().filter(DTOProfiles::getEnabled).sorted(Comparator.comparing(DTOProfiles::getId)).forEach(profile -> {
 				profile.setGlobalSettings(globalsettings);
-				String queueName = profile.getName();
 				ServLogs.getServices().appendLog(EnumTpMessageSeverity.DEBUG, "ServScheduler", "-", "starting queue ");
 				queueManager.createQueue(profile);
-				TaskQueue queue = queueManager.getQueue(queueName);
+				TaskQueue queue = queueManager.getQueue(profile.getId());
 				queue.addTask(new InitializeTask(profile, TpDailyTaskEnum.INITIALIZE));
 
 				//@formatter:off
@@ -247,7 +246,8 @@ public class ServScheduler {
 							if (taskSchedules.containsKey(task.getTpDailyTaskId())) {
 								LocalDateTime nextSchedule = taskSchedules.get(task.getTpDailyTaskId()).getNextSchedule();
 								task.reschedule(nextSchedule);
-								ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Next Exceution: " + nextSchedule);
+								ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Next Execution: " + nextSchedule.format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss")));
+
 							} else {
 								ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Task not completed, scheduling for today");
 								task.reschedule(LocalDateTime.now());
@@ -258,9 +258,9 @@ public class ServScheduler {
 					}
 				});
 
-				queueManager.startQueue(queueName);
-
 			});
+
+			queueManager.startQueues();
 
 			listeners.forEach(e -> {
 				DTOBotState state = new DTOBotState();
@@ -308,16 +308,6 @@ public class ServScheduler {
 
 	public void resumeBot() {
 		queueManager.resumeQueues();
-
-		List<DTOProfiles> profiles = ServProfiles.getServices().getProfiles();
-
-		if (profiles == null || profiles.isEmpty()) {
-			return;
-		}
-
-		profiles.stream().forEach(profile -> {
-			ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "RUNNING"));
-		});
 
 		listeners.forEach(e -> {
 			DTOBotState state = new DTOBotState();

@@ -43,6 +43,7 @@ public class EmulatorManager {
 	}
 
 	public void initialze() {
+		resetQueueState();
 		HashMap<String, String> globalConfig = ServConfig.getServices().getGlobalConfig();
 
 		if (globalConfig == null || globalConfig.isEmpty()) {
@@ -254,6 +255,16 @@ public class EmulatorManager {
 			pos++;
 		}
 		return pos;
+	}
+
+	public void resetQueueState() {
+		lock.lock();
+		try {
+			waitingQueue.clear();
+			permitsAvailable.signalAll();
+		} finally {
+			lock.unlock();
+		}
 	}
 
 }

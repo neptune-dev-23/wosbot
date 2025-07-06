@@ -38,7 +38,7 @@ public class TaskQueue {
 	});
 	// Bandera para detener el loop del scheduler.
 	private volatile boolean running = false;
-	
+
 	// Bandera para pausar/reanudar el scheduler.
 	private volatile boolean paused = false;
 
@@ -198,6 +198,7 @@ public class TaskQueue {
 		}
 		addTask(new InitializeTask(profile, TpDailyTaskEnum.INITIALIZE));
 	}
+
 	/**
 	 * Detiene inmediatamente el procesamiento de la cola, sin importar en qué estado esté.
 	 */
@@ -234,6 +235,7 @@ public class TaskQueue {
 	 */
 	public void resume() {
 		paused = false;
+		ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "RESUMING"));
 		System.out.println("TaskQueue reanudada.");
 	}
 
