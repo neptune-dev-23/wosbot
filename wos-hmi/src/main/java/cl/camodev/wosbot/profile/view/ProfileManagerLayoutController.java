@@ -2,6 +2,8 @@ package cl.camodev.wosbot.profile.view;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
@@ -65,6 +67,7 @@ public class ProfileManagerLayoutController implements IProfileChangeObserver {
 	private Long loadedProfileId;
 
 	private List<IProfileLoadListener> profileLoadListeners;
+	private final ExecutorService profileQueueExecutor = Executors.newSingleThreadExecutor();
 
 	@FXML
 	private void initialize() {
@@ -91,7 +94,7 @@ public class ProfileManagerLayoutController implements IProfileChangeObserver {
 				return new TableCell<ProfileAux, Void>() {
 					private final Button btnDelete = new Button();
 					private final Button btnLoad = new Button();
-					private final Button btnSave = new Button();
+//					private final Button btnSave = new Button();
 
 					// Método para cargar un icono desde los recursos
 					private ImageView loadIcon(String path) {
@@ -106,16 +109,16 @@ public class ProfileManagerLayoutController implements IProfileChangeObserver {
 						// Asignar iconos a los botones
 						btnDelete.setGraphic(loadIcon("/icons/buttons/delete.png"));
 						btnLoad.setGraphic(loadIcon("/icons/buttons/load.png"));
-						btnSave.setGraphic(loadIcon("/icons/buttons/save.png"));
+//						btnSave.setGraphic(loadIcon("/icons/buttons/save.png"));
 
 						// Configurar el tamaño de los botones (sin texto)
 						btnDelete.setPrefSize(30, 30);
 						btnLoad.setPrefSize(30, 30);
-						btnSave.setPrefSize(30, 30);
+//						btnSave.setPrefSize(30, 30);
 
 						btnDelete.setStyle("-fx-background-color: transparent; -fx-border-color: transparent;");
 						btnLoad.setStyle("-fx-background-color: transparent; -fx-border-color: transparent;");
-						btnSave.setStyle("-fx-background-color: transparent; -fx-border-color: transparent;");
+//						btnSave.setStyle("-fx-background-color: transparent; -fx-border-color: transparent;");
 
 						// Acción para el botón Delete
 						btnDelete.setOnAction((ActionEvent event) -> {
@@ -158,27 +161,27 @@ public class ProfileManagerLayoutController implements IProfileChangeObserver {
 						});
 
 						// Acción para el botón Save
-						btnSave.setOnAction((ActionEvent event) -> {
-							ProfileAux currentProfile = getTableView().getItems().get(getIndex());
-							System.out.println("Guardando perfil con ID: " + currentProfile.getId());
-							boolean saved = profileManagerActionController.saveProfile(currentProfile);
-
-							Alert alert;
-							if (saved) {
-								alert = new Alert(Alert.AlertType.INFORMATION);
-								alert.setTitle("SUCCESS UPDATE");
-								alert.setHeaderText(null);
-								alert.setContentText("Profile updated successfully.");
-								loadProfiles();
-							} else {
-								alert = new Alert(Alert.AlertType.ERROR);
-								alert.setTitle("ERROR UPDATE");
-								alert.setHeaderText(null);
-								alert.setContentText("Error updating profile.");
-
-							}
-							alert.showAndWait();
-						});
+//						btnSave.setOnAction((ActionEvent event) -> {
+//							ProfileAux currentProfile = getTableView().getItems().get(getIndex());
+//							System.out.println("Guardando perfil con ID: " + currentProfile.getId());
+//							boolean saved = profileManagerActionController.saveProfile(currentProfile);
+//
+//							Alert alert;
+//							if (saved) {
+//								alert = new Alert(Alert.AlertType.INFORMATION);
+//								alert.setTitle("SUCCESS UPDATE");
+//								alert.setHeaderText(null);
+//								alert.setContentText("Profile updated successfully.");
+//								loadProfiles();
+//							} else {
+//								alert = new Alert(Alert.AlertType.ERROR);
+//								alert.setTitle("ERROR UPDATE");
+//								alert.setHeaderText(null);
+//								alert.setContentText("Error updating profile.");
+//
+//							}
+//							alert.showAndWait();
+//						});
 					}
 
 					@Override
@@ -187,7 +190,7 @@ public class ProfileManagerLayoutController implements IProfileChangeObserver {
 						if (empty) {
 							setGraphic(null);
 						} else {
-							HBox buttonContainer = new HBox(5, btnLoad, btnSave, btnDelete);
+							HBox buttonContainer = new HBox(5, btnLoad/* , btnSave */, btnDelete);
 							setGraphic(buttonContainer);
 						}
 					}
@@ -390,7 +393,9 @@ public class ProfileManagerLayoutController implements IProfileChangeObserver {
 			}
 
 			loadedProfile.setConfig(key, value);
-			profileManagerActionController.saveProfile(loadedProfile);
+			profileQueueExecutor.submit(() -> {
+				profileManagerActionController.saveProfile(loadedProfile);
+			});
 
 		} catch (Exception e) {
 			e.printStackTrace();
