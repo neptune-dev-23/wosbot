@@ -12,7 +12,15 @@ public enum EnumTemplates {
 	GAME_HOME_SHORTCUTS_LANCER("/templates/shortcuts/lancer.png"),
 	GAME_HOME_SHORTCUTS_MARKSMAN("/templates/shortcuts/marksman.png"),
 	GAME_HOME_SHORTCUTS_RESEARCH_CENTER("/templates/shortcuts/researchCenter.png"),
+	GAME_HOME_SHORTCUTS_HELP_REQUEST("/templates/shortcuts/helpRequest.png"),
+	
+	GAME_HOME_SHORTCUTS_UPGRADE("/templates/shortcuts/upgrade.png"),
+	
+	
 	GAME_HOME_CAMP_TRAIN("/templates/home/camp/train.png"),
+	
+	GAME_HOME_CITY_STATUS_GO_BUTTON("/templates/home/city/status/goButton.png"),
+	GAME_HOME_CITY_STATUS_COOKHOUSE("/templates/home/city/status/cookhouse.png"),
 	
 	GAME_HOME_SHORTCUTS_MEAT("/templates/shortcuts/meat.png"),
 	GAME_HOME_SHORTCUTS_WOOD("/templates/shortcuts/wood.png"),

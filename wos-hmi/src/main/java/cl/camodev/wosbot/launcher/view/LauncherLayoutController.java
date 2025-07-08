@@ -13,6 +13,7 @@ import java.util.function.Supplier;
 import cl.camodev.utiles.UtilCV;
 import cl.camodev.wosbot.alliance.view.AllianceLayoutController;
 import cl.camodev.wosbot.city.view.CityEventsLayoutController;
+import cl.camodev.wosbot.city.view.CityUpgradesLayoutController;
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.view.ConsoleLogLayoutController;
@@ -235,6 +236,7 @@ public class LauncherLayoutController implements IProfileLoadListener {
 		//@formatter:off
 		List<ModuleDefinition> modules = Arrays.asList(				
 				new ModuleDefinition("TaskManagerLayout", "Task Manager", TaskManagerLayoutController::new),
+				new ModuleDefinition("CityUpgradesLayout", "City Upgrades", CityUpgradesLayoutController::new),
 				new ModuleDefinition("CityEventsLayout", "City Events", CityEventsLayoutController::new),
 				new ModuleDefinition("ShopLayout", "Shop", ShopLayoutController::new),
 				new ModuleDefinition("GatherLayout", "Gather", GatherLayoutController::new),

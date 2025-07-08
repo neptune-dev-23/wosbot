@@ -26,6 +26,8 @@ public enum EnumConfigurationKey {
 	BOOL_TRAINING_TROOPS("false",Boolean.class),
 	BOOL_TRAINING_RESOURCES("false",Boolean.class),
 	
+	CITY_UPGRADE_FURNACE_BOOL("false",Boolean.class),
+	
 	ALLIANCE_CHESTS_BOOL("false",Boolean.class),
 	ALLIANCE_CHESTS_OFFSET_INT("1",Integer.class),
 	ALLIANCE_TECH_BOOL("false",Boolean.class),
