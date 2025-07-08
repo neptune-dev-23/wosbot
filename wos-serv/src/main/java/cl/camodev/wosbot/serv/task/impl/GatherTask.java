@@ -76,12 +76,12 @@ public class GatherTask extends DelayedTask {
 
 	@Override
 	protected void execute() {
-		// Check if IntelligenceTask is not processed yet or reschedule time is lower than 10 minutes
-		if (profile.getConfig(EnumConfigurationKey.INTEL_BOOL, Boolean.class) && 
-			!isIntelligenceTaskReadyForGathering()) {
+		// Check if IntelligenceTask is not processed yet or reschedule time is lower than 60 minutes
+		long intelRemainingMinutes = isIntelligenceTaskReadyForGathering();
+		if (profile.getConfig(EnumConfigurationKey.INTEL_BOOL, Boolean.class) && intelRemainingMinutes > 0) {
 			servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), 
-				"Waiting for IntelligenceTask to be processed or reschedule time to exceed 10 minutes");
-			reschedule(LocalDateTime.now().plusMinutes(2)); // Check again in 2 minutes
+				"Waiting for IntelligenceTask to be processed or reschedule time to exceed intel remaining minutes");
+			reschedule(LocalDateTime.now().plusMinutes(intelRemainingMinutes)); // Check again in intelRemaining minutes
 			return;
 		}
 
@@ -122,7 +122,7 @@ public class GatherTask extends DelayedTask {
 				if (index != -1) {
 					try {
 						String time = emuManager.ocrRegionText(EMULATOR_NUMBER, queues[index][2], new DTOPoint(queues[index][2].getX() + 140, queues[index][2].getY() + 19));
-						LocalDateTime nextSchedule = parseRemaining(time).plusMinutes(5);
+						LocalDateTime nextSchedule = parseRemaining(time).plusMinutes(2);
 						this.reschedule(nextSchedule);
 						servScheduler.updateDailyTaskStatus(profile, tpTask, nextSchedule);
 					} catch (Exception e) {
@@ -196,6 +196,11 @@ public class GatherTask extends DelayedTask {
 						emuManager.tapBackButton(EMULATOR_NUMBER);
 						// falta fverificar si esta el heroe adecuado
 						sleepTask(200);
+						
+						// Click equalize
+						emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(198, 1188));
+						sleepTask(500);
+						
 						// click gather
 						DTOImageSearchResult gatherButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.RALLY_GATHER_BUTTON.getTemplate(), 0, 0, 720, 1280, 90);
 						if (gatherButton.isFound()) {
@@ -253,54 +258,51 @@ public class GatherTask extends DelayedTask {
 		return -1; // Retorna -1 si el punto no se encuentra en ninguno de los rangos
 	}
 
-	/**
-	 * Checks if IntelligenceTask is ready for gathering to start.
-	 * Returns true if IntelligenceTask has been processed or if its reschedule time is more than 10 minutes from now.
-	 * Returns false if IntelligenceTask is not processed yet or reschedule time is less than 10 minutes.
-	 */
-	private boolean isIntelligenceTaskReadyForGathering() {
+	private long isIntelligenceTaskReadyForGathering() {
 		try {
 			DailyTask intelligenceTask = iDailyTaskRepository.findByProfileIdAndTaskName(profile.getId(), TpDailyTaskEnum.INTEL);
 			
 			if (intelligenceTask == null) {
 				// IntelligenceTask has never been executed, so gathering should wait
 				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), 
-					"IntelligenceTask has never been executed, waiting");
-				return false;
+					"IntelligenceTask has never been executed, should wait");
+				return (long) 2; // Wait for 2 minutes
 			}
 			
 			LocalDateTime nextSchedule = intelligenceTask.getNextSchedule();
 			if (nextSchedule == null) {
-				// If there's no next schedule, assume it's processed
-				return true;
+				// If there's no next schedule, check again in 2 minutes
+				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), 
+					"IntelligenceTask has no next schedule, should wait");
+				return (long) 2; // Wait for 2 minutes
 			}
 			
-			// Check if the next schedule is more than 10 minutes from now
+			// Check if the next schedule is more than 60 minutes from now
 			long minutesUntilNextSchedule = ChronoUnit.MINUTES.between(LocalDateTime.now(), nextSchedule);
 			
-			if (minutesUntilNextSchedule > 10) {
+			if (minutesUntilNextSchedule <= 0) {
+				// If the next schedule is in the past, check again in 2 minutes
+				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), 
+					"IntelligenceTask next schedule is in the past and will start soon, should wait");
+				return (long) 2; // Wait for 2 minutes
+			}
+			if (minutesUntilNextSchedule > 300) {
 				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), 
 					"IntelligenceTask next schedule is in " + minutesUntilNextSchedule + " minutes, gathering can start");
-				return true;
+				return (long) 0; // Allow gathering to proceed
 			} else {
 				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), 
-					"IntelligenceTask next schedule is in " + minutesUntilNextSchedule + " minutes, waiting");
-				return false;
+					"IntelligenceTask next schedule is in " + minutesUntilNextSchedule + " minutes, should wait");
+				return minutesUntilNextSchedule; // Wait for the remaining minutes
 			}
 			
 		} catch (Exception e) {
 			servLogs.appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(), 
-				"Error checking IntelligenceTask status: " + e.getMessage());
-			// In case of error, allow gathering to proceed
-			return true;
+				"Error checking IntelligenceTask status: " + e.getMessage() + ", should wait");
+				return (long) 2; // Wait for 2 minutes
 		}
 	}
 
-	/**
-	 * Checks if GatherSpeedTask is ready for gathering to start.
-	 * Returns true if GatherSpeedTask has been processed.
-	 * Returns false if GatherSpeedTask is not processed yet.
-	 */
 	private boolean isGatherSpeedTaskReadyForGathering() {
 		try {
 			DailyTask gatherSpeedTask = iDailyTaskRepository.findByProfileIdAndTaskName(profile.getId(), TpDailyTaskEnum.GATHER_SPEED);
@@ -308,34 +310,38 @@ public class GatherTask extends DelayedTask {
 			if (gatherSpeedTask == null) {
 				// GatherSpeedTask has never been executed, so gathering should wait
 				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(),
-				"GatherSpeedTask has never been executed, waiting");
+				"GatherSpeedTask has never been executed, should wait");
 				return false;
 			}
 
 			LocalDateTime nextSchedule = gatherSpeedTask.getNextSchedule();
 			if (nextSchedule == null) {
-				// If there's no next schedule, assume it's processed
-				return true;
+				// If there's no next schedule, check again in 5 minutes
+				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(),
+					"GatherSpeedTask has no next schedule, should wait");
+				return false;
 			}
 			
 			// Check if the next schedule is more than 10 minutes from now
 			long minutesUntilNextSchedule = ChronoUnit.MINUTES.between(LocalDateTime.now(), nextSchedule);
 			
-			if (minutesUntilNextSchedule > 5) {
+			// FIX: Sometimes for whatever reason, ServScheduler doesn't update the next schedule correctly
+			// Due to this error, minutesUntilNextSchedule can be less than 0 even though task already run
+			// We will skip if its less than 0 to make sure gathering can start
+			if(minutesUntilNextSchedule > 0 && minutesUntilNextSchedule < 5) {
+				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(),
+					"GatherSpeedTask next schedule is in " + minutesUntilNextSchedule + " minutes, should wait");
+				return false;
+			} else {
 				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(),
 					"GatherSpeedTask next schedule is in " + minutesUntilNextSchedule + " minutes, gathering can start");
 				return true;
-			} else {
-				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(),
-					"GatherSpeedTask next schedule is in " + minutesUntilNextSchedule + " minutes, waiting");
-				return false;
-			}
+			} 
 
 		} catch (Exception e) {
 			servLogs.appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(),
-				"Error checking GatherSpeedTask status: " + e.getMessage());
-			// In case of error, allow gathering to proceed
-			return true;
+				"Error checking GatherSpeedTask status: " + e.getMessage() + ", should wait");
+			return false; // Wait for 2 minutes
 		}
 	}
 
