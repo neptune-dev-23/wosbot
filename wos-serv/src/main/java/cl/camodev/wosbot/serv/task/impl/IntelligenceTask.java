@@ -28,6 +28,7 @@ public class IntelligenceTask extends DelayedTask {
 	private final EmulatorManager emuManager = EmulatorManager.getInstance();
 	private final ServLogs servLogs = ServLogs.getServices();
 	private final IDailyTaskRepository iDailyTaskRepository = DailyTaskRepository.getRepository();
+	private boolean marchQueueLimitReached = false;
 
 	public IntelligenceTask(DTOProfiles profile, TpDailyTaskEnum tpTask) {
 		super(profile, tpTask);
@@ -47,6 +48,7 @@ public class IntelligenceTask extends DelayedTask {
 		}
 
 		boolean intelFound = false;
+		marchQueueLimitReached = false;
 
 		DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90);
 		DTOImageSearchResult worldResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 0, 0, 720, 1280, 90);
@@ -84,6 +86,7 @@ public class IntelligenceTask extends DelayedTask {
 				if (searchAndProcessBeast(EnumTemplates.INTEL_FIRE_BEAST, 5)) {
 					intelFound = true;
 				}
+				if (marchQueueLimitReached) return;
 			}
 
 			sleepTask(500);
@@ -113,6 +116,7 @@ public class IntelligenceTask extends DelayedTask {
 						intelFound = true;
 						break;
 					}
+					if (marchQueueLimitReached) return;
 				}
 			}
 
@@ -143,6 +147,7 @@ public class IntelligenceTask extends DelayedTask {
 						intelFound = true;
 						break;
 					}
+					if (marchQueueLimitReached) return;
 				}
 
 			}
@@ -174,6 +179,7 @@ public class IntelligenceTask extends DelayedTask {
 						intelFound = true;
 						break;
 					}
+					if (marchQueueLimitReached) return;
 				}
 
 			}
@@ -235,7 +241,13 @@ public class IntelligenceTask extends DelayedTask {
 				emuManager.tapBackButton(EMULATOR_NUMBER);
 			} else {
 				// March queue limit reached, cannot process exploration
-				servLogs.appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(), "Error: March queue limit reached, cannot process exploration.");
+				servLogs.appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(), "Error: March queue limit reached, cannot process exploration. Rescheduling task for 1 hour.");
+				LocalDateTime rescheduleTime = LocalDateTime.now().plusHours(1);
+				this.reschedule(rescheduleTime);
+				ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, rescheduleTime);
+				emuManager.tapBackButton(EMULATOR_NUMBER);
+				marchQueueLimitReached = true;
+				return;
 			}
 		}
 	}
@@ -267,7 +279,13 @@ public class IntelligenceTask extends DelayedTask {
 				emuManager.tapAtPoint(EMULATOR_NUMBER, rescue.getPoint());
 			} else {
 				// March queue limit reached, cannot process survivor
-				servLogs.appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(), "Error: March queue limit reached, cannot process survivor.");
+				servLogs.appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(), "Error: March queue limit reached, cannot process survivor. Rescheduling task for 1 hour.");
+				LocalDateTime rescheduleTime = LocalDateTime.now().plusHours(1);
+				this.reschedule(rescheduleTime);
+				ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, rescheduleTime);
+				emuManager.tapBackButton(EMULATOR_NUMBER);
+				marchQueueLimitReached = true;
+				return;
 			}
 		}
 	}
@@ -305,7 +323,13 @@ public class IntelligenceTask extends DelayedTask {
 					emuManager.tapAtPoint(EMULATOR_NUMBER, rally.getPoint());
 				} else {
 					// March queue limit reached, cannot process beast
-					servLogs.appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(), "Error: March queue limit reached, cannot process beast.");
+					servLogs.appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(), "Error: March queue limit reached, cannot process beast. Rescheduling task for 1 hour.");
+					LocalDateTime rescheduleTime = LocalDateTime.now().plusHours(1);
+					this.reschedule(rescheduleTime);
+					ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, rescheduleTime);
+					emuManager.tapBackButton(EMULATOR_NUMBER);
+					marchQueueLimitReached = true;
+					return;
 				}
 			}
 		}
