@@ -286,7 +286,7 @@ public class GatherTask extends DelayedTask {
 					"IntelligenceTask next schedule is in the past and will start soon, should wait");
 				return (long) 2; // Wait for 2 minutes
 			}
-			if (minutesUntilNextSchedule > 60) {
+			if (minutesUntilNextSchedule > 300) {
 				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), 
 					"IntelligenceTask next schedule is in " + minutesUntilNextSchedule + " minutes, gathering can start");
 				return (long) 0; // Allow gathering to proceed
