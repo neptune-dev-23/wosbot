@@ -245,7 +245,6 @@ public class IntelligenceTask extends DelayedTask {
 				LocalDateTime rescheduleTime = LocalDateTime.now().plusHours(1);
 				this.reschedule(rescheduleTime);
 				ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, rescheduleTime);
-				emuManager.tapBackButton(EMULATOR_NUMBER);
 				marchQueueLimitReached = true;
 				return;
 			}
@@ -283,7 +282,6 @@ public class IntelligenceTask extends DelayedTask {
 				LocalDateTime rescheduleTime = LocalDateTime.now().plusHours(1);
 				this.reschedule(rescheduleTime);
 				ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, rescheduleTime);
-				emuManager.tapBackButton(EMULATOR_NUMBER);
 				marchQueueLimitReached = true;
 				return;
 			}
@@ -327,7 +325,6 @@ public class IntelligenceTask extends DelayedTask {
 					LocalDateTime rescheduleTime = LocalDateTime.now().plusHours(1);
 					this.reschedule(rescheduleTime);
 					ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, rescheduleTime);
-					emuManager.tapBackButton(EMULATOR_NUMBER);
 					marchQueueLimitReached = true;
 					return;
 				}
