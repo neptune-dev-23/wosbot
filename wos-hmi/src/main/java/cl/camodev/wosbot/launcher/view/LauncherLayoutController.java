@@ -31,7 +31,7 @@ import cl.camodev.wosbot.profile.view.ProfileManagerLayoutController;
 import cl.camodev.wosbot.serv.impl.ServConfig;
 import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.shop.view.ShopLayoutController;
-import cl.camodev.wosbot.status.view.StatusLayoutController;
+import cl.camodev.wosbot.taskmanager.view.TaskManagerLayoutController;
 import cl.camodev.wosbot.training.view.TrainingLayoutController;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -234,7 +234,7 @@ public class LauncherLayoutController implements IProfileLoadListener {
 	private void initializeModules() {
 		//@formatter:off
 		List<ModuleDefinition> modules = Arrays.asList(				
-				new ModuleDefinition("StatusLayout", "Status", StatusLayoutController::new),
+				new ModuleDefinition("TaskManagerLayout", "Task Manager", TaskManagerLayoutController::new),
 				new ModuleDefinition("CityEventsLayout", "City Events", CityEventsLayoutController::new),
 				new ModuleDefinition("ShopLayout", "Shop", ShopLayoutController::new),
 				new ModuleDefinition("GatherLayout", "Gather", GatherLayoutController::new),
