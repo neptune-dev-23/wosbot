@@ -147,4 +147,9 @@ public class TrainingTroopsTask extends DelayedTask {
 		}
 	}
 
+	@Override
+	protected Object getDistinctKey() {
+		return troopType;
+	}
+
 }

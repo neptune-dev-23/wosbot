@@ -68,7 +68,7 @@ public class TaskQueue {
 
 		schedulerThread = new Thread(() -> {
 
-			boolean moreThan30Minutes = false; // Indica si la demora mínima superó los 30 minutos
+			boolean idlingTimeExceded = false; // Indica si la demora mínima superó los 30 minutos
 			ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "Getting queue slot"));
 			try {
 				EmulatorManager.getInstance().adquireEmulatorSlot(profile.getId(), (thread, position) -> {
@@ -135,18 +135,24 @@ public class TaskQueue {
 
 				// Verificar condiciones según el delay mínimo de la cola de tareas
 				if (minDelay != Long.MAX_VALUE) { // Asegurar que hay tareas en la cola
+					long maxIdle = 0;
+					if (profile.getId().equals(Long.valueOf(3L))) {
+						maxIdle = 120L;
+					} else {
+						maxIdle = Optional.ofNullable(profile.getGlobalsettings().get(EnumConfigurationKey.MAX_IDLE_TIME_INT.name())).map(Integer::parseInt).orElse(Integer.parseInt(EnumConfigurationKey.MAX_IDLE_TIME_INT.getDefaultValue()));
 
-					long maxIdle = Optional.ofNullable(profile.getGlobalsettings().get(EnumConfigurationKey.MAX_IDLE_TIME_INT.name())).map(Integer::parseInt).orElse(Integer.parseInt(EnumConfigurationKey.MAX_IDLE_TIME_INT.getDefaultValue()));
+					}
+
 					; // 30 minutos en segundos
-					if (!moreThan30Minutes && minDelay > TimeUnit.MINUTES.toSeconds(maxIdle)) {
-						moreThan30Minutes = true;
+					if (!idlingTimeExceded && minDelay > TimeUnit.MINUTES.toSeconds(maxIdle)) {
+						idlingTimeExceded = true;
 						ejecutarFragmentoEspecifico(minDelay);
 					}
 
 					// Si la demora baja a menos de 1 minuto y antes se cumplió la condición
-					if (moreThan30Minutes && minDelay < TimeUnit.MINUTES.toSeconds(1)) {
+					if (idlingTimeExceded && minDelay < TimeUnit.MINUTES.toSeconds(1)) {
 						encolarNuevaTarea();
-						moreThan30Minutes = false; // Restablecer la condición para futuras evaluaciones
+						idlingTimeExceded = false; // Restablecer la condición para futuras evaluaciones
 					}
 				}
 
@@ -237,6 +243,35 @@ public class TaskQueue {
 		paused = false;
 		ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "RESUMING"));
 		System.out.println("TaskQueue reanudada.");
+	}
+
+	public void executeTaskNow(TpDailyTaskEnum taskEnum) {
+
+		// Obtain the task prototype from the registry
+		DelayedTask prototype = DelayedTaskRegistry.create(taskEnum, profile);
+		if (prototype == null) {
+			ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, "TaskQueue", profile.getName(), "Task not found: " + taskEnum);
+			return;
+		}
+
+		// verify if the task already exists in the queue
+		DelayedTask existing = taskQueue.stream().filter(prototype::equals).findFirst().orElse(null);
+
+		if (existing != null) {
+			// task already exists, reschedule it to run now
+			taskQueue.remove(existing);
+			existing.reschedule(LocalDateTime.now());
+			existing.setRecurring(false);
+			taskQueue.offer(existing);
+
+			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueue", profile.getName(), "Rescheduled existing " + taskEnum + " to run now");
+		} else {
+			// task does not exist, create a new instance and schedule it just once
+			prototype.reschedule(LocalDateTime.now());
+			prototype.setRecurring(false);
+			taskQueue.offer(prototype);
+			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueue", profile.getName(), "Enqueued new immediate " + taskEnum);
+		}
 	}
 
 }

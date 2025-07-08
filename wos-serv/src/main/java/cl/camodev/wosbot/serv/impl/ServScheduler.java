@@ -55,6 +55,7 @@ import cl.camodev.wosbot.serv.task.impl.PetSkillsTask;
 import cl.camodev.wosbot.serv.task.impl.PetSkillsTask.PetSkill;
 import cl.camodev.wosbot.serv.task.impl.TrainingTroopsTask;
 import cl.camodev.wosbot.serv.task.impl.TrainingTroopsTask.TroopType;
+import cl.camodev.wosbot.serv.task.impl.UpgradeFurnaceTask;
 import cl.camodev.wosbot.serv.task.impl.VipTask;
 import cl.camodev.wosbot.serv.task.impl.WarAcademyTask;
 
@@ -230,6 +231,10 @@ public class ServScheduler {
 				taskMappings.put(EnumConfigurationKey.LIFE_ESSENCE_BOOL, List.of(
                         () -> new LifeEssenceTask(profile, TpDailyTaskEnum.LIFE_ESSENCE)
                     ));
+				
+				taskMappings.put(EnumConfigurationKey.CITY_UPGRADE_FURNACE_BOOL, List.of(
+                        () -> new UpgradeFurnaceTask(profile, TpDailyTaskEnum.CITY_UPGRADE_FURNACE)
+                    ));
 
 				//@formatter:on
 
@@ -358,6 +363,10 @@ public class ServScheduler {
 			config.setValor(filePath);
 			iConfigRepository.saveConfig(config);
 		}
+	}
+
+	public TaskQueueManager getQueueManager() {
+		return queueManager;
 	}
 
 }

@@ -42,6 +42,9 @@ public enum TpDailyTaskEnum {
 	TRAINING_LANCER(62, "Training Lancer"),
 	TRAINING_MARKSMAN(63, "Training Marksman"),
 	
+	CITY_UPGRADE_FURNACE(70, "City Upgrade Furnace"),
+	CITY_UPGRADE_OTHERS(71, "City Upgrade Others"),
+	
 
 	
 	

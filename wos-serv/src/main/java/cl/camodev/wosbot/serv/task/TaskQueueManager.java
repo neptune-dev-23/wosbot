@@ -23,9 +23,15 @@ public class TaskQueueManager {
 
 	public void startQueues() {
 		ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueueManager", "-", "Starting queues");
-		taskQueues.forEach((k, v) -> {
-			v.start();
+		taskQueues.entrySet().stream().sorted(Map.Entry.comparingByKey()).forEach(entry -> {
+			entry.getValue().start();
+			try {
+				Thread.sleep(200);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		});
+
 	}
 
 	public void stopQueues() {

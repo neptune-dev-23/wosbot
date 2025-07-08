@@ -3,6 +3,7 @@ package cl.camodev.wosbot.serv.task;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
@@ -21,6 +22,10 @@ public abstract class DelayedTask implements Runnable {
 	protected String EMULATOR_NUMBER;
 	protected TpDailyTaskEnum tpTask;
 	protected int homeAttemps = 0;
+
+	protected Object getDistinctKey() {
+		return null;
+	}
 
 	public DelayedTask(DTOProfiles profile, TpDailyTaskEnum tpTask) {
 		this.profile = profile;
@@ -97,5 +102,43 @@ public abstract class DelayedTask implements Runnable {
 
 	public LocalDateTime getScheduled() {
 		return scheduledTime;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o)
+			return true;
+		if (!(o instanceof DelayedTask))
+			return false;
+		if (getClass() != o.getClass())
+			return false;
+
+		DelayedTask that = (DelayedTask) o;
+		// 1) Mismo tipo de tarea y mismo perfil
+		if (tpTask != that.tpTask)
+			return false;
+		if (!Objects.equals(profile.getId(), that.profile.getId()))
+			return false;
+
+		// 2) Sólo comparamos distinctKey si alguno lo define (no-null)
+		Object keyThis = this.getDistinctKey();
+		Object keyThat = that.getDistinctKey();
+		if (keyThis != null || keyThat != null) {
+			return Objects.equals(keyThis, keyThat);
+		}
+
+		// 3) Si ambos keys son null, da por igual y decimos que son iguales
+		return true;
+	}
+
+	@Override
+	public int hashCode() {
+		// Incluyo getDistinctKey() sólo si no es null, para mantener coherencia con equals
+		Object key = getDistinctKey();
+		if (key != null) {
+			return Objects.hash(getClass(), tpTask, profile.getId(), key);
+		} else {
+			return Objects.hash(getClass(), tpTask, profile.getId());
+		}
 	}
 }
