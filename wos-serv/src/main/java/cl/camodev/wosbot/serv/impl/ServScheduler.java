@@ -28,6 +28,7 @@ import cl.camodev.wosbot.emulator.EmulatorManager;
 import cl.camodev.wosbot.ot.DTOBotState;
 import cl.camodev.wosbot.ot.DTODailyTaskStatus;
 import cl.camodev.wosbot.ot.DTOProfiles;
+import cl.camodev.wosbot.ot.DTOTaskState;
 import cl.camodev.wosbot.serv.IBotStateListener;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 import cl.camodev.wosbot.serv.task.TaskQueue;
@@ -122,7 +123,7 @@ public class ServScheduler {
 				Map<EnumConfigurationKey, List<Supplier<DelayedTask>>> taskMappings = new HashMap<>();
 				
 				taskMappings.put(EnumConfigurationKey.GATHER_SPEED_BOOL, List.of(
-					() -> new GatherSpeedTask(profile, TpDailyTaskEnum.GATHER_SPEED)
+					() -> new GatherSpeedTask(profile, TpDailyTaskEnum.GATHER_BOOST)
 				));
 
 				// Agregar tareas al mapa
@@ -209,19 +210,19 @@ public class ServScheduler {
                     ));
 				
 				taskMappings.put(EnumConfigurationKey.GATHER_MEAT_BOOL, List.of(
-                        () -> new GatherTask(profile, TpDailyTaskEnum.GATHER_RESOURCES, GatherType.MEAT)
+                        () -> new GatherTask(profile, TpDailyTaskEnum.GATHER_MEAT, GatherType.MEAT)
                     ));
 				
 				taskMappings.put(EnumConfigurationKey.GATHER_WOOD_BOOL, List.of(
-                        () -> new GatherTask(profile, TpDailyTaskEnum.GATHER_RESOURCES, GatherType.WOOD)
+                        () -> new GatherTask(profile, TpDailyTaskEnum.GATHER_WOOD, GatherType.WOOD)
                     ));
 				
 				taskMappings.put(EnumConfigurationKey.GATHER_COAL_BOOL, List.of(
-                        () -> new GatherTask(profile, TpDailyTaskEnum.GATHER_RESOURCES, GatherType.COAL)
+                        () -> new GatherTask(profile, TpDailyTaskEnum.GATHER_COAL, GatherType.COAL)
                     ));
 				
 				taskMappings.put(EnumConfigurationKey.GATHER_IRON_BOOL, List.of(
-                        () -> new GatherTask(profile, TpDailyTaskEnum.GATHER_RESOURCES, GatherType.IRON)
+                        () -> new GatherTask(profile, TpDailyTaskEnum.GATHER_IRON, GatherType.IRON)
                     ));
 				
 				taskMappings.put(EnumConfigurationKey.INTEL_BOOL, List.of(
@@ -247,17 +248,27 @@ public class ServScheduler {
 //						ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Scheduling tasks");
 						for (Supplier<DelayedTask> taskSupplier : taskSuppliers) {
 							DelayedTask task = taskSupplier.get();
-
 							if (taskSchedules.containsKey(task.getTpDailyTaskId())) {
+
 								LocalDateTime nextSchedule = taskSchedules.get(task.getTpDailyTaskId()).getNextSchedule();
 								task.reschedule(nextSchedule);
+
 								ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Next Execution: " + nextSchedule.format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss")));
 
 							} else {
 								ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Task not completed, scheduling for today");
 								task.reschedule(LocalDateTime.now());
-							}
 
+							}
+							DTOTaskState taskState = new DTOTaskState();
+							taskState.setProfileId(profile.getId());
+							taskState.setTaskId(task.getTpTask().getId());
+							taskState.setExecuting(false);
+							taskState.setScheduled(true);
+							taskState.setLastExecutionTime(taskSchedules.get(task.getTpDailyTaskId()).getLastExecution());
+							taskState.setNextExecutionTime(task.getScheduled());
+
+							ServTaskManager.getInstance().setTaskState(profile.getId(), taskState);
 							queue.addTask(task);
 						}
 					}

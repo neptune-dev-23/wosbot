@@ -13,15 +13,13 @@ public enum TpDailyTaskEnum {
 
 	LIFE_ESSENCE(9, "Life Essence"),
 	
-	
-	GATHER_RESOURCES(13, "Gathering"),
 	BANK(14, "Bank"),
-	BEAST_SLAY(15, "Beast Slay"),
+//	BEAST_SLAY(15, "Beast Slay"),
 
-	GATHER_SPEED(20, "Gather Speed Boost"),
+	
 	
 	MAIL_REWARDS(30, "Mail Rewards"),
-	DAILY_TASKS(31, "Daily Tasks"),
+	DAILY_MISSIONS(31, "Daily Missions"),
 	STOREHOUSE_CHEST(32, "Storehouse Chest"),
 	INTEL(33, "Intel"),
 	STOREHOUSE_STAMINA(34, "Storehouse Stamina"),
@@ -42,8 +40,18 @@ public enum TpDailyTaskEnum {
 	TRAINING_LANCER(62, "Training Lancer"),
 	TRAINING_MARKSMAN(63, "Training Marksman"),
 	
+	
+	GATHER_BOOST(101, "Gather Speed Boost"),
+	GATHER_MEAT(102, "Gather Meat"),
+	GATHER_WOOD(103, "Gather Wood"),
+	GATHER_COAL(104, "Gather Stone"),
+	GATHER_IRON(105, "Gather Iron"),
+	
 	CITY_UPGRADE_FURNACE(70, "City Upgrade Furnace"),
-	CITY_UPGRADE_OTHERS(71, "City Upgrade Others"),
+//	CITY_UPGRADE_OTHERS(71, "City Upgrade Others"),
+	
+//	SHOP_MYSTERY(80, "Shop Mystery"),
+	
 	
 
 	

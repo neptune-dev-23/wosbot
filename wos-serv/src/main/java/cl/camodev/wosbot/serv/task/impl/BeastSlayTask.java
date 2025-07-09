@@ -30,8 +30,8 @@ public class BeastSlayTask extends DelayedTask {
 	private int availableQueues = 0;
 	private int maxQueues = 3;
 
-	public BeastSlayTask(DTOProfiles profile) {
-		super(profile, TpDailyTaskEnum.BEAST_SLAY);
+	public BeastSlayTask(DTOProfiles profile, TpDailyTaskEnum tpTask) {
+		super(profile, tpTask);
 	}
 
 	@Override

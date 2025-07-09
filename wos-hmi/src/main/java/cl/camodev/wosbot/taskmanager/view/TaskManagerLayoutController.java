@@ -3,106 +3,115 @@ package cl.camodev.wosbot.taskmanager.view;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import cl.camodev.utiles.UtilTime;
 import cl.camodev.wosbot.almac.repo.DailyTaskRepository;
 import cl.camodev.wosbot.almac.repo.IDailyTaskRepository;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.ot.DTODailyTaskStatus;
 import cl.camodev.wosbot.ot.DTOProfiles;
-import cl.camodev.wosbot.profile.model.IProfileLoadListener;
-import cl.camodev.wosbot.profile.model.ProfileAux;
+import cl.camodev.wosbot.ot.DTOTaskState;
 import cl.camodev.wosbot.serv.impl.ServProfiles;
 import cl.camodev.wosbot.serv.impl.ServScheduler;
+import cl.camodev.wosbot.taskmanager.controller.TaskManagerActionController;
 import cl.camodev.wosbot.taskmanager.model.TaskManagerAux;
+import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.SingleSelectionModel;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.util.Duration;
 
-public class TaskManagerLayoutController implements IProfileLoadListener {
+public class TaskManagerLayoutController {
+
+	private TaskManagerActionController taskManagerActionController = new TaskManagerActionController(this);
 
 	@FXML
 	private TabPane tabPaneProfiles;
 
+	private final ObjectProperty<LocalDateTime> globalClock = new SimpleObjectProperty<>(LocalDateTime.now());
+
 	private IDailyTaskRepository dailyTaskRepository = DailyTaskRepository.getRepository();
-	private Timeline updateTimeline;
-	private HashMap<Long, TableView<TaskManagerAux>> tasks = new HashMap<>();
+
+	private final Map<Long, Tab> profileTabsMap = new HashMap<>();
+	private final Map<Long, ObservableList<TaskManagerAux>> tasks = new HashMap<>();
+
+	private static final Comparator<TaskManagerAux> TASK_AUX_COMPARATOR = (a, b) -> {
+		if (a.isScheduled() && !b.isScheduled())
+			return -1;
+		if (!a.isScheduled() && b.isScheduled())
+			return 1;
+		if (a.isExecuting() && !b.isExecuting())
+			return -1;
+		if (!a.isExecuting() && b.isExecuting())
+			return 1;
+		if (a.hasReadyTask() && !b.hasReadyTask())
+			return -1;
+		if (!a.hasReadyTask() && b.hasReadyTask())
+			return 1;
+		return Long.compare(a.getNearestMinutesUntilExecution(), b.getNearestMinutesUntilExecution());
+	};
 
 	@FXML
 	private void initialize() {
-		setupAutoRefresh();
-		loadTaskStatuses();
-	}
+		loadProfiles();
 
-	private void setupProfileTabs() {
-		// Additional TabPane setup can go here if needed
-	}
-
-	private void setupAutoRefresh() {
-
-		updateTimeline = new Timeline(new KeyFrame(Duration.seconds(5), e -> {
-			Platform.runLater(this::loadTaskStatuses);
+		Timeline ticker = new Timeline(new KeyFrame(Duration.seconds(5), evt -> {
+			globalClock.set(LocalDateTime.now());
 		}));
-		updateTimeline.setCycleCount(Timeline.INDEFINITE);
-		updateTimeline.play();
+		ticker.setCycleCount(Animation.INDEFINITE);
+		ticker.play();
+
 	}
 
-	private void loadTaskStatuses() {
-		if (tabPaneProfiles == null)
-			return;
+	private void loadProfiles() {
+		taskManagerActionController.loadProfiles(dtoProfiles -> {
+			Platform.runLater(() -> {
+				if (tabPaneProfiles == null)
+					return;
 
-		SingleSelectionModel<Tab> selModel = tabPaneProfiles.getSelectionModel();
-		Tab selectedTab = selModel.getSelectedItem();
-		Long selectedProfileId = selectedTab != null ? (Long) selectedTab.getUserData() : null;
+				for (DTOProfiles profile : dtoProfiles) {
 
-		List<DTOProfiles> profiles = ServProfiles.getServices().getProfiles();
-		if (profiles == null || profiles.isEmpty()) {
-			tabPaneProfiles.getTabs().clear();
-			return;
-		}
+					Tab existing = profileTabsMap.get(profile.getId());
+					if (existing == null) {
+						// Nuevo perfil → crea tab
+						Tab newTab = createProfileTab(profile);
+						profileTabsMap.put(profile.getId(), newTab);
+						tabPaneProfiles.getTabs().add(newTab);
+					} else {
+//						refreshProfileTab(profile);
+					}
+				}
 
-		Set<Long> enabledIds = profiles.stream().filter(DTOProfiles::getEnabled).map(DTOProfiles::getId).collect(Collectors.toSet());
-
-		List<Tab> toRemove = tabPaneProfiles.getTabs().stream().filter(tab -> !enabledIds.contains((Long) tab.getUserData())).collect(Collectors.toList());
-		toRemove.forEach(tab -> {
-			tabPaneProfiles.getTabs().remove(tab);
-			tasks.remove(tab.getUserData());
+				SingleSelectionModel<Tab> sel = tabPaneProfiles.getSelectionModel();
+				if (!tabPaneProfiles.getTabs().isEmpty()) {
+					sel.select(0);
+				}
+			});
 		});
 
-		Set<Long> existingIds = tabPaneProfiles.getTabs().stream().map(tab -> (Long) tab.getUserData()).collect(Collectors.toSet());
-
-		for (DTOProfiles profile : profiles) {
-			if (!profile.getEnabled())
-				continue;
-
-			if (!existingIds.contains(profile.getId())) {
-				// pestaña nueva
-				Tab newTab = createProfileTab(profile);
-				tabPaneProfiles.getTabs().add(newTab);
-			} else {
-				// pestaña existente: sólo refresco sus datos
-				refreshProfileTab(profile);
-			}
-		}
-
-		if (selectedProfileId != null && enabledIds.contains(selectedProfileId)) {
-			tabPaneProfiles.getTabs().stream().filter(tab -> selectedProfileId.equals(tab.getUserData())).findFirst().ifPresent(selModel::select);
-		} else if (!tabPaneProfiles.getTabs().isEmpty()) {
-			selModel.select(0);
-		}
 	}
 
 	private Tab createProfileTab(DTOProfiles profile) {
@@ -110,89 +119,117 @@ public class TaskManagerLayoutController implements IProfileLoadListener {
 		tab.setClosable(false);
 		tab.setUserData(profile.getId());
 
+		// 1) Prepara la tabla y la lista observable vacía
+		ObservableList<TaskManagerAux> dataList = FXCollections.observableArrayList();
 		TableView<TaskManagerAux> table = createTaskTable();
-		tasks.put(profile.getId(), table);
-
-		Map<Integer, DTODailyTaskStatus> taskStatuses = dailyTaskRepository.findDailyTasksStatusByProfile(profile.getId());
-		ServScheduler.getServices().getQueueManager().getQueue(profile.getId());
-		List<TaskManagerAux> list = Arrays.stream(TpDailyTaskEnum.values()).map(task -> {
-			DTODailyTaskStatus status = taskStatuses.get(task.getId());
-			String last = formatLastExecution(status);
-			String next = formatNextExecution(status);
-			long minutes = Long.MAX_VALUE;
-			boolean ready = false;
-			if (status != null && status.getNextSchedule() != null) {
-				long diff = ChronoUnit.MINUTES.between(LocalDateTime.now(), status.getNextSchedule());
-				if (diff <= 0) {
-					ready = true;
-					minutes = 0;
-				} else
-					minutes = diff;
-			}
-			return new TaskManagerAux(task.getName(), last, next, task, profile.getId(), minutes, ready, false);
-		}).sorted((a, b) -> {
-			if (a.hasReadyTask() && !b.hasReadyTask())
-				return -1;
-			if (!a.hasReadyTask() && b.hasReadyTask())
-				return 1;
-			return Long.compare(a.getNearestMinutesUntilExecution(), b.getNearestMinutesUntilExecution());
-		}).collect(Collectors.toList());
-
-		table.getItems().setAll(list);
+		table.setItems(dataList);
+		// Guarda la lista para futuras actualizaciones
+		tasks.put(profile.getId(), dataList);
 		tab.setContent(table);
+
+		// 2) Llama al builder asíncrono y actualiza la tabla cuando esté listo
+		buildTaskManagerList(profile, list -> {
+			// Siempre desde JavaFX Application Thread
+			dataList.setAll(list);
+			FXCollections.sort(dataList, TASK_AUX_COMPARATOR);
+		});
+
 		return tab;
 	}
 
-	private void refreshProfileTab(DTOProfiles profile) {
-		TableView<TaskManagerAux> table = tasks.get(profile.getId());
-		if (table == null)
-			return;
+//	private void refreshProfileTab(DTOProfiles profile) {
+//		ObservableList<TaskManagerAux> dataList = tasks.get(profile.getId());
+//		if (dataList == null)
+//			return;
+//
+//		List<TaskManagerAux> updated = buildTaskManagerList(profile);
+//		dataList.setAll(updated);
+//	}
 
-		Map<Integer, DTODailyTaskStatus> statuses = dailyTaskRepository.findDailyTasksStatusByProfile(profile.getId());
+	/**
+	 * Recarga el estado de las tareas y, cuando estén disponibles, construye la lista de TaskManagerAux y la entrega al consumidor.
+	 */
+	private void buildTaskManagerList(DTOProfiles profile, Consumer<List<TaskManagerAux>> onListReady) {
+		// Ahora `statuses` es una List<DTODailyTaskStatus>
+		taskManagerActionController.loadDailyTaskStatus(profile.getId(), (List<DTODailyTaskStatus> statuses) -> {
+			List<TaskManagerAux> list = Arrays.stream(TpDailyTaskEnum.values()).map(task -> {
+				// Busca el status cuyo ID coincida con el ID de la tarea
+//				System.out.println(">>> statuses.size=" + statuses.size() + "  buscando id=" + task.getId());
 
-		List<TaskManagerAux> updated = Arrays.stream(TpDailyTaskEnum.values()).map(task -> {
-			DTODailyTaskStatus s = statuses.get(task.getId());
-			String last = formatLastExecution(s);
-			String next = formatNextExecution(s);
-			long minutes = Long.MAX_VALUE;
-			boolean ready = false;
-			if (s != null && s.getNextSchedule() != null) {
-				long diff = ChronoUnit.MINUTES.between(LocalDateTime.now(), s.getNextSchedule());
-				if (diff <= 0) {
-					ready = true;
-					minutes = 0;
-				} else
-					minutes = diff;
-			}
-			return new TaskManagerAux(task.getName(), last, next, task, profile.getId(), minutes, ready, false);
-		}).sorted((a, b) -> {
-			if (a.hasReadyTask() && !b.hasReadyTask())
-				return -1;
-			if (!a.hasReadyTask() && b.hasReadyTask())
-				return 1;
-			return Long.compare(a.getNearestMinutesUntilExecution(), b.getNearestMinutesUntilExecution());
-		}).collect(Collectors.toList());
+				DTODailyTaskStatus s = statuses.stream().filter(st -> st.getIdTpDailyTask() == task.getId()) // o st.getTaskId()
+						.findFirst().orElse(null);
 
-		table.getItems().setAll(updated);
+				if (s == null) {
+					return new TaskManagerAux(task.getName(), null, null, task, profile.getId(), Long.MAX_VALUE, false, false, false);
+				}
+
+				long diff = Long.MAX_VALUE;
+				boolean ready = false;
+				if (s.getNextSchedule() != null) {
+					diff = ChronoUnit.MINUTES.between(LocalDateTime.now(), s.getNextSchedule());
+					if (diff <= 0) {
+						ready = true;
+						diff = 0;
+					}
+				}
+
+				boolean scheduled = Optional.ofNullable(ServScheduler.getServices().getQueueManager().getQueue(profile.getId())).map(q -> q.isTaskScheduled(task)).orElse(false);
+
+				return new TaskManagerAux(task.getName(), s.getLastExecution(), s.getNextSchedule(), task, profile.getId(), diff, ready, scheduled, false);
+			}).sorted((a, b) -> {
+				if (a.isScheduled() && !b.isScheduled())
+					return -1;
+				if (!a.isScheduled() && b.isScheduled())
+					return 1;
+				if (a.hasReadyTask() && !b.hasReadyTask())
+					return -1;
+				if (!a.hasReadyTask() && b.hasReadyTask())
+					return 1;
+				return Long.compare(a.getNearestMinutesUntilExecution(), b.getNearestMinutesUntilExecution());
+			}).collect(Collectors.toList());
+
+			Platform.runLater(() -> onListReady.accept(list));
+		});
 	}
 
 	private TableView<TaskManagerAux> createTaskTable() {
 		TableView<TaskManagerAux> table = new TableView<>();
 		table.getStyleClass().add("table-view");
+		Image iconTrue = new Image(getClass().getResourceAsStream("/icons/indicators/green.png"));
+		Image iconFalse = new Image(getClass().getResourceAsStream("/icons/indicators/red.png"));
 
 		// Task Name column
 		TableColumn<TaskManagerAux, String> colTaskName = new TableColumn<>("Task Name");
 		colTaskName.setCellValueFactory(cellData -> cellData.getValue().taskNameProperty());
 		colTaskName.setPrefWidth(200);
-		colTaskName.setCellFactory(column -> new TableCell<>() {
+		colTaskName.setCellFactory(column -> new TableCell<TaskManagerAux, String>() {
+			private final ImageView imageView = new ImageView();
+			{
+				// Ajusta tamaño del icono si es necesario
+				imageView.setFitWidth(16);
+				imageView.setFitHeight(16);
+			}
+
 			@Override
 			protected void updateItem(String item, boolean empty) {
 				super.updateItem(item, empty);
 				if (empty || item == null) {
 					setText(null);
+					setGraphic(null);
 					setStyle("");
 				} else {
 					setText(item);
+					// Obtén el objeto de la fila actual
+					TaskManagerAux task = getTableRow().getItem();
+					if (task != null) {
+						// Elige el icono según la propiedad booleana
+						boolean flag = task.scheduledProperty().get();
+						imageView.setImage(flag ? iconTrue : iconFalse);
+						setGraphic(imageView);
+						setContentDisplay(ContentDisplay.LEFT);
+					} else {
+						setGraphic(null);
+					}
 					setStyle("-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;");
 				}
 			}
@@ -200,7 +237,12 @@ public class TaskManagerLayoutController implements IProfileLoadListener {
 
 		// Last Execution column
 		TableColumn<TaskManagerAux, String> colLastExecution = new TableColumn<>("Last Execution");
-		colLastExecution.setCellValueFactory(cellData -> cellData.getValue().lastExecutionProperty());
+		colLastExecution.setCellValueFactory(cellData -> {
+			TaskManagerAux t = cellData.getValue();
+			return Bindings.createStringBinding(() -> {
+				return UtilTime.formatLastExecution(t.getLastExecution());
+			}, t.nextExecutionProperty(), t.executingProperty(), globalClock);
+		});
 		colLastExecution.setPrefWidth(150);
 		colLastExecution.setCellFactory(column -> new TableCell<>() {
 			@Override
@@ -218,8 +260,14 @@ public class TaskManagerLayoutController implements IProfileLoadListener {
 
 		// Next Execution column
 		TableColumn<TaskManagerAux, String> colNextExecution = new TableColumn<>("Next Execution");
-		colNextExecution.setCellValueFactory(cellData -> cellData.getValue().nextExecutionProperty());
 		colNextExecution.setPrefWidth(150);
+		colNextExecution.setCellValueFactory(cellData -> {
+			TaskManagerAux t = cellData.getValue();
+			return Bindings.createStringBinding(() -> {
+				return UtilTime.formatNextExecution(t.getNextExecution(), globalClock.get(), t.executingProperty().get());
+			}, t.nextExecutionProperty(), t.executingProperty(), globalClock);
+		});
+
 		colNextExecution.setCellFactory(column -> new TableCell<>() {
 			@Override
 			protected void updateItem(String item, boolean empty) {
@@ -295,121 +343,26 @@ public class TaskManagerLayoutController implements IProfileLoadListener {
 		return table;
 	}
 
-	private String formatLastExecution(DTODailyTaskStatus taskStatus) {
-		if (taskStatus == null || taskStatus.getLastExecution() == null) {
-			return "Never";
-		}
+	public void updateTaskStatus(Long profileId, int taskNameId, DTOTaskState taskState) {
+		Platform.runLater(() -> {
+			ObservableList<TaskManagerAux> dataList = tasks.get(profileId);
+			if (dataList == null)
+				return;
+			Optional<TaskManagerAux> optionalTask = dataList.stream().filter(aux -> aux.getTaskEnum().getId() == taskNameId).findFirst();
+			if (!optionalTask.isPresent())
+				return;
 
-		long minutesAgo = ChronoUnit.MINUTES.between(taskStatus.getLastExecution(), LocalDateTime.now());
-		return formatTimeAgo(minutesAgo);
-	}
+			TaskManagerAux taskAux = optionalTask.get();
+			taskAux.setLastExecution(taskState.getLastExecutionTime());
+			taskAux.setNextExecution(taskState.getNextExecutionTime());
+			taskAux.setScheduled(taskState.isScheduled());
+			taskAux.setExecuting(taskState.isExecuting());
+			taskAux.setHasReadyTask(taskState.getNextExecutionTime() != null && ChronoUnit.MINUTES.between(LocalDateTime.now(), taskState.getNextExecutionTime()) <= 0);
+			taskAux.setNearestMinutesUntilExecution(taskState.getNextExecutionTime() != null ? ChronoUnit.MINUTES.between(LocalDateTime.now(), taskState.getNextExecutionTime()) : Long.MAX_VALUE);
 
-	private String formatNextExecution(DTODailyTaskStatus taskStatus) {
-		if (taskStatus == null) {
-			return "Never";
-		}
+			FXCollections.sort(dataList, TASK_AUX_COMPARATOR);
+		});
 
-		if (taskStatus.getNextSchedule() != null) {
-			long minutesUntil = ChronoUnit.MINUTES.between(LocalDateTime.now(), taskStatus.getNextSchedule());
-			if (minutesUntil <= 0) {
-				return "Ready";
-			} else {
-				return formatTimeUntil(minutesUntil);
-			}
-		}
-
-		return "--";
-	}
-
-	private String formatTaskStatus(DTODailyTaskStatus taskStatus) {
-		if (taskStatus == null) {
-			return "Never";
-		}
-
-		if (taskStatus.getNextSchedule() != null) {
-			long minutesUntil = ChronoUnit.MINUTES.between(LocalDateTime.now(), taskStatus.getNextSchedule());
-			if (minutesUntil <= 0) {
-				return "Ready";
-			} else {
-				return formatTimeUntil(minutesUntil);
-			}
-		}
-
-		if (taskStatus.getLastExecution() != null) {
-			long minutesAgo = ChronoUnit.MINUTES.between(taskStatus.getLastExecution(), LocalDateTime.now());
-			return formatTimeAgo(minutesAgo);
-		}
-
-		return "--";
-	}
-
-	private String formatTimeAgo(long minutes) {
-		if (minutes < 1) {
-			return "Just now";
-		} else if (minutes < 60) {
-			return minutes + "m ago";
-		} else if (minutes < 1440) {
-			long hours = minutes / 60;
-			return hours + "h ago";
-		} else {
-			long days = minutes / 1440;
-			return days + "d ago";
-		}
-	}
-
-	private String formatTimeUntil(long minutes) {
-		if (minutes < 60) {
-			return minutes + "m";
-		} else if (minutes < 1440) {
-			long hours = minutes / 60;
-			return hours + "h";
-		} else {
-			long days = minutes / 1440;
-			return days + "d";
-		}
-	}
-
-	@Override
-	public void onProfileLoad(ProfileAux profile) {
-		loadTaskStatuses();
-	}
-
-	public void cleanup() {
-		if (updateTimeline != null) {
-			updateTimeline.stop();
-		}
-	}
-
-	// Inner classes for table data
-	public static class TaskRowData {
-
-	}
-
-	private String formatCombinedPetSkillsStatus(Map<Integer, DTODailyTaskStatus> taskStatuses) {
-		// Check all pet skill tasks and return the best status
-		TpDailyTaskEnum[] petSkillTasks = { TpDailyTaskEnum.PET_SKILL_STAMINA, TpDailyTaskEnum.PET_SKILL_FOOD, TpDailyTaskEnum.PET_SKILL_TREASURE, TpDailyTaskEnum.PET_SKILL_GATHERING };
-
-		String bestStatus = "Never";
-		int bestPriority = 0; // 0=Never, 1=Future, 2=Ready
-
-		for (TpDailyTaskEnum petSkillTask : petSkillTasks) {
-			DTODailyTaskStatus taskStatus = taskStatuses.get(petSkillTask.getId());
-			String status = formatTaskStatus(taskStatus);
-
-			int priority = 0;
-			if (status.equals("Ready")) {
-				priority = 2;
-			} else if (!status.equals("Never") && !status.equals("--")) {
-				priority = 1;
-			}
-
-			if (priority > bestPriority) {
-				bestPriority = priority;
-				bestStatus = status;
-			}
-		}
-
-		return bestStatus;
 	}
 
 }

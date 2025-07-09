@@ -25,6 +25,12 @@
 			<groupId>org.openjfx</groupId>
 			<artifactId>javafx-fxml</artifactId>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.controlsfx/controlsfx -->
+		<dependency>
+			<groupId>org.controlsfx</groupId>
+			<artifactId>controlsfx</artifactId>
+			<version>11.2.2</version>
+		</dependency>
 		<dependency>
 			<groupId>cl.camodev</groupId>
 			<artifactId>wos-ot</artifactId>

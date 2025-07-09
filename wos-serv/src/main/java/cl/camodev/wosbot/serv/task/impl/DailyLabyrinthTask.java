@@ -6,15 +6,16 @@ import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.serv.impl.ServLogs;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 
-public class ArenaTask extends DelayedTask {
+public class DailyLabyrinthTask extends DelayedTask {
 
-	public ArenaTask(DTOProfiles profile, TpDailyTaskEnum tpTask) {
+	public DailyLabyrinthTask(DTOProfiles profile, TpDailyTaskEnum tpTask) {
 		super(profile, tpTask);
 	}
 
 	@Override
 	protected void execute() {
-		ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Executing arena task");
+		// Implement the logic for the Daily Labyrinth task here
+		ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Executing daily labyrinth task");
 	}
 
 }

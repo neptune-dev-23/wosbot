@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import cl.camodev.wosbot.almac.entity.DailyTask;
+import cl.camodev.wosbot.almac.repo.DailyTaskRepository;
+import cl.camodev.wosbot.almac.repo.IDailyTaskRepository;
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
@@ -19,9 +22,6 @@ import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.serv.impl.ServLogs;
 import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.task.DelayedTask;
-import cl.camodev.wosbot.almac.entity.DailyTask;
-import cl.camodev.wosbot.almac.repo.DailyTaskRepository;
-import cl.camodev.wosbot.almac.repo.IDailyTaskRepository;
 import net.sourceforge.tess4j.TesseractException;
 
 public class IntelligenceTask extends DelayedTask {
@@ -40,8 +40,7 @@ public class IntelligenceTask extends DelayedTask {
 		// Check if GatherTask reschedule time is greater than 10 minutes
 		long gatherRemainingMinutes = isGatherTaskReadyForIntelligence();
 		if (gatherRemainingMinutes > 10) {
-			servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), 
-				"GatherTask reschedule time is more than 10 minutes, postponing IntelligenceTask");
+			servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "GatherTask reschedule time is more than 10 minutes, postponing IntelligenceTask");
 			reschedule(LocalDateTime.now().plusMinutes(gatherRemainingMinutes));
 			ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, LocalDateTime.now().plusMinutes(gatherRemainingMinutes));
 			return;
@@ -86,7 +85,8 @@ public class IntelligenceTask extends DelayedTask {
 				if (searchAndProcessBeast(EnumTemplates.INTEL_FIRE_BEAST, 5)) {
 					intelFound = true;
 				}
-				if (marchQueueLimitReached) return;
+				if (marchQueueLimitReached)
+					return;
 			}
 
 			sleepTask(500);
@@ -116,7 +116,8 @@ public class IntelligenceTask extends DelayedTask {
 						intelFound = true;
 						break;
 					}
-					if (marchQueueLimitReached) return;
+					if (marchQueueLimitReached)
+						return;
 				}
 			}
 
@@ -147,7 +148,8 @@ public class IntelligenceTask extends DelayedTask {
 						intelFound = true;
 						break;
 					}
-					if (marchQueueLimitReached) return;
+					if (marchQueueLimitReached)
+						return;
 				}
 
 			}
@@ -157,7 +159,7 @@ public class IntelligenceTask extends DelayedTask {
 			if (intelligence.isFound()) {
 				emuManager.tapAtPoint(EMULATOR_NUMBER, intelligence.getPoint());
 			}
-			
+
 			if (profile.getConfig(EnumConfigurationKey.INTEL_EXPLORATION_BOOL, Boolean.class)) {
 				sleepTask(500);
 				// @formatter:off
@@ -179,13 +181,14 @@ public class IntelligenceTask extends DelayedTask {
 						intelFound = true;
 						break;
 					}
-					if (marchQueueLimitReached) return;
+					if (marchQueueLimitReached)
+						return;
 				}
 
 			}
 
 			sleepTask(500);
-			if(intelFound == false) {
+			if (intelFound == false) {
 				try {
 					String rescheduleTime = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(120, 110), new DTOPoint(600, 146));
 					LocalDateTime reshchedule = parseAndAddTime(rescheduleTime);
@@ -354,39 +357,35 @@ public class IntelligenceTask extends DelayedTask {
 
 	private long isGatherTaskReadyForIntelligence() {
 		try {
-			DailyTask gatherTask = iDailyTaskRepository.findByProfileIdAndTaskName(profile.getId(), TpDailyTaskEnum.GATHER_RESOURCES);
-			
+			DailyTask gatherTask = iDailyTaskRepository.findByProfileIdAndTaskName(profile.getId(), TpDailyTaskEnum.GATHER_MEAT);
+
 			if (gatherTask == null) {
 				// GatherTask has never been executed, so intelligence can proceed
-				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), 
-					"GatherTask has never been executed, IntelligenceTask can proceed");
+				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), "GatherTask has never been executed, IntelligenceTask can proceed");
 				return (long) 0;
 			}
-			
+
 			LocalDateTime nextSchedule = gatherTask.getNextSchedule();
 			if (nextSchedule == null) {
 				// If there's no next schedule, allow intelligence to proceed
 				return (long) 0;
 			}
-			
+
 			// Check if the next schedule is more than 10 minutes from now
 			long minutesUntilNextSchedule = ChronoUnit.MINUTES.between(LocalDateTime.now(), nextSchedule);
-			
+
 			if (minutesUntilNextSchedule < 10) {
-				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), 
-					"GatherTask next schedule is in " + minutesUntilNextSchedule + " minutes, IntelligenceTask can proceed");
+				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), "GatherTask next schedule is in " + minutesUntilNextSchedule + " minutes, IntelligenceTask can proceed");
 				return (long) 0;
 			} else {
-				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), 
-					"GatherTask next schedule is in " + minutesUntilNextSchedule + " minutes, postponing IntelligenceTask");
+				servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), "GatherTask next schedule is in " + minutesUntilNextSchedule + " minutes, postponing IntelligenceTask");
 				return minutesUntilNextSchedule;
 			}
-			
+
 		} catch (Exception e) {
-			servLogs.appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(), 
-				"Error checking GatherTask status: " + e.getMessage());
+			servLogs.appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(), "Error checking GatherTask status: " + e.getMessage());
 			// In case of error, allow intelligence to proceed
-				return (long) 0;
+			return (long) 0;
 		}
 	}
 

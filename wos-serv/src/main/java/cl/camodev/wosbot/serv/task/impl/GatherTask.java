@@ -297,7 +297,7 @@ public class GatherTask extends DelayedTask {
 
 	private boolean isGatherSpeedTaskReadyForGathering() {
 		try {
-			DailyTask gatherSpeedTask = iDailyTaskRepository.findByProfileIdAndTaskName(profile.getId(), TpDailyTaskEnum.GATHER_SPEED);
+			DailyTask gatherSpeedTask = iDailyTaskRepository.findByProfileIdAndTaskName(profile.getId(), TpDailyTaskEnum.GATHER_BOOST);
 
 			if (gatherSpeedTask == null) {
 				// GatherSpeedTask has never been executed, so gathering should wait

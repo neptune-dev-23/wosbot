@@ -15,6 +15,9 @@ public enum EnumTemplates {
 	GAME_HOME_SHORTCUTS_HELP_REQUEST("/templates/shortcuts/helpRequest.png"),
 	
 	GAME_HOME_SHORTCUTS_UPGRADE("/templates/shortcuts/upgrade.png"),
+	DAILY_MISSION_DAILY_TAB("/templates/dailymission/dailyMissionTab.png"),
+	DAILY_MISSION_CLAIMALL_BUTTON("/templates/dailymission/claimAllButton.png"),
+	DAILY_MISSION_CLAIM_BUTTON("/templates/dailymission/claimButton.png"),
 	
 	
 	GAME_HOME_CAMP_TRAIN("/templates/home/camp/train.png"),

@@ -17,25 +17,30 @@ import cl.camodev.wosbot.emulator.EmulatorManager;
 import cl.camodev.wosbot.ex.HomeNotFoundException;
 import cl.camodev.wosbot.ot.DTOProfileStatus;
 import cl.camodev.wosbot.ot.DTOProfiles;
+import cl.camodev.wosbot.ot.DTOTaskState;
 import cl.camodev.wosbot.serv.impl.ServLogs;
 import cl.camodev.wosbot.serv.impl.ServProfiles;
+import cl.camodev.wosbot.serv.impl.ServTaskManager;
 import cl.camodev.wosbot.serv.task.impl.InitializeTask;
 
 public class TaskQueue {
+
 	// Cola que contendrá todas las tareas (no necesariamente ordenadas por tiempo).
 	private final PriorityBlockingQueue<DelayedTask> taskQueue = new PriorityBlockingQueue<>(11, new Comparator<DelayedTask>() {
 		@Override
 		public int compare(DelayedTask t1, DelayedTask t2) {
-			// Si t1 es InitializeTask y t2 no lo es, t1 tiene mayor prioridad.
+			// Initialize should always be executed first
 			if (t1 instanceof InitializeTask && !(t2 instanceof InitializeTask)) {
 				return -1;
 			} else if (!(t1 instanceof InitializeTask) && t2 instanceof InitializeTask) {
 				return 1;
 			}
-			// Si ambos son (o ninguno), se ordena según el delay.
+
+			// Compare by delay in seconds
 			return Long.compare(t1.getDelay(TimeUnit.SECONDS), t2.getDelay(TimeUnit.SECONDS));
 		}
 	});
+
 	// Bandera para detener el loop del scheduler.
 	private volatile boolean running = false;
 
@@ -62,20 +67,20 @@ public class TaskQueue {
 	 * Inicia el procesamiento de la cola.
 	 */
 	public void start() {
+
 		if (running)
 			return;
 		running = true;
 
 		schedulerThread = new Thread(() -> {
 
-			boolean idlingTimeExceded = false; // Indica si la demora mínima superó los 30 minutos
+			boolean idlingTimeExceded = false;
 			ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "Getting queue slot"));
 			try {
 				EmulatorManager.getInstance().adquireEmulatorSlot(profile.getId(), (thread, position) -> {
 					ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "Waiting for slot, position: " + position));
 				});
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			while (running) {
@@ -98,6 +103,7 @@ public class TaskQueue {
 
 				Iterator<DelayedTask> it = taskQueue.iterator();
 				while (it.hasNext()) {
+					DTOTaskState taskState = null;
 					DelayedTask task = it.next();
 					long delayInSeconds = task.getDelay(TimeUnit.SECONDS);
 
@@ -113,6 +119,16 @@ public class TaskQueue {
 						try {
 							ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Starting task execution");
 							ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "Executing " + task.getTaskName()));
+
+							taskState = new DTOTaskState();
+							taskState.setProfileId(profile.getId());
+							taskState.setTaskId(task.getTpDailyTaskId());
+							taskState.setScheduled(true);
+							taskState.setExecuting(true);
+							taskState.setLastExecutionTime(LocalDateTime.now());
+							taskState.setNextExecutionTime(task.getScheduled());
+							ServTaskManager.getInstance().setTaskState(profile.getId(), taskState);
+
 							task.run();
 						} catch (HomeNotFoundException e) {
 							ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, task.getTaskName(), profile.getName(), e.getMessage());
@@ -128,6 +144,13 @@ public class TaskQueue {
 							ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Task removed from schedule");
 						}
 
+						taskState.setExecuting(false);
+						taskState.setScheduled(task.isRecurring());
+						taskState.setLastExecutionTime(LocalDateTime.now());
+						taskState.setNextExecutionTime(task.getScheduled());
+
+						ServTaskManager.getInstance().setTaskState(profile.getId(), taskState);
+
 						executedTask = true;
 						break;
 					}
@@ -136,12 +159,11 @@ public class TaskQueue {
 				// Verificar condiciones según el delay mínimo de la cola de tareas
 				if (minDelay != Long.MAX_VALUE) { // Asegurar que hay tareas en la cola
 					long maxIdle = 0;
-					if (profile.getId().equals(Long.valueOf(3L))) {
-						maxIdle = 120L;
-					} else {
-						maxIdle = Optional.ofNullable(profile.getGlobalsettings().get(EnumConfigurationKey.MAX_IDLE_TIME_INT.name())).map(Integer::parseInt).orElse(Integer.parseInt(EnumConfigurationKey.MAX_IDLE_TIME_INT.getDefaultValue()));
-
-					}
+//					if (profile.getId().equals(Long.valueOf(3L))) {
+//						maxIdle = 120L;
+//					} else {
+					maxIdle = Optional.ofNullable(profile.getGlobalsettings().get(EnumConfigurationKey.MAX_IDLE_TIME_INT.name())).map(Integer::parseInt).orElse(Integer.parseInt(EnumConfigurationKey.MAX_IDLE_TIME_INT.getDefaultValue()));
+//					}
 
 					; // 30 minutos en segundos
 					if (!idlingTimeExceded && minDelay > TimeUnit.MINUTES.toSeconds(maxIdle)) {
@@ -261,7 +283,7 @@ public class TaskQueue {
 			// task already exists, reschedule it to run now
 			taskQueue.remove(existing);
 			existing.reschedule(LocalDateTime.now());
-			existing.setRecurring(false);
+			existing.setRecurring(true);
 			taskQueue.offer(existing);
 
 			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueue", profile.getName(), "Rescheduled existing " + taskEnum + " to run now");
@@ -272,6 +294,27 @@ public class TaskQueue {
 			taskQueue.offer(prototype);
 			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueue", profile.getName(), "Enqueued new immediate " + taskEnum);
 		}
+
+		DTOTaskState taskState = new DTOTaskState();
+		taskState.setProfileId(profile.getId());
+		taskState.setTaskId(taskEnum.getId());
+		taskState.setScheduled(true);
+		taskState.setExecuting(false);
+		taskState.setLastExecutionTime(prototype.getScheduled());
+		taskState.setNextExecutionTime(LocalDateTime.now());
+		ServTaskManager.getInstance().setTaskState(profile.getId(), taskState);
+	}
+
+	public boolean isTaskScheduled(TpDailyTaskEnum taskEnum) {
+		// Obtain the task prototype from the registry
+		DelayedTask prototype = DelayedTaskRegistry.create(taskEnum, profile);
+		if (prototype == null) {
+			ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, "TaskQueue", profile.getName(), "Task not found: " + taskEnum);
+			return false;
+		}
+		// Check if the task is enabled in the queue
+
+		return taskQueue.stream().anyMatch(task -> task.equals(prototype));
 	}
 
 }

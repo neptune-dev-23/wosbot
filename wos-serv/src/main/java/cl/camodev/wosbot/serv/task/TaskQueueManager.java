@@ -4,8 +4,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
+import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.ot.DTOProfiles;
+import cl.camodev.wosbot.ot.DTOTaskState;
 import cl.camodev.wosbot.serv.impl.ServLogs;
+import cl.camodev.wosbot.serv.impl.ServTaskManager;
 
 public class TaskQueueManager {
 
@@ -37,6 +40,14 @@ public class TaskQueueManager {
 	public void stopQueues() {
 		ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueueManager", "-", "Stopping queues");
 		taskQueues.forEach((k, v) -> {
+			for (TpDailyTaskEnum task : TpDailyTaskEnum.values()) {
+				DTOTaskState taskState = ServTaskManager.getInstance().getTaskState(k, task.getId());
+				if (taskState != null) {
+					taskState.setScheduled(false);
+					ServTaskManager.getInstance().setTaskState(k, taskState);
+				}
+			}
+
 			v.stop();
 		});
 		taskQueues.clear();

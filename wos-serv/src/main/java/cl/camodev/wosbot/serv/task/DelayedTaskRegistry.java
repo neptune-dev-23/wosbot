@@ -12,9 +12,12 @@ import cl.camodev.wosbot.serv.task.impl.AllianceHelpTask;
 import cl.camodev.wosbot.serv.task.impl.AllianceTechTask;
 import cl.camodev.wosbot.serv.task.impl.BankTask;
 import cl.camodev.wosbot.serv.task.impl.CrystalLaboratoryTask;
+import cl.camodev.wosbot.serv.task.impl.DailyMissionTask;
 import cl.camodev.wosbot.serv.task.impl.DailyStaminaTask;
 import cl.camodev.wosbot.serv.task.impl.ExplorationTask;
 import cl.camodev.wosbot.serv.task.impl.GatherSpeedTask;
+import cl.camodev.wosbot.serv.task.impl.GatherTask;
+import cl.camodev.wosbot.serv.task.impl.GatherTask.GatherType;
 import cl.camodev.wosbot.serv.task.impl.HeroRecruitmentTask;
 import cl.camodev.wosbot.serv.task.impl.InitializeTask;
 import cl.camodev.wosbot.serv.task.impl.IntelligenceTask;
@@ -44,14 +47,17 @@ public class DelayedTaskRegistry {
 		registry.put(TpDailyTaskEnum.LIFE_ESSENCE, profile -> new LifeEssenceTask(profile, TpDailyTaskEnum.LIFE_ESSENCE));
 
 		// Recolección y combate
-//		registry.put(TpDailyTaskEnum.GATHER_RESOURCES, profile -> new GatherTask(profile, TpDailyTaskEnum.GATHER_RESOURCES));
+		registry.put(TpDailyTaskEnum.GATHER_MEAT, profile -> new GatherTask(profile, TpDailyTaskEnum.GATHER_MEAT, GatherType.MEAT));
+		registry.put(TpDailyTaskEnum.GATHER_WOOD, profile -> new GatherTask(profile, TpDailyTaskEnum.GATHER_WOOD, GatherType.WOOD));
+		registry.put(TpDailyTaskEnum.GATHER_COAL, profile -> new GatherTask(profile, TpDailyTaskEnum.GATHER_COAL, GatherType.COAL));
+		registry.put(TpDailyTaskEnum.GATHER_IRON, profile -> new GatherTask(profile, TpDailyTaskEnum.GATHER_IRON, GatherType.IRON));
 		registry.put(TpDailyTaskEnum.BANK, profile -> new BankTask(profile, TpDailyTaskEnum.BANK));
 //		registry.put(TpDailyTaskEnum.BEAST_SLAY, profile -> new BeastSlayTask(profile, TpDailyTaskEnum.BEAST_SLAY));
-		registry.put(TpDailyTaskEnum.GATHER_SPEED, profile -> new GatherSpeedTask(profile, TpDailyTaskEnum.GATHER_SPEED));
+		registry.put(TpDailyTaskEnum.GATHER_BOOST, profile -> new GatherSpeedTask(profile, TpDailyTaskEnum.GATHER_BOOST));
 
 		// Recompensas diarias / bandeja
 		registry.put(TpDailyTaskEnum.MAIL_REWARDS, profile -> new MailRewardsTask(profile, TpDailyTaskEnum.MAIL_REWARDS));
-//		registry.put(TpDailyTaskEnum.DAILY_TASKS, profile -> new OnlineRewardTask(profile, TpDailyTaskEnum.DAILY_TASKS));
+		registry.put(TpDailyTaskEnum.DAILY_MISSIONS, profile -> new DailyMissionTask(profile, TpDailyTaskEnum.DAILY_MISSIONS));
 		registry.put(TpDailyTaskEnum.STOREHOUSE_CHEST, profile -> new OnlineRewardTask(profile, TpDailyTaskEnum.STOREHOUSE_CHEST));
 		registry.put(TpDailyTaskEnum.INTEL, profile -> new IntelligenceTask(profile, TpDailyTaskEnum.INTEL));
 		registry.put(TpDailyTaskEnum.STOREHOUSE_STAMINA, profile -> new DailyStaminaTask(profile, TpDailyTaskEnum.STOREHOUSE_STAMINA));

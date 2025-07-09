@@ -16,6 +16,7 @@ import cl.camodev.wosbot.serv.task.impl.InitializeTask;
 public abstract class DelayedTask implements Runnable {
 
 	protected volatile boolean recurring = true;
+	protected LocalDateTime lastExecutionTime;
 	protected LocalDateTime scheduledTime;
 	protected String taskName;
 	protected DTOProfiles profile;
@@ -37,25 +38,31 @@ public abstract class DelayedTask implements Runnable {
 
 	@Override
 	public void run() {
+
 		if (this instanceof InitializeTask) {
 			execute();
 			return;
 		}
 
 		if (!EmulatorManager.getInstance().isPackageRunning(EMULATOR_NUMBER, EmulatorManager.WHITEOUT_PACKAGE)) {
-			homeAttemps = 0;
 			throw new HomeNotFoundException("Game is not running");
 		}
 
 		if (isGameHomeFound()) {
 			execute();
-		} else {
+			return;
+		}
+
+		for (int attempt = 1; attempt <= 10; attempt++) {
 			EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
-			if (++homeAttemps >= 10) {
-				homeAttemps = 0;
-				throw new HomeNotFoundException("Home not found after 10 attempts");
+			sleepTask(100);
+			if (isGameHomeFound()) {
+				execute();
+				return;
 			}
 		}
+
+		throw new HomeNotFoundException("Home not found after 10 attempts");
 	}
 
 	private boolean isGameHomeFound() {
@@ -69,8 +76,20 @@ public abstract class DelayedTask implements Runnable {
 		return recurring;
 	}
 
+	public void setLastExecutionTime(LocalDateTime lastExecutionTime) {
+		this.lastExecutionTime = lastExecutionTime;
+	}
+
+	public LocalDateTime getLastExecutionTime() {
+		return lastExecutionTime;
+	}
+
 	public Integer getTpDailyTaskId() {
 		return tpTask.getId();
+	}
+
+	public TpDailyTaskEnum getTpTask() {
+		return tpTask;
 	}
 
 	public void setRecurring(boolean recurring) {
@@ -114,26 +133,23 @@ public abstract class DelayedTask implements Runnable {
 			return false;
 
 		DelayedTask that = (DelayedTask) o;
-		// 1) Mismo tipo de tarea y mismo perfil
+
 		if (tpTask != that.tpTask)
 			return false;
 		if (!Objects.equals(profile.getId(), that.profile.getId()))
 			return false;
 
-		// 2) Sólo comparamos distinctKey si alguno lo define (no-null)
 		Object keyThis = this.getDistinctKey();
 		Object keyThat = that.getDistinctKey();
 		if (keyThis != null || keyThat != null) {
 			return Objects.equals(keyThis, keyThat);
 		}
 
-		// 3) Si ambos keys son null, da por igual y decimos que son iguales
 		return true;
 	}
 
 	@Override
 	public int hashCode() {
-		// Incluyo getDistinctKey() sólo si no es null, para mantener coherencia con equals
 		Object key = getDistinctKey();
 		if (key != null) {
 			return Objects.hash(getClass(), tpTask, profile.getId(), key);
