@@ -54,10 +54,15 @@ public enum EnumTemplates {
 	
 	ALLIANCE_CHEST_BUTTON("/templates/alliance/chestButton.png"),
 	ALLIANCE_TECH_BUTTON("/templates/alliance/techButton.png"),
+	ALLIANCE_TRIUMPH_BUTTON("/templates/alliance/triumphButton.png"),
+	ALLIANCE_TRIUMPH_DAILY_CLAIMED("/templates/alliance/triumphDailyClaimed.png"),
+	ALLIANCE_TRIUMPH_DAILY("/templates/alliance/triumphDaily.png"),
+	ALLIANCE_TRIUMPH_WEEKLY("/templates/alliance/triumphWeekly.png"),
 	ALLIANCE_TECH_THUMB_UP("/templates/alliance/techThumbUp.png"),
 	ALLIANCE_WAR_BUTTON("/templates/alliance/warButton.png"),
 	ALLIANCE_HELP_BUTTON("/templates/alliance/helpButton.png"),
 	ALLIANCE_HELP_REQUESTS("/templates/alliance/helpRequests.png"),
+	
 	
 	ALLIANCE_CHEST_LOOT_CLAIM_BUTTON("/templates/alliance/lootClaimAllButton.png"),
 	
@@ -137,6 +142,9 @@ public enum EnumTemplates {
 	
 	LIFE_ESSENCE_MENU("/templates/essence/threeMenu.png"),
 	LIFE_ESSENCE_CLAIM("/templates/essence/claim.png"),
+	LIFE_ESSENCE_DAILY_CARING_AVAILABLE("/templates/essence/dailyCaringAvailable.png"),
+	LIFE_ESSENCE_DAILY_CARING_GOTO_ISLAND("/templates/essence/dailyCaringGotoIsland.png"),
+	LIFE_ESSENCE_DAILY_CARING_BUTTON("/templates/essence/dailyCaringButton.png"),
 	
 	NOMADIC_MERCHANT_COAL("/templates/nomadicmerchant/coal.png"), 
 	NOMADIC_MERCHANT_WOOD("/templates/nomadicmerchant/wood.png"), 

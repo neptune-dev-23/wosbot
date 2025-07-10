@@ -38,6 +38,7 @@ import cl.camodev.wosbot.serv.task.impl.AllianceChestTask;
 import cl.camodev.wosbot.serv.task.impl.AllianceHelpTask;
 import cl.camodev.wosbot.serv.task.impl.AllianceTechTask;
 import cl.camodev.wosbot.serv.task.impl.CrystalLaboratoryTask;
+import cl.camodev.wosbot.serv.task.impl.DailyMissionTask;
 import cl.camodev.wosbot.serv.task.impl.DailyStaminaTask;
 import cl.camodev.wosbot.serv.task.impl.ExplorationTask;
 import cl.camodev.wosbot.serv.task.impl.GatherSpeedTask;
@@ -56,6 +57,7 @@ import cl.camodev.wosbot.serv.task.impl.PetSkillsTask;
 import cl.camodev.wosbot.serv.task.impl.PetSkillsTask.PetSkill;
 import cl.camodev.wosbot.serv.task.impl.TrainingTroopsTask;
 import cl.camodev.wosbot.serv.task.impl.TrainingTroopsTask.TroopType;
+import cl.camodev.wosbot.serv.task.impl.TriumphTask;
 import cl.camodev.wosbot.serv.task.impl.UpgradeFurnaceTask;
 import cl.camodev.wosbot.serv.task.impl.VipTask;
 import cl.camodev.wosbot.serv.task.impl.WarAcademyTask;
@@ -122,6 +124,10 @@ public class ServScheduler {
 				// Mapa de tareas con listas para manejar múltiples instancias de tareas bajo la misma clave
 				Map<EnumConfigurationKey, List<Supplier<DelayedTask>>> taskMappings = new HashMap<>();
 				
+				taskMappings.put(EnumConfigurationKey.DAILY_MISSION_BOOL, List.of(
+                    () -> new DailyMissionTask(profile, TpDailyTaskEnum.DAILY_MISSIONS)
+                ));
+				
 				taskMappings.put(EnumConfigurationKey.GATHER_SPEED_BOOL, List.of(
 					() -> new GatherSpeedTask(profile, TpDailyTaskEnum.GATHER_BOOST)
 				));
@@ -160,6 +166,10 @@ public class ServScheduler {
 				
 				taskMappings.put(EnumConfigurationKey.ALLIANCE_HELP_REQUESTS_BOOL, List.of(
                     () -> new AllianceHelpTask(profile, TpDailyTaskEnum.ALLIANCE_HELP)
+                ));
+				
+				taskMappings.put(EnumConfigurationKey.ALLIANCE_TRIUMPH_BOOL, List.of(
+                    () -> new TriumphTask(profile, TpDailyTaskEnum.ALLIANCE_TRIUMPH)
                 ));
 
 				taskMappings.put(EnumConfigurationKey.BOOL_TRAINING_TROOPS, List.of(

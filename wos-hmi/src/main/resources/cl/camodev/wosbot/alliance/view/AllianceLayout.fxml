@@ -19,6 +19,8 @@
       <RowConstraints maxHeight="1.7976931348623157E308" minHeight="10.0" percentHeight="25.0" prefHeight="277.0" vgrow="SOMETIMES" />
       <RowConstraints maxHeight="1.7976931348623157E308" minHeight="10.0" percentHeight="25.0" prefHeight="277.0" vgrow="SOMETIMES" />
       <RowConstraints maxHeight="1.7976931348623157E308" minHeight="10.0" percentHeight="25.0" prefHeight="277.0" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="1.7976931348623157E308" minHeight="10.0" percentHeight="25.0" prefHeight="277.0" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="1.7976931348623157E308" minHeight="10.0" percentHeight="25.0" prefHeight="277.0" vgrow="SOMETIMES" />
   </rowConstraints>
    <children>
       <CheckBox fx:id="checkBoxTechContribution" mnemonicParsing="false" text="Tech contribution">
@@ -31,12 +33,12 @@
             <Insets />
          </GridPane.margin>
       </CheckBox>
-      <CheckBox fx:id="checkBoxAutojoin" mnemonicParsing="false" text="Enable Autojoin" GridPane.rowIndex="2">
+      <CheckBox fx:id="checkBoxAutojoin" mnemonicParsing="false" text="Enable Autojoin" GridPane.rowIndex="4">
          <GridPane.margin>
             <Insets />
          </GridPane.margin>
       </CheckBox>
-      <CheckBox fx:id="checkBoxHelpRequests" mnemonicParsing="false" text="Help request" GridPane.rowIndex="3" />
+      <CheckBox fx:id="checkBoxHelpRequests" mnemonicParsing="false" text="Help request" GridPane.rowIndex="5" />
       <Label text="Offset Time" GridPane.columnIndex="1">
          <GridPane.margin>
             <Insets />
@@ -47,13 +49,13 @@
             <Insets />
          </GridPane.margin>
       </Label>
-      <Label text="Number of queues" GridPane.columnIndex="1" GridPane.rowIndex="2">
+      <Label text="Number of queues" GridPane.columnIndex="1" GridPane.rowIndex="4">
          <GridPane.margin>
             <Insets />
          </GridPane.margin>
       </Label>
-      <Label text="Offset Time" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-      <TextField fx:id="textfieldAutojoinQueues" GridPane.columnIndex="2" GridPane.rowIndex="2">
+      <Label text="Offset Time" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+      <TextField fx:id="textfieldAutojoinQueues" GridPane.columnIndex="2" GridPane.rowIndex="4">
          <GridPane.margin>
             <Insets />
          </GridPane.margin>
@@ -68,10 +70,16 @@
             <Insets />
          </GridPane.margin>
       </TextField>
-      <TextField fx:id="textfieldHelpRequstOffset" GridPane.columnIndex="2" GridPane.rowIndex="3">
+      <TextField fx:id="textfieldHelpRequstOffset" GridPane.columnIndex="2" GridPane.rowIndex="5">
          <GridPane.margin>
             <Insets />
          </GridPane.margin>
       </TextField>
+      <CheckBox fx:id="checkBoxTriumph" mnemonicParsing="false" text="Claim Triumph" GridPane.rowIndex="2" />
+      <Label text="Offset Time" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+      <TextField fx:id="textfieldTriumphOffset" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+      <CheckBox fx:id="checkBoxAlliesEssence" mnemonicParsing="false" text="Claim allies essence" GridPane.rowIndex="3" />
+      <Label text="Fail offset time" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+      <TextField fx:id="textfieldAlliesEssenceOffsett" GridPane.columnIndex="2" GridPane.rowIndex="3" />
    </children>
 </GridPane>

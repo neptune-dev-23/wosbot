@@ -21,6 +21,7 @@ import cl.camodev.wosbot.serv.task.impl.GatherTask.GatherType;
 import cl.camodev.wosbot.serv.task.impl.HeroRecruitmentTask;
 import cl.camodev.wosbot.serv.task.impl.InitializeTask;
 import cl.camodev.wosbot.serv.task.impl.IntelligenceTask;
+import cl.camodev.wosbot.serv.task.impl.LifeEssenceCaringTask;
 import cl.camodev.wosbot.serv.task.impl.LifeEssenceTask;
 import cl.camodev.wosbot.serv.task.impl.MailRewardsTask;
 import cl.camodev.wosbot.serv.task.impl.NomadicMerchantTask;
@@ -29,6 +30,7 @@ import cl.camodev.wosbot.serv.task.impl.PetAdventureChestTask;
 import cl.camodev.wosbot.serv.task.impl.PetAllianceTreasuresTask;
 import cl.camodev.wosbot.serv.task.impl.PetSkillsTask;
 import cl.camodev.wosbot.serv.task.impl.TrainingTroopsTask;
+import cl.camodev.wosbot.serv.task.impl.TriumphTask;
 import cl.camodev.wosbot.serv.task.impl.UpgradeFurnaceTask;
 import cl.camodev.wosbot.serv.task.impl.VipTask;
 import cl.camodev.wosbot.serv.task.impl.WarAcademyTask;
@@ -45,6 +47,7 @@ public class DelayedTaskRegistry {
 		registry.put(TpDailyTaskEnum.PET_ADVENTURE, profile -> new PetAdventureChestTask(profile, TpDailyTaskEnum.PET_ADVENTURE));
 		registry.put(TpDailyTaskEnum.EXPLORATION_CHEST, profile -> new ExplorationTask(profile, TpDailyTaskEnum.EXPLORATION_CHEST));
 		registry.put(TpDailyTaskEnum.LIFE_ESSENCE, profile -> new LifeEssenceTask(profile, TpDailyTaskEnum.LIFE_ESSENCE));
+		registry.put(TpDailyTaskEnum.LIFE_ESSENCE_CARING, profile -> new LifeEssenceCaringTask(profile, TpDailyTaskEnum.LIFE_ESSENCE_CARING));
 
 		// Recolección y combate
 		registry.put(TpDailyTaskEnum.GATHER_MEAT, profile -> new GatherTask(profile, TpDailyTaskEnum.GATHER_MEAT, GatherType.MEAT));
@@ -68,6 +71,7 @@ public class DelayedTaskRegistry {
 		registry.put(TpDailyTaskEnum.ALLIANCE_TECH, profile -> new AllianceTechTask(profile, TpDailyTaskEnum.ALLIANCE_TECH));
 		registry.put(TpDailyTaskEnum.ALLIANCE_PET_TREASURE, profile -> new PetAllianceTreasuresTask(profile, TpDailyTaskEnum.ALLIANCE_PET_TREASURE));
 		registry.put(TpDailyTaskEnum.ALLIANCE_CHESTS, profile -> new AllianceChestTask(profile, TpDailyTaskEnum.ALLIANCE_CHESTS));
+		registry.put(TpDailyTaskEnum.ALLIANCE_TRIUMPH, profile -> new TriumphTask(profile, TpDailyTaskEnum.ALLIANCE_TRIUMPH));
 
 		// Mascotas
 		registry.put(TpDailyTaskEnum.PET_SKILL_STAMINA, profile -> new PetSkillsTask(profile, TpDailyTaskEnum.PET_SKILL_STAMINA, PetSkillsTask.PetSkill.STAMINA));

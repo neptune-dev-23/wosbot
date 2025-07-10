@@ -12,6 +12,7 @@ public enum TpDailyTaskEnum {
 	EXPLORATION_CHEST(7, "Exploration Chest"),
 
 	LIFE_ESSENCE(9, "Life Essence"),
+	LIFE_ESSENCE_CARING(10, "Life Essence Caring"),
 	
 	BANK(14, "Bank"),
 //	BEAST_SLAY(15, "Beast Slay"),
@@ -30,6 +31,7 @@ public enum TpDailyTaskEnum {
 	ALLIANCE_TECH(42, "Alliance Tech"),
 	ALLIANCE_PET_TREASURE(43, "Alliance Pet Treasure"),
 	ALLIANCE_CHESTS(44, "Alliance Chests"),
+	ALLIANCE_TRIUMPH(45, "Alliance Triumph"),
 	
 	PET_SKILL_STAMINA(51, "Pet Skill Stamina"),
 	PET_SKILL_FOOD(52, "Pet Skill Food"),

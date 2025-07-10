@@ -37,6 +37,8 @@ public enum EnumConfigurationKey {
 	ALLIANCE_PET_TREASURE_BOOL("false",Boolean.class),
 	ALLIANCE_HELP_REQUESTS_BOOL("false",Boolean.class),
 	ALLIANCE_HELP_REQUESTS_OFFSET_INT("1",Integer.class),
+	ALLIANCE_TRIUMPH_BOOL("false",Boolean.class),
+	ALLIANCE_TRIUMPH_OFFSET_INT("1",Integer.class),
 	
 	GATHER_SPEED_BOOL("false",Boolean.class),
 	GATHER_COAL_BOOL("false",Boolean.class),
@@ -58,12 +60,14 @@ public enum EnumConfigurationKey {
 	
 	LIFE_ESSENCE_BOOL("false",Boolean.class),
 	LIFE_ESSENCE_OFFSET_INT("1",Integer.class),
+	ALLIANCE_LIFE_ESSENCE_BOOL("false",Boolean.class),
+	ALLIANCE_LIFE_ESSENCE_OFFSET_INT("1",Integer.class),
 	
 	MAIL_REWARDS_BOOL("false",Boolean.class),
 	MAIL_REWARDS_OFFSET_INT("1",Integer.class),
 	
-	DAILY_TASKS_BOOL("false",Boolean.class),
-	DAILY_TASKS_OFFSET_INT("1",Integer.class),
+	DAILY_MISSION_BOOL("false",Boolean.class),
+	DAILY_MISSION_OFFSET_INT("1",Integer.class),
 	
 	STOREHOUSE_CHEST_BOOL("false",Boolean.class),
 	STOREHOUSE_STAMINA_BOOL("false",Boolean.class),
@@ -75,7 +79,7 @@ public enum EnumConfigurationKey {
 	PET_PERSONAL_TREASURE_BOOL("false",Boolean.class),
 	
 	BOOL_BANK("false",Boolean.class),
-	INT_BANK_DELAY("1",Integer.class),
+	INT_BANK_DELAY("1",Integer.class),  
 	;
 	//@formatter:on
 	private final String defaultValue;

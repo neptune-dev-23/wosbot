@@ -1,5 +1,8 @@
 package cl.camodev.wosbot.serv.task.impl;
 
+import java.time.LocalDateTime;
+
+import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
@@ -53,6 +56,9 @@ public class DailyMissionTask extends DelayedTask {
 		}
 		emulatorManager.tapBackButton(EMULATOR_NUMBER);
 		sleepTask(50);
+		LocalDateTime nextSchedule = LocalDateTime.now().plusHours(profile.getConfig(EnumConfigurationKey.DAILY_MISSION_OFFSET_INT, Integer.class));
+		this.reschedule(nextSchedule);
+		ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, nextSchedule);
 
 	}
 
