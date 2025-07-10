@@ -92,8 +92,7 @@ public class ConsoleLogLayoutController {
 
 	@FXML
 	void handleButtonResetProfileFilter(ActionEvent event) {
-		comboBoxProfileFilter.setValue(null);
-		comboBoxProfileFilter.getSelectionModel().clearSelection();
+		comboBoxProfileFilter.getSelectionModel().selectFirst(); // Select "All profiles"
 		updateLogFilter();
 	}
 
@@ -103,8 +102,10 @@ public class ConsoleLogLayoutController {
 			List<DTOProfiles> profiles = ServProfiles.getServices().getProfiles();
 			if (profiles != null) {
 				ObservableList<String> profileNames = FXCollections.observableArrayList();
+				profileNames.add("All profiles");
 				profiles.forEach(profile -> profileNames.add(profile.getName()));
 				comboBoxProfileFilter.setItems(profileNames);
+				comboBoxProfileFilter.getSelectionModel().selectFirst(); // Select "All profiles" by default
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -122,7 +123,7 @@ public class ConsoleLogLayoutController {
 		filteredLogMessages.setPredicate(logMessage -> {
 			// Profile filter
 			String selectedProfile = comboBoxProfileFilter.getValue();
-			if (selectedProfile != null && !selectedProfile.isEmpty()) {
+			if (selectedProfile != null && !selectedProfile.isEmpty() && !"All profiles".equals(selectedProfile)) {
 				String messageProfile = logMessage.profileProperty().get();
 				if (messageProfile == null || !messageProfile.equals(selectedProfile)) {
 					return false;

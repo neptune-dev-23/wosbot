@@ -42,7 +42,7 @@
                   <Insets />
                </HBox.margin>
             </CheckBox>
-            <ComboBox fx:id="comboBoxProfileFilter" prefWidth="120.0" promptText="All Profiles" HBox.hgrow="NEVER">
+            <ComboBox fx:id="comboBoxProfileFilter" prefWidth="120.0" HBox.hgrow="NEVER">
                <HBox.margin>
                   <Insets right="5.0" />
                </HBox.margin>
