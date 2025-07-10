@@ -264,25 +264,26 @@ public class ServScheduler {
 //						ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Scheduling tasks");
 						for (Supplier<DelayedTask> taskSupplier : taskSuppliers) {
 							DelayedTask task = taskSupplier.get();
+							DTOTaskState taskState = new DTOTaskState();
+							taskState.setProfileId(profile.getId());
+							taskState.setTaskId(task.getTpTask().getId());
+							taskState.setExecuting(false);
+							taskState.setScheduled(true);
+							taskState.setNextExecutionTime(task.getScheduled());
+							
 							if (taskSchedules.containsKey(task.getTpDailyTaskId())) {
-
-								LocalDateTime nextSchedule = taskSchedules.get(task.getTpDailyTaskId()).getNextSchedule();
+								DTODailyTaskStatus taskStatus = taskSchedules.get(task.getTpDailyTaskId());
+								LocalDateTime nextSchedule = taskStatus.getNextSchedule();
 								task.reschedule(nextSchedule);
+								taskState.setLastExecutionTime(taskStatus.getLastExecution());
 
 								ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Next Execution: " + nextSchedule.format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss")));
 
 							} else {
 								ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Task not completed, scheduling for today");
 								task.reschedule(LocalDateTime.now());
-
+								taskState.setLastExecutionTime(null); // No previous execution
 							}
-							DTOTaskState taskState = new DTOTaskState();
-							taskState.setProfileId(profile.getId());
-							taskState.setTaskId(task.getTpTask().getId());
-							taskState.setExecuting(false);
-							taskState.setScheduled(true);
-							taskState.setLastExecutionTime(taskSchedules.get(task.getTpDailyTaskId()).getLastExecution());
-							taskState.setNextExecutionTime(task.getScheduled());
 
 							ServTaskManager.getInstance().setTaskState(profile.getId(), taskState);
 							queue.addTask(task);
