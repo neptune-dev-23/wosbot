@@ -20,6 +20,7 @@ import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.ot.DTOTaskState;
 import cl.camodev.wosbot.serv.impl.ServLogs;
 import cl.camodev.wosbot.serv.impl.ServProfiles;
+import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.impl.ServTaskManager;
 import cl.camodev.wosbot.serv.task.impl.InitializeTask;
 
@@ -150,6 +151,7 @@ public class TaskQueue {
 						taskState.setNextExecutionTime(task.getScheduled());
 
 						ServTaskManager.getInstance().setTaskState(profile.getId(), taskState);
+						ServScheduler.getServices().updateDailyTaskStatus(profile, task.getTpTask(), task.getScheduled());
 
 						executedTask = true;
 						break;

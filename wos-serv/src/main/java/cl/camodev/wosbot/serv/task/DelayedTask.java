@@ -7,10 +7,13 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
+import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.emulator.EmulatorManager;
 import cl.camodev.wosbot.ex.HomeNotFoundException;
 import cl.camodev.wosbot.ot.DTOProfiles;
+import cl.camodev.wosbot.serv.impl.ServLogs;
+import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.task.impl.InitializeTask;
 
 public abstract class DelayedTask implements Runnable {
@@ -22,7 +25,10 @@ public abstract class DelayedTask implements Runnable {
 	protected DTOProfiles profile;
 	protected String EMULATOR_NUMBER;
 	protected TpDailyTaskEnum tpTask;
-	protected int homeAttemps = 0;
+
+	protected EmulatorManager emuManager = EmulatorManager.getInstance();
+	protected ServScheduler servScheduler = ServScheduler.getServices();
+	protected ServLogs servLogs = ServLogs.getServices();
 
 	protected Object getDistinctKey() {
 		return null;
@@ -67,7 +73,11 @@ public abstract class DelayedTask implements Runnable {
 
 	private boolean isGameHomeFound() {
 		EmulatorManager emulator = EmulatorManager.getInstance();
-		return emulator.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90).isFound() || emulator.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 0, 0, 720, 1280, 90).isFound();
+		return emulator
+				.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90)
+				.isFound()
+				|| emulator.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 0, 0, 720,
+						1280, 90).isFound();
 	}
 
 	protected abstract void execute();
@@ -156,5 +166,21 @@ public abstract class DelayedTask implements Runnable {
 		} else {
 			return Objects.hash(getClass(), tpTask, profile.getId());
 		}
+	}
+
+	public void logInfo(String message) {
+		servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), message);
+	}
+
+	public void logWarning(String message) {
+		servLogs.appendLog(EnumTpMessageSeverity.WARNING, taskName, profile.getName(), message);
+	}
+
+	public void logError(String message) {
+		servLogs.appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(), message);
+	}
+
+	public void logDebug(String message) {
+		servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), message);
 	}
 }

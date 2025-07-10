@@ -15,8 +15,6 @@ import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 
 public class AllianceHelpTask extends DelayedTask {
-	private EmulatorManager emulator = EmulatorManager.getInstance();
-	private ServLogs logs = ServLogs.getServices();
 
 	public AllianceHelpTask(DTOProfiles profile, TpDailyTaskEnum tpDailyTask) {
 		super(profile, tpDailyTask);
@@ -25,43 +23,36 @@ public class AllianceHelpTask extends DelayedTask {
 	@Override
 	protected void execute() {
 
-		// Verificar si estamos en HOME o en WORLD
-		boolean isHomeOrWorld = emulator.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90).isFound() || emulator.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 0, 0, 720, 1280, 90).isFound();
-
-		if (!isHomeOrWorld) {
-			logs.appendLog(EnumTpMessageSeverity.WARNING, taskName, profile.getName(), "Home not found");
-			emulator.tapBackButton(EMULATOR_NUMBER);
-			return;
-		}
-
-		logs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Going to alliance help");
+		logInfo("Going to alliance help");
 
 		// Ir a la sección de cofres de alianza
-		emulator.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(493, 1187), new DTOPoint(561, 1240));
+		emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(493, 1187), new DTOPoint(561, 1240));
 		sleepTask(3000);
 
-		DTOImageSearchResult allianceChestResult = emulator.searchTemplate(EMULATOR_NUMBER, EnumTemplates.ALLIANCE_HELP_BUTTON.getTemplate(), 0, 0, 720, 1280, 90);
+		DTOImageSearchResult allianceChestResult = emuManager.searchTemplate(EMULATOR_NUMBER,
+				EnumTemplates.ALLIANCE_HELP_BUTTON.getTemplate(), 0, 0, 720, 1280, 90);
 		if (!allianceChestResult.isFound()) {
-			logs.appendLog(EnumTpMessageSeverity.WARNING, taskName, profile.getName(), "Alliance help button not found");
+			logWarning("Alliance help button not found");
 			rescheduleTask();
 			return;
 		}
-		logs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Alliance help button found");
-		emulator.tapAtRandomPoint(EMULATOR_NUMBER, allianceChestResult.getPoint(), allianceChestResult.getPoint());
+		logInfo("Alliance help button found");
+		emuManager.tapAtRandomPoint(EMULATOR_NUMBER, allianceChestResult.getPoint(), allianceChestResult.getPoint());
 
 		sleepTask(500);
 
-		DTOImageSearchResult allianceHelpResult = emulator.searchTemplate(EMULATOR_NUMBER, EnumTemplates.ALLIANCE_HELP_REQUESTS.getTemplate(), 0, 0, 720, 1280, 90);
+		DTOImageSearchResult allianceHelpResult = emuManager.searchTemplate(EMULATOR_NUMBER,
+				EnumTemplates.ALLIANCE_HELP_REQUESTS.getTemplate(), 0, 0, 720, 1280, 90);
 		if (allianceHelpResult.isFound()) {
-			logs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Helping alliance members");
-			emulator.tapAtRandomPoint(EMULATOR_NUMBER, allianceHelpResult.getPoint(), allianceHelpResult.getPoint());
+			logInfo("Helping alliance members");
+			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, allianceHelpResult.getPoint(), allianceHelpResult.getPoint());
 
 		} else {
-			logs.appendLog(EnumTpMessageSeverity.WARNING, taskName, profile.getName(), "Alliance help requests not found");
+			logWarning("Alliance help requests not found");
 		}
-		emulator.tapBackButton(EMULATOR_NUMBER);
+		emuManager.tapBackButton(EMULATOR_NUMBER);
 		sleepTask(100);
-		emulator.tapBackButton(EMULATOR_NUMBER);
+		emuManager.tapBackButton(EMULATOR_NUMBER);
 
 		rescheduleTask();
 	}
@@ -72,10 +63,7 @@ public class AllianceHelpTask extends DelayedTask {
 	private void rescheduleTask() {
 		int offset = profile.getConfig(EnumConfigurationKey.ALLIANCE_HELP_REQUESTS_OFFSET_INT, Integer.class);
 		LocalDateTime nextExecutionTime = LocalDateTime.now().plusHours(offset);
-
 		this.reschedule(nextExecutionTime);
-		ServScheduler.getServices().updateDailyTaskStatus(profile, TpDailyTaskEnum.ALLIANCE_HELP, nextExecutionTime);
-
 	}
 
 }

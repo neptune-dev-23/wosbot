@@ -25,8 +25,7 @@ import cl.camodev.wosbot.serv.task.DelayedTask;
 import net.sourceforge.tess4j.TesseractException;
 
 public class IntelligenceTask extends DelayedTask {
-	private final EmulatorManager emuManager = EmulatorManager.getInstance();
-	private final ServLogs servLogs = ServLogs.getServices();
+
 	private final IDailyTaskRepository iDailyTaskRepository = DailyTaskRepository.getRepository();
 	private boolean marchQueueLimitReached = false;
 

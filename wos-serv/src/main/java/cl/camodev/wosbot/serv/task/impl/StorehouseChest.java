@@ -19,12 +19,12 @@ import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 import net.sourceforge.tess4j.TesseractException;
 
-public class OnlineRewardTask extends DelayedTask {
+public class StorehouseChest extends DelayedTask {
 
 	private final EmulatorManager emuManager = EmulatorManager.getInstance();
 	private final ServLogs servLogs = ServLogs.getServices();
 
-	public OnlineRewardTask(DTOProfiles profile, TpDailyTaskEnum tpDailyTask) {
+	public StorehouseChest(DTOProfiles profile, TpDailyTaskEnum tpDailyTask) {
 		super(profile, tpDailyTask);
 	}
 

@@ -25,7 +25,7 @@ import cl.camodev.wosbot.serv.task.impl.LifeEssenceCaringTask;
 import cl.camodev.wosbot.serv.task.impl.LifeEssenceTask;
 import cl.camodev.wosbot.serv.task.impl.MailRewardsTask;
 import cl.camodev.wosbot.serv.task.impl.NomadicMerchantTask;
-import cl.camodev.wosbot.serv.task.impl.OnlineRewardTask;
+import cl.camodev.wosbot.serv.task.impl.StorehouseChest;
 import cl.camodev.wosbot.serv.task.impl.PetAdventureChestTask;
 import cl.camodev.wosbot.serv.task.impl.PetAllianceTreasuresTask;
 import cl.camodev.wosbot.serv.task.impl.PetSkillsTask;
@@ -61,7 +61,7 @@ public class DelayedTaskRegistry {
 		// Recompensas diarias / bandeja
 		registry.put(TpDailyTaskEnum.MAIL_REWARDS, profile -> new MailRewardsTask(profile, TpDailyTaskEnum.MAIL_REWARDS));
 		registry.put(TpDailyTaskEnum.DAILY_MISSIONS, profile -> new DailyMissionTask(profile, TpDailyTaskEnum.DAILY_MISSIONS));
-		registry.put(TpDailyTaskEnum.STOREHOUSE_CHEST, profile -> new OnlineRewardTask(profile, TpDailyTaskEnum.STOREHOUSE_CHEST));
+		registry.put(TpDailyTaskEnum.STOREHOUSE_CHEST, profile -> new StorehouseChest(profile, TpDailyTaskEnum.STOREHOUSE_CHEST));
 		registry.put(TpDailyTaskEnum.INTEL, profile -> new IntelligenceTask(profile, TpDailyTaskEnum.INTEL));
 		registry.put(TpDailyTaskEnum.STOREHOUSE_STAMINA, profile -> new DailyStaminaTask(profile, TpDailyTaskEnum.STOREHOUSE_STAMINA));
 

@@ -17,48 +17,47 @@ import cl.camodev.wosbot.serv.task.DelayedTask;
 
 public class TriumphTask extends DelayedTask {
 
-	private EmulatorManager emulatorManager = EmulatorManager.getInstance();
-	private ServScheduler servScheduler = ServScheduler.getServices();
-	private ServLogs servLogs = ServLogs.getServices();
-
 	public TriumphTask(DTOProfiles profile, TpDailyTaskEnum dailyMission) {
 		super(profile, dailyMission);
 	}
 
 	@Override
 	protected void execute() {
-		servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Going to Alliance Menu to claim Triumph rewards");
-		emulatorManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(493, 1187), new DTOPoint(561, 1240));
+		logInfo("Going to Alliance Menu to claim Triumph rewards");
+		emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(493, 1187), new DTOPoint(561, 1240));
 		sleepTask(3000);
 
-		DTOImageSearchResult result = emulatorManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.ALLIANCE_TRIUMPH_BUTTON.getTemplate(), 0, 0, 720, 1280, 90);
+		DTOImageSearchResult result = emuManager.searchTemplate(EMULATOR_NUMBER,
+				EnumTemplates.ALLIANCE_TRIUMPH_BUTTON.getTemplate(), 0, 0, 720, 1280, 90);
 		if (result.isFound()) {
-			servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Alliance Triumph button found, tapping to open menu");
-			emulatorManager.tapAtPoint(EMULATOR_NUMBER, result.getPoint());
+			logInfo("Alliance Triumph button found, tapping to open menu");
+			emuManager.tapAtPoint(EMULATOR_NUMBER, result.getPoint());
 			sleepTask(2000);
 
-			servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Verifying if Triumph rewards are already claimed");
+			logInfo("Verifying if Triumph rewards are already claimed");
 			// verify if its already claimed daily
-			result = emulatorManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.ALLIANCE_TRIUMPH_DAILY_CLAIMED.getTemplate(), 0, 0, 720, 1280, 90);
+			result = emuManager.searchTemplate(EMULATOR_NUMBER,
+					EnumTemplates.ALLIANCE_TRIUMPH_DAILY_CLAIMED.getTemplate(), 0, 0, 720, 1280, 90);
 
 			if (result.isFound()) {
-				servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Daily Triumph already claimed, rescheduling for next reset time");
-				this.reschedule(UtilTime.getNextReset());
-				servScheduler.updateDailyTaskStatus(profile, tpTask, UtilTime.getNextReset());
+				logInfo("Daily Triumph already claimed, rescheduling for next reset time");
+				this.reschedule(UtilTime.getGameReset());
 			} else {
 				// verify if its ready to claim
-				servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Daily Triumph not claimed yet, checking if ready to claim");
-				result = emulatorManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.ALLIANCE_TRIUMPH_DAILY.getTemplate(), 0, 0, 720, 1280, 90);
+				logInfo("Daily Triumph not claimed yet, checking if ready to claim");
+				result = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.ALLIANCE_TRIUMPH_DAILY.getTemplate(),
+						0, 0, 720, 1280, 90);
 				if (result.isFound()) {
-					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Daily Triumph ready to claim, tapping to claim rewards");
-					emulatorManager.tapAtRandomPoint(EMULATOR_NUMBER, result.getPoint(), result.getPoint(), 50, 10);
+					logInfo("Daily Triumph ready to claim, tapping to claim rewards");
+					emuManager.tapAtRandomPoint(EMULATOR_NUMBER, result.getPoint(), result.getPoint(), 10, 50);
+					reschedule(UtilTime.getGameReset());
 				} else {
 					// not ready, reschedule for next schedule using offset configuration
-					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Daily Triumph not ready to claim, rescheduling");
+					logError("Daily Triumph not ready to claim, rescheduling");
 					int offset = profile.getConfig(EnumConfigurationKey.ALLIANCE_TRIUMPH_OFFSET_INT, Integer.class);
 					LocalDateTime nextSchedule = LocalDateTime.now().plusHours(offset);
-					this.reschedule(nextSchedule);
-					servScheduler.updateDailyTaskStatus(profile, tpTask, nextSchedule);
+					reschedule(nextSchedule);
+
 				}
 
 			}
@@ -74,6 +73,9 @@ public class TriumphTask extends DelayedTask {
 //				servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Weekly Triumph not ready to claim");
 //			}
 
+		} else {
+			logError("Alliance Triumph button not found, cannot claim rewards");
+			reschedule(LocalDateTime.now());
 		}
 
 	}

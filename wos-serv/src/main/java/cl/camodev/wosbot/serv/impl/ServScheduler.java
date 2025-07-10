@@ -51,7 +51,7 @@ import cl.camodev.wosbot.serv.task.impl.LifeEssenceCaringTask;
 import cl.camodev.wosbot.serv.task.impl.LifeEssenceTask;
 import cl.camodev.wosbot.serv.task.impl.MailRewardsTask;
 import cl.camodev.wosbot.serv.task.impl.NomadicMerchantTask;
-import cl.camodev.wosbot.serv.task.impl.OnlineRewardTask;
+import cl.camodev.wosbot.serv.task.impl.StorehouseChest;
 import cl.camodev.wosbot.serv.task.impl.PetAdventureChestTask;
 import cl.camodev.wosbot.serv.task.impl.PetAllianceTreasuresTask;
 import cl.camodev.wosbot.serv.task.impl.PetSkillsTask;
@@ -210,7 +210,7 @@ public class ServScheduler {
 					));
 				
 				taskMappings.put(EnumConfigurationKey.STOREHOUSE_CHEST_BOOL, List.of(
-						() -> new OnlineRewardTask(profile, TpDailyTaskEnum.STOREHOUSE_CHEST)
+						() -> new StorehouseChest(profile, TpDailyTaskEnum.STOREHOUSE_CHEST)
 					));
 				
 				taskMappings.put(EnumConfigurationKey.STOREHOUSE_STAMINA_BOOL, List.of(
