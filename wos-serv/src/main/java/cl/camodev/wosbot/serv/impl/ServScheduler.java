@@ -47,6 +47,7 @@ import cl.camodev.wosbot.serv.task.impl.GatherTask.GatherType;
 import cl.camodev.wosbot.serv.task.impl.HeroRecruitmentTask;
 import cl.camodev.wosbot.serv.task.impl.InitializeTask;
 import cl.camodev.wosbot.serv.task.impl.IntelligenceTask;
+import cl.camodev.wosbot.serv.task.impl.LifeEssenceCaringTask;
 import cl.camodev.wosbot.serv.task.impl.LifeEssenceTask;
 import cl.camodev.wosbot.serv.task.impl.MailRewardsTask;
 import cl.camodev.wosbot.serv.task.impl.NomadicMerchantTask;
@@ -159,6 +160,11 @@ public class ServScheduler {
 				taskMappings.put(EnumConfigurationKey.ALLIANCE_TECH_BOOL, List.of(
 				    () -> new AllianceTechTask(profile, TpDailyTaskEnum.ALLIANCE_TECH)
 				));
+				
+				
+				taskMappings.put(EnumConfigurationKey.ALLIANCE_LIFE_ESSENCE_BOOL, List.of(
+                    () -> new LifeEssenceCaringTask(profile, TpDailyTaskEnum.LIFE_ESSENCE_CARING)
+                ));
 
 				taskMappings.put(EnumConfigurationKey.ALLIANCE_CHESTS_BOOL, List.of(
 				    () -> new AllianceChestTask(profile, TpDailyTaskEnum.ALLIANCE_CHESTS)

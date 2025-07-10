@@ -97,8 +97,8 @@ public class LifeEssenceCaringTask extends DelayedTask {
 
 			} else {
 				servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "No daily attempts available, rescheduling for next day");
-				this.reschedule(UtilTime.getNextReset());
-				servScheduler.updateDailyTaskStatus(profile, tpTask, UtilTime.getNextReset());
+				this.reschedule(UtilTime.getGameReset());
+				servScheduler.updateDailyTaskStatus(profile, tpTask, UtilTime.getGameReset());
 				emulatorManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(42, 28));
 				sleepTask(3000);
 				emulatorManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(42, 28));
