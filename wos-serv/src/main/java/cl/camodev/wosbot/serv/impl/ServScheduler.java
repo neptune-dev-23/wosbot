@@ -269,7 +269,6 @@ public class ServScheduler {
 							taskState.setTaskId(task.getTpTask().getId());
 							taskState.setExecuting(false);
 							taskState.setScheduled(true);
-							taskState.setNextExecutionTime(task.getScheduled());
 							
 							if (taskSchedules.containsKey(task.getTpDailyTaskId())) {
 								DTODailyTaskStatus taskStatus = taskSchedules.get(task.getTpDailyTaskId());
@@ -285,6 +284,7 @@ public class ServScheduler {
 								taskState.setLastExecutionTime(null); // No previous execution
 							}
 
+							taskState.setNextExecutionTime(task.getScheduled());
 							ServTaskManager.getInstance().setTaskState(profile.getId(), taskState);
 							queue.addTask(task);
 						}
