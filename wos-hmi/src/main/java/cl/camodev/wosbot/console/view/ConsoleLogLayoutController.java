@@ -2,18 +2,23 @@ package cl.camodev.wosbot.console.view;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 import cl.camodev.wosbot.console.controller.ConsoleLogActionController;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.model.LogMessageAux;
 import cl.camodev.wosbot.ot.DTOLogMessage;
+import cl.camodev.wosbot.ot.DTOProfiles;
+import cl.camodev.wosbot.serv.impl.ServProfiles;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -27,6 +32,12 @@ public class ConsoleLogLayoutController {
 
 	@FXML
 	private CheckBox checkboxDebug;
+
+	@FXML
+	private ComboBox<String> comboBoxProfileFilter;
+
+	@FXML
+	private Button buttonResetProfileFilter;
 
 	@FXML
 	private TableView<LogMessageAux> tableviewLogMessages;
@@ -47,21 +58,29 @@ public class ConsoleLogLayoutController {
 	private TableColumn<LogMessageAux, String> columnLevel;
 
 	private ObservableList<LogMessageAux> logMessages;
+	private FilteredList<LogMessageAux> filteredLogMessages;
 
 	@FXML
 	private void initialize() {
 		actionController = new ConsoleLogActionController(this);
 		logMessages = FXCollections.observableArrayList();
+		filteredLogMessages = new FilteredList<>(logMessages);
+		
 		columnTimeStamp.setCellValueFactory(cellData -> cellData.getValue().timeStampProperty());
 		columnMessage.setCellValueFactory(cellData -> cellData.getValue().messageProperty());
 		columnLevel.setCellValueFactory(cellData -> cellData.getValue().severityProperty());
 		columnTask.setCellValueFactory(cellData -> cellData.getValue().taskProperty());
 		columnProfile.setCellValueFactory(cellData -> cellData.getValue().profileProperty());
-		tableviewLogMessages.setItems(logMessages);
+		tableviewLogMessages.setItems(filteredLogMessages);
 
 		// Botón para agregar datos (simula nuevos mensajes)
 		tableviewLogMessages.setPlaceholder(new Label("NO LOGS"));
-
+		
+		// Initialize profile filter
+		initializeProfileFilter();
+		
+		// Set up filter listeners
+		setupFilterListeners();
 	}
 
 	@FXML
@@ -69,7 +88,49 @@ public class ConsoleLogLayoutController {
 		Platform.runLater(() -> {
 			logMessages.clear();
 		});
+	}
 
+	@FXML
+	void handleButtonResetProfileFilter(ActionEvent event) {
+		comboBoxProfileFilter.setValue(null);
+		comboBoxProfileFilter.getSelectionModel().clearSelection();
+		updateLogFilter();
+	}
+
+	private void initializeProfileFilter() {
+		// Load available profiles
+		try {
+			List<DTOProfiles> profiles = ServProfiles.getServices().getProfiles();
+			if (profiles != null) {
+				ObservableList<String> profileNames = FXCollections.observableArrayList();
+				profiles.forEach(profile -> profileNames.add(profile.getName()));
+				comboBoxProfileFilter.setItems(profileNames);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void setupFilterListeners() {
+		// Listen for profile filter changes
+		comboBoxProfileFilter.valueProperty().addListener((obs, oldVal, newVal) -> {
+			updateLogFilter();
+		});
+	}
+
+	private void updateLogFilter() {
+		filteredLogMessages.setPredicate(logMessage -> {
+			// Profile filter
+			String selectedProfile = comboBoxProfileFilter.getValue();
+			if (selectedProfile != null && !selectedProfile.isEmpty()) {
+				String messageProfile = logMessage.profileProperty().get();
+				if (messageProfile == null || !messageProfile.equals(selectedProfile)) {
+					return false;
+				}
+			}
+			
+			return true;
+		});
 	}
 
 	public void appendMessage(DTOLogMessage dtoMessage) {
