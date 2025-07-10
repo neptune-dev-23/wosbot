@@ -3,6 +3,7 @@ package cl.camodev.wosbot.serv.task.impl;
 import java.time.LocalDateTime;
 
 import cl.camodev.utiles.UtilTime;
+import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
@@ -52,10 +53,12 @@ public class TriumphTask extends DelayedTask {
 					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Daily Triumph ready to claim, tapping to claim rewards");
 					emulatorManager.tapAtRandomPoint(EMULATOR_NUMBER, result.getPoint(), result.getPoint(), 50, 10);
 				} else {
-					// not ready, reshcedulte for next schedule 1 hour
-					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Daily Triumph not ready to claim, rescheduling for 1 hour later");
-					this.reschedule(LocalDateTime.now().plusHours(1));
-					servScheduler.updateDailyTaskStatus(profile, tpTask, LocalDateTime.now().plusHours(1));
+					// not ready, reschedule for next schedule using offset configuration
+					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Daily Triumph not ready to claim, rescheduling");
+					int offset = profile.getConfig(EnumConfigurationKey.ALLIANCE_TRIUMPH_OFFSET_INT, Integer.class);
+					LocalDateTime nextSchedule = LocalDateTime.now().plusHours(offset);
+					this.reschedule(nextSchedule);
+					servScheduler.updateDailyTaskStatus(profile, tpTask, nextSchedule);
 				}
 
 			}
