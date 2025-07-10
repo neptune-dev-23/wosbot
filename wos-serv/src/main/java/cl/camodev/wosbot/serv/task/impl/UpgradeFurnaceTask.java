@@ -127,7 +127,7 @@ public class UpgradeFurnaceTask extends DelayedTask {
 								// click on go button
 								emuManager.tapAtRandomPoint(EMULATOR_NUMBER, upgradeGoButton.getPoint(), upgradeGoButton.getPoint());
 								sleepTask(1000);
-								emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(320, 600), new DTOPoint(330, 610), 10, 10);
+								emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(330, 729), new DTOPoint(364, 731), 10, 10);
 								// handle upgrade requirements
 
 								DTOImageSearchResult upgradeButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_SHORTCUTS_UPGRADE.getTemplate(), 0, 0, 720, 1280, 90);
