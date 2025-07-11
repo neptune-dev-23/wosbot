@@ -3,11 +3,13 @@ package cl.camodev.wosbot.serv.impl;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.Arrays;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import cl.camodev.wosbot.almac.entity.Config;
 import cl.camodev.wosbot.almac.entity.DailyTask;
@@ -31,37 +33,9 @@ import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.ot.DTOTaskState;
 import cl.camodev.wosbot.serv.IBotStateListener;
 import cl.camodev.wosbot.serv.task.DelayedTask;
+import cl.camodev.wosbot.serv.task.DelayedTaskRegistry;
 import cl.camodev.wosbot.serv.task.TaskQueue;
 import cl.camodev.wosbot.serv.task.TaskQueueManager;
-import cl.camodev.wosbot.serv.task.impl.AllianceAutojoinTask;
-import cl.camodev.wosbot.serv.task.impl.AllianceChestTask;
-import cl.camodev.wosbot.serv.task.impl.AllianceHelpTask;
-import cl.camodev.wosbot.serv.task.impl.AllianceTechTask;
-import cl.camodev.wosbot.serv.task.impl.CrystalLaboratoryTask;
-import cl.camodev.wosbot.serv.task.impl.DailyMissionTask;
-import cl.camodev.wosbot.serv.task.impl.DailyStaminaTask;
-import cl.camodev.wosbot.serv.task.impl.ExplorationTask;
-import cl.camodev.wosbot.serv.task.impl.GatherSpeedTask;
-import cl.camodev.wosbot.serv.task.impl.GatherTask;
-import cl.camodev.wosbot.serv.task.impl.GatherTask.GatherType;
-import cl.camodev.wosbot.serv.task.impl.HeroRecruitmentTask;
-import cl.camodev.wosbot.serv.task.impl.InitializeTask;
-import cl.camodev.wosbot.serv.task.impl.IntelligenceTask;
-import cl.camodev.wosbot.serv.task.impl.LifeEssenceCaringTask;
-import cl.camodev.wosbot.serv.task.impl.LifeEssenceTask;
-import cl.camodev.wosbot.serv.task.impl.MailRewardsTask;
-import cl.camodev.wosbot.serv.task.impl.NomadicMerchantTask;
-import cl.camodev.wosbot.serv.task.impl.StorehouseChest;
-import cl.camodev.wosbot.serv.task.impl.PetAdventureChestTask;
-import cl.camodev.wosbot.serv.task.impl.PetAllianceTreasuresTask;
-import cl.camodev.wosbot.serv.task.impl.PetSkillsTask;
-import cl.camodev.wosbot.serv.task.impl.PetSkillsTask.PetSkill;
-import cl.camodev.wosbot.serv.task.impl.TrainingTroopsTask;
-import cl.camodev.wosbot.serv.task.impl.TrainingTroopsTask.TroopType;
-import cl.camodev.wosbot.serv.task.impl.TriumphTask;
-import cl.camodev.wosbot.serv.task.impl.UpgradeFurnaceTask;
-import cl.camodev.wosbot.serv.task.impl.VipTask;
-import cl.camodev.wosbot.serv.task.impl.WarAcademyTask;
 
 public class ServScheduler {
 	private static ServScheduler instance;
@@ -114,183 +88,57 @@ public class ServScheduler {
 			ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, "ServScheduler", "-", "No Enabled profiles");
 			return;
 		} else {
-			profiles.stream().filter(DTOProfiles::getEnabled).sorted(Comparator.comparing(DTOProfiles::getId)).forEach(profile -> {
+			TaskQueueManager queueManager = ServScheduler.getServices().getQueueManager();
+			DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+
+			profiles.stream().filter(DTOProfiles::getEnabled).sorted((a, b) -> a.getId().compareTo(b.getId())).forEach(profile -> {
 				profile.setGlobalSettings(globalsettings);
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.DEBUG, "ServScheduler", "-", "starting queue ");
+				ServLogs.getServices().appendLog(EnumTpMessageSeverity.DEBUG, "ServScheduler", "-", "starting queue");
+
 				queueManager.createQueue(profile);
 				TaskQueue queue = queueManager.getQueue(profile.getId());
-				queue.addTask(new InitializeTask(profile, TpDailyTaskEnum.INITIALIZE));
 
-				//@formatter:off
-				// Mapa de tareas con listas para manejar múltiples instancias de tareas bajo la misma clave
-				Map<EnumConfigurationKey, List<Supplier<DelayedTask>>> taskMappings = new HashMap<>();
-				
-				taskMappings.put(EnumConfigurationKey.DAILY_MISSION_BOOL, List.of(
-                    () -> new DailyMissionTask(profile, TpDailyTaskEnum.DAILY_MISSIONS)
-                ));
-				
-				taskMappings.put(EnumConfigurationKey.GATHER_SPEED_BOOL, List.of(
-					() -> new GatherSpeedTask(profile, TpDailyTaskEnum.GATHER_BOOST)
-				));
+				queue.addTask(DelayedTaskRegistry.create(TpDailyTaskEnum.INITIALIZE, profile));
 
-				// Agregar tareas al mapa
-				taskMappings.put(EnumConfigurationKey.BOOL_EXPLORATION_CHEST, List.of(
-				    () -> new ExplorationTask(profile, TpDailyTaskEnum.EXPLORATION_CHEST)
-				));
+				// load task using registry
+				EnumMap<EnumConfigurationKey, List<Supplier<DelayedTask>>> taskMappings = Arrays.stream(TpDailyTaskEnum.values()).filter(t -> t.getConfigKey() != null)
+						.collect(Collectors.groupingBy(TpDailyTaskEnum::getConfigKey, () -> new EnumMap<>(EnumConfigurationKey.class), Collectors.mapping(t -> (Supplier<DelayedTask>) () -> DelayedTaskRegistry.create(t, profile), Collectors.toList())));
 
-				taskMappings.put(EnumConfigurationKey.BOOL_HERO_RECRUITMENT, List.of(
-				    () -> new HeroRecruitmentTask(profile, TpDailyTaskEnum.HERO_RECRUITMENT)
-				));
-
-				taskMappings.put(EnumConfigurationKey.BOOL_WAR_ACADEMY_SHARDS, List.of(
-				    () -> new WarAcademyTask(profile, TpDailyTaskEnum.WAR_ACADEMY_SHARDS)
-				));
-
-				taskMappings.put(EnumConfigurationKey.BOOL_CRYSTAL_LAB_FC, List.of(
-				    () -> new CrystalLaboratoryTask(profile, TpDailyTaskEnum.CRYSTAL_LABORATORY)
-				));
-
-				taskMappings.put(EnumConfigurationKey.BOOL_NOMADIC_MERCHANT, List.of(
-				    () -> new NomadicMerchantTask(profile, TpDailyTaskEnum.NOMADIC_MERCHANT)
-				));
-
-				taskMappings.put(EnumConfigurationKey.BOOL_VIP_POINTS, List.of(() -> new VipTask(profile, TpDailyTaskEnum.VIP_POINTS)
-				));
-
-				taskMappings.put(EnumConfigurationKey.ALLIANCE_TECH_BOOL, List.of(
-				    () -> new AllianceTechTask(profile, TpDailyTaskEnum.ALLIANCE_TECH)
-				));
-				
-				
-				taskMappings.put(EnumConfigurationKey.ALLIANCE_LIFE_ESSENCE_BOOL, List.of(
-                    () -> new LifeEssenceCaringTask(profile, TpDailyTaskEnum.LIFE_ESSENCE_CARING)
-                ));
-
-				taskMappings.put(EnumConfigurationKey.ALLIANCE_CHESTS_BOOL, List.of(
-				    () -> new AllianceChestTask(profile, TpDailyTaskEnum.ALLIANCE_CHESTS)
-				));
-				
-				taskMappings.put(EnumConfigurationKey.ALLIANCE_HELP_REQUESTS_BOOL, List.of(
-                    () -> new AllianceHelpTask(profile, TpDailyTaskEnum.ALLIANCE_HELP)
-                ));
-				
-				taskMappings.put(EnumConfigurationKey.ALLIANCE_TRIUMPH_BOOL, List.of(
-                    () -> new TriumphTask(profile, TpDailyTaskEnum.ALLIANCE_TRIUMPH)
-                ));
-
-				taskMappings.put(EnumConfigurationKey.BOOL_TRAINING_TROOPS, List.of(
-				    () -> new TrainingTroopsTask(profile, TpDailyTaskEnum.TRAINING_INFANTRY, TroopType.INFANTRY),
-				    () -> new TrainingTroopsTask(profile, TpDailyTaskEnum.TRAINING_LANCER, TroopType.LANCER),
-				    () -> new TrainingTroopsTask(profile, TpDailyTaskEnum.TRAINING_MARKSMAN, TroopType.MARKSMAN)
-				));
-
-				taskMappings.put(EnumConfigurationKey.ALLIANCE_PET_TREASURE_BOOL, List.of(
-				    () -> new PetAllianceTreasuresTask(profile, TpDailyTaskEnum.ALLIANCE_PET_TREASURE)
-				));
-				
-				taskMappings.put(EnumConfigurationKey.PET_SKILL_FOOD_BOOL, List.of(
-					() -> new PetSkillsTask(profile, TpDailyTaskEnum.PET_SKILL_FOOD, PetSkill.FOOD)
-				));
-				
-				taskMappings.put(EnumConfigurationKey.PET_SKILL_GATHERING_BOOL, List.of(
-					() -> new PetSkillsTask(profile, TpDailyTaskEnum.PET_SKILL_GATHERING, PetSkill.GATHERING)
-				));
-				
-				
-				taskMappings.put(EnumConfigurationKey.PET_SKILL_STAMINA_BOOL, List.of(
-					() -> new PetSkillsTask(profile, TpDailyTaskEnum.PET_SKILL_STAMINA, PetSkill.STAMINA)
-				));
-				
-				taskMappings.put(EnumConfigurationKey.PET_SKILL_TRESURE_BOOL, List.of(
-					() -> new PetSkillsTask(profile, TpDailyTaskEnum.PET_SKILL_TREASURE, PetSkill.TREASURE)
-				));
-				
-				taskMappings.put(EnumConfigurationKey.ALLIANCE_AUTOJOIN_BOOL, List.of(
-						() -> new AllianceAutojoinTask(profile, TpDailyTaskEnum.ALLIANCE_AUTOJOIN)
-					));
-				
-				taskMappings.put(EnumConfigurationKey.STOREHOUSE_CHEST_BOOL, List.of(
-						() -> new StorehouseChest(profile, TpDailyTaskEnum.STOREHOUSE_CHEST)
-					));
-				
-				taskMappings.put(EnumConfigurationKey.STOREHOUSE_STAMINA_BOOL, List.of(
-						() -> new DailyStaminaTask(profile, TpDailyTaskEnum.STOREHOUSE_STAMINA)
-					));
-				
-				taskMappings.put(EnumConfigurationKey.MAIL_REWARDS_BOOL, List.of(
-						() -> new MailRewardsTask(profile, TpDailyTaskEnum.MAIL_REWARDS)
-					));
-				
-				taskMappings.put(EnumConfigurationKey.PET_PERSONAL_TREASURE_BOOL, List.of(
-                        () -> new PetAdventureChestTask(profile, TpDailyTaskEnum.PET_ADVENTURE)
-                    ));
-				
-				taskMappings.put(EnumConfigurationKey.GATHER_MEAT_BOOL, List.of(
-                        () -> new GatherTask(profile, TpDailyTaskEnum.GATHER_MEAT, GatherType.MEAT)
-                    ));
-				
-				taskMappings.put(EnumConfigurationKey.GATHER_WOOD_BOOL, List.of(
-                        () -> new GatherTask(profile, TpDailyTaskEnum.GATHER_WOOD, GatherType.WOOD)
-                    ));
-				
-				taskMappings.put(EnumConfigurationKey.GATHER_COAL_BOOL, List.of(
-                        () -> new GatherTask(profile, TpDailyTaskEnum.GATHER_COAL, GatherType.COAL)
-                    ));
-				
-				taskMappings.put(EnumConfigurationKey.GATHER_IRON_BOOL, List.of(
-                        () -> new GatherTask(profile, TpDailyTaskEnum.GATHER_IRON, GatherType.IRON)
-                    ));
-				
-				taskMappings.put(EnumConfigurationKey.INTEL_BOOL, List.of(
-                        () -> new IntelligenceTask(profile, TpDailyTaskEnum.INTEL)
-                    ));
-				
-				taskMappings.put(EnumConfigurationKey.LIFE_ESSENCE_BOOL, List.of(
-                        () -> new LifeEssenceTask(profile, TpDailyTaskEnum.LIFE_ESSENCE)
-                    ));
-				
-				taskMappings.put(EnumConfigurationKey.CITY_UPGRADE_FURNACE_BOOL, List.of(
-                        () -> new UpgradeFurnaceTask(profile, TpDailyTaskEnum.CITY_UPGRADE_FURNACE)
-                    ));
-
-				//@formatter:on
-
-				// Obtener el estado de las tareas desde la base de datos
+				// obtain current task schedules
 				Map<Integer, DTODailyTaskStatus> taskSchedules = iDailyTaskRepository.findDailyTasksStatusByProfile(profile.getId());
 
-				// Recorrer el mapa y programar las tareas según la configuración del perfil
-				taskMappings.forEach((key, taskSuppliers) -> {
-					if (profile.getConfig(key, Boolean.class)) {
-//						ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Scheduling tasks");
-						for (Supplier<DelayedTask> taskSupplier : taskSuppliers) {
-							DelayedTask task = taskSupplier.get();
+				// Enqueue tasks based on profile configuration
+				taskMappings.forEach((configKey, suppliers) -> {
+					if (profile.getConfig(configKey, Boolean.class)) {
+						for (Supplier<DelayedTask> sup : suppliers) {
+							DelayedTask task = sup.get();
+
+							// Construir estado y encolar
 							DTOTaskState taskState = new DTOTaskState();
 							taskState.setProfileId(profile.getId());
 							taskState.setTaskId(task.getTpTask().getId());
 							taskState.setExecuting(false);
 							taskState.setScheduled(true);
-							
-							if (taskSchedules.containsKey(task.getTpDailyTaskId())) {
-								DTODailyTaskStatus taskStatus = taskSchedules.get(task.getTpDailyTaskId());
-								LocalDateTime nextSchedule = taskStatus.getNextSchedule();
-								task.reschedule(nextSchedule);
-								taskState.setLastExecutionTime(taskStatus.getLastExecution());
 
-								ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Next Execution: " + nextSchedule.format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss")));
-
+							DTODailyTaskStatus status = taskSchedules.get(task.getTpDailyTaskId());
+							if (status != null) {
+								LocalDateTime next = status.getNextSchedule();
+								task.reschedule(next);
+								taskState.setLastExecutionTime(status.getLastExecution());
+								taskState.setNextExecutionTime(next);
+								ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Next Execution: " + next.format(fmt));
 							} else {
-								ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Task not completed, scheduling for today");
 								task.reschedule(LocalDateTime.now());
-								taskState.setLastExecutionTime(null); // No previous execution
+								taskState.setLastExecutionTime(null);
+								taskState.setNextExecutionTime(task.getScheduled());
+								ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Task not completed, scheduling for today");
 							}
 
-							taskState.setNextExecutionTime(task.getScheduled());
 							ServTaskManager.getInstance().setTaskState(profile.getId(), taskState);
 							queue.addTask(task);
 						}
 					}
 				});
-
 			});
 
 			queueManager.startQueues();
