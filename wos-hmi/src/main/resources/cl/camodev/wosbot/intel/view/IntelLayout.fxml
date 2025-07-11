@@ -38,8 +38,12 @@
          </GridPane.margin>
       </CheckBox>
       <CheckBox fx:id="checkBoxFireBeast" graphicTextGap="3.0" mnemonicParsing="false" text="Fire Beast" GridPane.rowIndex="1" />
-      <HBox prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="1" />
-      <HBox prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+      <HBox alignment="CENTER_LEFT" prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
       <CheckBox fx:id="checkBoxJourney" graphicTextGap="3.0" mnemonicParsing="false" text="Journey" GridPane.rowIndex="4" />
+      <HBox alignment="CENTER_LEFT" prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="1">
+         <children>
+            <CheckBox fx:id="checkBoxFireCrystalEra" mnemonicParsing="false" text="Fire Crystal Era?" />
+         </children>
+      </HBox>
    </children>
 </GridPane>

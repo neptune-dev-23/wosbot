@@ -28,6 +28,7 @@ public class IntelligenceTask extends DelayedTask {
 
 	private final IDailyTaskRepository iDailyTaskRepository = DailyTaskRepository.getRepository();
 	private boolean marchQueueLimitReached = false;
+	private boolean fcEra = false;
 
 	public IntelligenceTask(DTOProfiles profile, TpDailyTaskEnum tpTask) {
 		super(profile, tpTask);
@@ -44,6 +45,9 @@ public class IntelligenceTask extends DelayedTask {
 			ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, LocalDateTime.now().plusMinutes(gatherRemainingMinutes));
 			return;
 		}
+
+		fcEra = profile.getConfig(EnumConfigurationKey.INTEL_FC_ERA_BOOL,Boolean.class);
+
 
 		boolean intelFound = false;
 		marchQueueLimitReached = false;
@@ -97,17 +101,24 @@ public class IntelligenceTask extends DelayedTask {
 			if (profile.getConfig(EnumConfigurationKey.INTEL_BEASTS_BOOL, Boolean.class)) {
 				sleepTask(500);
 				// @formatter:off
-				List<EnumTemplates> beastPriorities = Arrays.asList(
-						EnumTemplates.INTEL_BEAST_YELLOW, 
-						EnumTemplates.INTEL_BEAST_PURPLE, 
-						EnumTemplates.INTEL_BEAST_BLUE, 
-						EnumTemplates.INTEL_BEAST_GREEN, 
-						EnumTemplates.INTEL_BEAST_GREY, 
-						EnumTemplates.INTEL_PREFC_BEAST_BLUE,
-						EnumTemplates.INTEL_PREFC_BEAST_GREEN, 
-						EnumTemplates.INTEL_PREFC_BEAST_GREY, 
-						EnumTemplates.INTEL_PREFC_BEAST_PURPLE, 
-						EnumTemplates.INTEL_PREFC_BEAST_YELLOW);
+
+				List<EnumTemplates> beastPriorities=null;
+				if (fcEra){
+					beastPriorities = Arrays.asList(
+							EnumTemplates.INTEL_BEAST_YELLOW,
+							EnumTemplates.INTEL_BEAST_PURPLE,
+							EnumTemplates.INTEL_BEAST_BLUE);
+					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Searching for beasts in FC era");
+				}else{
+					beastPriorities = Arrays.asList(
+							EnumTemplates.INTEL_PREFC_BEAST_YELLOW,
+							EnumTemplates.INTEL_PREFC_BEAST_PURPLE,
+							EnumTemplates.INTEL_PREFC_BEAST_BLUE,
+							EnumTemplates.INTEL_PREFC_BEAST_GREEN,
+							EnumTemplates.INTEL_PREFC_BEAST_GREY);
+					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Searching for beasts in pre-FC era");
+				}
+
 				// @formatter:on
 				servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Searching for beasts");
 				for (EnumTemplates beast : beastPriorities) {
@@ -129,17 +140,23 @@ public class IntelligenceTask extends DelayedTask {
 			if (profile.getConfig(EnumConfigurationKey.INTEL_CAMP_BOOL, Boolean.class)) {
 				sleepTask(500);
 				// @formatter:off
-				List<EnumTemplates> priorities = Arrays.asList(
-						EnumTemplates.INTEL_SURVIVOR_YELLOW, 
-						EnumTemplates.INTEL_SURVIVOR_PURPLE, 
-						EnumTemplates.INTEL_SURVIVOR_BLUE, 
-						EnumTemplates.INTEL_SURVIVOR_GREEN, 
-						EnumTemplates.INTEL_SURVIVOR_GREY,
-						EnumTemplates.INTEL_PREFC_SURVIVOR_YELLOW,
-						EnumTemplates.INTEL_PREFC_SURVIVOR_PURPLE,
-						EnumTemplates.INTEL_PREFC_SURVIVOR_BLUE,
-						EnumTemplates.INTEL_PREFC_SURVIVOR_GREEN,
-						EnumTemplates.INTEL_PREFC_SURVIVOR_GREY);
+				List<EnumTemplates> priorities = null;
+
+				if (fcEra) {
+					priorities = Arrays.asList(
+							EnumTemplates.INTEL_SURVIVOR_YELLOW,
+							EnumTemplates.INTEL_SURVIVOR_PURPLE,
+							EnumTemplates.INTEL_SURVIVOR_BLUE);
+					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Searching for camps in FC era");
+				} else {
+					priorities = Arrays.asList(
+							EnumTemplates.INTEL_PREFC_SURVIVOR_YELLOW,
+							EnumTemplates.INTEL_PREFC_SURVIVOR_PURPLE,
+							EnumTemplates.INTEL_PREFC_SURVIVOR_BLUE,
+							EnumTemplates.INTEL_PREFC_SURVIVOR_GREEN,
+							EnumTemplates.INTEL_PREFC_SURVIVOR_GREY);
+					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Searching for camps in pre-FC era");
+				}
 				// @formatter:on
 				servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Searching for survivors");
 				for (EnumTemplates beast : priorities) {
@@ -162,18 +179,23 @@ public class IntelligenceTask extends DelayedTask {
 			if (profile.getConfig(EnumConfigurationKey.INTEL_EXPLORATION_BOOL, Boolean.class)) {
 				sleepTask(500);
 				// @formatter:off
-				List<EnumTemplates> priorities = Arrays.asList(
-						EnumTemplates.INTEL_JOURNEY_YELLOW, 
-						EnumTemplates.INTEL_JOURNEY_PURPLE, 
-						EnumTemplates.INTEL_JOURNEY_BLUE, 
-						EnumTemplates.INTEL_JOURNEY_GREEN, 
-						EnumTemplates.INTEL_JOURNEY_GREY,
+				List<EnumTemplates> priorities = null;
+				if (fcEra) {
+					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Searching for explorations in FC era");
+					priorities = Arrays.asList(
+							EnumTemplates.INTEL_JOURNEY_YELLOW,
+							EnumTemplates.INTEL_JOURNEY_PURPLE,
+							EnumTemplates.INTEL_JOURNEY_BLUE);
+
+				} else {
+					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Searching for explorations in pre-FC era");
+				priorities = Arrays.asList(
 						EnumTemplates.INTEL_PREFC_JOURNEY_YELLOW,
 						EnumTemplates.INTEL_PREFC_JOURNEY_PURPLE,
 						EnumTemplates.INTEL_PREFC_JOURNEY_BLUE,
 						EnumTemplates.INTEL_PREFC_JOURNEY_GREEN,
 						EnumTemplates.INTEL_PREFC_JOURNEY_GREY);
-				// @formatter:on
+				}
 				servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Searching for explorations");
 				for (EnumTemplates beast : priorities) {
 					if (searchAndProcessExploration(beast, 5)) {

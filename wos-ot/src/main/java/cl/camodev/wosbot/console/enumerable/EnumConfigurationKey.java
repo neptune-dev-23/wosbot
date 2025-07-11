@@ -2,7 +2,7 @@ package cl.camodev.wosbot.console.enumerable;
 
 public enum EnumConfigurationKey {
 
-	//@formatter:off
+    //@formatter:off
 	BOOL_DEBUG("false", Boolean.class ),
 	DISCORD_TOKEN_STRING("", String.class),
 	MUMU_PATH_STRING("", String.class),
@@ -60,6 +60,7 @@ public enum EnumConfigurationKey {
 	INTEL_CAMP_BOOL("false",Boolean.class),
 	INTEL_EXPLORATION_BOOL("false",Boolean.class),
 	INTEL_BEASTS_EVENT_BOOL("false",Boolean.class),
+	INTEL_FC_ERA_BOOL("false",Boolean.class),
 	
 	LIFE_ESSENCE_BOOL("false",Boolean.class),
 	LIFE_ESSENCE_OFFSET_INT("1",Integer.class),
@@ -85,37 +86,37 @@ public enum EnumConfigurationKey {
 	INT_BANK_DELAY("1",Integer.class),  
 	;
 	//@formatter:on
-	private final String defaultValue;
-	private final Class<?> type;
+    private final String defaultValue;
+    private final Class<?> type;
 
-	EnumConfigurationKey(String defaultValue, Class<?> type) {
-		this.defaultValue = defaultValue;
-		this.type = type;
-	}
+    EnumConfigurationKey(String defaultValue, Class<?> type) {
+        this.defaultValue = defaultValue;
+        this.type = type;
+    }
 
-	public String getDefaultValue() {
-		return defaultValue;
-	}
+    public String getDefaultValue() {
+        return defaultValue;
+    }
 
-	public Class<?> getType() {
-		return type;
-	}
+    public Class<?> getType() {
+        return type;
+    }
 
-	/**
-	 * Método que convierte un String al tipo definido en 'type'. Agrega conversiones según los tipos que necesites.
-	 */
-	@SuppressWarnings("unchecked")
-	public <T> T castValue(String value) {
-		if (type.equals(Boolean.class)) {
-			return (T) Boolean.valueOf(value);
-		} else if (type.equals(Integer.class)) {
-			return (T) Integer.valueOf(value);
-		} else if (type.equals(Double.class)) {
-			return (T) Double.valueOf(value);
-		} else if (type.equals(String.class)) {
-			return (T) value;
-		}
-		// Agrega otros if/else según los tipos soportados
-		throw new UnsupportedOperationException("Tipo " + type.getSimpleName() + " no soportado");
-	}
+    /**
+     * Método que convierte un String al tipo definido en 'type'. Agrega conversiones según los tipos que necesites.
+     */
+    @SuppressWarnings("unchecked")
+    public <T> T castValue(String value) {
+        if (type.equals(Boolean.class)) {
+            return (T) Boolean.valueOf(value);
+        } else if (type.equals(Integer.class)) {
+            return (T) Integer.valueOf(value);
+        } else if (type.equals(Double.class)) {
+            return (T) Double.valueOf(value);
+        } else if (type.equals(String.class)) {
+            return (T) value;
+        }
+        // Agrega otros if/else según los tipos soportados
+        throw new UnsupportedOperationException("Tipo " + type.getSimpleName() + " no soportado");
+    }
 }
