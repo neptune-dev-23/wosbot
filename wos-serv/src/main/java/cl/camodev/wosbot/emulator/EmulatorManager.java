@@ -42,7 +42,7 @@ public class EmulatorManager {
 		return instance;
 	}
 
-	public void initialze() {
+	public void initialize() {
 		resetQueueState();
 		HashMap<String, String> globalConfig = ServConfig.getServices().getGlobalConfig();
 

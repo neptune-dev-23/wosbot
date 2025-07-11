@@ -65,7 +65,7 @@ public class ServScheduler {
 		EmulatorManager emulator = EmulatorManager.getInstance();
 
 		try {
-			emulator.initialze();
+			emulator.initialize();
 		} catch (Exception e) {
 			e.printStackTrace();
 			return;
