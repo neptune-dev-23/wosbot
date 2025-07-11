@@ -23,7 +23,10 @@ public enum EnumConfigurationKey {
 	BOOL_VIP_POINTS("false",Boolean.class),
 	VIP_BUY_MONTHLY("false",Boolean.class),
 	
-	BOOL_TRAINING_TROOPS("false",Boolean.class),
+	TRAIN_INFANTRY_BOOL("false",Boolean.class),
+	TRAIN_MARKSMAN_BOOL("false",Boolean.class),
+	TRAIN_LANCER_BOOL("false",Boolean.class),
+	
 	BOOL_TRAINING_RESOURCES("false",Boolean.class),
 	
 	CITY_UPGRADE_FURNACE_BOOL("false",Boolean.class),

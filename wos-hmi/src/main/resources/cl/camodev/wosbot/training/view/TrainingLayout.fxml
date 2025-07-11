@@ -17,15 +17,17 @@
       <RowConstraints maxHeight="1.7976931348623157E308" minHeight="10.0" percentHeight="25.0" prefHeight="277.0" vgrow="SOMETIMES" />
   </rowConstraints>
    <children>
-      <CheckBox fx:id="checkBoxTrainingTroops" mnemonicParsing="false" text="Enable Training Troops">
+      <CheckBox fx:id="checkBoxTrainInfantry" mnemonicParsing="false" text="Train Infantry">
          <GridPane.margin>
             <Insets />
          </GridPane.margin>
       </CheckBox>
-      <CheckBox fx:id="checkBoxUseResources" mnemonicParsing="false" text="Use Resources to fill" GridPane.rowIndex="1">
+      <CheckBox fx:id="checkBoxUseResources" mnemonicParsing="false" text="Use Resources to fill" GridPane.rowIndex="3">
          <GridPane.margin>
             <Insets />
          </GridPane.margin>
       </CheckBox>
+      <CheckBox fx:id="checkBoxTrainMarksman" mnemonicParsing="false" text="Train Marksmans" GridPane.rowIndex="1" />
+      <CheckBox fx:id="checkBoxTrainLancers" mnemonicParsing="false" text="Train Lancers" GridPane.rowIndex="2" />
    </children>
 </GridPane>
