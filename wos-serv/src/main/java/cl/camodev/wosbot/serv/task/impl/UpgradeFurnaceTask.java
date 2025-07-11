@@ -17,8 +17,6 @@ import cl.camodev.wosbot.serv.task.DelayedTask;
 
 public class UpgradeFurnaceTask extends DelayedTask {
 
-	private final EmulatorManager emuManager = EmulatorManager.getInstance();
-	private final ServLogs servLogs = ServLogs.getServices();
 
 	public UpgradeFurnaceTask(DTOProfiles profile, TpDailyTaskEnum tpDailyTask) {
 		super(profile, tpDailyTask);
@@ -55,6 +53,9 @@ public class UpgradeFurnaceTask extends DelayedTask {
 				for (int i = 0; i < MAX_ATTEMPTS; i++) {
 					try {
 						String rawText = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(162, 378), new DTOPoint(293, 397));
+						if (rawText.contains("Idle")) {
+							break;
+						}
 
 						// Sanitizar texto OCR
 						String cleanedText = rawText.replaceAll("[^0-9:\\n\\r]", "") // Eliminar caracteres no esperados excepto dígitos y separadores de tiempo
@@ -85,7 +86,7 @@ public class UpgradeFurnaceTask extends DelayedTask {
 				if (success) {
 					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Queue is already busy");
 					reschedule(upgradeTime);
-					ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, upgradeTime);
+					return;
 				} else {
 
 					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "No upgrades in progress, going to upgrade furnace");
@@ -128,7 +129,6 @@ public class UpgradeFurnaceTask extends DelayedTask {
 								emuManager.tapAtRandomPoint(EMULATOR_NUMBER, upgradeGoButton.getPoint(), upgradeGoButton.getPoint());
 								sleepTask(1000);
 								emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(330, 729), new DTOPoint(364, 731), 10, 10);
-								// handle upgrade requirements
 
 								DTOImageSearchResult upgradeButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_SHORTCUTS_UPGRADE.getTemplate(), 0, 0, 720, 1280, 90);
 								if (upgradeButton.isFound()) {
@@ -136,10 +136,25 @@ public class UpgradeFurnaceTask extends DelayedTask {
 									emuManager.tapAtRandomPoint(EMULATOR_NUMBER, upgradeButton.getPoint(), upgradeButton.getPoint());
 									sleepTask(1000);
 
+									while ((result = emuManager.searchTemplate(EMULATOR_NUMBER,	EnumTemplates.GAME_HOME_SHORTCUTS_OBTAIN.getTemplate(), 0, 0, 720, 1280, 90)).isFound()) {
+										logInfo("Refilling resources for upgrade");
+										emuManager.tapAtRandomPoint(EMULATOR_NUMBER, result.getPoint(), result.getPoint());
+										sleepTask(500);
+										// click replenish button
+										emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(358,1135));
+										sleepTask(300);
+
+										// confirm replenish
+										emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(511, 1056));
+										sleepTask(1000);
+									}
+
 									emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(489, 1034), new DTOPoint(500, 1050));
 
 								} else {
 									servLogs.appendLog(EnumTpMessageSeverity.WARNING, taskName, profile.getName(), "Upgrade button not found, skipping upgrade");
+									reschedule(LocalDateTime.now());
+									return;
 								}
 
 								for (int i = 0; i < MAX_ATTEMPTS; i++) {
@@ -152,13 +167,32 @@ public class UpgradeFurnaceTask extends DelayedTask {
 										break;
 									} else if (i == MAX_ATTEMPTS - 1) {
 										servLogs.appendLog(EnumTpMessageSeverity.WARNING, taskName, profile.getName(), "Allies help button not found, skipping request");
+										reschedule(LocalDateTime.now());
+										return;
 									}
 								}
 
 							} else {
 								// click on upgrade button
+
+
+								while ((result = emuManager.searchTemplate(EMULATOR_NUMBER,	EnumTemplates.GAME_HOME_SHORTCUTS_OBTAIN.getTemplate(), 0, 0, 720, 1280, 90)).isFound()) {
+									logInfo("Refilling resources for upgrade");
+									emuManager.tapAtRandomPoint(EMULATOR_NUMBER, result.getPoint(), result.getPoint());
+									sleepTask(500);
+									// click replenish button
+									emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(358,1135));
+									sleepTask(300);
+
+									// confirm replenish
+									emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(511, 1056));
+									sleepTask(1000);
+								}
+
 								servLogs.appendLog(EnumTpMessageSeverity.WARNING, taskName, profile.getName(), "No pending upgrade requirements found for furnace, upgrading furnace directly");
 								emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(470, 1196), new DTOPoint(480, 1216));
+
+
 								sleepTask(1000);
 
 								// check if allies can help
@@ -175,26 +209,26 @@ public class UpgradeFurnaceTask extends DelayedTask {
 										servLogs.appendLog(EnumTpMessageSeverity.WARNING, taskName, profile.getName(), "Allies help button not found, skipping request");
 									}
 								}
+								reschedule(LocalDateTime.now());
+								return;
 
 							}
-
+							this.reschedule(LocalDateTime.now());
 						} else {
 							servLogs.appendLog(EnumTpMessageSeverity.WARNING, taskName, profile.getName(), "Go button not found for cookhouse upgrade");
 						}
 					}
 
 				}
-				this.reschedule(scheduledTime);
+
 
 			} catch (Exception e) {
 				// TODO: handle exception
 			}
 
-		} else
-
-		{
+		} else{
 			emuManager.tapBackButton(EMULATOR_NUMBER);
-			this.reschedule(scheduledTime);
+			this.reschedule(LocalDateTime.now());
 		}
 
 	}

@@ -2,7 +2,7 @@ package cl.camodev.wosbot.console.enumerable;
 
 public enum EnumTemplates {
 
-	// @formatter:off
+    // @formatter:off
 	GAME_HOME_FURNACE("/templates/city.png"),
 	GAME_HOME_WORLD("/templates/world.png"),
 	GAME_HOME_PETS("/templates/home/petsButton.png"),
@@ -15,6 +15,9 @@ public enum EnumTemplates {
 	GAME_HOME_SHORTCUTS_HELP_REQUEST("/templates/shortcuts/helpRequest.png"),
 	
 	GAME_HOME_SHORTCUTS_UPGRADE("/templates/shortcuts/upgrade.png"),
+	GAME_HOME_SHORTCUTS_OBTAIN("/templates/shortcuts/obtain.png"),
+
+
 	DAILY_MISSION_DAILY_TAB("/templates/dailymission/dailyMissionTab.png"),
 	DAILY_MISSION_CLAIMALL_BUTTON("/templates/dailymission/claimAllButton.png"),
 	DAILY_MISSION_CLAIM_BUTTON("/templates/dailymission/claimButton.png"),
@@ -156,13 +159,13 @@ public enum EnumTemplates {
 	HERO_RECRUIT_CLAIM("/templates/herorecruitment/freebutton.png"),;
 	// @formatter:on
 
-	private String template;
+    private String template;
 
-	private EnumTemplates(String template) {
-		this.template = template;
-	}
+    private EnumTemplates(String template) {
+        this.template = template;
+    }
 
-	public String getTemplate() {
-		return template;
-	}
+    public String getTemplate() {
+        return template;
+    }
 }

@@ -25,10 +25,10 @@ import cl.camodev.wosbot.serv.task.impl.LifeEssenceCaringTask;
 import cl.camodev.wosbot.serv.task.impl.LifeEssenceTask;
 import cl.camodev.wosbot.serv.task.impl.MailRewardsTask;
 import cl.camodev.wosbot.serv.task.impl.NomadicMerchantTask;
-import cl.camodev.wosbot.serv.task.impl.StorehouseChest;
 import cl.camodev.wosbot.serv.task.impl.PetAdventureChestTask;
 import cl.camodev.wosbot.serv.task.impl.PetAllianceTreasuresTask;
 import cl.camodev.wosbot.serv.task.impl.PetSkillsTask;
+import cl.camodev.wosbot.serv.task.impl.StorehouseChest;
 import cl.camodev.wosbot.serv.task.impl.TrainingTroopsTask;
 import cl.camodev.wosbot.serv.task.impl.TriumphTask;
 import cl.camodev.wosbot.serv.task.impl.UpgradeFurnaceTask;
@@ -49,7 +49,7 @@ public class DelayedTaskRegistry {
 		registry.put(TpDailyTaskEnum.LIFE_ESSENCE, profile -> new LifeEssenceTask(profile, TpDailyTaskEnum.LIFE_ESSENCE));
 		registry.put(TpDailyTaskEnum.LIFE_ESSENCE_CARING, profile -> new LifeEssenceCaringTask(profile, TpDailyTaskEnum.LIFE_ESSENCE_CARING));
 
-		// Recolección y combate
+		// gathering tasks
 		registry.put(TpDailyTaskEnum.GATHER_MEAT, profile -> new GatherTask(profile, TpDailyTaskEnum.GATHER_MEAT, GatherType.MEAT));
 		registry.put(TpDailyTaskEnum.GATHER_WOOD, profile -> new GatherTask(profile, TpDailyTaskEnum.GATHER_WOOD, GatherType.WOOD));
 		registry.put(TpDailyTaskEnum.GATHER_COAL, profile -> new GatherTask(profile, TpDailyTaskEnum.GATHER_COAL, GatherType.COAL));
@@ -65,7 +65,7 @@ public class DelayedTaskRegistry {
 		registry.put(TpDailyTaskEnum.INTEL, profile -> new IntelligenceTask(profile, TpDailyTaskEnum.INTEL));
 		registry.put(TpDailyTaskEnum.STOREHOUSE_STAMINA, profile -> new DailyStaminaTask(profile, TpDailyTaskEnum.STOREHOUSE_STAMINA));
 
-		// Alianza
+		// alliance tasks
 		registry.put(TpDailyTaskEnum.ALLIANCE_AUTOJOIN, profile -> new AllianceAutojoinTask(profile, TpDailyTaskEnum.ALLIANCE_AUTOJOIN));
 		registry.put(TpDailyTaskEnum.ALLIANCE_HELP, profile -> new AllianceHelpTask(profile, TpDailyTaskEnum.ALLIANCE_HELP));
 		registry.put(TpDailyTaskEnum.ALLIANCE_TECH, profile -> new AllianceTechTask(profile, TpDailyTaskEnum.ALLIANCE_TECH));
@@ -73,13 +73,13 @@ public class DelayedTaskRegistry {
 		registry.put(TpDailyTaskEnum.ALLIANCE_CHESTS, profile -> new AllianceChestTask(profile, TpDailyTaskEnum.ALLIANCE_CHESTS));
 		registry.put(TpDailyTaskEnum.ALLIANCE_TRIUMPH, profile -> new TriumphTask(profile, TpDailyTaskEnum.ALLIANCE_TRIUMPH));
 
-		// Mascotas
+		// pet skills tasks
 		registry.put(TpDailyTaskEnum.PET_SKILL_STAMINA, profile -> new PetSkillsTask(profile, TpDailyTaskEnum.PET_SKILL_STAMINA, PetSkillsTask.PetSkill.STAMINA));
 		registry.put(TpDailyTaskEnum.PET_SKILL_FOOD, profile -> new PetSkillsTask(profile, TpDailyTaskEnum.PET_SKILL_FOOD, PetSkillsTask.PetSkill.FOOD));
 		registry.put(TpDailyTaskEnum.PET_SKILL_TREASURE, profile -> new PetSkillsTask(profile, TpDailyTaskEnum.PET_SKILL_TREASURE, PetSkillsTask.PetSkill.TREASURE));
 		registry.put(TpDailyTaskEnum.PET_SKILL_GATHERING, profile -> new PetSkillsTask(profile, TpDailyTaskEnum.PET_SKILL_GATHERING, PetSkillsTask.PetSkill.GATHERING));
 
-		// Entrenamiento
+		// training troops tasks
 		registry.put(TpDailyTaskEnum.TRAINING_INFANTRY, profile -> new TrainingTroopsTask(profile, TpDailyTaskEnum.TRAINING_INFANTRY, TrainingTroopsTask.TroopType.INFANTRY));
 		registry.put(TpDailyTaskEnum.TRAINING_LANCER, profile -> new TrainingTroopsTask(profile, TpDailyTaskEnum.TRAINING_LANCER, TrainingTroopsTask.TroopType.LANCER));
 		registry.put(TpDailyTaskEnum.TRAINING_MARKSMAN, profile -> new TrainingTroopsTask(profile, TpDailyTaskEnum.TRAINING_MARKSMAN, TrainingTroopsTask.TroopType.MARKSMAN));

@@ -1,5 +1,13 @@
 package cl.camodev.wosbot.serv.task.impl;
 
+import cl.camodev.wosbot.console.enumerable.EnumTemplates;
+import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
+import cl.camodev.wosbot.ot.DTOImageSearchResult;
+import cl.camodev.wosbot.ot.DTOPoint;
+import cl.camodev.wosbot.ot.DTOProfiles;
+import cl.camodev.wosbot.serv.task.DelayedTask;
+import net.sourceforge.tess4j.TesseractException;
+
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -7,175 +15,127 @@ import java.time.format.DateTimeFormatter;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import cl.camodev.wosbot.console.enumerable.EnumTemplates;
-import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
-import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
-import cl.camodev.wosbot.emulator.EmulatorManager;
-import cl.camodev.wosbot.ot.DTOImageSearchResult;
-import cl.camodev.wosbot.ot.DTOPoint;
-import cl.camodev.wosbot.ot.DTOProfiles;
-import cl.camodev.wosbot.serv.impl.ServLogs;
-import cl.camodev.wosbot.serv.impl.ServScheduler;
-import cl.camodev.wosbot.serv.task.DelayedTask;
-import net.sourceforge.tess4j.TesseractException;
-
 public class HeroRecruitmentTask extends DelayedTask {
 
-	public HeroRecruitmentTask(DTOProfiles profile, TpDailyTaskEnum tpDailyTask) {
-		super(profile, tpDailyTask);
-	}
+    public HeroRecruitmentTask(DTOProfiles profile, TpDailyTaskEnum tpDailyTask) {
+        super(profile, tpDailyTask);
+    }
 
-	@Override
-	protected void execute() {
+    @Override
+    protected void execute() {
 
-//		String text = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(40, 770), new DTOPoint(350, 810));
-//		System.out.println(text);
+        logInfo("going hero recruitment");
+        emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(160, 1190), new DTOPoint(217, 1250));
+        sleepTask(500);
+        emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(400, 1190), new DTOPoint(660, 1250));
+        sleepTask(500);
 
-		DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER,
-				EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90);
-		DTOImageSearchResult worldResult = emuManager.searchTemplate(EMULATOR_NUMBER,
-				EnumTemplates.GAME_HOME_WORLD.getTemplate(), 0, 0, 720, 1280, 90);
-		if (homeResult.isFound() || worldResult.isFound()) {
-			logInfo("going hero recruitment");
-			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(160, 1190), new DTOPoint(217, 1250));
-			sleepTask(500);
-			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(400, 1190), new DTOPoint(660, 1250));
-			sleepTask(500);
 
-			logInfo("evaluating advanced recruitment");
-			DTOImageSearchResult claimResult = emuManager.searchTemplate(EMULATOR_NUMBER,
-					EnumTemplates.HERO_RECRUIT_CLAIM.getTemplate(), 40, 800, 300, 95, 95);
-			LocalDateTime nextAdvanced = null;
-			if (claimResult.isFound()) {
-				logInfo("advanced recruitment available, tapping");
-				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(80, 827), new DTOPoint(315, 875));
-				sleepTask(500);
-				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(80, 90), new DTOPoint(140, 130));
-				sleepTask(300);
-				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(80, 90), new DTOPoint(140, 130));
-				sleepTask(300);
-				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(80, 90), new DTOPoint(140, 130));
-				sleepTask(300);
-				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(80, 90), new DTOPoint(140, 130));
-				sleepTask(300);
-				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(80, 90), new DTOPoint(140, 130));
-				sleepTask(1000);
-				logInfo("getting next recruitment time");
-				String text = "";
-				try {
-					text = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(40, 770), new DTOPoint(350, 810));
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (TesseractException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				logInfo(text + " rescheduling task");
-				nextAdvanced = parseNextFree(text);
-			} else {
-				logInfo("no rewards to claim, getting next recruitment time");
-				String text = "";
-				try {
-					text = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(40, 770), new DTOPoint(350, 810));
-				} catch (IOException | TesseractException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+        logInfo("evaluating advanced recruitment");
+        DTOImageSearchResult claimResult = emuManager.searchTemplate(EMULATOR_NUMBER,
+                EnumTemplates.HERO_RECRUIT_CLAIM.getTemplate(), 40, 800, 300, 95, 95);
+        LocalDateTime nextAdvanced = null;
+        String text = "";
+        if (claimResult.isFound()) {
+            logInfo("advanced recruitment available, tapping");
+            emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(80, 827), new DTOPoint(315, 875));
+            sleepTask(500);
+            emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(80, 90), new DTOPoint(140, 130));
+            sleepTask(300);
+            emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(80, 90), new DTOPoint(140, 130));
+            sleepTask(300);
+            emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(80, 90), new DTOPoint(140, 130));
+            sleepTask(300);
+            emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(80, 90), new DTOPoint(140, 130));
+            sleepTask(300);
+            emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(80, 90), new DTOPoint(140, 130));
+            sleepTask(1000);
+            logInfo("getting next recruitment time");
 
-				nextAdvanced = parseNextFree(text);
-			}
 
-			logInfo("evaluating epic recruitment");
-			DTOImageSearchResult claimResultEpic = emuManager.searchTemplate(EMULATOR_NUMBER,
-					EnumTemplates.HERO_RECRUIT_CLAIM.getTemplate(), 40, 1160, 300, 95, 95);
-			LocalDateTime nextEpic;
-			if (claimResultEpic.isFound()) {
-				logInfo("epic recruitment available, tapping");
-				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(70, 1180), new DTOPoint(315, 1230));
-				sleepTask(500);
-				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(80, 90), new DTOPoint(140, 130));
-				sleepTask(300);
-				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(80, 90), new DTOPoint(140, 130));
-				sleepTask(300);
-				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(80, 90), new DTOPoint(140, 130));
-				sleepTask(300);
-				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(80, 90), new DTOPoint(140, 130));
-				sleepTask(300);
-				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(80, 90), new DTOPoint(140, 130));
-				sleepTask(1000);
-				logInfo("getting next recruitment time");
-				String text = "";
-				try {
-					text = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(53, 1130), new DTOPoint(330, 1160));
-				} catch (IOException | TesseractException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				nextEpic = parseNextFree(text);
-			} else {
-				logInfo("no rewards to claim, getting next recruitment time");
-				String text = "";
-				try {
-					text = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(53, 1130), new DTOPoint(330, 1160));
-				} catch (IOException | TesseractException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				nextEpic = parseNextFree(text);
-			}
+        } else {
+            logInfo("no rewards to claim, getting next recruitment time");
 
-			LocalDateTime nextExecution = getEarliest(nextAdvanced, nextEpic);
-			this.reschedule(nextExecution);
-			ServScheduler.getServices().updateDailyTaskStatus(profile, TpDailyTaskEnum.HERO_RECRUITMENT, nextExecution);
-			emuManager.tapBackButton(EMULATOR_NUMBER);
-			emuManager.tapBackButton(EMULATOR_NUMBER);
+        }
 
-		} else {
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, taskName, profile.getName(),
-					"Home not found");
-			emuManager.tapBackButton(EMULATOR_NUMBER);
+        try {
+            text = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(40, 770), new DTOPoint(350, 810));
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        logInfo(text + " rescheduling task");
+        nextAdvanced = parseNextFree(text);
+        logInfo("evaluating epic recruitment");
+        DTOImageSearchResult claimResultEpic = emuManager.searchTemplate(EMULATOR_NUMBER,
+                EnumTemplates.HERO_RECRUIT_CLAIM.getTemplate(), 40, 1160, 300, 95, 95);
+        LocalDateTime nextEpic;
+        if (claimResultEpic.isFound()) {
+            logInfo("epic recruitment available, tapping");
+            emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(70, 1180), new DTOPoint(315, 1230));
+            sleepTask(500);
+            emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(80, 90), new DTOPoint(140, 130));
+            sleepTask(300);
+            emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(80, 90), new DTOPoint(140, 130));
+            sleepTask(300);
+            emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(80, 90), new DTOPoint(140, 130));
+            sleepTask(300);
+            emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(80, 90), new DTOPoint(140, 130));
+            sleepTask(300);
+            emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(80, 90), new DTOPoint(140, 130));
+            sleepTask(1000);
+            logInfo("getting next recruitment time");
 
-		}
+        } else {
+            logInfo("no rewards to claim, getting next recruitment time");
 
-	}
+        }
 
-	public static LocalDateTime getEarliest(LocalDateTime dt1, LocalDateTime dt2) {
-		return dt1.isBefore(dt2) ? dt1 : dt2;
-	}
 
-	public static LocalDateTime parseNextFree(String input) {
-		// Expresión regular para capturar opcionalmente los días y obligatoriamente la
-		// hora
-		Pattern pattern = Pattern.compile("^(?:~\\s*)?Next free:\\s*(?:(\\d+)d\\s+)?(\\d{1,2}:\\d{2}:\\d{2})\\s*$",
-				Pattern.CASE_INSENSITIVE);
-		Matcher matcher = pattern.matcher(input);
+        try {
+            text = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(53, 1130), new DTOPoint(330, 1160));
+        } catch (IOException | TesseractException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        nextEpic = parseNextFree(text);
 
-		if (!matcher.matches()) {
-			throw new IllegalArgumentException("El formato del texto no es válido: " + input);
-		}
+        LocalDateTime nextExecution = getEarliest(nextAdvanced, nextEpic);
+        this.reschedule(nextExecution);
+        emuManager.tapBackButton(EMULATOR_NUMBER);
+        emuManager.tapBackButton(EMULATOR_NUMBER);
 
-		// Grupo 1: días (opcional)
-		String daysStr = matcher.group(1);
-		// Grupo 2: la hora en formato HH:mm:ss
-		String timeStr = matcher.group(2);
+    }
 
-		// Convertir el número de días (si está presente) o 0 en caso contrario
-		int daysToAdd = daysStr != null ? Integer.parseInt(daysStr) : 0;
+    public LocalDateTime getEarliest(LocalDateTime dt1, LocalDateTime dt2) {
+        return dt1.isBefore(dt2) ? dt1 : dt2;
+    }
 
-		// Parsear la parte de la hora utilizando un formateador que permita 1 o 2
-		// dígitos para la hora
-		DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("H:mm:ss");
-		LocalTime timePart = LocalTime.parse(timeStr, timeFormatter);
+    public LocalDateTime parseNextFree(String input) {
+        // Regular expression to match the input format [n]d HH:mm:ss' o 'HH:mm:ss
+        Pattern pattern = Pattern.compile("(?i).*?(?:(\\d+)\\s*d\\s*)?(\\d{1,2}:\\d{2}:\\d{2}).*", Pattern.DOTALL);
+        Matcher matcher = pattern.matcher(input.trim());
 
-		// Obtener la fecha y hora actuales
-		LocalDateTime now = LocalDateTime.now();
+        if (!matcher.matches()) {
+            throw new IllegalArgumentException("Input does not match the expected format. Expected format: [n]d HH:mm:ss' o 'HH:mm:ss");
+        }
 
-		// Sumar al 'now' los días, horas, minutos y segundos obtenidos
-		LocalDateTime result = now.plusDays(daysToAdd).plusHours(timePart.getHour()).plusMinutes(timePart.getMinute())
-				.plusSeconds(timePart.getSecond());
 
-		return result;
-	}
+        String daysStr = matcher.group(1);   // optional, can be null
+        String timeStr = matcher.group(2);   // always present
+
+        int daysToAdd = (daysStr != null) ? Integer.parseInt(daysStr) : 0;
+
+        // parser for time part
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("H:mm:ss");
+        LocalTime timePart = LocalTime.parse(timeStr, timeFormatter);
+
+
+        return LocalDateTime.now()
+                .plusDays(daysToAdd)
+                .plusHours(timePart.getHour())
+                .plusMinutes(timePart.getMinute())
+                .plusSeconds(timePart.getSecond());
+    }
 
 }
