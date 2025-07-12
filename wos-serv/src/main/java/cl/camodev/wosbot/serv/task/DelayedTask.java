@@ -2,8 +2,10 @@ package cl.camodev.wosbot.serv.task;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
+import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
 
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
@@ -16,7 +18,7 @@ import cl.camodev.wosbot.serv.impl.ServLogs;
 import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.task.impl.InitializeTask;
 
-public abstract class DelayedTask implements Runnable {
+public abstract class DelayedTask implements Runnable, Delayed, Comparable<Delayed> {
 
 	protected volatile boolean recurring = true;
 	protected LocalDateTime lastExecutionTime;
@@ -124,9 +126,25 @@ public abstract class DelayedTask implements Runnable {
 		return taskName;
 	}
 
+	@Override
 	public long getDelay(TimeUnit unit) {
-		long delayMillis = ChronoUnit.MILLIS.between(LocalDateTime.now(), scheduledTime);
-		return unit.convert(delayMillis, TimeUnit.MILLISECONDS);
+		long diff = scheduledTime.toEpochSecond(ZoneOffset.UTC) - LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
+		return unit.convert(diff, TimeUnit.SECONDS);
+	}
+
+	@Override
+	public int compareTo(Delayed o) {
+		if (this == o) return 0;
+
+		boolean thisInit  = this instanceof InitializeTask;
+		boolean otherInit = o instanceof InitializeTask;
+		if (thisInit && !otherInit) return -1;
+		if (!thisInit && otherInit) return  1;
+
+
+		long diff = this.getDelay(TimeUnit.NANOSECONDS)
+				- o.getDelay(TimeUnit.NANOSECONDS);
+		return Long.compare(diff, 0);
 	}
 
 	public LocalDateTime getScheduled() {

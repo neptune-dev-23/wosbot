@@ -27,21 +27,8 @@ import cl.camodev.wosbot.serv.task.impl.InitializeTask;
 
 public class TaskQueue {
 
-	// Cola que contendrá todas las tareas (no necesariamente ordenadas por tiempo).
-	private final PriorityBlockingQueue<DelayedTask> taskQueue = new PriorityBlockingQueue<>(11, new Comparator<DelayedTask>() {
-		@Override
-		public int compare(DelayedTask t1, DelayedTask t2) {
-			// Initialize should always be executed first
-			if (t1 instanceof InitializeTask && !(t2 instanceof InitializeTask)) {
-				return -1;
-			} else if (!(t1 instanceof InitializeTask) && t2 instanceof InitializeTask) {
-				return 1;
-			}
 
-			// Compare by delay in seconds
-			return Long.compare(t1.getDelay(TimeUnit.SECONDS), t2.getDelay(TimeUnit.SECONDS));
-		}
-	});
+	private final PriorityBlockingQueue<DelayedTask> taskQueue = new PriorityBlockingQueue<>();
 
 	// Bandera para detener el loop del scheduler.
 	private volatile boolean running = false;
@@ -205,13 +192,13 @@ public class TaskQueue {
 					maxIdle = Optional.ofNullable(profile.getGlobalsettings().get(EnumConfigurationKey.MAX_IDLE_TIME_INT.name())).map(Integer::parseInt).orElse(Integer.parseInt(EnumConfigurationKey.MAX_IDLE_TIME_INT.getDefaultValue()));
 //					}
 
-					; // 30 minutos en segundos
+
 					if (!idlingTimeExceded && minDelay > TimeUnit.MINUTES.toSeconds(maxIdle)) {
 						idlingTimeExceded = true;
-						ejecutarFragmentoEspecifico(minDelay);
+						idlingEmulator(minDelay);
 					}
 
-					// Si la demora baja a menos de 1 minuto y antes se cumplió la condición
+					// Si la demora baja a menos de 1 minuto y intentamos obtener el slot de emulador y encolamos tarea de inicialización
 					if (idlingTimeExceded && minDelay < TimeUnit.MINUTES.toSeconds(1)) {
 						encolarNuevaTarea();
 						idlingTimeExceded = false; // Restablecer la condición para futuras evaluaciones
@@ -244,7 +231,7 @@ public class TaskQueue {
 	}
 
 	// Métodos auxiliares
-	private void ejecutarFragmentoEspecifico(long minDelay) {
+	private void idlingEmulator(long minDelay) {
 		EmulatorManager.getInstance().closeEmulator(profile.getEmulatorNumber());
 		ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueue", profile.getName(), "Closing game due to large inactivity");
 		LocalDateTime scheduledTime = LocalDateTime.now().plusSeconds(minDelay);
