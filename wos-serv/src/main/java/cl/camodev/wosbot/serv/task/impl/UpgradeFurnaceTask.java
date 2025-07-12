@@ -3,6 +3,8 @@ package cl.camodev.wosbot.serv.task.impl;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
@@ -57,23 +59,8 @@ public class UpgradeFurnaceTask extends DelayedTask {
 							break;
 						}
 
-						// Sanitizar texto OCR
-						String cleanedText = rawText.replaceAll("[^0-9:\\n\\r]", "") // Eliminar caracteres no esperados excepto dígitos y separadores de tiempo
-								.replaceAll("[\\n\\r]+", "") // Eliminar saltos de línea
-								.trim();
-
-						// Intentar parsear
-						// Parsear a LocalTime como duración
-						LocalTime parsedTime = LocalTime.parse(cleanedText, DateTimeFormatter.ofPattern("HH:mm:ss"));
-
-						// Convertir a segundos totales
-						long totalSeconds = parsedTime.toSecondOfDay();
-
-						// Calcular la mitad del tiempo
-						long halfSeconds = totalSeconds / 2;
-
 						// Sumar la mitad al tiempo actual
-						upgradeTime = LocalDateTime.now().plusSeconds(halfSeconds);
+						upgradeTime = parseNextFree(rawText);
 
 						success = true;
 						break;
@@ -231,5 +218,32 @@ public class UpgradeFurnaceTask extends DelayedTask {
 			this.reschedule(LocalDateTime.now());
 		}
 
+	}
+
+	public LocalDateTime parseNextFree(String input) {
+		// Regular expression to match the input format [n]d HH:mm:ss' o 'HH:mm:ss
+		Pattern pattern = Pattern.compile("(?i).*?(?:(\\d+)\\s*d\\s*)?(\\d{1,2}:\\d{2}:\\d{2}).*", Pattern.DOTALL);
+		Matcher matcher = pattern.matcher(input.trim());
+
+		if (!matcher.matches()) {
+			throw new IllegalArgumentException("Input does not match the expected format. Expected format: [n]d HH:mm:ss' o 'HH:mm:ss");
+		}
+
+
+		String daysStr = matcher.group(1);   // optional, can be null
+		String timeStr = matcher.group(2);   // always present
+
+		int daysToAdd = (daysStr != null) ? Integer.parseInt(daysStr) : 0;
+
+		// parser for time part
+		DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("H:mm:ss");
+		LocalTime timePart = LocalTime.parse(timeStr, timeFormatter);
+
+
+		return LocalDateTime.now()
+				.plusDays(daysToAdd)
+				.plusHours(timePart.getHour())
+				.plusMinutes(timePart.getMinute())
+				.plusSeconds(timePart.getSecond());
 	}
 }
