@@ -1,19 +1,6 @@
 package cl.camodev.wosbot.taskmanager.view;
 
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
-
 import cl.camodev.utiles.UtilTime;
-import cl.camodev.wosbot.almac.repo.DailyTaskRepository;
-import cl.camodev.wosbot.almac.repo.IDailyTaskRepository;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.ot.DTODailyTaskStatus;
 import cl.camodev.wosbot.ot.DTOProfiles;
@@ -32,19 +19,21 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.ContentDisplay;
-import javafx.scene.control.SingleSelectionModel;
-import javafx.scene.control.Tab;
-import javafx.scene.control.TabPane;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.util.Duration;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
 public class TaskManagerLayoutController {
+
+	private final Image iconTrue = new Image(getClass().getResourceAsStream("/icons/indicators/green.png"));
+	private final Image iconFalse = new Image(getClass().getResourceAsStream("/icons/indicators/red.png"));
 
 	private TaskManagerActionController taskManagerActionController = new TaskManagerActionController(this);
 
@@ -52,8 +41,6 @@ public class TaskManagerLayoutController {
 	private TabPane tabPaneProfiles;
 
 	private final ObjectProperty<LocalDateTime> globalClock = new SimpleObjectProperty<>(LocalDateTime.now());
-
-	private IDailyTaskRepository dailyTaskRepository = DailyTaskRepository.getRepository();
 
 	private final Map<Long, Tab> profileTabsMap = new HashMap<>();
 	private final Map<Long, ObservableList<TaskManagerAux>> tasks = new HashMap<>();
@@ -195,8 +182,7 @@ public class TaskManagerLayoutController {
 	private TableView<TaskManagerAux> createTaskTable() {
 		TableView<TaskManagerAux> table = new TableView<>();
 		table.getStyleClass().add("table-view");
-		Image iconTrue = new Image(getClass().getResourceAsStream("/icons/indicators/green.png"));
-		Image iconFalse = new Image(getClass().getResourceAsStream("/icons/indicators/red.png"));
+
 
 		// Task Name column
 		TableColumn<TaskManagerAux, String> colTaskName = new TableColumn<>("Task Name");
@@ -352,6 +338,18 @@ public class TaskManagerLayoutController {
 			if (!optionalTask.isPresent())
 				return;
 
+			Tab t = profileTabsMap.get(profileId);
+			boolean hasQueue = ServScheduler
+					.getServices()
+					.getQueueManager()
+					.getQueue(profileId) != null;
+
+			ImageView iv = new ImageView(hasQueue ? iconTrue : iconFalse);
+
+			iv.setFitWidth(16);
+			iv.setFitHeight(16);
+
+			t.setGraphic(iv);
 			TaskManagerAux taskAux = optionalTask.get();
 			taskAux.setLastExecution(taskState.getLastExecutionTime());
 			taskAux.setNextExecution(taskState.getNextExecutionTime());
@@ -361,6 +359,18 @@ public class TaskManagerLayoutController {
 			taskAux.setNearestMinutesUntilExecution(taskState.getNextExecutionTime() != null ? ChronoUnit.MINUTES.between(LocalDateTime.now(), taskState.getNextExecutionTime()) : Long.MAX_VALUE);
 
 			FXCollections.sort(dataList, TASK_AUX_COMPARATOR);
+
+			List<Tab> sortedTabs = profileTabsMap.entrySet().stream()
+					.sorted((e1, e2) -> {
+
+						boolean b1 = ServScheduler.getServices().getQueueManager().getQueue(e1.getKey()) != null;
+						boolean b2 = ServScheduler.getServices().getQueueManager().getQueue(e2.getKey()) != null;
+						if (b1 == b2) return 0;
+						return b1 ? -1 : 1; // true primero
+					})
+					.map(Map.Entry::getValue)
+					.collect(Collectors.toList());
+			tabPaneProfiles.getTabs().setAll(sortedTabs);
 		});
 
 	}
