@@ -21,7 +21,16 @@ public enum EnumTemplates {
 	DAILY_MISSION_DAILY_TAB("/templates/dailymission/dailyMissionTab.png"),
 	DAILY_MISSION_CLAIMALL_BUTTON("/templates/dailymission/claimAllButton.png"),
 	DAILY_MISSION_CLAIM_BUTTON("/templates/dailymission/claimButton.png"),
-	
+
+	BUILDING_BUTTON_TRAIN("/templates/building/trainButton.png"),
+	BUILDING_BUTTON_SPEED("/templates/building/speedButton.png"),
+	BUILDING_BUTTON_UPGRADE("/templates/building/upgradeButton.png"),
+	BUILDING_BUTTON_DETAILS("/templates/building/detailsButton.png"),
+
+	BUILDING_DETAILS_INFANTRY("/templates/building/detailsInfantry.png"),
+	BUILDING_DETAILS_LANCER("/templates/building/detailsLancer.png"),
+	BUILDING_DETAILS_MARKSMAN("/templates/building/detailsMarksman.png"),
+
 	
 	GAME_HOME_CAMP_TRAIN("/templates/home/camp/train.png"),
 	
