@@ -3,6 +3,7 @@ package cl.camodev.wosbot.serv.task.impl;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -13,12 +14,19 @@ import cl.camodev.wosbot.emulator.EmulatorManager;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
+import cl.camodev.wosbot.ot.DTOTaskState;
 import cl.camodev.wosbot.serv.impl.ServLogs;
 import cl.camodev.wosbot.serv.impl.ServScheduler;
+import cl.camodev.wosbot.serv.impl.ServTaskManager;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 
 public class UpgradeFurnaceTask extends DelayedTask {
 
+	private final Map<EnumTemplates, TpDailyTaskEnum> TROOP_TASK_MAP = Map.of(
+			EnumTemplates.BUILDING_DETAILS_INFANTRY, TpDailyTaskEnum.TRAINING_INFANTRY,
+			EnumTemplates.BUILDING_DETAILS_MARKSMAN,  TpDailyTaskEnum.TRAINING_MARKSMAN,
+			EnumTemplates.BUILDING_DETAILS_LANCER,    TpDailyTaskEnum.TRAINING_LANCER
+	);
 
 	public UpgradeFurnaceTask(DTOProfiles profile, TpDailyTaskEnum tpDailyTask) {
 		super(profile, tpDailyTask);
@@ -71,12 +79,12 @@ public class UpgradeFurnaceTask extends DelayedTask {
 				}
 
 				if (success) {
-					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Queue is already busy");
+					logInfo("Queue is already busy");
 					reschedule(upgradeTime);
 					return;
 				} else {
 
-					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "No upgrades in progress, going to upgrade furnace");
+					logInfo("No upgrades in progress, going to upgrade furnace");
 					// going to check current furnace requierements
 					// survivor status
 					emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(320, 30));
@@ -111,7 +119,7 @@ public class UpgradeFurnaceTask extends DelayedTask {
 							DTOImageSearchResult upgradeGoButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_CITY_STATUS_GO_BUTTON.getTemplate(), 0, 0, 720, 1280, 90);
 
 							if (upgradeGoButton.isFound()) {
-								servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Pending upgrade requirements found, going to upgrade requierements");
+								logInfo("Pending upgrade requirements found, going to upgrade requierements");
 								// click on go button
 								emuManager.tapAtRandomPoint(EMULATOR_NUMBER, upgradeGoButton.getPoint(), upgradeGoButton.getPoint());
 								sleepTask(1000);
@@ -139,6 +147,46 @@ public class UpgradeFurnaceTask extends DelayedTask {
 									emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(489, 1034), new DTOPoint(500, 1050));
 
 								} else {
+									//verify if the selected building is a troop training building (Infantry, Marksman, Lancer)
+									servLogs.appendLog(EnumTpMessageSeverity.WARNING, taskName, profile.getName(), "Upgrade button not found, checking if it's a troop training building");
+
+									//if it's a troop training building, we need to reschedule the task till the training is done
+
+									DTOImageSearchResult train = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.BUILDING_BUTTON_TRAIN.getTemplate(), 0, 0, 720, 1280, 90);
+
+									if (train.isFound()) {
+										servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Troop training building found, rescheduling task till training is done");
+										// i need to verify wich troops are being trained, so i can reschedule the task accordingly
+
+										DTOImageSearchResult detailsButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.BUILDING_BUTTON_DETAILS.getTemplate(), 0, 0, 720, 1280, 90);
+										if (detailsButton.isFound()){
+											emuManager.tapAtRandomPoint(EMULATOR_NUMBER, detailsButton.getPoint(), detailsButton.getPoint());
+											sleepTask(500);
+
+											for (var entry : TROOP_TASK_MAP.entrySet()) {
+												DTOImageSearchResult troop = emuManager.searchTemplate(
+														EMULATOR_NUMBER,
+														entry.getKey().getTemplate(),
+														0, 0, 720, 1280, 90
+												);
+												if (troop.isFound()) {
+													handleTroopReschedule(entry.getValue());
+													return;
+												}
+											}
+
+											// 5) Ningún entrenamiento encontrado → reprogramar a +1h
+											servLogs.appendLog(
+													EnumTpMessageSeverity.WARNING,
+													taskName,
+													profile.getName(),
+													"No troop training found, rescheduling task for 1 hour"
+											);
+											reschedule(LocalDateTime.now().plusHours(1));
+										}
+
+									}
+
 									servLogs.appendLog(EnumTpMessageSeverity.WARNING, taskName, profile.getName(), "Upgrade button not found, skipping upgrade");
 									reschedule(LocalDateTime.now());
 									return;
@@ -148,12 +196,12 @@ public class UpgradeFurnaceTask extends DelayedTask {
 									DTOImageSearchResult alliesHelpButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_SHORTCUTS_HELP_REQUEST.getTemplate(), 0, 0, 720, 1280, 90);
 
 									if (alliesHelpButton.isFound()) {
-										servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Allies help button found, requesting help");
+										logInfo("Allies help button found, requesting help");
 										emuManager.tapAtRandomPoint(EMULATOR_NUMBER, alliesHelpButton.getPoint(), alliesHelpButton.getPoint());
 										sleepTask(300);
 										break;
 									} else if (i == MAX_ATTEMPTS - 1) {
-										servLogs.appendLog(EnumTpMessageSeverity.WARNING, taskName, profile.getName(), "Allies help button not found, skipping request");
+										logInfo("Allies help button not found, skipping request");
 										reschedule(LocalDateTime.now());
 										return;
 									}
@@ -188,7 +236,7 @@ public class UpgradeFurnaceTask extends DelayedTask {
 									DTOImageSearchResult alliesHelpButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_SHORTCUTS_HELP_REQUEST.getTemplate(), 0, 0, 720, 1280, 90);
 
 									if (alliesHelpButton.isFound()) {
-										servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Allies help button found, requesting help");
+										logInfo("Allies help button found, requesting help");
 										emuManager.tapAtRandomPoint(EMULATOR_NUMBER, alliesHelpButton.getPoint(), alliesHelpButton.getPoint());
 										sleepTask(500);
 										break;
@@ -245,5 +293,28 @@ public class UpgradeFurnaceTask extends DelayedTask {
 				.plusHours(timePart.getHour())
 				.plusMinutes(timePart.getMinute())
 				.plusSeconds(timePart.getSecond());
+	}
+
+
+	private void handleTroopReschedule(TpDailyTaskEnum taskEnum) {
+		logInfo(taskEnum.name() + " build found, getting task state to reschedule");
+
+		DTOTaskState taskState = ServTaskManager
+				.getInstance()
+				.getTaskState(profile.getId(), taskEnum.getId());
+
+		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime next = (taskState != null && taskState.getNextExecutionTime() != null)
+				? taskState.getNextExecutionTime()
+				: now;
+
+		if (next.isBefore(now)) {
+			logInfo("Next execution time is before now, rescheduling task for now");
+			reschedule(now);
+		} else {
+			logInfo("Next execution time is after now, rescheduling task for " +
+					"next execution time minus 5 seconds");
+			reschedule(next.minusSeconds(5));
+		}
 	}
 }
