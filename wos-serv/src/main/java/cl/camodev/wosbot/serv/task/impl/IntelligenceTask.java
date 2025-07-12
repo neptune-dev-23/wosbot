@@ -410,4 +410,7 @@ public class IntelligenceTask extends DelayedTask {
 		}
 	}
 
+	@Override
+	public boolean provideDailyMissionProgress() {return true;}
+
 }

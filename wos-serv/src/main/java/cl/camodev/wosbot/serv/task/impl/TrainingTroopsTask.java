@@ -152,4 +152,7 @@ public class TrainingTroopsTask extends DelayedTask {
 		return troopType;
 	}
 
+	@Override
+	public boolean provideDailyMissionProgress() {return true;}
+
 }

@@ -178,4 +178,7 @@ public class PetAdventureChestTask extends DelayedTask {
 		return null; // Retorna null si no se encuentra el número
 	}
 
+	@Override
+	public boolean provideDailyMissionProgress() {return true;}
+
 }

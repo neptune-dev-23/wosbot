@@ -138,4 +138,7 @@ public class HeroRecruitmentTask extends DelayedTask {
                 .plusSeconds(timePart.getSecond());
     }
 
+    @Override
+    public boolean provideDailyMissionProgress() {return true;}
+
 }

@@ -72,6 +72,7 @@ public enum EnumConfigurationKey {
 	
 	DAILY_MISSION_BOOL("false",Boolean.class),
 	DAILY_MISSION_OFFSET_INT("1",Integer.class),
+	DAILY_MISSION_AUTO_SCHEDULE_BOOL("false",Boolean.class),
 	
 	STOREHOUSE_CHEST_BOOL("false",Boolean.class),
 	STOREHOUSE_STAMINA_BOOL("false",Boolean.class),

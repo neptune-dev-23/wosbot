@@ -385,4 +385,7 @@ public class GatherTask extends DelayedTask {
 		return gatherType;
 	}
 
+	@Override
+	public boolean provideDailyMissionProgress() {return true;}
+
 }

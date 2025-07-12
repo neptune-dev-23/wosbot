@@ -22,6 +22,7 @@ import cl.camodev.wosbot.serv.impl.ServLogs;
 import cl.camodev.wosbot.serv.impl.ServProfiles;
 import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.impl.ServTaskManager;
+import cl.camodev.wosbot.serv.task.impl.DailyMissionTask;
 import cl.camodev.wosbot.serv.task.impl.InitializeTask;
 
 public class TaskQueue {
@@ -143,6 +144,43 @@ public class TaskQueue {
 							addTask(task);
 						} else {
 							ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Task removed from schedule");
+						}
+
+						boolean dailyAutoSchedule = profile.getConfig(EnumConfigurationKey.DAILY_MISSION_AUTO_SCHEDULE_BOOL,Boolean.class);
+						if (dailyAutoSchedule) {
+							DTOTaskState state = ServTaskManager.getInstance().getTaskState(profile.getId(), TpDailyTaskEnum.DAILY_MISSIONS.getId());
+							LocalDateTime next = (state != null)? state.getNextExecutionTime(): null;
+							LocalDateTime now = LocalDateTime.now();
+							if (task.provideDailyMissionProgress()	&& (state == null || next == null || next.isAfter(now))) {
+								DelayedTask prototype = DelayedTaskRegistry.create(TpDailyTaskEnum.DAILY_MISSIONS, profile);
+
+								// verify if the task already exists in the queue
+								DelayedTask existing = taskQueue.stream().filter(prototype::equals).findFirst().orElse(null);
+
+								if (existing != null) {
+									// task already exists, reschedule it to run now
+									taskQueue.remove(existing);
+									existing.reschedule(LocalDateTime.now());
+									existing.setRecurring(true);
+									taskQueue.offer(existing);
+
+									ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueue", profile.getName(), "Rescheduled existing " + TpDailyTaskEnum.DAILY_MISSIONS + " to run now");
+								} else {
+									// task does not exist, create a new instance and schedule it just once
+									prototype.reschedule(LocalDateTime.now());
+									prototype.setRecurring(false);
+									taskQueue.offer(prototype);
+									ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueue", profile.getName(), "Enqueued new immediate " + TpDailyTaskEnum.DAILY_MISSIONS);
+								}
+
+
+
+							}
+						}
+
+
+						if (task.provideTriumphProgress()){
+
 						}
 
 						taskState.setExecuting(false);

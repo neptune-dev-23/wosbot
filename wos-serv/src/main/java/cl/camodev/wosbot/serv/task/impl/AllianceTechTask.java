@@ -68,4 +68,7 @@ public class AllianceTechTask extends DelayedTask {
 
 	}
 
+	@Override
+	public boolean provideDailyMissionProgress() {return true;}
+
 }

@@ -66,4 +66,7 @@ public class AllianceHelpTask extends DelayedTask {
 		this.reschedule(nextExecutionTime);
 	}
 
+	@Override
+	public boolean provideDailyMissionProgress() {return true;}
+
 }

@@ -17,4 +17,7 @@ public class ArenaTask extends DelayedTask {
 		ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Executing arena task");
 	}
 
+
+	@Override
+	public boolean provideDailyMissionProgress() {return true;}
 }

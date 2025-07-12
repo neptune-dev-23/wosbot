@@ -168,6 +168,14 @@ public abstract class DelayedTask implements Runnable {
 		}
 	}
 
+	public boolean provideDailyMissionProgress() {
+		return false;
+	}
+
+	public boolean provideTriumphProgress() {
+		return false;
+	}
+
 	public void logInfo(String message) {
 		servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), message);
 	}

@@ -18,4 +18,7 @@ public class DailyLabyrinthTask extends DelayedTask {
 		ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Executing daily labyrinth task");
 	}
 
+	@Override
+	public boolean provideDailyMissionProgress() {return true;}
+
 }

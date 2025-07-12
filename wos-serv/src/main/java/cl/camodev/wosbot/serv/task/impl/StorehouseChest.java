@@ -165,4 +165,6 @@ public class StorehouseChest extends DelayedTask {
 		}
 	}
 
+	@Override
+	public boolean provideDailyMissionProgress() {return true;}
 }
