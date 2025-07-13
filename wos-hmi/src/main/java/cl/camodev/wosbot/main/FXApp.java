@@ -6,6 +6,7 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -28,6 +29,7 @@ public class FXApp extends Application {
 	@Override
 	public void start(Stage stage) throws IOException {
 		// Inicializar Preferences
+		Image appIcon = new Image(getClass().getResourceAsStream("/icons/appIcon.png"));
 		prefs = Preferences.userRoot().node(FXApp.class.getName());
 
 		// Cargar FXML y controlador
@@ -46,6 +48,7 @@ public class FXApp extends Application {
 		Scene scene = new Scene(root, width, height);
 		scene.getStylesheets().add(ILauncherConstants.getCssPath());
 		stage.setScene(scene);
+		stage.getIcons().add(appIcon);
 
 		// Restaurar posición si existe
 		double x = prefs.getDouble(KEY_X, Double.NaN);
@@ -62,7 +65,7 @@ public class FXApp extends Application {
 			prefs.putDouble(KEY_X,      stage.getX());
 			prefs.putDouble(KEY_Y,      stage.getY());
 			prefs.putDouble(KEY_W,      stage.getWidth());
-			prefs.putDouble(KEY_H,      stage.getHeight());
+			prefs.putDouble(KEY_H,      stage.getHeight()-10);
 			System.exit(0);
 		});
 
