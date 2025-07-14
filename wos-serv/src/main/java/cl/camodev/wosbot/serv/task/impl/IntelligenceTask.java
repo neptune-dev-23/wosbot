@@ -338,8 +338,18 @@ public class IntelligenceTask extends DelayedTask {
 			if (attack.isFound()) {
 				emuManager.tapAtPoint(EMULATOR_NUMBER, attack.getPoint());
 				sleepTask(500);
-				emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(198, 1188)); // Click equalize
-				sleepTask(500);
+
+				DTOImageSearchResult equalizeButton = emuManager.searchTemplate(EMULATOR_NUMBER,
+						EnumTemplates.RALLY_EQUALIZE_BUTTON.getTemplate(), 0, 0, 720, 1280, 90);
+
+				if (equalizeButton.isFound()){
+					emuManager.tapAtPoint(EMULATOR_NUMBER, equalizeButton.getPoint());
+				}else{
+					//hard coded coords
+					emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(198, 1188));
+					sleepTask(500);
+				}
+
 				DTOImageSearchResult rally = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_ATTACK_CONFIRM.getTemplate(), 0, 0, 720, 1280, 90);
 				if (rally.isFound()) {
 					emuManager.tapAtPoint(EMULATOR_NUMBER, rally.getPoint());

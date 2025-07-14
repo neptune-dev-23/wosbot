@@ -212,7 +212,7 @@ public class GatherTask extends DelayedTask {
 								EnumTemplates.RALLY_EQUALIZE_BUTTON.getTemplate(), 0, 0, 720, 1280, 90);
 
 						if (equalizeButton.isFound()){
-							emuManager.tapAtPoint(EMULATOR_NUMBER, remove.getPoint());
+							emuManager.tapAtPoint(EMULATOR_NUMBER, equalizeButton.getPoint());
 						}else{
 							//hard coded coords
 							emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(198, 1188));
