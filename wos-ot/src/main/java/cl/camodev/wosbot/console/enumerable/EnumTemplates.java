@@ -97,42 +97,44 @@ public enum EnumTemplates {
 	INTEL_ATTACK_CONFIRM("/templates/intel/beastAttackConfirm.png"),
 	
 	INTEL_FIRE_BEAST("/templates/intel/beastFire.png"),
+
+
+	INTEL_BEAST_YELLOW("/templates/intel/beast10.png"),
+	INTEL_BEAST_PURPLE("/templates/intel/beast9.png"),
+	INTEL_BEAST_BLUE("/templates/intel/beast8.png"),
+	INTEL_BEAST_GREEN("/templates/intel/beast7.png"),
+	INTEL_BEAST_GREY("/templates/intel/beast6.png"),
+	INTEL_PREFC_BEAST_YELLOW("/templates/intel/beast5.png"),
+	INTEL_PREFC_BEAST_PURPLE("/templates/intel/beast4.png"),
+	INTEL_PREFC_BEAST_BLUE("/templates/intel/beast3.png"),
+	INTEL_PREFC_BEAST_GREEN("/templates/intel/beast2.png"),
+	INTEL_PREFC_BEAST_GREY("/templates/intel/beast1.png"),
+
+
+	INTEL_SURVIVOR_YELLOW("/templates/intel/survivor10.png"),
+	INTEL_SURVIVOR_PURPLE("/templates/intel/survivor9.png"),
+	INTEL_SURVIVOR_BLUE("/templates/intel/survivor8.png"),
+	INTEL_SURVIVOR_GREEN("/templates/intel/survivor7.png"),
+	INTEL_SURVIVOR_GREY("/templates/intel/survivor6.png"),
+	INTEL_PREFC_SURVIVOR_YELLOW("/templates/intel/survivor5.png"),
+	INTEL_PREFC_SURVIVOR_PURPLE("/templates/intel/survivor4.png"),
+	INTEL_PREFC_SURVIVOR_BLUE("/templates/intel/survivor3.png"),
+	INTEL_PREFC_SURVIVOR_GREEN("/templates/intel/survivor2.png"),
+	INTEL_PREFC_SURVIVOR_GREY("/templates/intel/survivor1.png"),
+
+	INTEL_JOURNEY_YELLOW("/templates/intel/journey10.png"),
+	INTEL_JOURNEY_PURPLE("/templates/intel/journey9.png"),
+	INTEL_JOURNEY_BLUE("/templates/intel/journey8.png"),
+	INTEL_JOURNEY_GREEN("/templates/intel/journey7.png"),
+	INTEL_JOURNEY_GREY("/templates/intel/journey6.png"),
 	
-	INTEL_PREFC_BEAST_YELLOW("/templates/intel/prefcBeastYellow.png"),
-	INTEL_PREFC_BEAST_PURPLE("/templates/intel/prefcBeastPurple.png"),
-	INTEL_PREFC_BEAST_BLUE("/templates/intel/prefcBeastBlue.png"),
-	INTEL_PREFC_BEAST_GREEN("/templates/intel/prefcBeastGreen.png"),
-	INTEL_PREFC_BEAST_GREY("/templates/intel/prefcBeastGrey.png"),
+	INTEL_PREFC_JOURNEY_YELLOW("/templates/intel/journey5.png"),
+	INTEL_PREFC_JOURNEY_PURPLE("/templates/intel/journey4.png"),
+	INTEL_PREFC_JOURNEY_BLUE("/templates/intel/journey3.png"),
+	INTEL_PREFC_JOURNEY_GREEN("/templates/intel/journey2.png"),
+	INTEL_PREFC_JOURNEY_GREY("/templates/intel/journey1.png"),
 	
-	INTEL_BEAST_YELLOW("/templates/intel/beastYellow.png"),
-	INTEL_BEAST_PURPLE("/templates/intel/beastPurple.png"),
-	INTEL_BEAST_BLUE("/templates/intel/beastBlue.png"),
-	INTEL_BEAST_GREEN("/templates/intel/beastGreen.png"),
-	INTEL_BEAST_GREY("/templates/intel/beastGrey.png"),
-	
-	INTEL_PREFC_SURVIVOR_YELLOW("/templates/intel/prefcSurvivorYellow.png"),
-	INTEL_PREFC_SURVIVOR_PURPLE("/templates/intel/prefcSurvivorPurple.png"),
-	INTEL_PREFC_SURVIVOR_BLUE("/templates/intel/prefcSurvivorBlue.png"),
-	INTEL_PREFC_SURVIVOR_GREEN("/templates/intel/prefcSurvivorGreen.png"),
-	INTEL_PREFC_SURVIVOR_GREY("/templates/intel/prefcSurvivorGrey.png"),
-	
-	INTEL_SURVIVOR_YELLOW("/templates/intel/survivorYellow.png"),
-	INTEL_SURVIVOR_PURPLE("/templates/intel/survivorPurple.png"),
-	INTEL_SURVIVOR_BLUE("/templates/intel/survivorBlue.png"),
-	INTEL_SURVIVOR_GREEN("/templates/intel/survivorGreen.png"),
-	INTEL_SURVIVOR_GREY("/templates/intel/survivorGrey.png"),
-	
-	INTEL_PREFC_JOURNEY_YELLOW("/templates/intel/prefcJourneyYellow.png"),
-	INTEL_PREFC_JOURNEY_PURPLE("/templates/intel/prefcJourneyPurple.png"),
-	INTEL_PREFC_JOURNEY_BLUE("/templates/intel/prefcJourneyBlue.png"),
-	INTEL_PREFC_JOURNEY_GREEN("/templates/intel/prefcJourneyGreen.png"),
-	INTEL_PREFC_JOURNEY_GREY("/templates/intel/prefcJourneyGrey.png"),
-	
-	INTEL_JOURNEY_YELLOW("/templates/intel/journeyYellow.png"),
-	INTEL_JOURNEY_PURPLE("/templates/intel/journeyPurple.png"),
-	INTEL_JOURNEY_BLUE("/templates/intel/journeyBlue.png"),
-	INTEL_JOURNEY_GREEN("/templates/intel/journeyGreen.png"),
-	INTEL_JOURNEY_GREY("/templates/intel/journeyGrey.png"),
+
 	
 	INTEL_MASTER_BOUNTY("/templates/intel/masterBounty.png"),
 	
