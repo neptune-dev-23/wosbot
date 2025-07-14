@@ -54,6 +54,8 @@ public enum EnumTemplates {
 	RALLY_GATHER_BUTTON("/templates/rally/gatherButton.png"),
 	RALLY_GATHER_ALREADY_MARCHING("/templates/rally/gatherAlreadyMarching.png"),
 	RALLY_POLAR_BUTTON("/templates/rally/rallyPolarButton.png"),
+
+	RALLY_EQUALIZE_BUTTON("/templates/rally/equalizeButton.png"),
 	
 	HOME_DEALS_BUTTON("/templates/home/dealsButton.png"),
 	HOME_EVENTS_BUTTON("/templates/home/eventsButton.png"),

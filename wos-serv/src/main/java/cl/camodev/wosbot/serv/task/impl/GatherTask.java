@@ -207,8 +207,19 @@ public class GatherTask extends DelayedTask {
 						sleepTask(200);
 
 						// Click equalize
-						emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(198, 1188));
+
+						DTOImageSearchResult equalizeButton = emuManager.searchTemplate(EMULATOR_NUMBER,
+								EnumTemplates.RALLY_EQUALIZE_BUTTON.getTemplate(), 0, 0, 720, 1280, 90);
+
+						if (equalizeButton.isFound()){
+							emuManager.tapAtPoint(EMULATOR_NUMBER, remove.getPoint());
+						}else{
+							//hard coded coords
+							emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(198, 1188));
 						sleepTask(500);
+						}
+
+
 
 						// click gather
 						DTOImageSearchResult gatherButton = emuManager.searchTemplate(EMULATOR_NUMBER,
