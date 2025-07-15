@@ -30,6 +30,8 @@ public enum EnumConfigurationKey {
 	BOOL_TRAINING_RESOURCES("false",Boolean.class),
 	
 	CITY_UPGRADE_FURNACE_BOOL("false",Boolean.class),
+	CITY_ACCEPT_NEW_SURVIVORS_BOOL("false",Boolean.class),
+	CITY_ACCEPT_NEW_SURVIVORS_OFFSET_INT("1",Integer.class),
 	
 	ALLIANCE_CHESTS_BOOL("false",Boolean.class),
 	ALLIANCE_CHESTS_OFFSET_INT("1",Integer.class),

@@ -6,34 +6,8 @@ import java.util.function.Function;
 
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.ot.DTOProfiles;
-import cl.camodev.wosbot.serv.task.impl.AllianceAutojoinTask;
-import cl.camodev.wosbot.serv.task.impl.AllianceChestTask;
-import cl.camodev.wosbot.serv.task.impl.AllianceHelpTask;
-import cl.camodev.wosbot.serv.task.impl.AllianceTechTask;
-import cl.camodev.wosbot.serv.task.impl.BankTask;
-import cl.camodev.wosbot.serv.task.impl.CrystalLaboratoryTask;
-import cl.camodev.wosbot.serv.task.impl.DailyMissionTask;
-import cl.camodev.wosbot.serv.task.impl.DailyStaminaTask;
-import cl.camodev.wosbot.serv.task.impl.ExplorationTask;
-import cl.camodev.wosbot.serv.task.impl.GatherSpeedTask;
-import cl.camodev.wosbot.serv.task.impl.GatherTask;
+import cl.camodev.wosbot.serv.task.impl.*;
 import cl.camodev.wosbot.serv.task.impl.GatherTask.GatherType;
-import cl.camodev.wosbot.serv.task.impl.HeroRecruitmentTask;
-import cl.camodev.wosbot.serv.task.impl.InitializeTask;
-import cl.camodev.wosbot.serv.task.impl.IntelligenceTask;
-import cl.camodev.wosbot.serv.task.impl.LifeEssenceCaringTask;
-import cl.camodev.wosbot.serv.task.impl.LifeEssenceTask;
-import cl.camodev.wosbot.serv.task.impl.MailRewardsTask;
-import cl.camodev.wosbot.serv.task.impl.NomadicMerchantTask;
-import cl.camodev.wosbot.serv.task.impl.PetAdventureChestTask;
-import cl.camodev.wosbot.serv.task.impl.PetAllianceTreasuresTask;
-import cl.camodev.wosbot.serv.task.impl.PetSkillsTask;
-import cl.camodev.wosbot.serv.task.impl.StorehouseChest;
-import cl.camodev.wosbot.serv.task.impl.TrainingTroopsTask;
-import cl.camodev.wosbot.serv.task.impl.TriumphTask;
-import cl.camodev.wosbot.serv.task.impl.UpgradeFurnaceTask;
-import cl.camodev.wosbot.serv.task.impl.VipTask;
-import cl.camodev.wosbot.serv.task.impl.WarAcademyTask;
 
 public class DelayedTaskRegistry {
 	private static final Map<TpDailyTaskEnum, Function<DTOProfiles, DelayedTask>> registry = new EnumMap<>(TpDailyTaskEnum.class);
@@ -87,7 +61,7 @@ public class DelayedTaskRegistry {
 		// Mejora de ciudad
 		registry.put(TpDailyTaskEnum.CITY_UPGRADE_FURNACE, profile -> new UpgradeFurnaceTask(profile, TpDailyTaskEnum.CITY_UPGRADE_FURNACE));
 //		registry.put(TpDailyTaskEnum.CITY_UPGRADE_OTHERS, profile -> new ArenaTask(profile, TpDailyTaskEnum.CITY_UPGRADE_OTHERS));
-
+		registry.put(TpDailyTaskEnum.CITY_SURVIVORS, profile -> new NewSurvivorsTask(profile, TpDailyTaskEnum.CITY_SURVIVORS));
 		// Inicializar
 		registry.put(TpDailyTaskEnum.INITIALIZE, profile -> new InitializeTask(profile, TpDailyTaskEnum.INITIALIZE));
 	}

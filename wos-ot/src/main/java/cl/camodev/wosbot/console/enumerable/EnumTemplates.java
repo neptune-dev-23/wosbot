@@ -18,6 +18,13 @@ public enum EnumTemplates {
 	GAME_HOME_SHORTCUTS_OBTAIN("/templates/shortcuts/obtain.png"),
 
 
+	GAME_HOME_NEW_SURVIVORS("/templates/home/newSurvivors.png"),
+	GAME_HOME_NEW_SURVIVORS_WELCOME_IN("/templates/home/newSurvivorsWelcome.png"),
+	GAME_HOME_NEW_SURVIVORS_PLUS_BUTTON("/templates/home/newSurvivorsPlusButton.png"),
+
+	GAME_HOME_BOTTOM_BAR_SHOP_BUTTON(""),
+	GAME_HOME_BOTTOM_BAR_BACKPACK_BUTTON(""),
+
 	DAILY_MISSION_DAILY_TAB("/templates/dailymission/dailyMissionTab.png"),
 	DAILY_MISSION_CLAIMALL_BUTTON("/templates/dailymission/claimAllButton.png"),
 	DAILY_MISSION_CLAIM_BUTTON("/templates/dailymission/claimButton.png"),

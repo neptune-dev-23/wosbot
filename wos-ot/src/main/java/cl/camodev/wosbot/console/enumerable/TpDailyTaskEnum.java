@@ -43,6 +43,7 @@ public enum TpDailyTaskEnum {
 	    GATHER_IRON(105, "Gather Iron",               EnumConfigurationKey.GATHER_IRON_BOOL),
 
 	    CITY_UPGRADE_FURNACE(70, "City Upgrade Furnace", EnumConfigurationKey.CITY_UPGRADE_FURNACE_BOOL),
+		CITY_SURVIVORS(71, "City Survivors", EnumConfigurationKey.CITY_ACCEPT_NEW_SURVIVORS_BOOL),
 
 	    BANK(14, "Bank",                              null),
 	    INITIALIZE(100, "Initialize",                  null);
