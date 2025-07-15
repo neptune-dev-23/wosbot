@@ -1,5 +1,6 @@
 package cl.camodev.wosbot.serv.task.impl;
 
+import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
@@ -22,7 +23,7 @@ public class NewSurvivorsTask extends DelayedTask {
         DTOImageSearchResult world = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 0, 0, 720, 1280, 90);
         if (world.isFound()) {
             emuManager.tapAtPoint(EMULATOR_NUMBER, world.getPoint());
-            sleepTask(1000);
+            sleepTask(2000);
         }
 
         //i need to search for New Survivors Template
@@ -58,13 +59,13 @@ public class NewSurvivorsTask extends DelayedTask {
                     sleepTask(50);
                 }
 
-                this.reschedule(LocalDateTime.now().plusHours(2));
+                this.reschedule(LocalDateTime.now().plusHours(profile.getConfig(EnumConfigurationKey.CITY_ACCEPT_NEW_SURVIVORS_OFFSET_INT,Integer.class)));
             }
 
 
         } else {
-            reschedule(LocalDateTime.now().plusHours(2));
-            return;
+            this.reschedule(LocalDateTime.now().plusHours(profile.getConfig(EnumConfigurationKey.CITY_ACCEPT_NEW_SURVIVORS_OFFSET_INT,Integer.class)));
+
         }
 
 
