@@ -5,6 +5,7 @@
 A bot for automating tasks in **Whiteout Survival**. This project is a work in progress and is developed in my free time. If you have any requests or suggestions, feel free to ask—I’ll try to respond as soon as possible.
 
 [![](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://buymeacoffee.com/cearivera1z)
+[![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/Wk6YSr6mUp)
 ---
 
 ## 📌 Current Features
