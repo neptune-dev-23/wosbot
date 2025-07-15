@@ -1,4 +1,4 @@
-# Whiteout Survival Bot (PAUSED)
+# Whiteout Survival Bot (WIP)
 
 **The development of the project is currently on pause due to issues I'm experiencing with the emulator**
 
@@ -75,7 +75,10 @@ Simply double-click `wos-bot-x.x.x.jar`.
 ![image3](https://raw.githubusercontent.com/camoloqlo/wosbot/refs/heads/master/images/picture3.png)
 ![image4](https://raw.githubusercontent.com/camoloqlo/wosbot/refs/heads/master/images/picture4.png)  
 ![image5](https://raw.githubusercontent.com/camoloqlo/wosbot/refs/heads/master/images/picture5.png)  
-![image6](https://raw.githubusercontent.com/camoloqlo/wosbot/refs/heads/master/images/picture6.png)  
+![image6](https://raw.githubusercontent.com/camoloqlo/wosbot/refs/heads/master/images/picture6.png)
+![image7](https://raw.githubusercontent.com/camoloqlo/wosbot/refs/heads/master/images/picture7.png)
+![image8](https://raw.githubusercontent.com/camoloqlo/wosbot/refs/heads/master/images/picture8.png)
+![image9](https://raw.githubusercontent.com/camoloqlo/wosbot/refs/heads/master/images/picture9.png)
 
 ---
 
