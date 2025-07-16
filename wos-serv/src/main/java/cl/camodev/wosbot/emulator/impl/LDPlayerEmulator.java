@@ -220,6 +220,7 @@ public class LDPlayerEmulator extends Emulator {
 					closeEmulator(emulatorNumber);
 					Thread.sleep(retryDelay * 10);
 					launchEmulator(emulatorNumber);
+					Thread.sleep(retryDelay * 20);
 					continue;
 				}
 

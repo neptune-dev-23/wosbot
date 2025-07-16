@@ -13,6 +13,7 @@ import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.emulator.EmulatorManager;
 import cl.camodev.wosbot.ex.HomeNotFoundException;
+import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.serv.impl.ServLogs;
 import cl.camodev.wosbot.serv.impl.ServScheduler;
@@ -56,31 +57,23 @@ public abstract class DelayedTask implements Runnable, Delayed, Comparable<Delay
 			throw new HomeNotFoundException("Game is not running");
 		}
 
-		if (isGameHomeFound()) {
-			execute();
-			return;
-		}
 
 		for (int attempt = 1; attempt <= 10; attempt++) {
-			EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
-			sleepTask(100);
-			if (isGameHomeFound()) {
+			DTOImageSearchResult home = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90);
+			DTOImageSearchResult world = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 0, 0, 720, 1280, 90);
+			if (home.isFound() || world.isFound()) {
 				execute();
 				return;
+			}else {
+				EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
+				sleepTask(100);
 			}
 		}
 
 		throw new HomeNotFoundException("Home not found after 10 attempts");
 	}
 
-	private boolean isGameHomeFound() {
-		EmulatorManager emulator = EmulatorManager.getInstance();
-		return emulator
-				.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90)
-				.isFound()
-				|| emulator.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 0, 0, 720,
-						1280, 90).isFound();
-	}
+
 
 	protected abstract void execute();
 
@@ -185,6 +178,7 @@ public abstract class DelayedTask implements Runnable, Delayed, Comparable<Delay
 			return Objects.hash(getClass(), tpTask, profile.getId());
 		}
 	}
+
 
 	public boolean provideDailyMissionProgress() {
 		return false;

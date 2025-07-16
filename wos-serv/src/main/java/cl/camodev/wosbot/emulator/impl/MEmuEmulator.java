@@ -25,7 +25,7 @@ import cl.camodev.wosbot.ot.DTOPoint;
 
 public class MEmuEmulator extends Emulator {
 	private static final int MAX_RETRIES = 10;
-	private static final int RETRY_DELAY_MS = 3000;
+	private static final int RETRY_DELAY_MS = 5000;
 	private static final int INIT_LOOPS = 10;
 	private static final int INIT_DELAY_MS = 500;
 
@@ -37,7 +37,7 @@ public class MEmuEmulator extends Emulator {
 			AndroidDebugBridge.disconnectBridge(5000, TimeUnit.MILLISECONDS);
 			AndroidDebugBridge.terminate();
 			AndroidDebugBridge.init(false);
-			bridge = AndroidDebugBridge.createBridge(consolePath + File.separator + "adb.exe", false, 5000,
+			bridge = AndroidDebugBridge.createBridge(consolePath + File.separator + "adb.exe", true, 5000,
 					TimeUnit.MILLISECONDS);
 		}
 

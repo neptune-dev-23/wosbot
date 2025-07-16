@@ -26,6 +26,8 @@ public enum EnumConfigurationKey {
 	TRAIN_INFANTRY_BOOL("false",Boolean.class),
 	TRAIN_MARKSMAN_BOOL("false",Boolean.class),
 	TRAIN_LANCER_BOOL("false",Boolean.class),
+
+	TRAIN_PRIORITIZE_PROMOTION_BOOL("false",Boolean.class),
 	
 	BOOL_TRAINING_RESOURCES("false",Boolean.class),
 	

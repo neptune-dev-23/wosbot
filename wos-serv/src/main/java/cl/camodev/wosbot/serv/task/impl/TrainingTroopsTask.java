@@ -1,5 +1,6 @@
 package cl.camodev.wosbot.serv.task.impl;
 
+import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
@@ -73,6 +74,19 @@ public class TrainingTroopsTask extends DelayedTask {
                 sleepTask(500);
 
                 EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(222, 157), new DTOPoint(504, 231), 10, 100);
+
+                boolean promotionPriority = profile.getConfig(EnumConfigurationKey.TRAIN_PRIORITIZE_PROMOTION_BOOL, Boolean.class);
+
+                if (promotionPriority) {
+                  // i need to verify if there's troops available to promote, if not, i should train normally
+
+
+                } else {
+                  // i should train troops normally, so i need to search for the training button
+
+
+                }
+
 
                 DTOImageSearchResult trainingButtonResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.TRAINING_TRAIN_BUTTON.getTemplate(), 0, 0, 720, 1280, 90);
 

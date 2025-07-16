@@ -156,7 +156,7 @@ public class UpgradeFurnaceTask extends DelayedTask {
 
 									if (train.isFound()) {
 										servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Troop training building found, rescheduling task till training is done");
-										// i need to verify wich troops are being trained, so i can reschedule the task accordingly
+										// i need to verify which troops are being trained, so I can reschedule the task accordingly
 
 										DTOImageSearchResult detailsButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.BUILDING_BUTTON_DETAILS.getTemplate(), 0, 0, 720, 1280, 90);
 										if (detailsButton.isFound()){
@@ -164,10 +164,7 @@ public class UpgradeFurnaceTask extends DelayedTask {
 											sleepTask(500);
 
 											for (var entry : TROOP_TASK_MAP.entrySet()) {
-												DTOImageSearchResult troop = emuManager.searchTemplate(
-														EMULATOR_NUMBER,
-														entry.getKey().getTemplate(),
-														0, 0, 720, 1280, 90
+												DTOImageSearchResult troop = emuManager.searchTemplate(EMULATOR_NUMBER,entry.getKey().getTemplate(),0, 0, 720, 1280, 90
 												);
 												if (troop.isFound()) {
 													handleTroopReschedule(entry.getValue());
@@ -175,7 +172,6 @@ public class UpgradeFurnaceTask extends DelayedTask {
 												}
 											}
 
-											// 5) Ningún entrenamiento encontrado → reprogramar a +1h
 											servLogs.appendLog(
 													EnumTpMessageSeverity.WARNING,
 													taskName,

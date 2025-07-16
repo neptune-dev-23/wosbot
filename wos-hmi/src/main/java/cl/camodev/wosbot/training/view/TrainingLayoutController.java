@@ -8,6 +8,9 @@ import javafx.scene.control.CheckBox;
 public class TrainingLayoutController extends AbstractProfileController {
 
 	@FXML
+	private CheckBox checkBoxTrainPrioritizePromotion;
+
+	@FXML
 	private CheckBox checkBoxTrainInfantry;
 
 	@FXML
@@ -24,9 +27,11 @@ public class TrainingLayoutController extends AbstractProfileController {
 		checkBoxMappings.put(checkBoxTrainInfantry, EnumConfigurationKey.TRAIN_INFANTRY_BOOL);
 		checkBoxMappings.put(checkBoxTrainLancers, EnumConfigurationKey.TRAIN_LANCER_BOOL);
 		checkBoxMappings.put(checkBoxTrainMarksman, EnumConfigurationKey.TRAIN_MARKSMAN_BOOL);
+		checkBoxMappings.put(checkBoxTrainPrioritizePromotion, EnumConfigurationKey.TRAIN_PRIORITIZE_PROMOTION_BOOL);
 		checkBoxMappings.put(checkBoxUseResources, EnumConfigurationKey.BOOL_TRAINING_RESOURCES);
 
 		initializeChangeEvents();
 		checkBoxUseResources.setDisable(true);
+		checkBoxTrainPrioritizePromotion.setDisable(true);
 	}
 }
