@@ -29,6 +29,7 @@ public class DelayedTaskRegistry {
 		registry.put(TpDailyTaskEnum.GATHER_COAL, profile -> new GatherTask(profile, TpDailyTaskEnum.GATHER_COAL, GatherType.COAL));
 		registry.put(TpDailyTaskEnum.GATHER_IRON, profile -> new GatherTask(profile, TpDailyTaskEnum.GATHER_IRON, GatherType.IRON));
 		registry.put(TpDailyTaskEnum.BANK, profile -> new BankTask(profile, TpDailyTaskEnum.BANK));
+		registry.put(TpDailyTaskEnum.SHOP_MYSTERY, profile -> new MysteryShopTask(profile, TpDailyTaskEnum.SHOP_MYSTERY));
 //		registry.put(TpDailyTaskEnum.BEAST_SLAY, profile -> new BeastSlayTask(profile, TpDailyTaskEnum.BEAST_SLAY));
 		registry.put(TpDailyTaskEnum.GATHER_BOOST, profile -> new GatherSpeedTask(profile, TpDailyTaskEnum.GATHER_BOOST));
 

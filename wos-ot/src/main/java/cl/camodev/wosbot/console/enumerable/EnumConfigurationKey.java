@@ -88,7 +88,8 @@ public enum EnumConfigurationKey {
 	PET_PERSONAL_TREASURE_BOOL("false",Boolean.class),
 	
 	BOOL_BANK("false",Boolean.class),
-	INT_BANK_DELAY("1",Integer.class),  
+	INT_BANK_DELAY("1",Integer.class),
+	BOOL_MYSTERY_SHOP("false",Boolean.class),
 	;
 	//@formatter:on
     private final String defaultValue;

@@ -22,8 +22,8 @@ public enum EnumTemplates {
 	GAME_HOME_NEW_SURVIVORS_WELCOME_IN("/templates/home/newSurvivorsWelcome.png"),
 	GAME_HOME_NEW_SURVIVORS_PLUS_BUTTON("/templates/home/newSurvivorsPlusButton.png"),
 
-	GAME_HOME_BOTTOM_BAR_SHOP_BUTTON(""),
-	GAME_HOME_BOTTOM_BAR_BACKPACK_BUTTON(""),
+	GAME_HOME_BOTTOM_BAR_SHOP_BUTTON("/templates/home/bottombar/shopButton.png"),
+	GAME_HOME_BOTTOM_BAR_BACKPACK_BUTTON("/templates/home/bottombar/backpack.png"),
 
 	DAILY_MISSION_DAILY_TAB("/templates/dailymission/dailyMissionTab.png"),
 	DAILY_MISSION_CLAIMALL_BUTTON("/templates/dailymission/claimAllButton.png"),
@@ -176,7 +176,11 @@ public enum EnumTemplates {
 	NOMADIC_MERCHANT_VIP("/templates/nomadicmerchant/vip.png"),
 	NOMADIC_MERCHANT_REFRESH("/templates/nomadicmerchant/refresh.png"),
 	EXPLORATION_CLAIM("/templates/exploration/claim.png"),
-	HERO_RECRUIT_CLAIM("/templates/herorecruitment/freebutton.png"),;
+	HERO_RECRUIT_CLAIM("/templates/herorecruitment/freebutton.png"),
+	// Mystery Shop templates for MysteryShopTask
+	SHOP_MYSTERY_BUTTON("/templates/shop/mysteryShopButton.png"),
+	MYSTERY_SHOP_FREE_REWARD("/templates/shop/mysteryshop/freeReward.png"),
+	MYSTERY_SHOP_DAILY_REFRESH("/templates/shop/mysteryshop/dailyRefresh.png");
 	// @formatter:on
 
     private String template;

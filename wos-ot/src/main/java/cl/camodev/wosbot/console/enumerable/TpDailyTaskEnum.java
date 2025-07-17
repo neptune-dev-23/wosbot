@@ -45,11 +45,10 @@ public enum TpDailyTaskEnum {
 	    CITY_UPGRADE_FURNACE(70, "City Upgrade Furnace", EnumConfigurationKey.CITY_UPGRADE_FURNACE_BOOL),
 		CITY_SURVIVORS(71, "City Survivors", EnumConfigurationKey.CITY_ACCEPT_NEW_SURVIVORS_BOOL),
 
-	    BANK(14, "Bank",                              null),
-	    INITIALIZE(100, "Initialize",                  null);
-//	CITY_UPGRADE_OTHERS(71, "City Upgrade Others"),
-	
-//	SHOP_MYSTERY(80, "Shop Mystery"),
+		BANK(14, "Bank",                              EnumConfigurationKey.BOOL_BANK),
+		SHOP_MYSTERY(80, "Shop Mystery",              EnumConfigurationKey.BOOL_MYSTERY_SHOP),
+		INITIALIZE(100, "Initialize",                  null);
+
     private final int id;
     private final String name;
     private final EnumConfigurationKey configKey;
@@ -58,6 +57,15 @@ public enum TpDailyTaskEnum {
         this.id = id;
         this.name = name;
         this.configKey = configKey;
+    }
+
+    public static TpDailyTaskEnum fromId(int id) {
+        for (TpDailyTaskEnum t : values()) {
+            if (t.id == id) {
+                return t;
+            }
+        }
+        throw new IllegalArgumentException("No existe un TpDailyTaskEnum con id " + id);
     }
 
     public int getId() {
@@ -71,14 +79,5 @@ public enum TpDailyTaskEnum {
     /** Clave que usará el perfil para saber si esta tarea está habilitada */
     public EnumConfigurationKey getConfigKey() {
         return configKey;
-    }
-
-    public static TpDailyTaskEnum fromId(int id) {
-        for (TpDailyTaskEnum t : values()) {
-            if (t.id == id) {
-                return t;
-            }
-        }
-        throw new IllegalArgumentException("No existe un TpDailyTaskEnum con id " + id);
     }
 }
