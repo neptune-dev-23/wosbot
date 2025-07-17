@@ -16,6 +16,7 @@ import cl.camodev.wosbot.profile.model.ProfileAux;
 import cl.camodev.wosbot.profile.model.impl.ProfileCallback;
 import cl.camodev.wosbot.profile.model.impl.ProfileModel;
 import cl.camodev.wosbot.profile.view.BulkUpdateDialogController;
+import cl.camodev.wosbot.profile.view.EditProfileController;
 import cl.camodev.wosbot.profile.view.NewProfileLayoutController;
 import cl.camodev.wosbot.profile.view.ProfileManagerLayoutController;
 import cl.camodev.wosbot.serv.IProfileStatusChangeListener;
@@ -275,6 +276,60 @@ public class ProfileManagerActionController implements IProfileStatusChangeListe
 				"Failed to open bulk update dialog: " + e.getMessage());
 			showAlert(AlertType.ERROR, "ERROR",
 				"Failed to open bulk update dialog: " + e.getMessage());
+		}
+	}
+
+	/**
+	 * Shows the edit profile dialog for the specified profile
+	 */
+	public void showEditProfileDialog(ProfileAux profile, javafx.scene.Node ownerNode) {
+		if (profile == null) {
+			showAlert(Alert.AlertType.ERROR, "ERROR", "No profile selected for editing.");
+			return;
+		}
+
+		try {
+			// Load the edit profile dialog
+			FXMLLoader loader = new FXMLLoader(
+				getClass().getResource("/cl/camodev/wosbot/profile/view/EditProfile.fxml")
+			);
+			Parent root = loader.load();
+
+			// Get the controller and setup the dialog
+			EditProfileController dialogController = loader.getController();
+			dialogController.setProfileToEdit(profile);
+			dialogController.setActionController(this);
+
+			// Create a new stage for the dialog
+			Stage dialogStage = new Stage();
+			dialogStage.setTitle("Edit Profile - " + profile.getName());
+
+			// Create scene and apply CSS
+			Scene scene = new Scene(root);
+			scene.getStylesheets().add(ILauncherConstants.getCssPath());
+
+			dialogStage.setScene(scene);
+			dialogStage.initModality(Modality.WINDOW_MODAL);
+			dialogStage.initOwner(ownerNode.getScene().getWindow());
+			dialogStage.setResizable(false);
+
+			// Set the dialog stage in the controller
+			dialogController.setDialogStage(dialogStage);
+
+			// Show dialog and wait for user response
+			dialogStage.showAndWait();
+
+			// If changes were saved, refresh the profiles list
+			if (dialogController.isSaveClicked()) {
+				profileManagerLayoutController.loadProfiles();
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, "Profile Manager", "-",
+				"Failed to open edit profile dialog: " + e.getMessage());
+			showAlert(Alert.AlertType.ERROR, "ERROR",
+				"Failed to open edit profile dialog: " + e.getMessage());
 		}
 	}
 

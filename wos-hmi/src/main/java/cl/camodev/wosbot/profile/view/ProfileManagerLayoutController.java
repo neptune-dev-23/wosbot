@@ -83,6 +83,18 @@ public class ProfileManagerLayoutController implements IProfileChangeObserver {
 		columnEmulatorNumber.setCellValueFactory(cellData -> cellData.getValue().emulatorNumberProperty());
 		columnStatus.setCellValueFactory(cellData -> cellData.getValue().statusProperty());
 
+		// Add double-click event handler to open edit dialog
+		tableviewLogMessages.setRowFactory(tv -> {
+			javafx.scene.control.TableRow<ProfileAux> row = new javafx.scene.control.TableRow<>();
+			row.setOnMouseClicked(event -> {
+				if (event.getClickCount() == 2 && (!row.isEmpty())) {
+					ProfileAux selectedProfile = row.getItem();
+					profileManagerActionController.showEditProfileDialog(selectedProfile, tableviewLogMessages);
+				}
+			});
+			return row;
+		});
+
 		columnDelete.setCellFactory(new Callback<TableColumn<ProfileAux, Void>, TableCell<ProfileAux, Void>>() {
 			@Override
 			public TableCell<ProfileAux, Void> call(TableColumn<ProfileAux, Void> param) {
