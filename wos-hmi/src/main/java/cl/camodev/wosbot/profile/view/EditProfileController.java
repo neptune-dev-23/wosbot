@@ -1,6 +1,5 @@
 package cl.camodev.wosbot.profile.view;
 
-import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.profile.controller.ProfileManagerActionController;
 import cl.camodev.wosbot.profile.model.ProfileAux;

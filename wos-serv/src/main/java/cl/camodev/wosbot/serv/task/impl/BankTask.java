@@ -232,27 +232,47 @@ public class BankTask extends DelayedTask {
 			emuManager.tapAtPoint(EMULATOR_NUMBER, activeDepositResult.getPoint());
 			sleepTask(200);
 
-			try {
-				String timeLeft = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(240, 770), new DTOPoint(470, 810));
-				LocalDateTime nextBank = parseAndAddToNow(timeLeft);
-				this.reschedule(nextBank);
+			// Try OCR up to 5 times before fallback
+			boolean ocrSuccess = false;
+			String timeLeft = null;
+			int maxOcrAttempts = 5;
 
-				logInfo("Deposit not ready, rescheduled for: " + nextBank + " (remaining: " + timeLeft + ")");
+			for (int attempt = 1; attempt <= maxOcrAttempts; attempt++) {
+				try {
+					logInfo("OCR attempt " + attempt + " of " + maxOcrAttempts);
+					timeLeft = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(240, 770), new DTOPoint(470, 810));
 
-			} catch (IOException | TesseractException e) {
-				logError("Error reading remaining time with OCR: " + e.getMessage());
+					// Try to parse the time to validate it's a valid format
+					LocalDateTime nextBank = parseAndAddToNow(timeLeft);
+					this.reschedule(nextBank);
 
-				// Fallback: schedule check in 1 hour
+					logInfo("Deposit not ready, rescheduled for: " + nextBank + " (remaining: " + timeLeft + ")");
+					ocrSuccess = true;
+					break; // Success, exit the retry loop
+
+				} catch (IOException | TesseractException e) {
+					logWarning("OCR attempt " + attempt + " failed: " + e.getMessage());
+					if (attempt < maxOcrAttempts) {
+						// Wait a bit before retrying
+						sleepTask(1000);
+					}
+				} catch (IllegalArgumentException e) {
+					logWarning("OCR attempt " + attempt + " - invalid time format: " + e.getMessage() + " (text: '" + timeLeft + "')");
+					if (attempt < maxOcrAttempts) {
+						// Wait a bit before retrying
+						sleepTask(1000);
+					}
+				}
+			}
+
+			// If all OCR attempts failed, use fallback
+			if (!ocrSuccess) {
+				logError("All " + maxOcrAttempts + " OCR attempts failed, using fallback schedule");
 				LocalDateTime fallbackTime = LocalDateTime.now().plusHours(1);
 				this.reschedule(fallbackTime);
 				logWarning("Using fallback schedule: " + fallbackTime);
-			} catch (IllegalArgumentException e) {
-				logError("Error parsing time format: " + e.getMessage());
-
-				// Fallback: schedule check in 1 hour
-				LocalDateTime fallbackTime = LocalDateTime.now().plusHours(1);
-				this.reschedule(fallbackTime);
 			}
+
 		} else {
 			// No active deposit found - make a new deposit
 			logInfo("No active deposit found, creating new deposit");
@@ -304,4 +324,3 @@ public class BankTask extends DelayedTask {
 		return now.plusDays(daysToAdd).plusHours(hours).plusMinutes(minutes).plusSeconds(seconds);
 	}
 }
-

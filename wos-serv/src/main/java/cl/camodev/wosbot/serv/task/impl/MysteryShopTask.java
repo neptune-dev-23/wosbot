@@ -108,7 +108,7 @@ public class MysteryShopTask extends DelayedTask {
 		// STEP 4: Process free rewards and daily refresh in a loop
 		boolean foundFreeRewards = true;
 		boolean usedDailyRefresh = false;
-		int maxIterations = 2; // Prevent infinite loops
+		int maxIterations = 5; // Prevent infinite loops
 		int iteration = 0;
 
 		while ((foundFreeRewards || !usedDailyRefresh) && iteration < maxIterations) {
@@ -187,7 +187,7 @@ public class MysteryShopTask extends DelayedTask {
 				foundRewardInThisIteration = true;
 
 				// Wait a bit before searching for the next reward
-				sleepTask(100);
+				sleepTask(500);
 			}
 		}
 
