@@ -7,6 +7,7 @@ import java.util.concurrent.Executors;
 
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
+import cl.camodev.wosbot.launcher.view.ILauncherConstants;
 import cl.camodev.wosbot.ot.DTOProfileStatus;
 import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.profile.controller.ProfileManagerActionController;
@@ -42,12 +43,10 @@ import javafx.util.Duration;
 
 public class ProfileManagerLayoutController implements IProfileChangeObserver {
 
+	private final ExecutorService profileQueueExecutor = Executors.newSingleThreadExecutor();
 	private ProfileManagerActionController profileManagerActionController;
-
 	private ObservableList<ProfileAux> profiles;
-
 	private SortedList<ProfileAux> sortedProfiles;
-
 	@FXML
 	private TableView<ProfileAux> tableviewLogMessages;
 	@FXML
@@ -60,14 +59,10 @@ public class ProfileManagerLayoutController implements IProfileChangeObserver {
 	private TableColumn<ProfileAux, String> columnProfileName;
 	@FXML
 	private TableColumn<ProfileAux, String> columnStatus;
-
 	@FXML
 	private Button btnBulkUpdate;
-
 	private Long loadedProfileId;
-
 	private List<IProfileLoadListener> profileLoadListeners;
-	private final ExecutorService profileQueueExecutor = Executors.newSingleThreadExecutor();
 
 	@FXML
 	private void initialize() {
@@ -95,15 +90,6 @@ public class ProfileManagerLayoutController implements IProfileChangeObserver {
 					private final Button btnDelete = new Button();
 					private final Button btnLoad = new Button();
 //					private final Button btnSave = new Button();
-
-					// Método para cargar un icono desde los recursos
-					private ImageView loadIcon(String path) {
-						Image image = new Image(getClass().getResourceAsStream(path));
-						ImageView imageView = new ImageView(image);
-						imageView.setFitWidth(16);
-						imageView.setFitHeight(16);
-						return imageView;
-					}
 
 					{
 						// Asignar iconos a los botones
@@ -182,6 +168,15 @@ public class ProfileManagerLayoutController implements IProfileChangeObserver {
 //							}
 //							alert.showAndWait();
 //						});
+					}
+
+					// Método para cargar un icono desde los recursos
+					private ImageView loadIcon(String path) {
+						Image image = new Image(getClass().getResourceAsStream(path));
+						ImageView imageView = new ImageView(image);
+						imageView.setFitWidth(16);
+						imageView.setFitHeight(16);
+						return imageView;
 					}
 
 					@Override
@@ -285,54 +280,7 @@ public class ProfileManagerLayoutController implements IProfileChangeObserver {
 
 	@FXML
 	void handleButtonBulkUpdateProfiles(ActionEvent event) {
-		if (loadedProfileId == null) {
-			Alert alert = new Alert(Alert.AlertType.WARNING);
-			alert.setTitle("WARNING");
-			alert.setHeaderText(null);
-			alert.setContentText("Please load a profile first to use as template for bulk update.");
-			alert.showAndWait();
-			return;
-		}
-
-		// Find the currently loaded profile to use as template
-		ProfileAux templateProfile = profiles.stream().filter(p -> p.getId().equals(loadedProfileId)).findFirst().orElse(null);
-
-		if (templateProfile == null) {
-			Alert alert = new Alert(Alert.AlertType.ERROR);
-			alert.setTitle("ERROR");
-			alert.setHeaderText(null);
-			alert.setContentText("Could not find the loaded profile to use as template.");
-			alert.showAndWait();
-			return;
-		}
-
-		// Confirm bulk update
-		Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
-		confirmAlert.setTitle("CONFIRM BULK UPDATE");
-		confirmAlert.setHeaderText("Bulk Update All Profiles");
-		confirmAlert.setContentText("This will apply the current settings from profile '" + templateProfile.getName() + "' to ALL profiles. This action cannot be undone. Continue?");
-
-		if (confirmAlert.showAndWait().orElse(null) != ButtonType.OK) {
-			return;
-		}
-
-		// Perform bulk update
-		boolean success = profileManagerActionController.bulkUpdateProfiles(templateProfile);
-
-		Alert resultAlert;
-		if (success) {
-			resultAlert = new Alert(Alert.AlertType.INFORMATION);
-			resultAlert.setTitle("SUCCESS");
-			resultAlert.setHeaderText(null);
-			resultAlert.setContentText("All profiles have been updated successfully with settings from '" + templateProfile.getName() + "'.");
-			loadProfiles(); // Refresh the profiles
-		} else {
-			resultAlert = new Alert(Alert.AlertType.ERROR);
-			resultAlert.setTitle("ERROR");
-			resultAlert.setHeaderText(null);
-			resultAlert.setContentText("Error occurred while updating profiles. Some profiles may not have been updated.");
-		}
-		resultAlert.showAndWait();
+		profileManagerActionController.showBulkUpdateDialog(loadedProfileId, profiles, btnBulkUpdate);
 	}
 
 	public void loadProfiles() {
