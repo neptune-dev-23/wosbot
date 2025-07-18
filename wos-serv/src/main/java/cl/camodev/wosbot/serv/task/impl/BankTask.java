@@ -76,7 +76,9 @@ public class BankTask extends DelayedTask {
 		emuManager.tapAtRandomPoint(EMULATOR_NUMBER, dealsResult.getPoint(), dealsResult.getPoint());
 		sleepTask(2000);
 		emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(630, 143), new DTOPoint(2, 128));
-
+		sleepTask(200);
+		emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(630, 143), new DTOPoint(2, 128));
+		sleepTask(200);
 		// Search for the bank option within events
 		DTOImageSearchResult bankResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.EVENTS_DEALS_BANK.getTemplate(), 0, 0, 720, 1280, 90);
 		if (!bankResult.isFound()) {
