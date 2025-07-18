@@ -32,19 +32,6 @@ import java.util.stream.Collectors;
 
 public class TaskManagerLayoutController {
 
-	private final Image iconTrue = new Image(getClass().getResourceAsStream("/icons/indicators/green.png"));
-	private final Image iconFalse = new Image(getClass().getResourceAsStream("/icons/indicators/red.png"));
-
-	private TaskManagerActionController taskManagerActionController = new TaskManagerActionController(this);
-
-	@FXML
-	private TabPane tabPaneProfiles;
-
-	private final ObjectProperty<LocalDateTime> globalClock = new SimpleObjectProperty<>(LocalDateTime.now());
-
-	private final Map<Long, Tab> profileTabsMap = new HashMap<>();
-	private final Map<Long, ObservableList<TaskManagerAux>> tasks = new HashMap<>();
-
 	private static final Comparator<TaskManagerAux> TASK_AUX_COMPARATOR = (a, b) -> {
 		if (a.isScheduled() && !b.isScheduled())
 			return -1;
@@ -60,6 +47,14 @@ public class TaskManagerLayoutController {
 			return 1;
 		return Long.compare(a.getNearestMinutesUntilExecution(), b.getNearestMinutesUntilExecution());
 	};
+	private final Image iconTrue = new Image(getClass().getResourceAsStream("/icons/indicators/green.png"));
+	private final Image iconFalse = new Image(getClass().getResourceAsStream("/icons/indicators/red.png"));
+	private final ObjectProperty<LocalDateTime> globalClock = new SimpleObjectProperty<>(LocalDateTime.now());
+	private final Map<Long, Tab> profileTabsMap = new HashMap<>();
+	private final Map<Long, ObservableList<TaskManagerAux>> tasks = new HashMap<>();
+	private TaskManagerActionController taskManagerActionController = new TaskManagerActionController(this);
+	@FXML
+	private TabPane tabPaneProfiles;
 
 	@FXML
 	private void initialize() {
@@ -150,19 +145,19 @@ public class TaskManagerLayoutController {
 					return new TaskManagerAux(task.getName(), null, null, task, profile.getId(), Long.MAX_VALUE, false, false, false);
 				}
 
-				long diff = Long.MAX_VALUE;
+				long diffInSeconds = Long.MAX_VALUE;
 				boolean ready = false;
 				if (s.getNextSchedule() != null) {
-					diff = ChronoUnit.MINUTES.between(LocalDateTime.now(), s.getNextSchedule());
-					if (diff <= 0) {
+					diffInSeconds = ChronoUnit.SECONDS.between(LocalDateTime.now(), s.getNextSchedule());
+					if (diffInSeconds <= 0) {
 						ready = true;
-						diff = 0;
+						diffInSeconds = 0;
 					}
 				}
 
 				boolean scheduled = Optional.ofNullable(ServScheduler.getServices().getQueueManager().getQueue(profile.getId())).map(q -> q.isTaskScheduled(task)).orElse(false);
 
-				return new TaskManagerAux(task.getName(), s.getLastExecution(), s.getNextSchedule(), task, profile.getId(), diff, ready, scheduled, false);
+				return new TaskManagerAux(task.getName(), s.getLastExecution(), s.getNextSchedule(), task, profile.getId(), diffInSeconds, ready, scheduled, false);
 			}).sorted((a, b) -> {
 				if (a.isScheduled() && !b.isScheduled())
 					return -1;
@@ -250,7 +245,32 @@ public class TaskManagerLayoutController {
 		colNextExecution.setCellValueFactory(cellData -> {
 			TaskManagerAux t = cellData.getValue();
 			return Bindings.createStringBinding(() -> {
-				return UtilTime.formatNextExecution(t.getNextExecution(), globalClock.get(), t.executingProperty().get());
+				LocalDateTime now = globalClock.get();
+				LocalDateTime next = t.getNextExecution();
+				if (t.executingProperty().get()) {
+					return "Executing";
+				}
+				if (next == null) {
+					return "Never";
+				}
+				long diff = java.time.Duration.between(now, next).getSeconds();
+				if (diff <= 0) {
+					return "Ready";
+				} else if (diff < 60) {
+					return diff + "s~";
+				} else if (diff < 3600) {
+					long min = diff / 60;
+					return min + "m";
+				} else if (diff < 86400) {
+					long h = diff / 3600;
+					long m = (diff % 3600) / 60;
+					return h + "h " + m + "m";
+				} else {
+					long d = diff / 86400;
+					long h = (diff % 86400) / 3600;
+					long m = (diff % 3600) / 60;
+					return d + "d " + h + "h " + m + "m";
+				}
 			}, t.nextExecutionProperty(), t.executingProperty(), globalClock);
 		});
 
@@ -260,36 +280,46 @@ public class TaskManagerLayoutController {
 				super.updateItem(item, empty);
 				if (empty || item == null) {
 					setText(null);
+					getStyleClass().removeAll(
+						"next-execution-ready", "next-execution-never", "next-execution-executing", "next-execution-seconds",
+						"next-execution-minutes-short", "next-execution-minutes-medium", "next-execution-minutes-long",
+						"next-execution-hours", "next-execution-days"
+					);
 					setStyle("");
 					return;
 				}
 				setText(item);
 
-				String style = "-fx-font-size: 14px; ";
+				// Remove all custom classes first
+				getStyleClass().removeAll(
+					"next-execution-ready", "next-execution-never", "next-execution-executing", "next-execution-seconds",
+					"next-execution-minutes-short", "next-execution-minutes-medium", "next-execution-minutes-long",
+					"next-execution-hours", "next-execution-days"
+				);
+
+				// Assign class based on value
 				if ("Ready".equals(item)) {
-					style += "-fx-text-fill: #4CAF50; -fx-font-weight: bold;";
+					getStyleClass().add("next-execution-ready");
 				} else if ("Never".equals(item) || "--".equals(item)) {
-					style += "-fx-text-fill: #757575;";
-				} else if (item.matches(".*[mhd].*")) {
-					String timeStr = item.replaceAll("[^0-9]", "");
-					int timeValue = timeStr.isEmpty() ? Integer.MAX_VALUE : Integer.parseInt(timeStr);
-					if (item.contains("m")) {
-						if (timeValue <= 15) {
-							style += "-fx-text-fill: #4CAF50; -fx-font-weight: bold;";
-						} else if (timeValue <= 60) {
-							style += "-fx-text-fill: #ffc107;";
-						} else {
-							style += "-fx-text-fill: #ff9800;";
-						}
-					} else if (item.contains("h")) {
-						style += (timeValue <= 2) ? "-fx-text-fill: #ffc107;" : "-fx-text-fill: #ff9800;";
+					getStyleClass().add("next-execution-never");
+				} else if ("Executing".equals(item)) {
+					getStyleClass().add("next-execution-executing");
+				} else if (item.endsWith("s~")) {
+					getStyleClass().add("next-execution-seconds");
+				} else if (item.matches("\\d+m")) {
+					int min = Integer.parseInt(item.replace("m", ""));
+					if (min <= 15) {
+						getStyleClass().add("next-execution-minutes-short");
+					} else if (min <= 60) {
+						getStyleClass().add("next-execution-minutes-medium");
 					} else {
-						style += "-fx-text-fill: #ff5722;";
+						getStyleClass().add("next-execution-minutes-long");
 					}
-				} else {
-					style += "-fx-text-fill: white;";
+				} else if (item.matches("\\d+h \\d+m")) {
+					getStyleClass().add("next-execution-hours");
+				} else if (item.matches("\\d+d \\d+h \\d+m")) {
+					getStyleClass().add("next-execution-days");
 				}
-				setStyle(style);
 			}
 		});
 
@@ -355,8 +385,8 @@ public class TaskManagerLayoutController {
 			taskAux.setNextExecution(taskState.getNextExecutionTime());
 			taskAux.setScheduled(taskState.isScheduled());
 			taskAux.setExecuting(taskState.isExecuting());
-			taskAux.setHasReadyTask(taskState.getNextExecutionTime() != null && ChronoUnit.MINUTES.between(LocalDateTime.now(), taskState.getNextExecutionTime()) <= 0);
-			taskAux.setNearestMinutesUntilExecution(taskState.getNextExecutionTime() != null ? ChronoUnit.MINUTES.between(LocalDateTime.now(), taskState.getNextExecutionTime()) : Long.MAX_VALUE);
+			taskAux.setHasReadyTask(taskState.getNextExecutionTime() != null && ChronoUnit.SECONDS.between(LocalDateTime.now(), taskState.getNextExecutionTime()) <= 0);
+			taskAux.setNearestMinutesUntilExecution(taskState.getNextExecutionTime() != null ? ChronoUnit.SECONDS.between(LocalDateTime.now(), taskState.getNextExecutionTime()) : Long.MAX_VALUE);
 
 			FXCollections.sort(dataList, TASK_AUX_COMPARATOR);
 

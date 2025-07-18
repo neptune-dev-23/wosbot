@@ -2,6 +2,8 @@ package cl.camodev.wosbot.serv.task.impl;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -283,44 +285,28 @@ public class BankTask extends DelayedTask {
 	}
 
 	public LocalDateTime parseAndAddToNow(String text) {
-		if (text == null || text.trim().isEmpty()) {
-			throw new IllegalArgumentException("Input text is empty or null");
-		}
-
-		// Replace 'O' (uppercase letter O) with '0' (zero)
-		text = text.toUpperCase().replace('O', '0').trim();
-
-		// Remove extra spaces within the string
-		text = text.replaceAll("\\s+", " ");
-
-		// Regular expression to detect format with days or time only
-		Pattern pattern = Pattern.compile("(\\d+)d\\s*(\\d{1,2}:\\d{2}:\\d{2})|^(\\d{1,2}:\\d{2}:\\d{2})$");
-		Matcher matcher = pattern.matcher(text);
+		// Regular expression to match the input format [n]d HH:mm:ss' o 'HH:mm:ss
+		Pattern pattern = Pattern.compile("(?i).*?(?:(\\d+)\\s*d\\s*)?(\\d{1,2}:\\d{2}:\\d{2}).*", Pattern.DOTALL);
+		Matcher matcher = pattern.matcher(text.trim());
 
 		if (!matcher.matches()) {
-			throw new IllegalArgumentException("Invalid format: '" + text + "'");
+			throw new IllegalArgumentException("Input does not match the expected format. Expected format: [n]d HH:mm:ss' o 'HH:mm:ss");
 		}
 
-		int daysToAdd = 0;
-		String timeText;
+		String daysStr = matcher.group(1);
+		String timeStr = matcher.group(2);
 
-		if (matcher.group(1) != null) { // If there's a number of days
-			daysToAdd = Integer.parseInt(matcher.group(1));
-			timeText = matcher.group(2);
-		} else { // Only time
-			timeText = matcher.group(3);
-		}
+		int daysToAdd = (daysStr != null) ? Integer.parseInt(daysStr) : 0;
 
-		// Parse hours, minutes and seconds from time string
-		String[] timeParts = timeText.split(":");
-		int hours = Integer.parseInt(timeParts[0]);
-		int minutes = Integer.parseInt(timeParts[1]);
-		int seconds = Integer.parseInt(timeParts[2]);
+		// parser for time part
+		DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("H:mm:ss");
+		LocalTime timePart = LocalTime.parse(timeStr, timeFormatter);
 
-		// Get current date and time
-		LocalDateTime now = LocalDateTime.now();
 
-		// Add days, hours, minutes and seconds
-		return now.plusDays(daysToAdd).plusHours(hours).plusMinutes(minutes).plusSeconds(seconds);
+		return LocalDateTime.now()
+				.plusDays(daysToAdd)
+				.plusHours(timePart.getHour())
+				.plusMinutes(timePart.getMinute())
+				.plusSeconds(timePart.getSecond());
 	}
 }
