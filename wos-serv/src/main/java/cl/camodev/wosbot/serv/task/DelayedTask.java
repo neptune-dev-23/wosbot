@@ -33,16 +33,24 @@ public abstract class DelayedTask implements Runnable, Delayed, Comparable<Delay
 	protected ServScheduler servScheduler = ServScheduler.getServices();
 	protected ServLogs servLogs = ServLogs.getServices();
 
-	protected Object getDistinctKey() {
-		return null;
-	}
-
 	public DelayedTask(DTOProfiles profile, TpDailyTaskEnum tpTask) {
 		this.profile = profile;
 		this.taskName = tpTask.getName();
 		this.scheduledTime = LocalDateTime.now();
 		this.EMULATOR_NUMBER = profile.getEmulatorNumber().toString();
 		this.tpTask = tpTask;
+	}
+
+	protected Object getDistinctKey() {
+		return null;
+	}
+
+	/**
+	 * Override this method to specify where the task should start execution.
+	 * @return EnumStartLocation indicating the required starting location
+	 */
+	protected EnumStartLocation getRequiredStartLocation() {
+		return EnumStartLocation.ANY;
 	}
 
 	@Override
@@ -57,14 +65,27 @@ public abstract class DelayedTask implements Runnable, Delayed, Comparable<Delay
 			throw new HomeNotFoundException("Game is not running");
 		}
 
+		EnumStartLocation requiredLocation = getRequiredStartLocation();
 
 		for (int attempt = 1; attempt <= 10; attempt++) {
 			DTOImageSearchResult home = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90);
 			DTOImageSearchResult world = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 0, 0, 720, 1280, 90);
+
 			if (home.isFound() || world.isFound()) {
+				// Found either home or world, now check if we need to navigate to the correct location
+				if (requiredLocation == EnumStartLocation.HOME && !home.isFound()) {
+					// We need HOME but we're in WORLD, navigate to HOME
+					emuManager.tapAtPoint(EMULATOR_NUMBER, world.getPoint());
+					sleepTask(2000); // Wait for navigation
+				} else if (requiredLocation == EnumStartLocation.WORLD && !world.isFound()) {
+					// We need WORLD but we're in HOME, navigate to WORLD
+					emuManager.tapAtPoint(EMULATOR_NUMBER, home.getPoint());
+					sleepTask(2000); // Wait for navigation
+				}
+				// If requiredLocation is ANY, we can execute from either location
 				execute();
 				return;
-			}else {
+			} else {
 				EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
 				sleepTask(100);
 			}
@@ -81,12 +102,16 @@ public abstract class DelayedTask implements Runnable, Delayed, Comparable<Delay
 		return recurring;
 	}
 
-	public void setLastExecutionTime(LocalDateTime lastExecutionTime) {
-		this.lastExecutionTime = lastExecutionTime;
+	public void setRecurring(boolean recurring) {
+		this.recurring = recurring;
 	}
 
 	public LocalDateTime getLastExecutionTime() {
 		return lastExecutionTime;
+	}
+
+	public void setLastExecutionTime(LocalDateTime lastExecutionTime) {
+		this.lastExecutionTime = lastExecutionTime;
 	}
 
 	public Integer getTpDailyTaskId() {
@@ -95,10 +120,6 @@ public abstract class DelayedTask implements Runnable, Delayed, Comparable<Delay
 
 	public TpDailyTaskEnum getTpTask() {
 		return tpTask;
-	}
-
-	public void setRecurring(boolean recurring) {
-		this.recurring = recurring;
 	}
 
 	public void reschedule(LocalDateTime rescheduledTime) {
