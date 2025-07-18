@@ -53,6 +53,47 @@ public class TaskQueue {
 	}
 
 	/**
+	 * Removes a specific task from the queue based on task type
+	 * @param taskEnum The type of task to remove
+	 * @return true if a task was removed, false if no matching task was found
+	 */
+	public boolean removeTask(TpDailyTaskEnum taskEnum) {
+		// Create a prototype task to compare against
+		DelayedTask prototype = DelayedTaskRegistry.create(taskEnum, profile);
+		if (prototype == null) {
+			ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, "TaskQueue",
+				profile.getName(), "Cannot create prototype for task removal: " + taskEnum.getName());
+			return false;
+		}
+
+		// Remove the task from the queue using the equals method
+		boolean removed = taskQueue.removeIf(task -> task.equals(prototype));
+
+		if (removed) {
+			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueue",
+				profile.getName(), "Removed task " + taskEnum.getName() + " from queue");
+		} else {
+			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueue",
+				profile.getName(), "Task " + taskEnum.getName() + " was not found in queue");
+		}
+
+		return removed;
+	}
+
+	/**
+	 * Checks if a specific task type is currently scheduled in the queue
+	 * @param taskEnum The type of task to check
+	 * @return true if the task is in the queue, false otherwise
+	 */
+	public boolean isTaskScheduled(TpDailyTaskEnum taskEnum) {
+		DelayedTask prototype = DelayedTaskRegistry.create(taskEnum, profile);
+		if (prototype == null) {
+			return false;
+		}
+		return taskQueue.stream().anyMatch(task -> task.equals(prototype));
+	}
+
+	/**
 	 * Inicia el procesamiento de la cola.
 	 */
 	public void start() {
@@ -88,7 +129,7 @@ public class TaskQueue {
 				boolean executedTask = false;
 				long minDelay = Long.MAX_VALUE;
 
-				// realizar preverificacion de que el jeugo esta coriendo
+				// realizar preverificacion de que el jeugo esta corriendo
 
 				Iterator<DelayedTask> it = taskQueue.iterator();
 				while (it.hasNext()) {
@@ -186,12 +227,7 @@ public class TaskQueue {
 				// Verificar condiciones según el delay mínimo de la cola de tareas
 				if (minDelay != Long.MAX_VALUE) { // Asegurar que hay tareas en la cola
 					long maxIdle = 0;
-//					if (profile.getId().equals(Long.valueOf(3L))) {
-//						maxIdle = 120L;
-//					} else {
 					maxIdle = Optional.ofNullable(profile.getGlobalsettings().get(EnumConfigurationKey.MAX_IDLE_TIME_INT.name())).map(Integer::parseInt).orElse(Integer.parseInt(EnumConfigurationKey.MAX_IDLE_TIME_INT.getDefaultValue()));
-//					}
-
 
 					if (!idlingTimeExceded && minDelay > TimeUnit.MINUTES.toSeconds(maxIdle)) {
 						idlingTimeExceded = true;
@@ -330,18 +366,6 @@ public class TaskQueue {
 		taskState.setLastExecutionTime(prototype.getScheduled());
 		taskState.setNextExecutionTime(LocalDateTime.now());
 		ServTaskManager.getInstance().setTaskState(profile.getId(), taskState);
-	}
-
-	public boolean isTaskScheduled(TpDailyTaskEnum taskEnum) {
-		// Obtain the task prototype from the registry
-		DelayedTask prototype = DelayedTaskRegistry.create(taskEnum, profile);
-		if (prototype == null) {
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, "TaskQueue", profile.getName(), "Task not found: " + taskEnum);
-			return false;
-		}
-		// Check if the task is enabled in the queue
-
-		return taskQueue.stream().anyMatch(task -> task.equals(prototype));
 	}
 
 }

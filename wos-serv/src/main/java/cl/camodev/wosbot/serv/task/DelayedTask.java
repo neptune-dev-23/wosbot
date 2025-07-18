@@ -37,7 +37,7 @@ public abstract class DelayedTask implements Runnable, Delayed, Comparable<Delay
 		this.profile = profile;
 		this.taskName = tpTask.getName();
 		this.scheduledTime = LocalDateTime.now();
-		this.EMULATOR_NUMBER = profile.getEmulatorNumber().toString();
+		this.EMULATOR_NUMBER = profile.getEmulatorNumber();
 		this.tpTask = tpTask;
 	}
 
@@ -148,7 +148,7 @@ public abstract class DelayedTask implements Runnable, Delayed, Comparable<Delay
 			Thread.sleep(millis);
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
-			e.printStackTrace();
+			throw new RuntimeException("Task was interrupted during sleep", e);
 		}
 	}
 
