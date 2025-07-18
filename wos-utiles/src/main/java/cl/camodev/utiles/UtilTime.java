@@ -61,20 +61,6 @@ public class UtilTime {
 		return formatTimeAgo(minutesAgo);
 	}
 
-	public static String formatNextExecution(LocalDateTime execution, LocalDateTime clock, boolean executing) {
-
-		if (executing)
-			return "Executing";
-
-		if (execution == null)
-			return "Never";
-
-		long minutesUntil = ChronoUnit.MINUTES.between(clock, execution);
-		if (minutesUntil <= 0) {
-			return "Ready";
-		}
-		return formatTimeUntil(minutesUntil);
-	}
 
 	private static String formatTimeAgo(long minutes) {
 		if (minutes < 1) {
@@ -90,29 +76,5 @@ public class UtilTime {
 		}
 	}
 
-	private static String formatTimeUntil(long minutes) {
-		if (minutes < 1) {
-			return "Now";
-		}
-		long days = minutes / 1440;
-		long hours = (minutes % 1440) / 60;
-		long mins = minutes % 60;
-
-		if (days > 0) {
-			if (hours > 0) {
-				return days + "d " + hours + "h";
-			} else {
-				return days + "d";
-			}
-		} else if (hours > 0) {
-			if (mins > 0) {
-				return hours + "h " + mins + "m";
-			} else {
-				return hours + "h";
-			}
-		} else {
-			return mins + "m";
-		}
-	}
 
 }

@@ -415,3 +415,54 @@
 	-fx-min-width: 100px; /* Ancho mínimo */
 	-fx-max-width: 200px; /* Ancho máximo */
 }
+
+/* Delay-based next execution cell colors */
+.next-execution-ready {
+    -fx-text-fill: #4CAF50 !important;
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+}
+
+.next-execution-never {
+    -fx-text-fill: #757575 !important;
+    -fx-font-size: 14px;
+}
+
+.next-execution-executing {
+    -fx-text-fill: #ff9800 !important;
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+    -fx-background-color: rgba(255, 152, 0, 0.2) !important;
+}
+
+.next-execution-seconds {
+    -fx-text-fill: #00bcd4 !important;
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+}
+
+.next-execution-minutes-short {
+    -fx-text-fill: #4CAF50 !important;
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+}
+
+.next-execution-minutes-medium {
+    -fx-text-fill: #ffc107 !important;
+    -fx-font-size: 14px;
+}
+
+.next-execution-minutes-long {
+    -fx-text-fill: #ff9800 !important;
+    -fx-font-size: 14px;
+}
+
+.next-execution-hours {
+    -fx-text-fill: #ff9800 !important;
+    -fx-font-size: 14px;
+}
+
+.next-execution-days {
+    -fx-text-fill: #ff5722 !important;
+    -fx-font-size: 14px;
+}
