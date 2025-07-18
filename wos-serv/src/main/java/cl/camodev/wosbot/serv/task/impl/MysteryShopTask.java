@@ -24,8 +24,8 @@ public class MysteryShopTask extends DelayedTask {
 
 		while (attempt < 5) {
 			// Check if we are on the home screen
-			DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90);
-			DTOImageSearchResult worldResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 0, 0, 720, 1280, 90);
+			DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(),  90);
+			DTOImageSearchResult worldResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(),  90);
 
 			if (homeResult.isFound() || worldResult.isFound()) {
 				if (navigateToShop()) {
@@ -60,7 +60,7 @@ public class MysteryShopTask extends DelayedTask {
 		DTOImageSearchResult shopButtonResult = emuManager.searchTemplate(
 			EMULATOR_NUMBER,
 			EnumTemplates.GAME_HOME_BOTTOM_BAR_SHOP_BUTTON.getTemplate(),
-			0, 0, 720, 1280, 90
+			 90
 		);
 
 		if (!shopButtonResult.isFound()) {
@@ -78,7 +78,7 @@ public class MysteryShopTask extends DelayedTask {
 		DTOImageSearchResult mysteryShopResult = emuManager.searchTemplate(
 			EMULATOR_NUMBER,
 			EnumTemplates.SHOP_MYSTERY_BUTTON.getTemplate(),
-			0, 0, 720, 1280, 90
+			 90
 		);
 
 		if (!mysteryShopResult.isFound()) {
@@ -169,7 +169,7 @@ public class MysteryShopTask extends DelayedTask {
 			DTOImageSearchResult freeRewardResult = emuManager.searchTemplate(
 				EMULATOR_NUMBER,
 				EnumTemplates.MYSTERY_SHOP_FREE_REWARD.getTemplate(),
-				0, 0, 720, 1280, 90
+				 90
 			);
 
 			// If found, claim the reward
@@ -203,7 +203,7 @@ public class MysteryShopTask extends DelayedTask {
 		DTOImageSearchResult dailyRefreshResult = emuManager.searchTemplate(
 			EMULATOR_NUMBER,
 			EnumTemplates.MYSTERY_SHOP_DAILY_REFRESH.getTemplate(),
-			0, 0, 720, 1280, 90
+			 90
 		);
 
 		if (dailyRefreshResult.isFound()) {

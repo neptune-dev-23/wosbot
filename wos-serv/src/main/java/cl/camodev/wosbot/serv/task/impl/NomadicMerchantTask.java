@@ -14,13 +14,10 @@ import cl.camodev.wosbot.serv.task.DelayedTask;
 
 public class NomadicMerchantTask extends DelayedTask {
 
-	private boolean isVipEnabled = true;
-
 	private final int[][] SQUARES = { { 40, 432 }, { 261, 432 }, { 481, 432 }, { 40, 741 }, { 261, 741 }, { 481, 741 } };
-
 	private final int[] REFRESH_BUTTON = { 500, 230 };
-
 	private final EnumTemplates[] TEMPLATES = { EnumTemplates.NOMADIC_MERCHANT_COAL, EnumTemplates.NOMADIC_MERCHANT_MEAT, EnumTemplates.NOMADIC_MERCHANT_STONE, EnumTemplates.NOMADIC_MERCHANT_WOOD };
+	private boolean isVipEnabled = true;
 
 	public NomadicMerchantTask(DTOProfiles profile, TpDailyTaskEnum tpDailyTask) {
 		super(profile, tpDailyTask);
@@ -33,8 +30,8 @@ public class NomadicMerchantTask extends DelayedTask {
 	protected void execute() {
 
 		// Buscar la plantilla de la pantalla HOME
-		DTOImageSearchResult homeResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90);
-		DTOImageSearchResult worldResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 0, 0, 720, 1280, 90);
+		DTOImageSearchResult homeResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(),  90);
+		DTOImageSearchResult worldResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(),  90);
 		if (homeResult.isFound() || worldResult.isFound()) {
 			ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, taskName, profile.getName(), "HOME FOUND GOING TO SHOP");
 			EmulatorManager.getInstance().tapAtPoint(EMULATOR_NUMBER, new DTOPoint(420, 1220));

@@ -34,8 +34,8 @@ public class UpgradeFurnaceTask extends DelayedTask {
 
 	@Override
 	protected void execute() {
-		DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90);
-		DTOImageSearchResult worldResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 0, 0, 720, 1280, 90);
+		DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(),  90);
+		DTOImageSearchResult worldResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(),  90);
 
 		if (homeResult.isFound() || worldResult.isFound()) {
 			if (worldResult.isFound()) {
@@ -91,14 +91,14 @@ public class UpgradeFurnaceTask extends DelayedTask {
 					sleepTask(500);
 
 					// search for cookhouse
-					DTOImageSearchResult result = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_CITY_STATUS_COOKHOUSE.getTemplate(), 0, 0, 720, 1280, 90);
+					DTOImageSearchResult result = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_CITY_STATUS_COOKHOUSE.getTemplate(),  90);
 					if (result.isFound()) {
 						// click on cookhouse
 						emuManager.tapAtRandomPoint(EMULATOR_NUMBER, result.getPoint(), result.getPoint());
 						sleepTask(500);
 
 						// search go button
-						DTOImageSearchResult goButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_CITY_STATUS_GO_BUTTON.getTemplate(), 0, 0, 720, 1280, 90);
+						DTOImageSearchResult goButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_CITY_STATUS_GO_BUTTON.getTemplate(),  90);
 						if (goButton.isFound()) {
 							// click on go button
 							emuManager.tapAtRandomPoint(EMULATOR_NUMBER, goButton.getPoint(), goButton.getPoint());
@@ -116,7 +116,7 @@ public class UpgradeFurnaceTask extends DelayedTask {
 
 							// search go button for upgrade pending requirements
 
-							DTOImageSearchResult upgradeGoButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_CITY_STATUS_GO_BUTTON.getTemplate(), 0, 0, 720, 1280, 90);
+							DTOImageSearchResult upgradeGoButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_CITY_STATUS_GO_BUTTON.getTemplate(),  90);
 
 							if (upgradeGoButton.isFound()) {
 								logInfo("Pending upgrade requirements found, going to upgrade requierements");
@@ -125,13 +125,13 @@ public class UpgradeFurnaceTask extends DelayedTask {
 								sleepTask(1000);
 								emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(330, 729), new DTOPoint(364, 731), 10, 10);
 
-								DTOImageSearchResult upgradeButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_SHORTCUTS_UPGRADE.getTemplate(), 0, 0, 720, 1280, 90);
+								DTOImageSearchResult upgradeButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_SHORTCUTS_UPGRADE.getTemplate(),  90);
 								if (upgradeButton.isFound()) {
 									// click on upgrade button
 									emuManager.tapAtRandomPoint(EMULATOR_NUMBER, upgradeButton.getPoint(), upgradeButton.getPoint());
 									sleepTask(1000);
 
-									while ((result = emuManager.searchTemplate(EMULATOR_NUMBER,	EnumTemplates.GAME_HOME_SHORTCUTS_OBTAIN.getTemplate(), 0, 0, 720, 1280, 90)).isFound()) {
+									while ((result = emuManager.searchTemplate(EMULATOR_NUMBER,	EnumTemplates.GAME_HOME_SHORTCUTS_OBTAIN.getTemplate(),  90)).isFound()) {
 										logInfo("Refilling resources for upgrade");
 										emuManager.tapAtRandomPoint(EMULATOR_NUMBER, result.getPoint(), result.getPoint());
 										sleepTask(500);
@@ -152,19 +152,19 @@ public class UpgradeFurnaceTask extends DelayedTask {
 
 									//if it's a troop training building, we need to reschedule the task till the training is done
 
-									DTOImageSearchResult train = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.BUILDING_BUTTON_TRAIN.getTemplate(), 0, 0, 720, 1280, 90);
+									DTOImageSearchResult train = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.BUILDING_BUTTON_TRAIN.getTemplate(),  90);
 
 									if (train.isFound()) {
 										servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Troop training building found, rescheduling task till training is done");
 										// i need to verify which troops are being trained, so I can reschedule the task accordingly
 
-										DTOImageSearchResult detailsButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.BUILDING_BUTTON_DETAILS.getTemplate(), 0, 0, 720, 1280, 90);
+										DTOImageSearchResult detailsButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.BUILDING_BUTTON_DETAILS.getTemplate(),  90);
 										if (detailsButton.isFound()){
 											emuManager.tapAtRandomPoint(EMULATOR_NUMBER, detailsButton.getPoint(), detailsButton.getPoint());
 											sleepTask(500);
 
 											for (var entry : TROOP_TASK_MAP.entrySet()) {
-												DTOImageSearchResult troop = emuManager.searchTemplate(EMULATOR_NUMBER,entry.getKey().getTemplate(),0, 0, 720, 1280, 90
+												DTOImageSearchResult troop = emuManager.searchTemplate(EMULATOR_NUMBER,entry.getKey().getTemplate(), 90
 												);
 												if (troop.isFound()) {
 													handleTroopReschedule(entry.getValue());
@@ -189,7 +189,7 @@ public class UpgradeFurnaceTask extends DelayedTask {
 								}
 
 								for (int i = 0; i < MAX_ATTEMPTS; i++) {
-									DTOImageSearchResult alliesHelpButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_SHORTCUTS_HELP_REQUEST.getTemplate(), 0, 0, 720, 1280, 90);
+									DTOImageSearchResult alliesHelpButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_SHORTCUTS_HELP_REQUEST.getTemplate(), , 90);
 
 									if (alliesHelpButton.isFound()) {
 										logInfo("Allies help button found, requesting help");
@@ -207,7 +207,7 @@ public class UpgradeFurnaceTask extends DelayedTask {
 								// click on upgrade button
 
 
-								while ((result = emuManager.searchTemplate(EMULATOR_NUMBER,	EnumTemplates.GAME_HOME_SHORTCUTS_OBTAIN.getTemplate(), 0, 0, 720, 1280, 90)).isFound()) {
+								while ((result = emuManager.searchTemplate(EMULATOR_NUMBER,	EnumTemplates.GAME_HOME_SHORTCUTS_OBTAIN.getTemplate(),  90)).isFound()) {
 									logInfo("Refilling resources for upgrade");
 									emuManager.tapAtRandomPoint(EMULATOR_NUMBER, result.getPoint(), result.getPoint());
 									sleepTask(500);
@@ -229,7 +229,7 @@ public class UpgradeFurnaceTask extends DelayedTask {
 								// check if allies can help
 
 								for (int i = 0; i < MAX_ATTEMPTS; i++) {
-									DTOImageSearchResult alliesHelpButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_SHORTCUTS_HELP_REQUEST.getTemplate(), 0, 0, 720, 1280, 90);
+									DTOImageSearchResult alliesHelpButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_SHORTCUTS_HELP_REQUEST.getTemplate(),  90);
 
 									if (alliesHelpButton.isFound()) {
 										logInfo("Allies help button found, requesting help");

@@ -24,8 +24,8 @@ public class DailyStaminaTask extends DelayedTask {
 
 	@Override
 	protected void execute() {
-		DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90);
-		DTOImageSearchResult worldResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 0, 0, 720, 1280, 90);
+		DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(),  90);
+		DTOImageSearchResult worldResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(),  90);
 
 		if (homeResult.isFound() || worldResult.isFound()) {
 			if (worldResult.isFound()) {
@@ -40,7 +40,7 @@ public class DailyStaminaTask extends DelayedTask {
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(20, 250), new DTOPoint(200, 280));
 			sleepTask(500);
 
-			DTOImageSearchResult researchCenter = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_SHORTCUTS_RESEARCH_CENTER.getTemplate(), 0, 0, 720, 1280, 90);
+			DTOImageSearchResult researchCenter = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_SHORTCUTS_RESEARCH_CENTER.getTemplate(), 90);
 
 			if (researchCenter.isFound()) {
 				{
@@ -53,7 +53,7 @@ public class DailyStaminaTask extends DelayedTask {
 					System.out.println("Searching for chest");
 					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Searching for chest");
 					for (int i = 0; i < 5; i++) {
-						chest = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.STOREHOUSE_CHEST.getTemplate(), 0, 0, 720, 1280, 90);
+						chest = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.STOREHOUSE_CHEST.getTemplate(),  90);
 
 						if (chest.isFound()) {
 							// debo obtener la recompensa y verificar caundo es la proxima via ocr
@@ -64,7 +64,7 @@ public class DailyStaminaTask extends DelayedTask {
 
 							emuManager.tapBackButton(EMULATOR_NUMBER);
 							for (int j = 0; j < 5; j++) {
-								DTOImageSearchResult stamina = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.STOREHOUSE_STAMINA.getTemplate(), 0, 0, 720, 1280, 90);
+								DTOImageSearchResult stamina = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.STOREHOUSE_STAMINA.getTemplate(),  90);
 
 								if (stamina.isFound()) {
 									servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Claiming stamina");
@@ -91,7 +91,7 @@ public class DailyStaminaTask extends DelayedTask {
 					if (!chest.isFound()) {
 						System.out.println("Chest not found, verifying stamina");
 						for (int i = 0; i < 5; i++) {
-							DTOImageSearchResult stamina = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.STOREHOUSE_STAMINA.getTemplate(), 0, 0, 720, 1280, 90);
+							DTOImageSearchResult stamina = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.STOREHOUSE_STAMINA.getTemplate(), 90);
 
 							if (stamina.isFound()) {
 								servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Claiming stamina");

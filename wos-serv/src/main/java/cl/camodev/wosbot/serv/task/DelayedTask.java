@@ -68,8 +68,8 @@ public abstract class DelayedTask implements Runnable, Delayed, Comparable<Delay
 		EnumStartLocation requiredLocation = getRequiredStartLocation();
 
 		for (int attempt = 1; attempt <= 10; attempt++) {
-			DTOImageSearchResult home = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90);
-			DTOImageSearchResult world = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 0, 0, 720, 1280, 90);
+			DTOImageSearchResult home = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 90);
+			DTOImageSearchResult world = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(),  90);
 
 			if (home.isFound() || world.isFound()) {
 				// Found either home or world, now check if we need to navigate to the correct location
@@ -79,7 +79,7 @@ public abstract class DelayedTask implements Runnable, Delayed, Comparable<Delay
 					sleepTask(2000); // Wait for navigation
 
 					// Validate that we actually moved to HOME
-					DTOImageSearchResult homeAfterNav = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90);
+					DTOImageSearchResult homeAfterNav = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(),  90);
 					if (!homeAfterNav.isFound()) {
 						logWarning("Failed to navigate to HOME, retrying...");
 						continue; // Try again
@@ -91,7 +91,7 @@ public abstract class DelayedTask implements Runnable, Delayed, Comparable<Delay
 					sleepTask(2000); // Wait for navigation
 
 					// Validate that we actually moved to WORLD
-					DTOImageSearchResult worldAfterNav = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 0, 0, 720, 1280, 90);
+					DTOImageSearchResult worldAfterNav = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 90);
 					if (!worldAfterNav.isFound()) {
 						logWarning("Failed to navigate to WORLD, retrying...");
 						continue; // Try again
