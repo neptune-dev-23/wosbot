@@ -5,7 +5,6 @@ import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.ot.DTODailyTaskStatus;
 import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.ot.DTOTaskState;
-import cl.camodev.wosbot.serv.impl.ServProfiles;
 import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.taskmanager.controller.TaskManagerActionController;
 import cl.camodev.wosbot.taskmanager.model.TaskManagerAux;
@@ -47,25 +46,58 @@ public class TaskManagerLayoutController {
 			return 1;
 		return Long.compare(a.getNearestMinutesUntilExecution(), b.getNearestMinutesUntilExecution());
 	};
-	private final Image iconTrue = new Image(getClass().getResourceAsStream("/icons/indicators/green.png"));
-	private final Image iconFalse = new Image(getClass().getResourceAsStream("/icons/indicators/red.png"));
+
+	private final Image iconTrue = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/icons/indicators/green.png")));
+	private final Image iconFalse = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/icons/indicators/red.png")));
 	private final ObjectProperty<LocalDateTime> globalClock = new SimpleObjectProperty<>(LocalDateTime.now());
 	private final Map<Long, Tab> profileTabsMap = new HashMap<>();
 	private final Map<Long, ObservableList<TaskManagerAux>> tasks = new HashMap<>();
-	private TaskManagerActionController taskManagerActionController = new TaskManagerActionController(this);
+	private final TaskManagerActionController taskManagerActionController = new TaskManagerActionController(this);
+
 	@FXML
 	private TabPane tabPaneProfiles;
 
 	@FXML
-	private void initialize() {
+	public void initialize() {
 		loadProfiles();
 
-		Timeline ticker = new Timeline(new KeyFrame(Duration.seconds(5), evt -> {
-			globalClock.set(LocalDateTime.now());
-		}));
+		Timeline ticker = new Timeline(new KeyFrame(Duration.seconds(1), evt -> updateTimeValues()));
 		ticker.setCycleCount(Animation.INDEFINITE);
 		ticker.play();
+	}
 
+	// Method to update time-dependent values and trigger reordering
+	private void updateTimeValues() {
+		Platform.runLater(() -> {
+			LocalDateTime now = LocalDateTime.now();
+			globalClock.set(now);
+
+			// Update all tables for all profiles
+			tasks.forEach((profileId, dataList) -> {
+				boolean needsReorder = false;
+
+				for (TaskManagerAux task : dataList) {
+					if (task.getNextExecution() != null) {
+						long newSeconds = ChronoUnit.SECONDS.between(now, task.getNextExecution());
+						long oldSeconds = task.getNearestMinutesUntilExecution();
+						boolean newReady = newSeconds <= 0;
+						boolean oldReady = task.hasReadyTask();
+
+						// Update values if they changed
+						if (newSeconds != oldSeconds || newReady != oldReady) {
+							task.setNearestMinutesUntilExecution(Math.max(0, newSeconds));
+							task.setHasReadyTask(newReady);
+							needsReorder = true;
+						}
+					}
+				}
+
+				// Reorder the table if any time values changed
+				if (needsReorder) {
+					FXCollections.sort(dataList, TASK_AUX_COMPARATOR);
+				}
+			});
+		});
 	}
 
 	private void loadProfiles() {
@@ -257,7 +289,7 @@ public class TaskManagerLayoutController {
 				if (diff <= 0) {
 					return "Ready";
 				} else if (diff < 60) {
-					return diff + "s~";
+					return diff + "s";
 				} else if (diff < 3600) {
 					long min = diff / 60;
 					return min + "m";
@@ -304,7 +336,7 @@ public class TaskManagerLayoutController {
 					getStyleClass().add("next-execution-never");
 				} else if ("Executing".equals(item)) {
 					getStyleClass().add("next-execution-executing");
-				} else if (item.endsWith("s~")) {
+				} else if (item.endsWith("s")) {
 					getStyleClass().add("next-execution-seconds");
 				} else if (item.matches("\\d+m")) {
 					int min = Integer.parseInt(item.replace("m", ""));
@@ -324,32 +356,83 @@ public class TaskManagerLayoutController {
 		});
 
 		TableColumn<TaskManagerAux, Void> colActions = new TableColumn<>("Actions");
-		colActions.setPrefWidth(100);
+		colActions.setPrefWidth(180);
 		colActions.setCellFactory(column -> new TableCell<>() {
 			private final Button btnExecute = new Button("Execute Now");
+			private final Button btnRemove = new Button("Remove");
+
 			{
-				btnExecute.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-size: 12px; " + "-fx-padding: 6px 12px; -fx-border-radius: 3px; -fx-background-radius: 3px;");
+				btnExecute.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-size: 11px; " +
+					"-fx-padding: 4px 8px; -fx-border-radius: 3px; -fx-background-radius: 3px;");
+				btnRemove.setStyle("-fx-background-color: #f44336; -fx-text-fill: white; -fx-font-size: 11px; " +
+					"-fx-padding: 4px 8px; -fx-border-radius: 3px; -fx-background-radius: 3px;");
+
 				btnExecute.setOnAction(ev -> {
 					TaskManagerAux item = getTableView().getItems().get(getIndex());
-					List<DTOProfiles> allProfiles = ServProfiles.getServices().getProfiles();
-					DTOProfiles profile = allProfiles.stream().filter(p -> p.getId().equals(item.getProfileId())).findFirst().orElse(null);
+					taskManagerActionController.executeTaskNow(item);
+				});
 
-					if (profile == null) {
-						System.err.println("Profile not found: " + item.getProfileId());
-						return;
-					}
+				btnRemove.setOnAction(ev -> {
+					TaskManagerAux item = getTableView().getItems().get(getIndex());
+					DTOProfiles profile = taskManagerActionController.findProfileById(item.getProfileId());
 
-					ServScheduler scheduler = ServScheduler.getServices();
-					scheduler.updateDailyTaskStatus(profile, item.getTaskEnum(), LocalDateTime.now());
-					scheduler.getQueueManager().getQueue(profile.getId()).executeTaskNow(item.getTaskEnum());
-
+					taskManagerActionController.removeTask(item, () -> {
+						// Refresh the table after successful removal
+						buildTaskManagerList(profile, list -> {
+							ObservableList<TaskManagerAux> dataList = tasks.get(profile.getId());
+							if (dataList != null) {
+								dataList.setAll(list);
+								FXCollections.sort(dataList, TASK_AUX_COMPARATOR);
+							}
+						});
+					});
 				});
 			}
 
 			@Override
 			protected void updateItem(Void item, boolean empty) {
 				super.updateItem(item, empty);
-				setGraphic(empty ? null : btnExecute);
+				if (empty) {
+					setGraphic(null);
+				} else {
+					// Get the task data to check its state
+					TaskManagerAux task = getTableRow().getItem();
+
+					if (task != null) {
+						// Check if queue is active for this profile
+						boolean queueActive = ServScheduler.getServices().getQueueManager().getQueue(task.getProfileId()) != null;
+
+						// Enable/disable execute button based on queue status
+						btnExecute.setDisable(!queueActive);
+
+						// Update execute button style when disabled
+						if (!queueActive) {
+							btnExecute.setStyle("-fx-background-color: #757575; -fx-text-fill: #bdbdbd; -fx-font-size: 11px; " +
+								"-fx-padding: 4px 8px; -fx-border-radius: 3px; -fx-background-radius: 3px;");
+						} else {
+							btnExecute.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-size: 11px; " +
+								"-fx-padding: 4px 8px; -fx-border-radius: 3px; -fx-background-radius: 3px;");
+						}
+
+						// Enable/disable remove button based on task state
+						boolean canRemove = task.scheduledProperty().get() && !task.executingProperty().get();
+						btnRemove.setDisable(!canRemove);
+
+						// Update remove button style when disabled
+						if (!canRemove) {
+							btnRemove.setStyle("-fx-background-color: #757575; -fx-text-fill: #bdbdbd; -fx-font-size: 11px; " +
+								"-fx-padding: 4px 8px; -fx-border-radius: 3px; -fx-background-radius: 3px;");
+						} else {
+							btnRemove.setStyle("-fx-background-color: #f44336; -fx-text-fill: white; -fx-font-size: 11px; " +
+								"-fx-padding: 4px 8px; -fx-border-radius: 3px; -fx-background-radius: 3px;");
+						}
+					}
+
+					// Create HBox to hold both buttons
+					javafx.scene.layout.HBox buttonBox = new javafx.scene.layout.HBox(5);
+					buttonBox.getChildren().addAll(btnExecute, btnRemove);
+					setGraphic(buttonBox);
+				}
 			}
 		});
 

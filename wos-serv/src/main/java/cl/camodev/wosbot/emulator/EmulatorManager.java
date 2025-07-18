@@ -169,6 +169,15 @@ public class EmulatorManager {
 		return ImageSearchUtil.buscarTemplate(screenshot, templatePath, x, y, width, height, threshold);
 	}
 
+	/**
+	 * Busca una imagen en toda la pantalla del emulador.
+	 */
+	public DTOImageSearchResult searchTemplate(String emulatorNumber, String templatePath, double threshold) {
+		checkEmulatorInitialized();
+		byte[] screenshot = captureScreenshotViaADB(emulatorNumber);
+		return ImageSearchUtil.buscarTemplate(screenshot, templatePath, 0, 0, 720, 1280, threshold);
+	}
+
 	public void launchEmulator(String emulatorNumber) {
 		checkEmulatorInitialized();
 		emulator.launchEmulator(emulatorNumber);

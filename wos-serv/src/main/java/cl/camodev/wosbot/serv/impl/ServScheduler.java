@@ -223,6 +223,50 @@ public class ServScheduler {
 		iDailyTaskRepository.saveDailyTask(dailyTask);
 	}
 
+	/**
+	 * Removes a task from the scheduler for a specific profile
+	 * @param profileId The profile ID
+	 * @param taskEnum The task to remove
+	 */
+	public void removeTaskFromScheduler(Long profileId, TpDailyTaskEnum taskEnum) {
+		try {
+			// Get the task queue for the profile
+			TaskQueue queue = queueManager.getQueue(profileId);
+			if (queue != null) {
+				// Remove the task from the queue
+				boolean removedFromQueue = queue.removeTask(taskEnum);
+				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "Scheduler",
+					"Profile " + profileId, "Removing task " + taskEnum.getName() + " from scheduler. Removed from queue: " + removedFromQueue);
+			} else {
+				ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, "Scheduler",
+					"Profile " + profileId, "No queue found for profile when removing task " + taskEnum.getName());
+			}
+
+			// Update task state in ServTaskManager to reflect removal
+			DTOTaskState taskState = new DTOTaskState();
+			taskState.setProfileId(profileId);
+			taskState.setTaskId(taskEnum.getId());
+			taskState.setScheduled(false);
+			taskState.setExecuting(false);
+			taskState.setLastExecutionTime(LocalDateTime.now());
+			taskState.setNextExecutionTime(null);
+			ServTaskManager.getInstance().setTaskState(profileId, taskState);
+
+			// Notify listeners about the change
+			listeners.forEach(listener -> {
+				DTOBotState state = new DTOBotState();
+				state.setRunning(true);
+				state.setPaused(false);
+				state.setActionTime(LocalDateTime.now());
+				listener.onBotStateChange(state);
+			});
+
+		} catch (Exception e) {
+			ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, "Scheduler",
+				"Profile " + profileId, "Error removing task " + taskEnum.getName() + ": " + e.getMessage());
+		}
+	}
+
 	public void saveEmulatorPath(String enumConfigurationKey, String filePath) {
 		List<Config> configs = iConfigRepository.getGlobalConfigs();
 
