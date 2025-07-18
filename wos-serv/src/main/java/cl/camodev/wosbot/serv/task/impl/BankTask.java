@@ -244,7 +244,7 @@ public class BankTask extends DelayedTask {
 			for (int attempt = 1; attempt <= maxOcrAttempts; attempt++) {
 				try {
 					logInfo("OCR attempt " + attempt + " of " + maxOcrAttempts);
-					timeLeft = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(240, 770), new DTOPoint(470, 810));
+					timeLeft = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(220, 770), new DTOPoint(490, 810));
 
 					// Try to parse the time to validate it's a valid format
 					LocalDateTime nextBank = parseAndAddToNow(timeLeft);
@@ -288,7 +288,7 @@ public class BankTask extends DelayedTask {
 
 	public LocalDateTime parseAndAddToNow(String text) {
 		// Regular expression to match the input format [n]d HH:mm:ss' o 'HH:mm:ss
-		Pattern pattern = Pattern.compile("(?i).*?(?:(\\d+)\\s*d\\s*)?(\\d{1,2}:\\d{2}:\\d{2}).*", Pattern.DOTALL);
+		Pattern pattern = Pattern.compile("(?i).*?(?:(\\d+)\\s*d\\D*)?(\\d{1,2}:\\d{2}:\\d{2}).*", Pattern.DOTALL);
 		Matcher matcher = pattern.matcher(text.trim());
 
 		if (!matcher.matches()) {
