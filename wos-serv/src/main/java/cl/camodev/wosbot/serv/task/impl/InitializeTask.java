@@ -47,7 +47,7 @@ public class InitializeTask extends DelayedTask {
 			boolean homeScreen = false;
 			int attempts = 0;
 			while (!homeScreen) {
-				DTOImageSearchResult homeResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90);
+				DTOImageSearchResult homeResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(),90);
 				if (homeResult.isFound()) {
 					homeScreen = true;
 					ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "home screen found");

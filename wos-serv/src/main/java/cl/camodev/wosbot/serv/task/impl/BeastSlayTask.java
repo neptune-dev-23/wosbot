@@ -34,11 +34,22 @@ public class BeastSlayTask extends DelayedTask {
 		super(profile, tpTask);
 	}
 
+	public static LocalDateTime calculateFullStaminaTime(int currentStamina, int maxStamina, int regenRateMinutes) {
+		if (currentStamina >= maxStamina) {
+			return LocalDateTime.now(); // Ya está lleno
+		}
+
+		int staminaNeeded = maxStamina - currentStamina;
+		int minutesToFull = staminaNeeded * regenRateMinutes;
+
+		return LocalDateTime.now().plus(minutesToFull, ChronoUnit.MINUTES);
+	}
+
 	@Override
 	protected void execute() {
 
-		DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90);
-		DTOImageSearchResult worldResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 0, 0, 720, 1280, 90);
+		DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 90);
+		DTOImageSearchResult worldResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 90);
 
 		if (homeResult.isFound() || worldResult.isFound()) {
 			if (homeResult.isFound()) {
@@ -220,17 +231,6 @@ public class BeastSlayTask extends DelayedTask {
 		} else {
 			throw new NumberFormatException("No se encontró un formato válido en el texto OCR: " + normalizedText);
 		}
-	}
-
-	public static LocalDateTime calculateFullStaminaTime(int currentStamina, int maxStamina, int regenRateMinutes) {
-		if (currentStamina >= maxStamina) {
-			return LocalDateTime.now(); // Ya está lleno
-		}
-
-		int staminaNeeded = maxStamina - currentStamina;
-		int minutesToFull = staminaNeeded * regenRateMinutes;
-
-		return LocalDateTime.now().plus(minutesToFull, ChronoUnit.MINUTES);
 	}
 
 }

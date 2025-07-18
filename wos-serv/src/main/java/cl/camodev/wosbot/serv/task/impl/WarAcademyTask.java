@@ -23,6 +23,27 @@ public class WarAcademyTask extends DelayedTask {
 		super(profile, tpDailyTask);
 	}
 
+	/**
+	 * Parsea un String con el formato "Remaining : <number>" y retorna el número encontrado. Se consideran espacios extra y no distingue entre
+	 * mayúsculas y minúsculas.
+	 *
+	 * @param input La cadena a parsear, por ejemplo: " Remaining today: 7 "
+	 * @return El número extraído del String.
+	 * @throws IllegalArgumentException si el formato del texto no es válido.
+	 */
+	public static int parseRemaining(String input) {
+		Pattern pattern = Pattern.compile("^\\s*remaining\\s*:\\s*(\\d+|O)\\s*$", Pattern.CASE_INSENSITIVE);
+		Matcher matcher = pattern.matcher(input);
+
+		if (matcher.matches()) {
+			String value = matcher.group(1);
+			// Si es "O", lo interpretamos como 0
+			return value.equalsIgnoreCase("O") ? 0 : Integer.parseInt(value);
+		} else {
+			throw new IllegalArgumentException("El formato del texto no es válido: " + input);
+		}
+	}
+
 	@Override
 	protected void execute() {
 
@@ -34,8 +55,8 @@ public class WarAcademyTask extends DelayedTask {
 	}
 
 	private boolean isHomeOrWorldScreenFound() {
-		DTOImageSearchResult homeResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90);
-		DTOImageSearchResult worldResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 0, 0, 720, 1280, 90);
+		DTOImageSearchResult homeResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(),  90);
+		DTOImageSearchResult worldResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(),  90);
 		return homeResult.isFound() || worldResult.isFound();
 	}
 
@@ -91,27 +112,6 @@ public class WarAcademyTask extends DelayedTask {
 	private void logAndExit(String message) {
 		ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, taskName, profile.getName(), message);
 		EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
-	}
-
-	/**
-	 * Parsea un String con el formato "Remaining : <number>" y retorna el número encontrado. Se consideran espacios extra y no distingue entre
-	 * mayúsculas y minúsculas.
-	 *
-	 * @param input La cadena a parsear, por ejemplo: " Remaining today: 7 "
-	 * @return El número extraído del String.
-	 * @throws IllegalArgumentException si el formato del texto no es válido.
-	 */
-	public static int parseRemaining(String input) {
-		Pattern pattern = Pattern.compile("^\\s*remaining\\s*:\\s*(\\d+|O)\\s*$", Pattern.CASE_INSENSITIVE);
-		Matcher matcher = pattern.matcher(input);
-
-		if (matcher.matches()) {
-			String value = matcher.group(1);
-			// Si es "O", lo interpretamos como 0
-			return value.equalsIgnoreCase("O") ? 0 : Integer.parseInt(value);
-		} else {
-			throw new IllegalArgumentException("El formato del texto no es válido: " + input);
-		}
 	}
 
 }

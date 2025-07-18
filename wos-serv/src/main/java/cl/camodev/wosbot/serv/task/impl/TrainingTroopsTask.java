@@ -24,28 +24,36 @@ public class TrainingTroopsTask extends DelayedTask {
 
     private final TroopType troopType;
 
-    public enum TroopType {
-        //@formatter:off
-		INFANTRY(EnumTemplates.GAME_HOME_SHORTCUTS_INFANTRY), 
-		LANCER(EnumTemplates.GAME_HOME_SHORTCUTS_LANCER), 
-		MARKSMAN(EnumTemplates.GAME_HOME_SHORTCUTS_MARKSMAN);
-		//@formatter:on
-
-        private final EnumTemplates template;
-
-        private TroopType(EnumTemplates template) {
-            this.template = template;
-        }
-
-        public String getTemplate() {
-            return template.getTemplate();
-        }
-
-    }
-
     public TrainingTroopsTask(DTOProfiles profile, TpDailyTaskEnum heroRecruitment, TroopType troopType) {
         super(profile, heroRecruitment);
         this.troopType = troopType;
+    }
+
+    public static LocalDateTime addTimeToLocalDateTime(LocalDateTime dateTime, String timeString) {
+        // Regular expression to match the input format [n]d HH:mm:ss' o 'HH:mm:ss
+        Pattern pattern = Pattern.compile("(?i).*?(?:(\\d+)\\s*d\\s*)?(\\d{1,2}:\\d{2}:\\d{2}).*", Pattern.DOTALL);
+        Matcher matcher = pattern.matcher(timeString.trim());
+
+        if (!matcher.matches()) {
+            throw new IllegalArgumentException("Input does not match the expected format. Expected format: [n]d HH:mm:ss' o 'HH:mm:ss");
+        }
+
+
+        String daysStr = matcher.group(1);   // optional, can be null
+        String timeStr = matcher.group(2);   // always present
+
+        int daysToAdd = (daysStr != null) ? Integer.parseInt(daysStr) : 0;
+
+        // parser for time part
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("H:mm:ss");
+        LocalTime timePart = LocalTime.parse(timeStr, timeFormatter);
+
+
+        return LocalDateTime.now()
+                .plusDays(daysToAdd)
+                .plusHours(timePart.getHour())
+                .plusMinutes(timePart.getMinute())
+                .plusSeconds(timePart.getSecond());
     }
 
     @Override
@@ -57,7 +65,7 @@ public class TrainingTroopsTask extends DelayedTask {
         EmulatorManager.getInstance().tapAtPoint(EMULATOR_NUMBER, new DTOPoint(110, 270));
         sleepTask(500);
 
-        DTOImageSearchResult troopsResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, troopType.getTemplate(), 0, 0, 720, 1280, 90);
+        DTOImageSearchResult troopsResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, troopType.getTemplate(),  90);
 
         if (troopsResult.isFound()) {
             EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, troopsResult.getPoint(), troopsResult.getPoint());
@@ -65,8 +73,8 @@ public class TrainingTroopsTask extends DelayedTask {
 
             EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(310, 650), new DTOPoint(450, 730), 15, 100);
 
-            DTOImageSearchResult trainingResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_CAMP_TRAIN.getTemplate(), 0, 0, 720, 1280, 90);
-            DTOImageSearchResult upgrading = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.BUILDING_BUTTON_SPEED.getTemplate(), 0, 0, 720, 1280, 90);
+            DTOImageSearchResult trainingResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_CAMP_TRAIN.getTemplate(),  90);
+            DTOImageSearchResult upgrading = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.BUILDING_BUTTON_SPEED.getTemplate(),  90);
 
 
             if (trainingResult.isFound()) {
@@ -88,7 +96,7 @@ public class TrainingTroopsTask extends DelayedTask {
                 }
 
 
-                DTOImageSearchResult trainingButtonResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.TRAINING_TRAIN_BUTTON.getTemplate(), 0, 0, 720, 1280, 90);
+                DTOImageSearchResult trainingButtonResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.TRAINING_TRAIN_BUTTON.getTemplate(),  90);
 
 
                 if (trainingButtonResult.isFound() && !upgrading.isFound()) {
@@ -136,33 +144,6 @@ public class TrainingTroopsTask extends DelayedTask {
         }
     }
 
-    public static LocalDateTime addTimeToLocalDateTime(LocalDateTime dateTime, String timeString) {
-        // Regular expression to match the input format [n]d HH:mm:ss' o 'HH:mm:ss
-        Pattern pattern = Pattern.compile("(?i).*?(?:(\\d+)\\s*d\\s*)?(\\d{1,2}:\\d{2}:\\d{2}).*", Pattern.DOTALL);
-        Matcher matcher = pattern.matcher(timeString.trim());
-
-        if (!matcher.matches()) {
-            throw new IllegalArgumentException("Input does not match the expected format. Expected format: [n]d HH:mm:ss' o 'HH:mm:ss");
-        }
-
-
-        String daysStr = matcher.group(1);   // optional, can be null
-        String timeStr = matcher.group(2);   // always present
-
-        int daysToAdd = (daysStr != null) ? Integer.parseInt(daysStr) : 0;
-
-        // parser for time part
-        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("H:mm:ss");
-        LocalTime timePart = LocalTime.parse(timeStr, timeFormatter);
-
-
-        return LocalDateTime.now()
-                .plusDays(daysToAdd)
-                .plusHours(timePart.getHour())
-                .plusMinutes(timePart.getMinute())
-                .plusSeconds(timePart.getSecond());
-    }
-
     @Override
     protected Object getDistinctKey() {
         return troopType;
@@ -171,6 +152,25 @@ public class TrainingTroopsTask extends DelayedTask {
     @Override
     public boolean provideDailyMissionProgress() {
         return true;
+    }
+
+    public enum TroopType {
+        //@formatter:off
+		INFANTRY(EnumTemplates.GAME_HOME_SHORTCUTS_INFANTRY),
+		LANCER(EnumTemplates.GAME_HOME_SHORTCUTS_LANCER),
+		MARKSMAN(EnumTemplates.GAME_HOME_SHORTCUTS_MARKSMAN);
+		//@formatter:on
+
+        private final EnumTemplates template;
+
+        private TroopType(EnumTemplates template) {
+            this.template = template;
+        }
+
+        public String getTemplate() {
+            return template.getTemplate();
+        }
+
     }
 
 }

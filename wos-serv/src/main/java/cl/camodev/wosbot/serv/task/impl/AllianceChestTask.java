@@ -30,7 +30,7 @@ public class AllianceChestTask extends DelayedTask {
 		sleepTask(3000);
 
 		DTOImageSearchResult allianceChestResult = emuManager.searchTemplate(EMULATOR_NUMBER,
-				EnumTemplates.ALLIANCE_CHEST_BUTTON.getTemplate(), 0, 0, 720, 1280, 90);
+				EnumTemplates.ALLIANCE_CHEST_BUTTON.getTemplate(),  90);
 		if (!allianceChestResult.isFound()) {
 			int offset = profile.getConfig(EnumConfigurationKey.ALLIANCE_CHESTS_OFFSET_INT, Integer.class);
 			LocalDateTime nextExecutionTime = LocalDateTime.now().plusHours(offset);
@@ -47,7 +47,7 @@ public class AllianceChestTask extends DelayedTask {
 
 		// Buscar el botón de reclamar recompensas
 		DTOImageSearchResult claimButton = emuManager.searchTemplate(EMULATOR_NUMBER,
-				EnumTemplates.ALLIANCE_CHEST_LOOT_CLAIM_BUTTON.getTemplate(), 0, 0, 720, 1280, 90);
+				EnumTemplates.ALLIANCE_CHEST_LOOT_CLAIM_BUTTON.getTemplate(),  90);
 		if (claimButton.isFound()) {
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, claimButton.getPoint(), claimButton.getPoint(), 10, 100);
 			sleepTask(500);

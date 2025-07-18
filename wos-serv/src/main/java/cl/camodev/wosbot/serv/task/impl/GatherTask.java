@@ -19,39 +19,10 @@ import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 
 public class GatherTask extends DelayedTask {
-	//@formatter:off
-	public enum GatherType {
-		MEAT( EnumTemplates.GAME_HOME_SHORTCUTS_MEAT, EnumTemplates.GAME_HOME_SHORTCUTS_FARM_MEAT, EnumConfigurationKey.GATHER_MEAT_LEVEL_INT), 
-		WOOD( EnumTemplates.GAME_HOME_SHORTCUTS_WOOD, EnumTemplates.GAME_HOME_SHORTCUTS_FARM_WOOD, EnumConfigurationKey.GATHER_WOOD_LEVEL_INT), 
-		COAL( EnumTemplates.GAME_HOME_SHORTCUTS_COAL, EnumTemplates.GAME_HOME_SHORTCUTS_FARM_COAL, EnumConfigurationKey.GATHER_COAL_LEVEL_INT), 
-		IRON( EnumTemplates.GAME_HOME_SHORTCUTS_IRON, EnumTemplates.GAME_HOME_SHORTCUTS_FARM_IRON, EnumConfigurationKey.GATHER_IRON_LEVEL_INT);
-		
-		
-		EnumTemplates template;
-		EnumTemplates tile;
-		EnumConfigurationKey level;
-		
-		GatherType(EnumTemplates enumTemplate,EnumTemplates tile, EnumConfigurationKey level) {
-		this.template = enumTemplate;
-		this.tile = tile;
-		this.level = level;
-		}
-		
-		public String getTemplate() {
-            return template.getTemplate();
-		}
-		
-		public String getTile() {
-            return tile.getTemplate();
-		}
-		
-		public EnumConfigurationKey getConfig() {
-            return level;
-        }
-
-		
-	}
+	private final GatherType gatherType;
+	private final IDailyTaskRepository iDailyTaskRepository = DailyTaskRepository.getRepository();
 	
+	//@formatter:on
 	private DTOPoint[][] queues = {
 			{new DTOPoint(10, 342),new DTOPoint(435, 407), new DTOPoint(152, 378)},
 			{new DTOPoint(10, 415),new DTOPoint(435, 480), new DTOPoint(152, 451)},
@@ -60,15 +31,36 @@ public class GatherTask extends DelayedTask {
 			{new DTOPoint(10, 634),new DTOPoint(435, 699), new DTOPoint(152, 670)},
 			{new DTOPoint(10, 707),new DTOPoint(435, 772), new DTOPoint(152, 743)},
 			};
-	
-	//@formatter:on
-
-	private final GatherType gatherType;
-	private final IDailyTaskRepository iDailyTaskRepository = DailyTaskRepository.getRepository();
-
 	public GatherTask(DTOProfiles profile, TpDailyTaskEnum tpTask, GatherType gatherType) {
 		super(profile, tpTask);
 		this.gatherType = gatherType;
+	}
+
+	public static LocalDateTime parseRemaining(String timeStr) {
+		if (timeStr == null) {
+			return LocalDateTime.now();
+		}
+		// Elimina saltos de línea y espacios extra
+		timeStr = timeStr.replaceAll("\\r?\\n", "").trim();
+
+		// Se espera el formato hh:mm:ss
+		String[] parts = timeStr.split(":");
+		if (parts.length != 3) {
+			return LocalDateTime.now();
+		}
+
+		try {
+			int hours = Integer.parseInt(parts[0].trim());
+			int minutes = Integer.parseInt(parts[1].trim());
+			int seconds = Integer.parseInt(parts[2].trim());
+
+			LocalDateTime now = LocalDateTime.now();
+			// Se suma el tiempo parseado al instante actual
+			return now.plusHours(hours).plusMinutes(minutes).plusSeconds(seconds);
+		} catch (NumberFormatException e) {
+			// Si ocurre algún error durante el parseo, se retorna LocalDateTime.now()
+			return LocalDateTime.now().plusMinutes(3);
+		}
 	}
 
 	@Override
@@ -91,9 +83,9 @@ public class GatherTask extends DelayedTask {
 		}
 
 		DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER,
-				EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90);
+				EnumTemplates.GAME_HOME_FURNACE.getTemplate(),  90);
 		DTOImageSearchResult worldResult = emuManager.searchTemplate(EMULATOR_NUMBER,
-				EnumTemplates.GAME_HOME_WORLD.getTemplate(), 0, 0, 720, 1280, 90);
+				EnumTemplates.GAME_HOME_WORLD.getTemplate(),  90);
 
 		if (homeResult.isFound() || worldResult.isFound()) {
 			if (worldResult.isFound()) {
@@ -135,8 +127,7 @@ public class GatherTask extends DelayedTask {
 			} else {
 				emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(110, 270));
 				emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(464, 551));
-				homeResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(),
-						0, 0, 720, 1280, 90);
+				homeResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 90);
 				if (homeResult.isFound()) {
 					emuManager.tapAtPoint(EMULATOR_NUMBER, homeResult.getPoint());
 					sleepTask(3000);
@@ -149,8 +140,7 @@ public class GatherTask extends DelayedTask {
 				// hacer swhipe a la izquierda
 				emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(678, 913), new DTOPoint(40, 913));
 				sleepTask(300);
-				DTOImageSearchResult tile = emuManager.searchTemplate(EMULATOR_NUMBER, gatherType.getTile(), 0, 0, 720,
-						1280, 90);
+				DTOImageSearchResult tile = emuManager.searchTemplate(EMULATOR_NUMBER, gatherType.getTile(), 90);
 
 				if (tile.isFound()) {
 					emuManager.tapAtPoint(EMULATOR_NUMBER, tile.getPoint());
@@ -162,7 +152,7 @@ public class GatherTask extends DelayedTask {
 							(profile.getConfig(gatherType.getConfig(), Integer.class) - 1), 50);
 
 					DTOImageSearchResult tick = emuManager.searchTemplate(EMULATOR_NUMBER,
-							EnumTemplates.GAME_HOME_SHORTCUTS_FARM_TICK.getTemplate(), 0, 0, 720, 1280, 90);
+							EnumTemplates.GAME_HOME_SHORTCUTS_FARM_TICK.getTemplate(),  90);
 					if (!tick.isFound()) {
 						emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(183, 1140));
 
@@ -174,7 +164,7 @@ public class GatherTask extends DelayedTask {
 					// click gather
 
 					DTOImageSearchResult gather = emuManager.searchTemplate(EMULATOR_NUMBER,
-							EnumTemplates.GAME_HOME_SHORTCUTS_FARM_GATHER.getTemplate(), 0, 0, 720, 1280, 90);
+							EnumTemplates.GAME_HOME_SHORTCUTS_FARM_GATHER.getTemplate(),  90);
 					if (gather.isFound()) {
 						emuManager.tapAtPoint(EMULATOR_NUMBER, gather.getPoint());
 						sleepTask(500);
@@ -188,7 +178,7 @@ public class GatherTask extends DelayedTask {
 
 						sleepTask(200);
 						DTOImageSearchResult remove = emuManager.searchTemplate(EMULATOR_NUMBER,
-								EnumTemplates.RALLY_REMOVE_HERO_BUTTON.getTemplate(), 0, 0, 720, 1280, 90);
+								EnumTemplates.RALLY_REMOVE_HERO_BUTTON.getTemplate(),  90);
 						if (remove.isFound()) {
 							emuManager.tapAtPoint(EMULATOR_NUMBER, remove.getPoint());
 							sleepTask(200);
@@ -197,7 +187,7 @@ public class GatherTask extends DelayedTask {
 						emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(362, 348));
 						sleepTask(200);
 						remove = emuManager.searchTemplate(EMULATOR_NUMBER,
-								EnumTemplates.RALLY_REMOVE_HERO_BUTTON.getTemplate(), 0, 0, 720, 1280, 90);
+								EnumTemplates.RALLY_REMOVE_HERO_BUTTON.getTemplate(),  90);
 						if (remove.isFound()) {
 							emuManager.tapAtPoint(EMULATOR_NUMBER, remove.getPoint());
 							sleepTask(200);
@@ -209,7 +199,7 @@ public class GatherTask extends DelayedTask {
 						// Click equalize
 
 						DTOImageSearchResult equalizeButton = emuManager.searchTemplate(EMULATOR_NUMBER,
-								EnumTemplates.RALLY_EQUALIZE_BUTTON.getTemplate(), 0, 0, 720, 1280, 90);
+								EnumTemplates.RALLY_EQUALIZE_BUTTON.getTemplate(),  90);
 
 						if (equalizeButton.isFound()){
 							emuManager.tapAtPoint(EMULATOR_NUMBER, equalizeButton.getPoint());
@@ -223,13 +213,13 @@ public class GatherTask extends DelayedTask {
 
 						// click gather
 						DTOImageSearchResult gatherButton = emuManager.searchTemplate(EMULATOR_NUMBER,
-								EnumTemplates.RALLY_GATHER_BUTTON.getTemplate(), 0, 0, 720, 1280, 90);
+								EnumTemplates.RALLY_GATHER_BUTTON.getTemplate(),  90);
 						if (gatherButton.isFound()) {
 							emuManager.tapAtPoint(EMULATOR_NUMBER, gatherButton.getPoint());
 							sleepTask(200);
 							// verificar si ya hay un marcha en curso
 							DTOImageSearchResult march = emuManager.searchTemplate(EMULATOR_NUMBER,
-									EnumTemplates.RALLY_GATHER_ALREADY_MARCHING.getTemplate(), 0, 0, 720, 1280, 90);
+									EnumTemplates.RALLY_GATHER_ALREADY_MARCHING.getTemplate(),  90);
 							if (march.isFound()) {
 								emuManager.tapBackButton(EMULATOR_NUMBER);
 								emuManager.tapBackButton(EMULATOR_NUMBER);
@@ -364,33 +354,6 @@ public class GatherTask extends DelayedTask {
 		}
 	}
 
-	public static LocalDateTime parseRemaining(String timeStr) {
-		if (timeStr == null) {
-			return LocalDateTime.now();
-		}
-		// Elimina saltos de línea y espacios extra
-		timeStr = timeStr.replaceAll("\\r?\\n", "").trim();
-
-		// Se espera el formato hh:mm:ss
-		String[] parts = timeStr.split(":");
-		if (parts.length != 3) {
-			return LocalDateTime.now();
-		}
-
-		try {
-			int hours = Integer.parseInt(parts[0].trim());
-			int minutes = Integer.parseInt(parts[1].trim());
-			int seconds = Integer.parseInt(parts[2].trim());
-
-			LocalDateTime now = LocalDateTime.now();
-			// Se suma el tiempo parseado al instante actual
-			return now.plusHours(hours).plusMinutes(minutes).plusSeconds(seconds);
-		} catch (NumberFormatException e) {
-			// Si ocurre algún error durante el parseo, se retorna LocalDateTime.now()
-			return LocalDateTime.now().plusMinutes(3);
-		}
-	}
-
 	@Override
 	protected Object getDistinctKey() {
 		return gatherType;
@@ -398,5 +361,38 @@ public class GatherTask extends DelayedTask {
 
 	@Override
 	public boolean provideDailyMissionProgress() {return true;}
+
+	//@formatter:off
+	public enum GatherType {
+		MEAT( EnumTemplates.GAME_HOME_SHORTCUTS_MEAT, EnumTemplates.GAME_HOME_SHORTCUTS_FARM_MEAT, EnumConfigurationKey.GATHER_MEAT_LEVEL_INT),
+		WOOD( EnumTemplates.GAME_HOME_SHORTCUTS_WOOD, EnumTemplates.GAME_HOME_SHORTCUTS_FARM_WOOD, EnumConfigurationKey.GATHER_WOOD_LEVEL_INT),
+		COAL( EnumTemplates.GAME_HOME_SHORTCUTS_COAL, EnumTemplates.GAME_HOME_SHORTCUTS_FARM_COAL, EnumConfigurationKey.GATHER_COAL_LEVEL_INT),
+		IRON( EnumTemplates.GAME_HOME_SHORTCUTS_IRON, EnumTemplates.GAME_HOME_SHORTCUTS_FARM_IRON, EnumConfigurationKey.GATHER_IRON_LEVEL_INT);
+
+
+		EnumTemplates template;
+		EnumTemplates tile;
+		EnumConfigurationKey level;
+
+		GatherType(EnumTemplates enumTemplate,EnumTemplates tile, EnumConfigurationKey level) {
+		this.template = enumTemplate;
+		this.tile = tile;
+		this.level = level;
+		}
+
+		public String getTemplate() {
+            return template.getTemplate();
+		}
+
+		public String getTile() {
+            return tile.getTemplate();
+		}
+
+		public EnumConfigurationKey getConfig() {
+            return level;
+        }
+
+
+	}
 
 }

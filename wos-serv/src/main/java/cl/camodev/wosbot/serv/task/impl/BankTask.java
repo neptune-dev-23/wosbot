@@ -35,8 +35,8 @@ public class BankTask extends DelayedTask {
 
 		while (attempt < 5) {
 			// Check if we are on the home screen
-			DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90);
-			DTOImageSearchResult worldResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 0, 0, 720, 1280, 90);
+			DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(),  90);
+			DTOImageSearchResult worldResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 90);
 
 			if (homeResult.isFound() || worldResult.isFound()) {
 				if (navigateToBank()) {
@@ -67,7 +67,7 @@ public class BankTask extends DelayedTask {
 	 */
 	private boolean navigateToBank() {
 		// Search for the Deals button
-		DTOImageSearchResult dealsResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.HOME_DEALS_BUTTON.getTemplate(), 0, 0, 720, 1280, 90);
+		DTOImageSearchResult dealsResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.HOME_DEALS_BUTTON.getTemplate(),  90);
 		if (!dealsResult.isFound()) {
 			logWarning("Deals button not found");
 			return false;
@@ -80,7 +80,7 @@ public class BankTask extends DelayedTask {
 		emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(630, 143), new DTOPoint(2, 128));
 		sleepTask(200);
 		// Search for the bank option within events
-		DTOImageSearchResult bankResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.EVENTS_DEALS_BANK.getTemplate(), 0, 0, 720, 1280, 90);
+		DTOImageSearchResult bankResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.EVENTS_DEALS_BANK.getTemplate(), 90);
 		if (!bankResult.isFound()) {
 			logWarning("Bank option not found");
 			return false;
@@ -101,7 +101,7 @@ public class BankTask extends DelayedTask {
 	 */
 	private void handleBankOperations(int bankDelay) {
 		// STEP 1: Check if there's a deposit ready to withdraw
-		DTOImageSearchResult withdrawAvailableResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.EVENTS_DEALS_BANK_WITHDRAW.getTemplate(), 0, 0, 720, 1280, 90);
+		DTOImageSearchResult withdrawAvailableResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.EVENTS_DEALS_BANK_WITHDRAW.getTemplate(),  90);
 
 		if (withdrawAvailableResult.isFound()) {
 			// Deposit is ready - withdraw it
@@ -125,7 +125,7 @@ public class BankTask extends DelayedTask {
 	 * Withdraws the ready deposit
 	 */
 	private void withdrawDeposit() {
-		DTOImageSearchResult withdrawResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.EVENTS_DEALS_BANK_WITHDRAW.getTemplate(), 0, 0, 720, 1280, 90);
+		DTOImageSearchResult withdrawResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.EVENTS_DEALS_BANK_WITHDRAW.getTemplate(),  90);
 		if (withdrawResult.isFound()) {
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, withdrawResult.getPoint(), withdrawResult.getPoint());
 			sleepTask(1000);
@@ -227,7 +227,7 @@ public class BankTask extends DelayedTask {
 		DTOImageSearchResult activeDepositResult = emuManager.searchTemplate(
 				EMULATOR_NUMBER,
 				EnumTemplates.EVENTS_DEALS_BANK_INDEPOSIT.getTemplate(),
-				0, 0, 720, 1280, 90
+				 90
 		);
 
 		if (activeDepositResult.isFound()) {
