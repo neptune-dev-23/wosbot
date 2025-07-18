@@ -77,12 +77,28 @@ public abstract class DelayedTask implements Runnable, Delayed, Comparable<Delay
 					// We need HOME but we're in WORLD, navigate to HOME
 					emuManager.tapAtPoint(EMULATOR_NUMBER, world.getPoint());
 					sleepTask(2000); // Wait for navigation
+
+					// Validate that we actually moved to HOME
+					DTOImageSearchResult homeAfterNav = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 0, 0, 720, 1280, 90);
+					if (!homeAfterNav.isFound()) {
+						logWarning("Failed to navigate to HOME, retrying...");
+						continue; // Try again
+					}
+
 				} else if (requiredLocation == EnumStartLocation.WORLD && !world.isFound()) {
 					// We need WORLD but we're in HOME, navigate to WORLD
 					emuManager.tapAtPoint(EMULATOR_NUMBER, home.getPoint());
 					sleepTask(2000); // Wait for navigation
+
+					// Validate that we actually moved to WORLD
+					DTOImageSearchResult worldAfterNav = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 0, 0, 720, 1280, 90);
+					if (!worldAfterNav.isFound()) {
+						logWarning("Failed to navigate to WORLD, retrying...");
+						continue; // Try again
+					}
 				}
 				// If requiredLocation is ANY, we can execute from either location
+
 				execute();
 				return;
 			} else {
