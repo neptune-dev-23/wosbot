@@ -21,3 +21,5 @@ wos-hmi/.project
 /wos-ot/.settings
 .settings/org.eclipse.m2e.core.prefs
 .project
+/.idea
+/wos-hmi/log

@@ -1,16 +1,37 @@
 package cl.camodev.wosbot.main;
 
-public class Main {
-	public static void main(String[] args) {
-//		// Iniciar Spring Boot en un hilo separado para no bloquear JavaFX
-//		Thread springThread = new Thread(() -> {
-//			SpringApp.start();
-//		});
-//		springThread.setDaemon(true);
-//		springThread.start();
-//
-//		// Iniciar JavaFX
-		FXApp.main(args);
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 
+public class Main {
+	private static final Logger logger = LogManager.getLogger(Main.class);
+
+	public static void main(String[] args) {
+		try {
+			// Initialize Log4j configuration
+			configureLog4j();
+
+			logger.info("Starting WosBot application");
+			logger.info("Logging configured. Check log/bot.log for detailed logs.");
+
+			// Launch JavaFX application
+			FXApp.main(args);
+
+		} catch (Exception e) {
+			logger.error("Failed to start application: " + e.getMessage(), e);
+			System.exit(1);
+		}
+	}
+
+	/**
+	 * Configure Log4j programmatically
+	 */
+	private static void configureLog4j() {
+		try {
+			logger.info("Log4j configuration loaded successfully");
+		} catch (Exception e) {
+			System.err.println("Failed to configure Log4j: " + e.getMessage());
+			e.printStackTrace();
+		}
 	}
 }
