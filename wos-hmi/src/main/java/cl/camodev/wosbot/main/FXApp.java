@@ -10,11 +10,15 @@ import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
+
 
 import java.io.IOException;
 import java.util.prefs.Preferences;
 
 public class FXApp extends Application {
+	private static final Logger logger = LogManager.getLogger(FXApp.class);
 	private static final String KEY_X      = "windowX";
 	private static final String KEY_Y      = "windowY";
 	private static final String KEY_W      = "windowWidth";
@@ -126,6 +130,6 @@ public class FXApp extends Application {
 		stage.setX(finalX);
 		stage.setY(finalY);
 
-		System.out.println("Window positioned on primary screen due to invalid saved position");
+		logger.info("Window positioned on primary screen due to invalid saved position");
 	}
 }
