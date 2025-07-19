@@ -2,6 +2,9 @@ package cl.camodev.wosbot.launcher.view;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -67,6 +70,9 @@ public class LauncherLayoutController implements IProfileLoadListener {
 	@FXML
 	private Label labelRunTime;
 
+	@FXML
+	private Label labelVersion;
+
 	private Stage stage;
 
 	private LauncherActionController actionController;
@@ -92,7 +98,43 @@ public class LauncherLayoutController implements IProfileLoadListener {
 		initializeModules();
 		initializeExternalLibraries();
 		initializeEmulatorManager();
+		showVersion();
 
+	}
+
+	private void showVersion() {
+		String version = getVersion();
+		labelVersion.setText("Version: " + version);
+	}
+
+	private String getVersion() {
+		// If running as JAR
+		Package pkg = getClass().getPackage();
+		if (pkg != null && pkg.getImplementationVersion() != null) {
+			return pkg.getImplementationVersion();
+		}
+		// Read version from parent project pom.xml
+		try {
+			Path parentPomPath = Paths.get("..", "pom.xml");
+			if (!Files.exists(parentPomPath)) {
+				parentPomPath = Paths.get("pom.xml");
+			}
+			List<String> lines = Files.readAllLines(parentPomPath);
+			String revision = null;
+			for (String line : lines) {
+				line = line.trim();
+				if (line.startsWith("<revision>") && line.endsWith("</revision>")) {
+					revision = line.replace("<revision>", "").replace("</revision>", "").trim();
+					break;
+				}
+			}
+			if (revision != null) {
+				return revision;
+			}
+		} catch (Exception e) {
+			// Ignore error
+		}
+		return "Unknown";
 	}
 
 	private void initializeEmulatorManager() {
@@ -336,37 +378,10 @@ public class LauncherLayoutController implements IProfileLoadListener {
 		return type.cast(controller);
 	}
 
-	private static class ModuleDefinition {
-		private final String fxmlName;
-		private final String buttonTitle;
-		private final Supplier<Object> controllerSupplier;
-
-		public ModuleDefinition(String fxmlName, String buttonTitle, Supplier<Object> controllerSupplier) {
-			this.fxmlName = fxmlName;
-			this.buttonTitle = buttonTitle;
-			this.controllerSupplier = controllerSupplier;
-		}
-
-		public Object createController(IProfileChangeObserver profileObserver) {
-			Object controller = controllerSupplier.get();
-			if (controller instanceof IProfileObserverInjectable) {
-				((IProfileObserverInjectable) controller).setProfileObserver(profileObserver);
-			}
-			return controller;
-		}
-
-		public String getFxmlName() {
-			return fxmlName;
-		}
-
-		public String getButtonTitle() {
-			return buttonTitle;
-		}
-
-	}
 	@Override
 	public void onProfileLoad(ProfileAux profile) {
-		stage.setTitle("Whiteout Survival Bot - " + profile.getName());
+		String version = getVersion();
+		stage.setTitle("Whiteout Survival Bot v" + version + " - " + profile.getName());
 		buttonStartStop.setDisable(false);
 		buttonPauseResume.setDisable(true);
 	}
@@ -398,6 +413,35 @@ public class LauncherLayoutController implements IProfileLoadListener {
 				estado = false;
 			}
 		}
+	}
+
+	private static class ModuleDefinition {
+		private final String fxmlName;
+		private final String buttonTitle;
+		private final Supplier<Object> controllerSupplier;
+
+		public ModuleDefinition(String fxmlName, String buttonTitle, Supplier<Object> controllerSupplier) {
+			this.fxmlName = fxmlName;
+			this.buttonTitle = buttonTitle;
+			this.controllerSupplier = controllerSupplier;
+		}
+
+		public Object createController(IProfileChangeObserver profileObserver) {
+			Object controller = controllerSupplier.get();
+			if (controller instanceof IProfileObserverInjectable) {
+				((IProfileObserverInjectable) controller).setProfileObserver(profileObserver);
+			}
+			return controller;
+		}
+
+		public String getFxmlName() {
+			return fxmlName;
+		}
+
+		public String getButtonTitle() {
+			return buttonTitle;
+		}
+
 	}
 
 }

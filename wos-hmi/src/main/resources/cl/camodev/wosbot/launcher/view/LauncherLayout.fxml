@@ -25,7 +25,7 @@
         <HBox GridPane.rowIndex="0">
             <children>
                
-                <VBox fx:id="buttonsContainer" prefHeight="325.0" prefWidth="110.0" style="-fx-border-color: black;">
+                <VBox fx:id="buttonsContainer" prefHeight="325.0" prefWidth="130.0" style="-fx-border-color: black;">
                <HBox.margin>
                   <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
                </HBox.margin></VBox>
@@ -43,9 +43,11 @@
         <GridPane style="-fx-border-color: black;" GridPane.rowIndex="1">
             <columnConstraints>
                 <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" prefWidth="100.0" />
+            <ColumnConstraints />
             </columnConstraints>
             <rowConstraints>
                 <RowConstraints vgrow="SOMETIMES" />
+            <RowConstraints />
             </rowConstraints>
             <children>
                 <HBox alignment="CENTER_RIGHT">
@@ -53,6 +55,7 @@
                         <Insets bottom="3.0" left="3.0" right="3.0" top="3.0" />
                     </GridPane.margin>
                     <children>
+                      <Label fx:id="labelVersion" text="Versión:" />
                   <Label fx:id="labelRunTime" />
                   <GridPane>
                      <columnConstraints>
