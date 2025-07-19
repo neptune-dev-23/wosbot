@@ -189,7 +189,7 @@ public class UpgradeFurnaceTask extends DelayedTask {
 								}
 
 								for (int i = 0; i < MAX_ATTEMPTS; i++) {
-									DTOImageSearchResult alliesHelpButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_SHORTCUTS_HELP_REQUEST.getTemplate(), , 90);
+									DTOImageSearchResult alliesHelpButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_SHORTCUTS_HELP_REQUEST.getTemplate(), 90);
 
 									if (alliesHelpButton.isFound()) {
 										logInfo("Allies help button found, requesting help");
