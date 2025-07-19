@@ -16,8 +16,11 @@ import javax.imageio.ImageIO;
 import cl.camodev.wosbot.ot.DTOPoint;
 import net.sourceforge.tess4j.Tesseract;
 import net.sourceforge.tess4j.TesseractException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class Emulator {
+	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Emulator.class);
 	protected String consolePath;
 
 	public Emulator(String consolePath) {
@@ -53,15 +56,15 @@ public abstract class Emulator {
 				int exitCode = process.waitFor();
 
 				if (exitCode == 0) {
-					System.out.println("✅ Comando ejecutado con éxito: " + command);
+					logger.info("✅ Command executed successfully: " + command);
 					return;
 				} else {
-					System.err.println("❌ Error ejecutando el comando, código de salida: " + exitCode);
+					logger.error("❌ Error executing command, exit code: " + exitCode);
 					restartAdb();
 					Thread.sleep(retryDelay);
 				}
 			} catch (IOException | InterruptedException e) {
-				e.printStackTrace();
+				logger.error("Exception executing ADB command", e);
 			}
 		}
 	}
@@ -90,7 +93,7 @@ public abstract class Emulator {
 							output.append(line).append("\n");
 						}
 					} catch (IOException e) {
-						e.printStackTrace();
+						logger.error("Exception reading process output", e);
 					}
 				});
 				outputReader.start();
@@ -102,7 +105,7 @@ public abstract class Emulator {
 
 				// 📌 Verificar si ADB está en estado offline y reiniciarlo
 				if (result.contains("device offline") || result.isEmpty()) {
-					System.err.println("⚠ Dispositivo en estado OFFLINE o sin respuesta. Reiniciando ADB interno de MuMu...");
+					logger.warn("⚠ Device is OFFLINE or no response. Restarting internal ADB...");
 					restartAdb();
 					Thread.sleep(2000); // Esperar para que el servidor ADB se recupere
 					continue; // Reintentar el comando
@@ -111,15 +114,15 @@ public abstract class Emulator {
 				if (exitCode == 0 && !result.isEmpty()) {
 					return result;
 				} else {
-					System.out.println("🔄 Intento " + attempt + " - No se obtuvo una salida válida, reintentando...");
+					logger.info("🔄 Attempt " + attempt + " - No valid output, retrying...");
 					Thread.sleep(retryDelay);
 				}
 			} catch (IOException | InterruptedException e) {
-				e.printStackTrace();
+				logger.error("Exception executing ADB command with output", e);
 			}
 		}
 
-		System.err.println("❌ No se obtuvo una salida válida después de " + maxRetries + " intentos.");
+		logger.error("❌ No se obtuvo una salida válida después de " + maxRetries + " intentos.");
 		return null;
 	}
 
@@ -181,7 +184,7 @@ public abstract class Emulator {
 				if (exitCode == 0 && (outputBytes != null)) {
 					return outputBytes;
 				} else {
-					System.out.println("🔄 Intento " + attempt + " - No se obtuvo una salida válida, reintentando...");
+					logger.info("🔄 Attempt " + attempt + " - No valid output, retrying...");
 					restartAdb();
 					Thread.sleep(retryDelay);
 				}
@@ -190,7 +193,7 @@ public abstract class Emulator {
 			}
 		}
 
-		System.err.println("❌ No se obtuvo una salida válida después de " + maxRetries + " intentos.");
+		logger.error("❌ No se obtuvo una salida válida después de " + maxRetries + " intentos.");
 		return null;
 	}
 
@@ -215,7 +218,7 @@ public abstract class Emulator {
 	public void restartAdb() {
 
 		try {
-			System.out.println("🔄 Reiniciando ADB del emulador...");
+			logger.info("🔄 Reiniciando ADB del emulador...");
 			String adbPath = consolePath + File.separator + "adb.exe";
 			// Ejecutar "adb kill-server"
 			ProcessBuilder killServer = new ProcessBuilder(adbPath, "kill-server");
@@ -234,10 +237,9 @@ public abstract class Emulator {
 			Process devicesProcess = devices.start();
 			devicesProcess.waitFor();
 
-			System.out.println("✅ ADB reiniciado con éxito.");
+			logger.info("✅ ADB reiniciado con éxito.");
 		} catch (IOException | InterruptedException e) {
-			e.printStackTrace();
-			System.err.println("❌ Error al reiniciar el ADB interno de MuMu.");
+			logger.error("Error restarting internal MuMu ADB.", e);
 		}
 
 	}
@@ -251,7 +253,7 @@ public abstract class Emulator {
 			try {
 				return imageBytes;
 			} catch (IllegalArgumentException e) {
-				System.err.println("❌ Error al decodificar la imagen.");
+				logger.error("❌ Error decoding image.", e);
 			}
 		}
 		return null;
@@ -260,7 +262,7 @@ public abstract class Emulator {
 	public String ocrRegionText(String emulatorNumber, DTOPoint p1, DTOPoint p2) throws IOException, TesseractException {
 		BufferedImage image = ImageIO.read(new ByteArrayInputStream(captureScreenshot(emulatorNumber)));
 		if (image == null)
-			throw new IOException("No se pudo capturar la imagen.");
+			throw new IOException("Could not capture image.");
 
 		int x = (int) Math.min(p1.getX(), p2.getX());
 		int y = (int) Math.min(p1.getY(), p2.getY());
@@ -278,7 +280,7 @@ public abstract class Emulator {
 	// 🔹 Tap aleatorio dentro de un área definida por dos puntos
 	public boolean tapAtRandomPoint(String emulatorNumber, DTOPoint point1, DTOPoint point2) {
 		if (point1 == null || point2 == null) {
-			System.err.println("Alguno de los DTOPoint es null.");
+			logger.error("Alguno de los DTOPoint es null.");
 			return false;
 		}
 
@@ -297,14 +299,14 @@ public abstract class Emulator {
 		String command = String.format("shell input tap %d %d", randomX, randomY);
 		executeAdbCommand(emulatorNumber, command);
 
-		System.out.println("✅ Tap aleatorio en (" + randomX + ", " + randomY + ")");
+		logger.info("✅ Tap aleatorio en (" + randomX + ", " + randomY + ")");
 		return true;
 	}
 
 	// 🔹 Tap aleatorio con múltiples repeticiones y delay
 	public boolean tapAtRandomPoint(String emulatorNumber, DTOPoint point1, DTOPoint point2, int tapCount, int delayMs) {
 		if (point1 == null || point2 == null) {
-			System.err.println("Alguno de los DTOPoint es null.");
+			logger.error("Alguno de los DTOPoint es null.");
 			return false;
 		}
 
@@ -322,14 +324,14 @@ public abstract class Emulator {
 			String command = String.format("shell input tap %d %d", randomX, randomY);
 			executeAdbCommand(emulatorNumber, command);
 
-			System.out.println("✅ Tap aleatorio en (" + randomX + ", " + randomY + ")");
+			logger.info("✅ Tap aleatorio en (" + randomX + ", " + randomY + ")");
 
 			// Esperar antes de la siguiente repetición
 			if (i < tapCount - 1) {
 				try {
 					Thread.sleep(delayMs);
 				} catch (InterruptedException e) {
-					e.printStackTrace();
+					logger.error("Error en el delay entre taps", e);
 					return false;
 				}
 			}
@@ -346,7 +348,7 @@ public abstract class Emulator {
 	public void pressBackButton(String emulatorNumber) {
 		String command = "shell input keyevent KEYCODE_BACK";
 		executeAdbCommand(emulatorNumber, command);
-		System.out.println("🔙 Botón de retroceso presionado en el emulador " + emulatorNumber);
+		logger.info("🔙 Back button pressed on emulator " + emulatorNumber);
 	}
 
 	// 🔹 Método para verificar si una app está instalada
@@ -359,6 +361,6 @@ public abstract class Emulator {
 	public void launchApp(String emulatorNumber, String packageName) {
 		String command = "shell monkey -p " + packageName + " -c android.intent.category.LAUNCHER 1";
 		executeAdbCommand(emulatorNumber, command);
-		System.out.println("📱 Aplicación " + packageName + " iniciada en el emulador " + emulatorNumber);
+		logger.info("📱 Application " + packageName + " launched on emulator " + emulatorNumber);
 	}
 }
