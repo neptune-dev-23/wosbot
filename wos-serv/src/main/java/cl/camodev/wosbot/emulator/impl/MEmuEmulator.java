@@ -13,6 +13,8 @@ import java.util.function.Function;
 
 import javax.imageio.ImageIO;
 
+
+
 import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.IDevice;
@@ -22,8 +24,11 @@ import com.android.ddmlib.TimeoutException;
 
 import cl.camodev.wosbot.emulator.Emulator;
 import cl.camodev.wosbot.ot.DTOPoint;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MEmuEmulator extends Emulator {
+	private static final Logger logger = LoggerFactory.getLogger(MEmuEmulator.class);
 	private static final int MAX_RETRIES = 10;
 	private static final int RETRY_DELAY_MS = 5000;
 	private static final int INIT_LOOPS = 10;
@@ -74,20 +79,20 @@ public class MEmuEmulator extends Emulator {
 	    }
 
 	    private <T> T withRetries(String emulatorNumber,
-	                              Function<IDevice, T> action,
-	                              String actionName) {
+                              Function<IDevice, T> action,
+                              String actionName) {
 	        for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
 	            try {
 	                IDevice device = findDevice(emulatorNumber);
 	                if (device == null) {
-	                    System.err.println("❌ Dispositivo no encontrado para " + actionName + ": " + emulatorNumber);
+	                    logger.error("❌ Device not found for " + actionName + ": " + emulatorNumber);
 	                    restartAdb();
 	                    Thread.sleep(RETRY_DELAY_MS);
 	                    continue;
 	                }
 	                return action.apply(device);
 	            } catch (Exception e) {
-	                System.err.println("⚠️ Intento " + attempt + " de " + actionName + " falló: " + e.getMessage());
+	                logger.warn("⚠️ Attempt " + attempt + " of " + actionName + " failed: " + e.getMessage(), e);
 	                try {
 	                    restartAdb();
 	                    Thread.sleep(RETRY_DELAY_MS);
@@ -96,7 +101,8 @@ public class MEmuEmulator extends Emulator {
 	                }
 	            }
 	        }
-	        throw new RuntimeException("❌ Todos los intentos para " + actionName + " fallaron en " + emulatorNumber);
+	        logger.error("❌ All attempts for " + actionName + " failed on " + emulatorNumber);
+	        throw new RuntimeException("❌ All attempts for " + actionName + " failed on " + emulatorNumber);
 	    }
 
 	    /**
@@ -129,10 +135,10 @@ public class MEmuEmulator extends Emulator {
 	     * Envía múltiple taps aleatorios dentro del rectángulo definido por p1/p2.
 	     */
 	    public boolean tapAtRandomPoint(String emulatorNumber,
-	                                    DTOPoint p1,
-	                                    DTOPoint p2,
-	                                    int tapCount,
-	                                    int delayMs) {
+                                    DTOPoint p1,
+                                    DTOPoint p2,
+                                    int tapCount,
+                                    int delayMs) {
 	        return withRetries(emulatorNumber, device -> {
 	            Random rnd = new Random();
 	            int minX = Math.min(p1.getX(), p2.getX()), maxX = Math.max(p1.getX(), p2.getX());
@@ -142,7 +148,7 @@ public class MEmuEmulator extends Emulator {
 	                int y = minY + rnd.nextInt(maxY - minY + 1);
 	                try {
 	                    device.executeShellCommand("input tap " + x + " " + y, new NullOutputReceiver());
-	                    System.out.println("✅ Tap " + i + "/" + tapCount + " en (" + x + "," + y + ")");
+	                    logger.info("✅ Tap " + i + "/" + tapCount + " sent to (" + x + "," + y + ")");
 	                    if (i < tapCount) Thread.sleep(delayMs);
 	                } catch (Exception ex) {
 	                    throw new RuntimeException(ex);
@@ -199,14 +205,14 @@ public class MEmuEmulator extends Emulator {
 	public void launchEmulator(String emulatorNumber) {
 		String[] command = { consolePath + File.separator + "memuc", "start", "-i", emulatorNumber };
 		executeCommand(command);
-		System.out.println("🚀 MEmu lanzado en el índice " + emulatorNumber);
+		logger.info("🚀 MEmu launched at index " + emulatorNumber);
 	}
 
 	@Override
 	public void closeEmulator(String emulatorNumber) {
 		String[] command = { consolePath + File.separator + "memuc", "stop", "-i", emulatorNumber };
 		executeCommand(command);
-		System.out.println("🛑 MEmu cerrado en el índice " + emulatorNumber);
+		logger.info("🛑 MEmu closed at index " + emulatorNumber);
 	}
 
 	private void executeCommand(String[] command) {
@@ -216,7 +222,7 @@ public class MEmuEmulator extends Emulator {
 			Process process = pb.start();
 			process.waitFor();
 		} catch (IOException | InterruptedException e) {
-			e.printStackTrace();
+			logger.error("Error executing command", e);
 		}
 	}
 

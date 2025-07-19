@@ -9,6 +9,8 @@ import java.util.Optional;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+
+
 import cl.camodev.utiles.UtilTime;
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
@@ -24,21 +26,20 @@ import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.impl.ServTaskManager;
 import cl.camodev.wosbot.serv.task.impl.DailyMissionTask;
 import cl.camodev.wosbot.serv.task.impl.InitializeTask;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TaskQueue {
 
 
+	private static final Logger logger = LoggerFactory.getLogger(TaskQueue.class);
 	private final PriorityBlockingQueue<DelayedTask> taskQueue = new PriorityBlockingQueue<>();
-
 	// Bandera para detener el loop del scheduler.
 	private volatile boolean running = false;
-
 	// Bandera para pausar/reanudar el scheduler.
 	private volatile boolean paused = false;
-
 	// Hilo que se encargará de evaluar y ejecutar las tareas.
 	private Thread schedulerThread;
-
 	private DTOProfiles profile;
 
 	public TaskQueue(DTOProfiles profile) {
@@ -63,6 +64,7 @@ public class TaskQueue {
 		if (prototype == null) {
 			ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, "TaskQueue",
 				profile.getName(), "Cannot create prototype for task removal: " + taskEnum.getName());
+			logger.warn("Cannot create prototype for task removal: " + taskEnum.getName());
 			return false;
 		}
 
@@ -72,9 +74,11 @@ public class TaskQueue {
 		if (removed) {
 			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueue",
 				profile.getName(), "Removed task " + taskEnum.getName() + " from queue");
+			logger.info("Removed task " + taskEnum.getName() + " from queue");
 		} else {
 			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueue",
 				profile.getName(), "Task " + taskEnum.getName() + " was not found in queue");
+			logger.info("Task " + taskEnum.getName() + " was not found in queue");
 		}
 
 		return removed;
@@ -106,18 +110,21 @@ public class TaskQueue {
 
 			boolean idlingTimeExceded = false;
 			ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "Getting queue slot"));
+			logger.info("Profile " + profile.getName() + " is getting queue slot.");
 			try {
 				EmulatorManager.getInstance().adquireEmulatorSlot(profile.getId(), (thread, position) -> {
 					ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "Waiting for slot, position: " + position));
+					logger.info("Profile " + profile.getName() + " waiting for slot, position: " + position);
 				});
 			} catch (InterruptedException e) {
-				e.printStackTrace();
+				logger.error("Interrupted while acquiring emulator slot for profile " + profile.getName(), e);
 			}
 			while (running) {
 				// Check if paused and skip execution if so
 				if (paused) {
 					try {
 						ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "PAUSED"));
+						logger.info("Profile " + profile.getName() + " is paused.");
 						Thread.sleep(1000); // Wait 1 second while paused
 						continue;
 					} catch (InterruptedException e) {
@@ -162,9 +169,11 @@ public class TaskQueue {
 							task.run();
 						} catch (HomeNotFoundException e) {
 							ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, task.getTaskName(), profile.getName(), e.getMessage());
+							logger.error("Error executing task " + task.getTaskName() + " for profile " + profile.getName() + ": " + e.getMessage(), e);
 							addTask(new InitializeTask(profile, TpDailyTaskEnum.INITIALIZE));
 						} catch (Exception e) {
 							ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, task.getTaskName(), profile.getName(), e.getMessage());
+							logger.error("Error executing task " + task.getTaskName() + " for profile " + profile.getName() + ": " + e.getMessage(), e);
 						}
 
 						if (task.isRecurring()) {
@@ -277,18 +286,17 @@ public class TaskQueue {
 	}
 
 	private void encolarNuevaTarea() {
-		ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueue", profile.getName(), "shcheduled task's will start soon");
+        ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueue", profile.getName(), "shcheduled task's will start soon");
 
-		try {
-			EmulatorManager.getInstance().adquireEmulatorSlot(profile.getId(), (thread, position) -> {
-				ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "Waiting for slot, position: " + position));
-			});
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		addTask(new InitializeTask(profile, TpDailyTaskEnum.INITIALIZE));
-	}
+        try {
+            EmulatorManager.getInstance().adquireEmulatorSlot(profile.getId(), (thread, position) -> {
+                ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "Waiting for slot, position: " + position));
+            });
+        } catch (InterruptedException e) {
+            logger.error("Interrupted while acquiring emulator slot for profile " + profile.getName(), e);
+        }
+        addTask(new InitializeTask(profile, TpDailyTaskEnum.INITIALIZE));
+    }
 
 	/**
 	 * Detiene inmediatamente el procesamiento de la cola, sin importar en qué estado esté.
@@ -302,6 +310,7 @@ public class TaskQueue {
 			try {
 				schedulerThread.join(1000); // Esperar hasta 1 segundo para que el hilo termine
 			} catch (InterruptedException e) {
+				logger.error("Interrupted while stopping TaskQueue for profile " + profile.getName(), e);
 				Thread.currentThread().interrupt();
 			}
 		}
@@ -309,26 +318,26 @@ public class TaskQueue {
 		// Eliminar todas las tareas pendientes en la cola
 		taskQueue.clear();
 		ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "NOT RUNNING "));
-		System.out.println("TaskQueue detenida de inmediato.");
+		logger.info("TaskQueue stopped immediately for profile " + profile.getName());
 	}
 
 	/**
 	 * Pausa el procesamiento de la cola, manteniendo las tareas en la cola.
 	 */
 	public void pause() {
-		paused = true;
-		ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "PAUSE REQUESTED"));
-		System.out.println("TaskQueue pausada.");
-	}
+        paused = true;
+        ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "PAUSE REQUESTED"));
+        logger.info("TaskQueue paused for profile " + profile.getName());
+    }
 
 	/**
 	 * Reanuda el procesamiento de la cola.
 	 */
 	public void resume() {
-		paused = false;
-		ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "RESUMING"));
-		System.out.println("TaskQueue reanudada.");
-	}
+        paused = false;
+        ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "RESUMING"));
+        logger.info("TaskQueue resumed for profile " + profile.getName());
+    }
 
 	public void executeTaskNow(TpDailyTaskEnum taskEnum) {
 
