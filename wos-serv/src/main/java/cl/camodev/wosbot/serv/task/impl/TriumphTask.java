@@ -54,9 +54,8 @@ public class TriumphTask extends DelayedTask {
 				} else {
 					// not ready, reschedule for next schedule using offset configuration
 					logError("Daily Triumph not ready to claim, rescheduling");
-					int offset = profile.getConfig(EnumConfigurationKey.ALLIANCE_TRIUMPH_OFFSET_INT, Integer.class);
-					LocalDateTime nextSchedule = LocalDateTime.now().plusHours(offset);
-					reschedule(nextSchedule);
+
+					reschedule(LocalDateTime.now().plusMinutes(profile.getConfig(EnumConfigurationKey.ALLIANCE_TRIUMPH_OFFSET_INT, Integer.class)));
 
 				}
 
@@ -75,7 +74,8 @@ public class TriumphTask extends DelayedTask {
 
 		} else {
 			logError("Alliance Triumph button not found, cannot claim rewards");
-			reschedule(LocalDateTime.now());
+
+			reschedule(LocalDateTime.now().plusMinutes(profile.getConfig(EnumConfigurationKey.ALLIANCE_TRIUMPH_OFFSET_INT, Integer.class)));
 		}
 
 	}

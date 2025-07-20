@@ -33,7 +33,7 @@ public class AllianceTechTask extends DelayedTask {
 				EnumTemplates.ALLIANCE_TECH_BUTTON.getTemplate(),  90);
 		if (!menuResult.isFound()) {
 			this.reschedule(LocalDateTime.now()
-					.plusHours(profile.getConfig(EnumConfigurationKey.ALLIANCE_TECH_OFFSET_INT, Integer.class)));
+					.plusMinutes(profile.getConfig(EnumConfigurationKey.ALLIANCE_TECH_OFFSET_INT, Integer.class)));
 			return;
 		}
 
@@ -48,7 +48,7 @@ public class AllianceTechTask extends DelayedTask {
 		if (!thumbUpResult.isFound()) {
 			logError("No task marked for upgrade, rescheduling task");
 			this.reschedule(LocalDateTime.now()
-					.plusHours(profile.getConfig(EnumConfigurationKey.ALLIANCE_TECH_OFFSET_INT, Integer.class)));
+					.plusMinutes(profile.getConfig(EnumConfigurationKey.ALLIANCE_TECH_OFFSET_INT, Integer.class)));
 			return;
 		}
 
@@ -62,7 +62,7 @@ public class AllianceTechTask extends DelayedTask {
 		emuManager.tapBackButton(EMULATOR_NUMBER);
 
 		LocalDateTime nextSchedule = LocalDateTime.now()
-				.plusHours(profile.getConfig(EnumConfigurationKey.ALLIANCE_TECH_OFFSET_INT, Integer.class));
+				.plusMinutes(profile.getConfig(EnumConfigurationKey.ALLIANCE_TECH_OFFSET_INT, Integer.class));
 		this.reschedule(nextSchedule);
 		ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, nextSchedule);
 

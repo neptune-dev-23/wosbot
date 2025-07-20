@@ -1,16 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.ColumnConstraints?>
-<?import javafx.scene.layout.GridPane?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.RowConstraints?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 
-<GridPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="508.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
+<GridPane xmlns:fx="http://javafx.com/fxml/1" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="508.0" xmlns="http://javafx.com/javafx/17.0.12">
     
     <columnConstraints>
         <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" prefWidth="100.0" />
@@ -18,18 +12,19 @@
    
     <rowConstraints>
         <RowConstraints maxHeight="1.7976931348623157E308" vgrow="ALWAYS" />
+      <RowConstraints maxHeight="30.0" minHeight="30.0" prefHeight="30.0" vgrow="ALWAYS" />
         <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="SOMETIMES" />
     </rowConstraints>
     <children>
-      
-        <HBox GridPane.rowIndex="0">
+
+        <HBox>
             <children>
-               
+
                 <VBox fx:id="buttonsContainer" prefHeight="325.0" prefWidth="130.0" style="-fx-border-color: black;">
                <HBox.margin>
                   <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
                </HBox.margin></VBox>
-               
+
                 <AnchorPane fx:id="mainContentPane" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="2.0" prefWidth="2.0" style="-fx-border-color: black;" HBox.hgrow="ALWAYS">
                <HBox.margin>
                   <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
@@ -39,8 +34,8 @@
                 <Insets bottom="1.0" left="1.0" right="1.0" top="1.0" />
             </HBox.margin>
         </HBox>
-     
-        <GridPane style="-fx-border-color: black;" GridPane.rowIndex="1">
+
+        <GridPane style="-fx-border-color: black;" GridPane.rowIndex="2">
             <columnConstraints>
                 <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" prefWidth="100.0" />
             <ColumnConstraints />
@@ -55,7 +50,6 @@
                         <Insets bottom="3.0" left="3.0" right="3.0" top="3.0" />
                     </GridPane.margin>
                     <children>
-                      <Label fx:id="labelVersion" text="Versión:" />
                   <Label fx:id="labelRunTime" />
                   <GridPane>
                      <columnConstraints>
@@ -83,5 +77,6 @@
                 <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
             </GridPane.margin>
         </GridPane>
+          <Label fx:id="labelVersion" text="Versión:" GridPane.rowIndex="1" />
     </children>
 </GridPane>

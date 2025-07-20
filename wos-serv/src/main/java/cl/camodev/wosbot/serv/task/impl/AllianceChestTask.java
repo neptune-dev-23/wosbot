@@ -32,8 +32,8 @@ public class AllianceChestTask extends DelayedTask {
 		DTOImageSearchResult allianceChestResult = emuManager.searchTemplate(EMULATOR_NUMBER,
 				EnumTemplates.ALLIANCE_CHEST_BUTTON.getTemplate(),  90);
 		if (!allianceChestResult.isFound()) {
-			int offset = profile.getConfig(EnumConfigurationKey.ALLIANCE_CHESTS_OFFSET_INT, Integer.class);
-			LocalDateTime nextExecutionTime = LocalDateTime.now().plusHours(offset);
+
+			LocalDateTime nextExecutionTime = LocalDateTime.now().plusMinutes(profile.getConfig(EnumConfigurationKey.ALLIANCE_CHESTS_OFFSET_INT, Integer.class));
 			this.reschedule(nextExecutionTime);
 			return;
 		}
@@ -63,8 +63,8 @@ public class AllianceChestTask extends DelayedTask {
 		emuManager.tapBackButton(EMULATOR_NUMBER);
 		emuManager.tapBackButton(EMULATOR_NUMBER);
 
-		int offset = profile.getConfig(EnumConfigurationKey.ALLIANCE_CHESTS_OFFSET_INT, Integer.class);
-		LocalDateTime nextExecutionTime = LocalDateTime.now().plusHours(offset);
+
+		LocalDateTime nextExecutionTime = LocalDateTime.now().plusMinutes(profile.getConfig(EnumConfigurationKey.ALLIANCE_CHESTS_OFFSET_INT, Integer.class));
 		this.reschedule(nextExecutionTime);
 	}
 }
