@@ -61,7 +61,7 @@ public class DailyMissionTask extends DelayedTask {
 		this.setRecurring(!profile.getConfig(EnumConfigurationKey.DAILY_MISSION_AUTO_SCHEDULE_BOOL,Boolean.class));
 
 		if (recurring){
-			LocalDateTime nextSchedule = LocalDateTime.now().plusHours(profile.getConfig(EnumConfigurationKey.DAILY_MISSION_OFFSET_INT, Integer.class));
+			LocalDateTime nextSchedule = LocalDateTime.now().plusMinutes(profile.getConfig(EnumConfigurationKey.DAILY_MISSION_OFFSET_INT, Integer.class));
 			this.reschedule(nextSchedule);
 		}else{
 			this.reschedule(LocalDateTime.now().plusMinutes(30));

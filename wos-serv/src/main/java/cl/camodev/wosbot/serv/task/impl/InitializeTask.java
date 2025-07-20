@@ -58,7 +58,7 @@ public class InitializeTask extends DelayedTask {
 					attempts++;
 				}
 
-				if (attempts > 5) {
+				if (attempts > 10) {
 					ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(), "screen not found after 5 attempts, restarting emulator");
 					EmulatorManager.getInstance().closeEmulator(EMULATOR_NUMBER);
 					isStarted = false;

@@ -18,7 +18,7 @@ public enum EnumConfigurationKey {
 	BOOL_WAR_ACADEMY_SHARDS("false", Boolean.class),
 	BOOL_CRYSTAL_LAB_FC("false",Boolean.class),
 	BOOL_EXPLORATION_CHEST("false",Boolean.class),
-	INT_EXPLORATION_CHEST_OFFSET("1",Integer.class),
+	INT_EXPLORATION_CHEST_OFFSET("60",Integer.class),
 	BOOL_HERO_RECRUITMENT("false",Boolean.class),
 	BOOL_VIP_POINTS("false",Boolean.class),
 	VIP_BUY_MONTHLY("false",Boolean.class),
@@ -33,19 +33,19 @@ public enum EnumConfigurationKey {
 	
 	CITY_UPGRADE_FURNACE_BOOL("false",Boolean.class),
 	CITY_ACCEPT_NEW_SURVIVORS_BOOL("false",Boolean.class),
-	CITY_ACCEPT_NEW_SURVIVORS_OFFSET_INT("1",Integer.class),
-	
+	CITY_ACCEPT_NEW_SURVIVORS_OFFSET_INT("60",Integer.class),
+
 	ALLIANCE_CHESTS_BOOL("false",Boolean.class),
-	ALLIANCE_CHESTS_OFFSET_INT("1",Integer.class),
+	ALLIANCE_CHESTS_OFFSET_INT("60",Integer.class),
 	ALLIANCE_TECH_BOOL("false",Boolean.class),
-	ALLIANCE_TECH_OFFSET_INT("1",Integer.class),
+	ALLIANCE_TECH_OFFSET_INT("60",Integer.class),
 	ALLIANCE_AUTOJOIN_BOOL("false",Boolean.class),
 	ALLIANCE_AUTOJOIN_QUEUES_INT("1",Integer.class),
 	ALLIANCE_PET_TREASURE_BOOL("false",Boolean.class),
 	ALLIANCE_HELP_REQUESTS_BOOL("false",Boolean.class),
-	ALLIANCE_HELP_REQUESTS_OFFSET_INT("1",Integer.class),
+	ALLIANCE_HELP_REQUESTS_OFFSET_INT("60",Integer.class),
 	ALLIANCE_TRIUMPH_BOOL("false",Boolean.class),
-	ALLIANCE_TRIUMPH_OFFSET_INT("1",Integer.class),
+	ALLIANCE_TRIUMPH_OFFSET_INT("60",Integer.class),
 	
 	GATHER_SPEED_BOOL("false",Boolean.class),
 	GATHER_COAL_BOOL("false",Boolean.class),
@@ -67,15 +67,15 @@ public enum EnumConfigurationKey {
 	INTEL_FC_ERA_BOOL("false",Boolean.class),
 	
 	LIFE_ESSENCE_BOOL("false",Boolean.class),
-	LIFE_ESSENCE_OFFSET_INT("1",Integer.class),
+	LIFE_ESSENCE_OFFSET_INT("60",Integer.class),
 	ALLIANCE_LIFE_ESSENCE_BOOL("false",Boolean.class),
-	ALLIANCE_LIFE_ESSENCE_OFFSET_INT("1",Integer.class),
+	ALLIANCE_LIFE_ESSENCE_OFFSET_INT("60",Integer.class),
 	
 	MAIL_REWARDS_BOOL("false",Boolean.class),
-	MAIL_REWARDS_OFFSET_INT("1",Integer.class),
+	MAIL_REWARDS_OFFSET_INT("60",Integer.class),
 	
 	DAILY_MISSION_BOOL("false",Boolean.class),
-	DAILY_MISSION_OFFSET_INT("1",Integer.class),
+	DAILY_MISSION_OFFSET_INT("60",Integer.class),
 	DAILY_MISSION_AUTO_SCHEDULE_BOOL("false",Boolean.class),
 	
 	STOREHOUSE_CHEST_BOOL("false",Boolean.class),

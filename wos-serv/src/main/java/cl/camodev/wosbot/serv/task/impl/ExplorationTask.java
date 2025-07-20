@@ -49,15 +49,14 @@ public class ExplorationTask extends DelayedTask {
 				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(230, 890), new DTOPoint(490, 960));
 				sleepTask(200);
 
-				int offset = profile.getConfig(EnumConfigurationKey.INT_EXPLORATION_CHEST_OFFSET, Integer.class);
-				LocalDateTime nextSchedule = LocalDateTime.now().plusHours(offset);
+
+				LocalDateTime nextSchedule = LocalDateTime.now().plusMinutes(profile.getConfig(EnumConfigurationKey.INT_EXPLORATION_CHEST_OFFSET, Integer.class));
 				this.reschedule(nextSchedule);
 				ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, nextSchedule);
 
 			} else {
 				logInfo("no rewards to claim");
-				int offset = profile.getConfig(EnumConfigurationKey.INT_EXPLORATION_CHEST_OFFSET, Integer.class);
-				LocalDateTime nextSchedule = LocalDateTime.now().plusHours(offset);
+				LocalDateTime nextSchedule = LocalDateTime.now().plusMinutes(profile.getConfig(EnumConfigurationKey.INT_EXPLORATION_CHEST_OFFSET, Integer.class));
 				this.reschedule(nextSchedule);
 
 			}

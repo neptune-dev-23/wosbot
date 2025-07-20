@@ -59,12 +59,12 @@ public class NewSurvivorsTask extends DelayedTask {
                     sleepTask(50);
                 }
 
-                this.reschedule(LocalDateTime.now().plusHours(profile.getConfig(EnumConfigurationKey.CITY_ACCEPT_NEW_SURVIVORS_OFFSET_INT,Integer.class)));
+                this.reschedule(LocalDateTime.now().plusMinutes(profile.getConfig(EnumConfigurationKey.CITY_ACCEPT_NEW_SURVIVORS_OFFSET_INT,Integer.class)));
             }
 
 
         } else {
-            this.reschedule(LocalDateTime.now().plusHours(profile.getConfig(EnumConfigurationKey.CITY_ACCEPT_NEW_SURVIVORS_OFFSET_INT,Integer.class)));
+            this.reschedule(LocalDateTime.now().plusMinutes(profile.getConfig(EnumConfigurationKey.CITY_ACCEPT_NEW_SURVIVORS_OFFSET_INT,Integer.class)));
 
         }
 

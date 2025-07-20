@@ -80,8 +80,7 @@ public class LifeEssenceCaringTask extends DelayedTask {
 					}
 				}
 
-				LocalDateTime nextSchedule = LocalDateTime.now().plusHours(profile.getConfig(EnumConfigurationKey.ALLIANCE_LIFE_ESSENCE_OFFSET_INT, Integer.class));
-				this.reschedule(nextSchedule);
+				this.reschedule(LocalDateTime.now().plusMinutes(profile.getConfig(EnumConfigurationKey.ALLIANCE_LIFE_ESSENCE_OFFSET_INT, Integer.class)));
 				logInfo("No caring available after multiple attempts");
 
 				emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(42, 28));
