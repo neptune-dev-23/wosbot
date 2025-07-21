@@ -51,25 +51,30 @@ public class ScheduleTaskDialogController {
         // Set task name in header
         lblTaskName.setText("Schedule: " + task.getTaskEnum().getName());
 
-        // Default settings: Always start with "Execute immediately" selected
-        cbImmediate.setSelected(true);
-        cbRecurring.setSelected(false);
-        timeField.setDisable(true);
-        timeField.clear();
-
-        // Check if task is already scheduled and show info, but don't change defaults
+        // Check if task is already scheduled to determine default behavior
         boolean isTaskScheduled = task.scheduledProperty().get();
-        if (isTaskScheduled) {
-            // Show info message but keep execute immediately as default
-            lblInfo.setText("Note: Task is currently scheduled. You can modify the schedule or execute immediately.");
-            lblInfo.setVisible(true);
 
-            // Pre-fill time field for convenience (but keep it disabled since immediate is selected)
+        if (isTaskScheduled) {
+            // Task is already scheduled: Enable both execute now AND recurring by default
+            cbImmediate.setSelected(true);
+            cbRecurring.setSelected(true);
+            timeField.setDisable(true);
+
+            // Pre-fill with current execution time for convenience
             if (task.getNextExecution() != null) {
                 String currentTime = task.getNextExecution().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
                 timeField.setText(currentTime);
             }
+
+            // Show info message
+            lblInfo.setText("Task is currently scheduled");
+            lblInfo.setVisible(true);
         } else {
+            // Task is not scheduled: Only execute now by default
+            cbImmediate.setSelected(true);
+            cbRecurring.setSelected(false);
+            timeField.setDisable(true);
+            timeField.clear();
             lblInfo.setVisible(false);
         }
     }
