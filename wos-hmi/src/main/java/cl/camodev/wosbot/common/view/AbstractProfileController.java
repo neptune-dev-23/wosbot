@@ -16,12 +16,12 @@ import javafx.scene.control.ToggleGroup;
 
 public abstract class AbstractProfileController implements IProfileLoadListener, IProfileObserverInjectable {
 
-	protected IProfileChangeObserver profileObserver;
-	protected boolean isLoadingProfile = false;
 	protected final Map<CheckBox, EnumConfigurationKey> checkBoxMappings = new HashMap<>();
 	protected final Map<TextField, EnumConfigurationKey> textFieldMappings = new HashMap<>();
 	protected final Map<RadioButton, EnumConfigurationKey> radioButtonMappings = new HashMap<>();
 	protected final Map<ComboBox<Integer>, EnumConfigurationKey> comboBoxMappings = new HashMap<>();
+	protected IProfileChangeObserver profileObserver;
+	protected boolean isLoadingProfile = false;
 
 	@Override
 	public void setProfileObserver(IProfileChangeObserver observer) {
@@ -94,7 +94,7 @@ public abstract class AbstractProfileController implements IProfileLoadListener,
 		}
 		try {
 			int number = Integer.parseInt(value);
-			return number >= 0 && number <= 24;
+			return number >= 0 && number <= 999;
 		} catch (NumberFormatException e) {
 			return false;
 		}
