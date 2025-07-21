@@ -13,6 +13,8 @@
         <revision>1.5.2</revision>
         <javafx-version>23.0.1</javafx-version>
         <java.version>21</java.version>
+		<slf4j.version>2.0.17</slf4j.version>
+		<logback.version>1.4.11</logback.version>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
     </properties>
@@ -44,12 +46,21 @@
 				<artifactId>javafx-fxml</artifactId>
 				<version>${javafx-version}</version>
 			</dependency>
-			<!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core -->
+			<!-- API de SLF4J -->
 			<dependency>
-				<groupId>org.apache.logging.log4j</groupId>
-				<artifactId>log4j-core</artifactId>
-				<version>2.25.1</version>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-api</artifactId>
+				<version>${slf4j.version}</version>
 			</dependency>
+			<!-- Implementación Logback (binding) -->
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-log4j12</artifactId>
+				<version>${slf4j.version}</version>
+				<scope>runtime</scope>
+			</dependency>
+
+
 		</dependencies>
 	</dependencyManagement>
 
