@@ -118,7 +118,7 @@
 							<goal>copy-resources</goal>
 						</goals>
 						<configuration>
-							<outputDirectory>${project.build.directory}/tessdata</outputDirectory>
+							<outputDirectory>${project.build.directory}/lib/tesseract</outputDirectory>
 							<resources>
 								<resource>
 									<directory>${project.basedir}/tessdata</directory>
