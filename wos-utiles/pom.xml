@@ -28,5 +28,17 @@
 			<artifactId>wos-ot</artifactId>
 			<version>${revision}</version>
 		</dependency>
+		<!-- API -->
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+		</dependency>
+		<!-- Binding/implementación en tiempo de ejecución -->
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+
 	</dependencies>
 </project>

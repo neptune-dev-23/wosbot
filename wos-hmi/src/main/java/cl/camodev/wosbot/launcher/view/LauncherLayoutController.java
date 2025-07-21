@@ -260,7 +260,7 @@ public class LauncherLayoutController implements IProfileLoadListener {
 
 	private void initializeExternalLibraries() {
 		try {
-			UtilCV.loadNativeLibrary("/native/opencv_java4110.dll");
+			UtilCV.loadNativeLibrary("/native/opencv/opencv_java4110.dll");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
