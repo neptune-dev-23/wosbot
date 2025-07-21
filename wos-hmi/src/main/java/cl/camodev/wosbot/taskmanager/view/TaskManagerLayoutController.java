@@ -358,18 +358,18 @@ public class TaskManagerLayoutController {
 		TableColumn<TaskManagerAux, Void> colActions = new TableColumn<>("Actions");
 		colActions.setPrefWidth(180);
 		colActions.setCellFactory(column -> new TableCell<>() {
-			private final Button btnExecute = new Button("Execute Now");
+			private final Button btnSchedule = new Button("Schedule");
 			private final Button btnRemove = new Button("Remove");
 
 			{
-				btnExecute.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-size: 11px; " +
+				btnSchedule.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-size: 11px; " +
 					"-fx-padding: 4px 8px; -fx-border-radius: 3px; -fx-background-radius: 3px;");
 				btnRemove.setStyle("-fx-background-color: #f44336; -fx-text-fill: white; -fx-font-size: 11px; " +
 					"-fx-padding: 4px 8px; -fx-border-radius: 3px; -fx-background-radius: 3px;");
 
-				btnExecute.setOnAction(ev -> {
+				btnSchedule.setOnAction(ev -> {
 					TaskManagerAux item = getTableView().getItems().get(getIndex());
-					taskManagerActionController.executeTaskNow(item);
+					taskManagerActionController.showScheduleDialog(item);
 				});
 
 				btnRemove.setOnAction(ev -> {
@@ -402,15 +402,15 @@ public class TaskManagerLayoutController {
 						// Check if queue is active for this profile
 						boolean queueActive = ServScheduler.getServices().getQueueManager().getQueue(task.getProfileId()) != null;
 
-						// Enable/disable execute button based on queue status
-						btnExecute.setDisable(!queueActive);
+						// Enable/disable schedule button based on queue status
+						btnSchedule.setDisable(!queueActive);
 
-						// Update execute button style when disabled
+						// Update schedule button style when disabled
 						if (!queueActive) {
-							btnExecute.setStyle("-fx-background-color: #757575; -fx-text-fill: #bdbdbd; -fx-font-size: 11px; " +
+							btnSchedule.setStyle("-fx-background-color: #757575; -fx-text-fill: #bdbdbd; -fx-font-size: 11px; " +
 								"-fx-padding: 4px 8px; -fx-border-radius: 3px; -fx-background-radius: 3px;");
 						} else {
-							btnExecute.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-size: 11px; " +
+							btnSchedule.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-size: 11px; " +
 								"-fx-padding: 4px 8px; -fx-border-radius: 3px; -fx-background-radius: 3px;");
 						}
 
@@ -430,7 +430,7 @@ public class TaskManagerLayoutController {
 
 					// Create HBox to hold both buttons
 					javafx.scene.layout.HBox buttonBox = new javafx.scene.layout.HBox(5);
-					buttonBox.getChildren().addAll(btnExecute, btnRemove);
+					buttonBox.getChildren().addAll(btnSchedule, btnRemove);
 					setGraphic(buttonBox);
 				}
 			}
