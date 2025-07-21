@@ -14,47 +14,60 @@ import java.util.Enumeration;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class UtilCV {
+	private static final Logger logger = LoggerFactory.getLogger(UtilCV.class);
 
 	public static void loadNativeLibrary(String resourcePath) throws IOException {
 		// Obtener el nombre del archivo a partir de la ruta del recurso
 		String[] parts = resourcePath.split("/");
 		String libFileName = parts[parts.length - 1];
 
-		// Crear un archivo temporal (se eliminará al salir de la aplicación)
-		File tempLib = File.createTempFile(libFileName, "");
-		tempLib.deleteOnExit();
+		// Crear el directorio lib/opencv si no existe
+		File libDir = new File("lib/opencv");
+		if (!libDir.exists()) {
+			libDir.mkdirs();
+		}
+
+		// Crear el archivo destino en lib/opencv
+		File destLib = new File(libDir, libFileName);
 
 		// Abrir el recurso como stream
-		try (InputStream in = UtilCV.class.getResourceAsStream(resourcePath); OutputStream out = new FileOutputStream(tempLib)) {
-
+		try (InputStream in = UtilCV.class.getResourceAsStream(resourcePath); OutputStream out = new FileOutputStream(destLib)) {
 			if (in == null) {
-				throw new IOException("No se encontró el recurso: " + resourcePath);
+				logger.error("Resource not found: {}", resourcePath);
+				throw new IOException("Resource not found: " + resourcePath);
 			}
-
 			byte[] buffer = new byte[4096];
 			int bytesRead;
 			while ((bytesRead = in.read(buffer)) != -1) {
 				out.write(buffer, 0, bytesRead);
 			}
+		} catch (IOException e) {
+			logger.error("Error extracting native library: {}", e.getMessage());
+			throw e;
 		}
 
-		// Cargar la librería usando la ruta absoluta del archivo temporal
-		System.load(tempLib.getAbsolutePath());
-		System.out.println("Librería cargada desde: " + tempLib.getAbsolutePath());
+		// Cargar la librería usando la ruta absoluta del archivo destino
+		System.load(destLib.getAbsolutePath());
+		logger.info("Native library loaded from: {}", destLib.getAbsolutePath());
 	}
 
 	public static void extractResourceFolder(String resourcePath, File destination) throws IOException, URISyntaxException {
 		// Crea el directorio de destino si no existe
 		if (!destination.exists()) {
 			if (!destination.mkdirs()) {
-				throw new IOException("No se pudo crear el directorio: " + destination.getAbsolutePath());
+				logger.error("Could not create directory: {}", destination.getAbsolutePath());
+				throw new IOException("Could not create directory: " + destination.getAbsolutePath());
 			}
 		}
 
 		URL url = UtilCV.class.getResource(resourcePath);
 		if (url == null) {
-			throw new IOException("No se pudo encontrar la carpeta " + resourcePath + " en los recursos.");
+			logger.error("Resource folder not found: {}", resourcePath);
+			throw new IOException("Resource folder not found: " + resourcePath);
 		}
 
 		// Si se ejecuta desde un JAR, el protocolo será "jar"

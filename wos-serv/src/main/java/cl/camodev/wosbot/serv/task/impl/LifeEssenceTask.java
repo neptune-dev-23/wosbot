@@ -66,7 +66,7 @@ public class LifeEssenceTask extends DelayedTask {
 						break;
 					}
 				}
-				LocalDateTime nextSchedule = LocalDateTime.now().plusHours(profile.getConfig(EnumConfigurationKey.LIFE_ESSENCE_OFFSET_INT, Integer.class));
+				LocalDateTime nextSchedule = LocalDateTime.now().plusMinutes(profile.getConfig(EnumConfigurationKey.LIFE_ESSENCE_OFFSET_INT, Integer.class));
 				this.reschedule(nextSchedule);
 				ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, nextSchedule);
 				

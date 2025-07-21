@@ -49,7 +49,7 @@ public class UtilOCR {
 		// Configurar Tesseract
 		Tesseract tesseract = new Tesseract();
 		// Establece la ruta a la carpeta tessdata (asegúrate de que la ruta sea correcta)
-		tesseract.setDatapath("tessdata");
+		tesseract.setDatapath("/lib/tesseract");
 		// Establecer el idioma; por ejemplo, "spa" para español
 		tesseract.setLanguage("eng");
 
