@@ -37,7 +37,7 @@ public class MailRewardsTask extends DelayedTask {
 				sleepTask(1000);
 				EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(420, 1227), new DTOPoint(450, 1250), 10, 100);
 			}
-			LocalDateTime nextSchedule = LocalDateTime.now().plusHours(profile.getConfig(EnumConfigurationKey.MAIL_REWARDS_OFFSET_INT, Integer.class));
+			LocalDateTime nextSchedule = LocalDateTime.now().plusMinutes(profile.getConfig(EnumConfigurationKey.MAIL_REWARDS_OFFSET_INT, Integer.class));
 			this.reschedule(nextSchedule);
 			ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, nextSchedule);
 			EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
