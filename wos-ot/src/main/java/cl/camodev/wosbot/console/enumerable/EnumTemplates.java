@@ -177,6 +177,26 @@ public enum EnumTemplates {
 	NOMADIC_MERCHANT_REFRESH("/templates/nomadicmerchant/refresh.png"),
 	EXPLORATION_CLAIM("/templates/exploration/claim.png"),
 	HERO_RECRUIT_CLAIM("/templates/herorecruitment/freebutton.png"),
+
+	// Labyrinth templates for DailyLabyrinthTask
+	LEFT_MENU_CITY_TAB("/templates/leftmenu/cityTab.png"),
+	LEFT_MENU_LABYRINTH_BUTTON("/templates/leftmenu/labyrinth.png"),
+	BUILDING_BUTTON_LABYRINTH("/templates/building/labyrinthButton.png"),
+
+	// Labyrinth dungeon selection buttons
+	LABYRINTH_DUNGEON_1("/templates/labyrinth/dungeon1.png"),
+	LABYRINTH_DUNGEON_2("/templates/labyrinth/dungeon2.png"),
+	LABYRINTH_DUNGEON_3("/templates/labyrinth/dungeon3.png"),
+	LABYRINTH_DUNGEON_4("/templates/labyrinth/dungeon4.png"),
+	LABYRINTH_DUNGEON_5("/templates/labyrinth/dungeon5.png"),
+	LABYRINTH_DUNGEON_6("/templates/labyrinth/dungeon6.png"),
+	// Labyrinth challenge options
+	LABYRINTH_QUICK_CHALLENGE("/templates/labyrinth/quickChallenge.png"),
+	LABYRINTH_NORMAL_CHALLENGE("/templates/labyrinth/normalChallenge.png"),
+	LABYRINTH_RAID_CHALLENGE("/templates/labyrinth/raidChallenge.png"),
+	LABYRINTH_QUICK_DEPLOY("/templates/labyrinth/quickDeploy.png"),
+	LABYRINTH_DEPLOY("/templates/labyrinth/deploy.png"),
+
 	// Mystery Shop templates for MysteryShopTask
 	SHOP_MYSTERY_BUTTON("/templates/shop/mysteryShopButton.png"),
 	MYSTERY_SHOP_FREE_REWARD("/templates/shop/mysteryshop/freeReward.png"),

@@ -10,7 +10,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.RowConstraints?>
 
-<GridPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="306.0" prefWidth="580.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
+<GridPane xmlns:fx="http://javafx.com/fxml/1" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="306.0" prefWidth="580.0" xmlns="http://javafx.com/javafx/23.0.1">
   <columnConstraints>
       <ColumnConstraints hgrow="SOMETIMES" percentWidth="50.0" />
       <ColumnConstraints hgrow="SOMETIMES" percentWidth="50.0" />
@@ -43,6 +43,11 @@
          </GridPane.margin>
       </CheckBox>
       <CheckBox fx:id="checkBoxHeroRecruitment" graphicTextGap="3.0" mnemonicParsing="false" text="Open recruitment hero chests" GridPane.rowIndex="8">
+         <GridPane.margin>
+            <Insets />
+         </GridPane.margin>
+      </CheckBox>
+      <CheckBox fx:id="checkBoxDailyLabyrinth" graphicTextGap="3.0" mnemonicParsing="false" text="Complete daily labyrinth" GridPane.columnIndex="1" GridPane.rowIndex="8">
          <GridPane.margin>
             <Insets />
          </GridPane.margin>
