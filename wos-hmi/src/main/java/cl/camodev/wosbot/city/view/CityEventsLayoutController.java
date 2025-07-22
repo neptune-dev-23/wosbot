@@ -31,6 +31,9 @@ public class CityEventsLayoutController extends AbstractProfileController {
 	private CheckBox checkBoxDailyMission, checkboxAutoScheduleDailyMission;
 
 	@FXML
+	private CheckBox checkBoxDailyLabyrinth;
+
+	@FXML
 	private RadioButton radioButtonStorehouseChest;
 
 	@FXML
@@ -67,6 +70,7 @@ public class CityEventsLayoutController extends AbstractProfileController {
 		checkBoxMappings.put(checkBoxLifeEssence, EnumConfigurationKey.LIFE_ESSENCE_BOOL);
 		checkBoxMappings.put(checkBoxDailyMission, EnumConfigurationKey.DAILY_MISSION_BOOL);
 		checkBoxMappings.put(checkboxAutoScheduleDailyMission, EnumConfigurationKey.DAILY_MISSION_AUTO_SCHEDULE_BOOL);
+		checkBoxMappings.put(checkBoxDailyLabyrinth, EnumConfigurationKey.DAILY_LABYRINTH_BOOL);
 
 		textFieldMappings.put(textfieldExplorationOffset, EnumConfigurationKey.INT_EXPLORATION_CHEST_OFFSET);
 		textFieldMappings.put(textfieldMailOffset, EnumConfigurationKey.MAIL_REWARDS_OFFSET_INT);

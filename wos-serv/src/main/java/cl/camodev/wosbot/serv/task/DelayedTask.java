@@ -272,4 +272,23 @@ public abstract class DelayedTask implements Runnable, Delayed, Comparable<Delay
     public void tapRandomPoint(DTOPoint p1, DTOPoint p2, int count, int delay) {
         emuManager.tapAtRandomPoint(EMULATOR_NUMBER, p1, p2, count, delay);
     }
+
+
+    /**
+     * Performs a swipe action from a start point to an end point on the emulator screen.
+     *
+     * @param start The starting point of the swipe.
+     * @param end   The ending point of the swipe.
+     */
+    public void swipe(DTOPoint start, DTOPoint end) {
+        emuManager.executeSwipe(EMULATOR_NUMBER, start, end);
+    }
+
+    /**
+     * Taps the back button on the emulator.
+     */
+    public void tapBackButton() {
+        emuManager.tapBackButton(EMULATOR_NUMBER);
+    }
+
 }
