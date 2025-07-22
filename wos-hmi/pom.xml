@@ -75,7 +75,17 @@
 							<mainClass>cl.camodev.wosbot.main.Main</mainClass>
 							<addClasspath>true</addClasspath>
 							<classpathPrefix>lib/</classpathPrefix>
+							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+							<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
 						</manifest>
+						<manifestEntries>
+							<Implementation-Version>${project.version}</Implementation-Version>
+							<Implementation-Title>${project.name}</Implementation-Title>
+							<Implementation-Vendor-Id>${project.groupId}</Implementation-Vendor-Id>
+							<Built-By>${user.name}</Built-By>
+							<Build-Jdk>${java.version}</Build-Jdk>
+							<Build-Time>${maven.build.timestamp}</Build-Time>
+						</manifestEntries>
 					</archive>
 					<finalName>wos-bot-${project.version}</finalName>
 				</configuration>
