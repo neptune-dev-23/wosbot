@@ -152,35 +152,35 @@ public class BankTask extends DelayedTask {
 			case 1:
 				// 1-day deposit area (top-left)
 				searchTopLeft = new DTOPoint(50, 580);
-				searchBottomRight = new DTOPoint(320 - 50, 920 - 580);
+				searchBottomRight = new DTOPoint(320 , 920 );
 				depositType = "1-day";
 				depositDays = 1;
 				break;
 			case 7:
 				// 7-day deposit area (top-right)
 				searchTopLeft = new DTOPoint(380, 580);
-				searchBottomRight = new DTOPoint(670 - 380, 920 - 580);
+				searchBottomRight = new DTOPoint(670 , 920);
 				depositType = "7-day";
 				depositDays = 7;
 				break;
 			case 15:
 				// 15-day deposit area (bottom-left)
 				searchTopLeft = new DTOPoint(50, 900);
-				searchBottomRight = new DTOPoint(340 - 50, 1250 - 900);
+				searchBottomRight = new DTOPoint(340, 1250 );
 				depositType = "15-day";
 				depositDays = 15;
 				break;
 			case 30:
 				// 30-day deposit area (bottom-right)
 				searchTopLeft = new DTOPoint(380, 900);
-				searchBottomRight = new DTOPoint(660 - 380, 1250 - 900);
+				searchBottomRight = new DTOPoint(660 , 1250 );
 				depositType = "30-day";
 				depositDays = 30;
 				break;
 			default:
 				logWarning("Invalid bank delay configuration: " + bankDelay + ". Valid values are 1, 7, 15, 30. Using 1-day deposit as fallback");
-				searchTopLeft = new DTOPoint(0, 0);
-				searchBottomRight = new DTOPoint(350 - 0, 800 - 0);
+				searchTopLeft = new DTOPoint(50, 580);
+				searchBottomRight = new DTOPoint(320 , 920 );
 				depositType = "1-day (fallback)";
 				depositDays = 1;
 				break;
@@ -190,10 +190,8 @@ public class BankTask extends DelayedTask {
 		DTOImageSearchResult depositAvailableResult = emuManager.searchTemplate(
 				EMULATOR_NUMBER,
 				EnumTemplates.EVENTS_DEALS_BANK_DEPOSIT.getTemplate(),
-				searchTopLeft.getX(),
-				searchTopLeft.getY(),
-				searchBottomRight.getX(),
-				searchBottomRight.getY(),
+				searchTopLeft,
+				searchBottomRight,
 				90
 		);
 

@@ -21,15 +21,13 @@ import net.sourceforge.tess4j.TesseractException;
 
 public class EmulatorManager {
 
+	public static String WHITEOUT_PACKAGE = "com.gof.global";
 	private static EmulatorManager instance;
-	private Emulator emulator;
-
 	private final ReentrantLock lock = new ReentrantLock();
 	private final Condition permitsAvailable = lock.newCondition();
 	private final PriorityQueue<WaitingThread> waitingQueue = new PriorityQueue<>();
-
+	private Emulator emulator;
 	private int MAX_RUNNING_EMULATORS = 3;
-	public static String WHITEOUT_PACKAGE = "com.gof.global";
 
 	private EmulatorManager() {
 
@@ -163,10 +161,10 @@ public class EmulatorManager {
 	/**
 	 * Busca una imagen en la pantalla capturada del emulador.
 	 */
-	public DTOImageSearchResult searchTemplate(String emulatorNumber, String templatePath, int x, int y, int width, int height, double threshold) {
+	public DTOImageSearchResult searchTemplate(String emulatorNumber, String templatePath, DTOPoint topLeftCorner, DTOPoint bottomRightCorner , double threshold) {
 		checkEmulatorInitialized();
 		byte[] screenshot = captureScreenshotViaADB(emulatorNumber);
-		return ImageSearchUtil.buscarTemplate(screenshot, templatePath, x, y, width, height, threshold);
+		return ImageSearchUtil.buscarTemplate(screenshot, templatePath, topLeftCorner, bottomRightCorner, threshold);
 	}
 
 	/**
@@ -175,7 +173,7 @@ public class EmulatorManager {
 	public DTOImageSearchResult searchTemplate(String emulatorNumber, String templatePath, double threshold) {
 		checkEmulatorInitialized();
 		byte[] screenshot = captureScreenshotViaADB(emulatorNumber);
-		return ImageSearchUtil.buscarTemplate(screenshot, templatePath, 0, 0, 720, 1280, threshold);
+		return ImageSearchUtil.buscarTemplate(screenshot, templatePath, new DTOPoint(0,0), new DTOPoint(720,1280), threshold);
 	}
 
 	public void launchEmulator(String emulatorNumber) {

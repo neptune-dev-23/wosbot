@@ -187,7 +187,7 @@ public class MysteryShopTask extends DelayedTask {
 				foundRewardInThisIteration = true;
 
 				// Wait a bit before searching for the next reward
-				sleepTask(500);
+				sleepTask(1000);
 			}
 		}
 

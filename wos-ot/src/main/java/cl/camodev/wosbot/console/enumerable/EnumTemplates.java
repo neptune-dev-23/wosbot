@@ -200,7 +200,49 @@ public enum EnumTemplates {
 	// Mystery Shop templates for MysteryShopTask
 	SHOP_MYSTERY_BUTTON("/templates/shop/mysteryShopButton.png"),
 	MYSTERY_SHOP_FREE_REWARD("/templates/shop/mysteryshop/freeReward.png"),
-	MYSTERY_SHOP_DAILY_REFRESH("/templates/shop/mysteryshop/dailyRefresh.png");
+	MYSTERY_SHOP_DAILY_REFRESH("/templates/shop/mysteryshop/dailyRefresh.png"),
+
+	//Troop training templates
+
+	TRAINING_TROOP_PROMOTE("/templates/training/troopPromote.png"),
+
+	TRAINING_INFANTRY_T11("/templates/training/infantry11.png"),
+	TRAINING_INFANTRY_T10("/templates/training/infantry10.png"),
+	TRAINING_INFANTRY_T9("/templates/training/infantry9.png"),
+	TRAINING_INFANTRY_T8("/templates/training/infantry8.png"),
+	TRAINING_INFANTRY_T7("/templates/training/infantry7.png"),
+	TRAINING_INFANTRY_T6("/templates/training/infantry6.png"),
+	TRAINING_INFANTRY_T5("/templates/training/infantry5.png"),
+	TRAINING_INFANTRY_T4("/templates/training/infantry4.png"),
+	TRAINING_INFANTRY_T3("/templates/training/infantry3.png"),
+	TRAINING_INFANTRY_T2("/templates/training/infantry2.png"),
+	TRAINING_INFANTRY_T1("/templates/training/infantry1.png"),
+
+	TRAINING_LANCER_T11("/templates/training/lancer11.png"),
+	TRAINING_LANCER_T10("/templates/training/lancer10.png"),
+	TRAINING_LANCER_T9("/templates/training/lancer9.png"),
+	TRAINING_LANCER_T8("/templates/training/lancer8.png"),
+	TRAINING_LANCER_T7("/templates/training/lancer7.png"),
+	TRAINING_LANCER_T6("/templates/training/lancer6.png"),
+	TRAINING_LANCER_T5("/templates/training/lancer5.png"),
+	TRAINING_LANCER_T4("/templates/training/lancer4.png"),
+	TRAINING_LANCER_T3("/templates/training/lancer3.png"),
+	TRAINING_LANCER_T2("/templates/training/lancer2.png"),
+	TRAINING_LANCER_T1("/templates/training/lancer1.png"),
+
+	TRAINING_MARKSMAN_T11("/templates/training/marksman11.png"),
+	TRAINING_MARKSMAN_T10("/templates/training/marksman10.png"),
+	TRAINING_MARKSMAN_T9("/templates/training/marksman9.png"),
+	TRAINING_MARKSMAN_T8("/templates/training/marksman8.png"),
+	TRAINING_MARKSMAN_T7("/templates/training/marksman7.png"),
+	TRAINING_MARKSMAN_T6("/templates/training/marksman6.png"),
+	TRAINING_MARKSMAN_T5("/templates/training/marksman5.png"),
+	TRAINING_MARKSMAN_T4("/templates/training/marksman4.png"),
+	TRAINING_MARKSMAN_T3("/templates/training/marksman3.png"),
+	TRAINING_MARKSMAN_T2("/templates/training/marksman2.png"),
+	TRAINING_MARKSMAN_T1("/templates/training/marksman1.png")
+
+	;
 	// @formatter:on
 
     private String template;

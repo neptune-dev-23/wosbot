@@ -3,8 +3,6 @@ package cl.camodev.wosbot.serv.task;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Comparator;
-import java.util.Iterator;
 import java.util.Optional;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -17,6 +15,7 @@ import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.emulator.EmulatorManager;
 import cl.camodev.wosbot.ex.HomeNotFoundException;
+import cl.camodev.wosbot.ex.StopExecutionException;
 import cl.camodev.wosbot.ot.DTOProfileStatus;
 import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.ot.DTOTaskState;
@@ -24,7 +23,6 @@ import cl.camodev.wosbot.serv.impl.ServLogs;
 import cl.camodev.wosbot.serv.impl.ServProfiles;
 import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.impl.ServTaskManager;
-import cl.camodev.wosbot.serv.task.impl.DailyMissionTask;
 import cl.camodev.wosbot.serv.task.impl.InitializeTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -138,98 +136,108 @@ public class TaskQueue {
 
 				// realizar preverificacion de que el jeugo esta corriendo
 
-				Iterator<DelayedTask> it = taskQueue.iterator();
-				while (it.hasNext()) {
+				// Procesar tareas que están listas para ejecutar
+				DelayedTask task;
+				while ((task = taskQueue.peek()) != null) {
 					DTOTaskState taskState = null;
-					DelayedTask task = it.next();
 					long delayInSeconds = task.getDelay(TimeUnit.SECONDS);
 
-					// Obtener el menor delay de todas las tareas en la cola
-					if (delayInSeconds < minDelay) {
+					// Si la primera tarea no está lista, ninguna lo estará (cola ordenada)
+					if (delayInSeconds > 0) {
 						minDelay = delayInSeconds;
+						break;
 					}
 
-					// Si la tarea está lista para ejecutarse (delay <= 0)
-					if (delayInSeconds <= 0) {
-						it.remove();
+					// Remover la tarea de la cola
+					taskQueue.poll();
 
-						try {
-							ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Starting task execution");
-							ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "Executing " + task.getTaskName()));
+					try {
+						ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Starting task execution");
+						ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "Executing " + task.getTaskName()));
 
-							taskState = new DTOTaskState();
-							taskState.setProfileId(profile.getId());
-							taskState.setTaskId(task.getTpDailyTaskId());
-							taskState.setScheduled(true);
-							taskState.setExecuting(true);
-							taskState.setLastExecutionTime(LocalDateTime.now());
-							taskState.setNextExecutionTime(task.getScheduled());
-							ServTaskManager.getInstance().setTaskState(profile.getId(), taskState);
-
-							task.run();
-						} catch (HomeNotFoundException e) {
-							ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, task.getTaskName(), profile.getName(), e.getMessage());
-							logger.error("Error executing task " + task.getTaskName() + " for profile " + profile.getName() + ": " + e.getMessage(), e);
-							addTask(new InitializeTask(profile, TpDailyTaskEnum.INITIALIZE));
-						} catch (Exception e) {
-							ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, task.getTaskName(), profile.getName(), e.getMessage());
-							logger.error("Error executing task " + task.getTaskName() + " for profile " + profile.getName() + ": " + e.getMessage(), e);
-						}
-
-						if (task.isRecurring()) {
-							ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Next schedule: " + UtilTime.localDateTimeToDDHHMMSS(task.getScheduled()));
-							addTask(task);
-						} else {
-							ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Task removed from schedule");
-						}
-
-						boolean dailyAutoSchedule = profile.getConfig(EnumConfigurationKey.DAILY_MISSION_AUTO_SCHEDULE_BOOL,Boolean.class);
-						if (dailyAutoSchedule) {
-							DTOTaskState state = ServTaskManager.getInstance().getTaskState(profile.getId(), TpDailyTaskEnum.DAILY_MISSIONS.getId());
-							LocalDateTime next = (state != null)? state.getNextExecutionTime(): null;
-							LocalDateTime now = LocalDateTime.now();
-							if (task.provideDailyMissionProgress()	&& (state == null || next == null || next.isAfter(now))) {
-								DelayedTask prototype = DelayedTaskRegistry.create(TpDailyTaskEnum.DAILY_MISSIONS, profile);
-
-								// verify if the task already exists in the queue
-								DelayedTask existing = taskQueue.stream().filter(prototype::equals).findFirst().orElse(null);
-
-								if (existing != null) {
-									// task already exists, reschedule it to run now
-									taskQueue.remove(existing);
-									existing.reschedule(LocalDateTime.now());
-									existing.setRecurring(true);
-									taskQueue.offer(existing);
-
-									ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueue", profile.getName(), "Rescheduled existing " + TpDailyTaskEnum.DAILY_MISSIONS + " to run now");
-								} else {
-									// task does not exist, create a new instance and schedule it just once
-									prototype.reschedule(LocalDateTime.now());
-									prototype.setRecurring(false);
-									taskQueue.offer(prototype);
-									ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueue", profile.getName(), "Enqueued new immediate " + TpDailyTaskEnum.DAILY_MISSIONS);
-								}
-
-
-
-							}
-						}
-
-
-						if (task.provideTriumphProgress()){
-
-						}
-
-						taskState.setExecuting(false);
-						taskState.setScheduled(task.isRecurring());
+						taskState = new DTOTaskState();
+						taskState.setProfileId(profile.getId());
+						taskState.setTaskId(task.getTpDailyTaskId());
+						taskState.setScheduled(true);
+						taskState.setExecuting(true);
 						taskState.setLastExecutionTime(LocalDateTime.now());
 						taskState.setNextExecutionTime(task.getScheduled());
-
 						ServTaskManager.getInstance().setTaskState(profile.getId(), taskState);
-						ServScheduler.getServices().updateDailyTaskStatus(profile, task.getTpTask(), task.getScheduled());
 
-						executedTask = true;
-						break;
+						task.run();
+					} catch (HomeNotFoundException e) {
+						ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, task.getTaskName(), profile.getName(), e.getMessage());
+						logger.error("Error executing task " + task.getTaskName() + " for profile " + profile.getName() + ": " + e.getMessage(), e);
+						addTask(new InitializeTask(profile, TpDailyTaskEnum.INITIALIZE));
+					} catch (StopExecutionException e){
+						logger.error("Execution stopped for task " + task.getTaskName() + " for profile " + profile.getName() + ": " + e.getMessage(), e);
+						stop();
+					}
+					catch (Exception e) {
+						ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, task.getTaskName(), profile.getName(), e.getMessage());
+						logger.error("Error executing task " + task.getTaskName() + " for profile " + profile.getName() + ": " + e.getMessage(), e);
+					}
+
+					if (task.isRecurring()) {
+						ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Next schedule: " + UtilTime.localDateTimeToDDHHMMSS(task.getScheduled()));
+						addTask(task);
+					} else {
+						ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Task removed from schedule");
+					}
+
+					boolean dailyAutoSchedule = profile.getConfig(EnumConfigurationKey.DAILY_MISSION_AUTO_SCHEDULE_BOOL,Boolean.class);
+					if (dailyAutoSchedule) {
+						DTOTaskState state = ServTaskManager.getInstance().getTaskState(profile.getId(), TpDailyTaskEnum.DAILY_MISSIONS.getId());
+						LocalDateTime next = (state != null)? state.getNextExecutionTime(): null;
+						LocalDateTime now = LocalDateTime.now();
+						if (task.provideDailyMissionProgress()	&& (state == null || next == null || next.isAfter(now))) {
+							DelayedTask prototype = DelayedTaskRegistry.create(TpDailyTaskEnum.DAILY_MISSIONS, profile);
+
+							// verify if the task already exists in the queue
+							DelayedTask existing = taskQueue.stream().filter(prototype::equals).findFirst().orElse(null);
+
+							if (existing != null) {
+								// task already exists, reschedule it to run now
+								taskQueue.remove(existing);
+								existing.reschedule(LocalDateTime.now());
+								existing.setRecurring(true);
+								taskQueue.offer(existing);
+
+								ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueue", profile.getName(), "Rescheduled existing " + TpDailyTaskEnum.DAILY_MISSIONS + " to run now");
+							} else {
+								// task does not exist, create a new instance and schedule it just once
+								prototype.reschedule(LocalDateTime.now());
+								prototype.setRecurring(false);
+								taskQueue.offer(prototype);
+								ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueue", profile.getName(), "Enqueued new immediate " + TpDailyTaskEnum.DAILY_MISSIONS);
+							}
+
+
+
+						}
+					}
+
+
+					if (task.provideTriumphProgress()){
+
+					}
+
+					taskState.setExecuting(false);
+					taskState.setScheduled(task.isRecurring());
+					taskState.setLastExecutionTime(LocalDateTime.now());
+					taskState.setNextExecutionTime(task.getScheduled());
+
+					ServTaskManager.getInstance().setTaskState(profile.getId(), taskState);
+					ServScheduler.getServices().updateDailyTaskStatus(profile, task.getTpTask(), task.getScheduled());
+
+					executedTask = true;
+				}
+
+				// Si no se ejecutó ninguna tarea, obtener el delay de la próxima tarea
+				if (!executedTask && !taskQueue.isEmpty()) {
+					DelayedTask nextTask = taskQueue.peek();
+					if (nextTask != null) {
+						minDelay = nextTask.getDelay(TimeUnit.SECONDS);
 					}
 				}
 
