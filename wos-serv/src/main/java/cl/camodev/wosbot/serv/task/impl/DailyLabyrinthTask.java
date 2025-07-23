@@ -143,7 +143,7 @@ public class DailyLabyrinthTask extends DelayedTask {
                 logger.info("Successfully completed challenge for dungeon {}", dungeonNumber);
                 logInfo("Successfully completed challenge for dungeon " + dungeonNumber);
                 anyCompleted = true;
-                return; // Exit after completing one challenge
+
             }
         }
 
@@ -193,6 +193,8 @@ public class DailyLabyrinthTask extends DelayedTask {
      * Attempts to execute a quick challenge
      */
     private boolean attemptQuickChallenge(int dungeonNumber) {
+        tapPoint(new DTOPoint(700, 1200));
+        sleepTask(100);
         DTOImageSearchResult quickChallengeResult = emuManager.searchTemplate(
                 EMULATOR_NUMBER,
                 EnumTemplates.LABYRINTH_QUICK_CHALLENGE.getTemplate(),
@@ -231,6 +233,7 @@ public class DailyLabyrinthTask extends DelayedTask {
             tapPoint(raidResult.getPoint());
             sleepTask(400);
             tapRandomPoint(SKIP_BUTTON, SKIP_BUTTON, 10, 50);
+            tapBackButton();
             return true;
         }
         return false;
