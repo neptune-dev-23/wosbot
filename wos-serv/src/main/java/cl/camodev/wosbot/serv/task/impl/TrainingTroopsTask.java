@@ -84,11 +84,19 @@ public class TrainingTroopsTask extends DelayedTask {
         logInfo("Starting training execution for troop type: " + troopType);
 
         // Navigate to troops interface
-        navigateToTroopsInterface();
+        ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(),
+                "Navigating to training interface for " + troopType);
+
+        // Tap on troops menu
+        emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(3, 513), new DTOPoint(26, 588));
+        sleepTask(1000);
+
+        // Tap on training tab
+        emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(110, 270));
+        sleepTask(500);
 
         // Search for the specific troop type
-        DTOImageSearchResult troopsResult = EmulatorManager.getInstance()
-            .searchTemplate(EMULATOR_NUMBER, troopType.getTemplate(), 90);
+        DTOImageSearchResult troopsResult = emuManager.searchTemplate(EMULATOR_NUMBER, troopType.getTemplate(), 90);
 
         if (troopsResult.isFound()) {
             handleTroopStatusCheck(troopsResult);
@@ -97,22 +105,7 @@ public class TrainingTroopsTask extends DelayedTask {
         }
     }
 
-    /**
-     * Navigate to the troops interface in the game
-     */
-    private void navigateToTroopsInterface() {
-        ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(),
-            "Navigating to training interface for " + troopType);
 
-        // Tap on troops menu
-        EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER,
-            new DTOPoint(3, 513), new DTOPoint(26, 588));
-        sleepTask(1000);
-
-        // Tap on training tab
-        EmulatorManager.getInstance().tapAtPoint(EMULATOR_NUMBER, new DTOPoint(110, 270));
-        sleepTask(500);
-    }
 
     /**
      * Handle checking the status of troops and determine next action
@@ -131,6 +124,21 @@ public class TrainingTroopsTask extends DelayedTask {
                     return; // Status handled successfully, exit
                 }
 
+                // If none of the status conditions were met, try manual attempt
+                logInfo("Manual attempt - tapping on troop and reopening interface");
+
+                // Tap on the troop first
+                EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER,
+                    troopsResult.getPoint(), troopsResult.getPoint());
+                sleepTask(2000);
+
+                // Navigate back to home/training camp area
+                tapRandomPoint(new DTOPoint(310, 650), new DTOPoint(450, 730), 10, 100);
+                sleepTask(500);
+
+                // Reopen the troops interface completely
+                reopenTroopsInterface();
+
             } catch (Exception e) {
                 logInfo("Error during training check attempt " + attempt + ": " + e.getMessage());
                 if (attempt == 5) {
@@ -139,6 +147,27 @@ public class TrainingTroopsTask extends DelayedTask {
                 }
             }
         }
+    }
+
+    /**
+     * Reopen the troops interface after a manual attempt
+     * This ensures we're in the correct state to read troop status
+     */
+    private void reopenTroopsInterface() {
+        logInfo("Reopening troops interface for status refresh");
+
+        ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(),
+                "Manual attempt - reopening training interface for " + troopType);
+
+        // Tap on troops menu
+        emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(3, 513), new DTOPoint(26, 588));
+        sleepTask(1000);
+
+        // Tap on training tab
+        emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(110, 270));
+        sleepTask(500);
+
+        logInfo("Troops interface reopened successfully");
     }
 
     /**
@@ -162,7 +191,7 @@ public class TrainingTroopsTask extends DelayedTask {
             logInfo("Training completed or troops idle, starting new training process");
 
             // Tap on troop to enter training interface
-            EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER,
+           emuManager.tapAtRandomPoint(EMULATOR_NUMBER,
                 troopsResult.getPoint(), troopsResult.getPoint());
             sleepTask(2000);
 
