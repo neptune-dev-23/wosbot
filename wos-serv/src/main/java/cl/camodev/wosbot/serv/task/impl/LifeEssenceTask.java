@@ -56,7 +56,7 @@ public class LifeEssenceTask extends DelayedTask {
 				servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Searching for life essence");
 				for (int i = 1; i < 11; i++) {
 					servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), "Searching for life essence attempt " + i);
-					DTOImageSearchResult lifeEssence = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.LIFE_ESSENCE_CLAIM.getTemplate(), 0, 80, 720, 1200, 90);
+					DTOImageSearchResult lifeEssence = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.LIFE_ESSENCE_CLAIM.getTemplate(), new DTOPoint(0, 80), new DTOPoint(720, 1280), 90);
 					if (lifeEssence.isFound()) {
 						emuManager.tapAtPoint(EMULATOR_NUMBER, lifeEssence.getPoint());
 						sleepTask(100);

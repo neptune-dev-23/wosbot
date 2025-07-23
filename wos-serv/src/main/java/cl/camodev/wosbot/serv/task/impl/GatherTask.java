@@ -106,8 +106,8 @@ public class GatherTask extends DelayedTask {
 			int maxY = queues[Math.min(activeMarchQueues - 1, queues.length - 1)][1].getY(); // Use the Y coordinate of
 																								// the last active queue
 
-			DTOImageSearchResult resource = emuManager.searchTemplate(EMULATOR_NUMBER, gatherType.getTemplate(), 10,
-					342, (425 - 10), maxY, 90);
+			DTOImageSearchResult resource = emuManager.searchTemplate(EMULATOR_NUMBER, gatherType.getTemplate(), new DTOPoint(10,
+					342), new DTOPoint(415, maxY), 90);
 
 			if (resource.isFound()) {
 				logInfo("Resource found, getting remaining time");

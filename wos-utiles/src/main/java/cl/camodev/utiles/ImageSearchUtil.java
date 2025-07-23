@@ -1,6 +1,5 @@
 package cl.camodev.utiles;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -31,10 +30,8 @@ public class ImageSearchUtil {
 	 * </p>
 	 *
 	 * @param templateResourcePath Ruta del template dentro de los recursos del jar.
-	 * @param roiX                 Coordenada X del punto superior izquierdo de la ROI.
-	 * @param roiY                 Coordenada Y del punto superior izquierdo de la ROI.
-	 * @param roiWidth             Ancho de la ROI.
-	 * @param roiHeight            Alto de la ROI.
+	 * @param topLeftCorner        Punto de la esquina superior izquierda del ROI.
+	 * @param bottomRightCorner    Punto de la esquina inferior derecha del ROI.
 	 * @param thresholdPercentage  Umbral de coincidencia en porcentaje (0 a 100). Si el porcentaje de coincidencia es menor que este valor, se
 	 *                             considerará que no hay coincidencia suficiente.
 	 * @return Un objeto {@link DTOImageSearchResult} que contiene:
@@ -46,8 +43,19 @@ public class ImageSearchUtil {
 	 *         </ul>
 	 */
 
-	public static DTOImageSearchResult buscarTemplate(byte[] image, String templateResourcePath, int roiX, int roiY, int roiWidth, int roiHeight, double thresholdPercentage) {
+	public static DTOImageSearchResult buscarTemplate(byte[] image, String templateResourcePath, DTOPoint topLeftCorner, DTOPoint bottomRightCorner, double thresholdPercentage) {
 		try {
+			// Calcular ROI a partir de las esquinas
+			int roiX = topLeftCorner.getX();
+			int roiY = topLeftCorner.getY();
+			int roiWidth = bottomRightCorner.getX() - topLeftCorner.getX();
+			int roiHeight = bottomRightCorner.getY() - topLeftCorner.getY();
+
+			// Validar que las coordenadas formen un rectángulo válido
+			if (roiWidth <= 0 || roiHeight <= 0) {
+				logger.error("Invalid ROI: bottomRightCorner must be greater than topLeftCorner in both dimensions.");
+				return new DTOImageSearchResult(false, null, 0.0);
+			}
 
 			// Decodificar la imagen principal directamente desde el byte[]
 			MatOfByte matOfByte = new MatOfByte(image);
@@ -122,14 +130,4 @@ public class ImageSearchUtil {
 		}
 	}
 
-	private static byte[] readAllBytes(InputStream is) throws IOException {
-		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-		int nRead;
-		byte[] data = new byte[16384];
-		while ((nRead = is.read(data, 0, data.length)) != -1) {
-			buffer.write(data, 0, nRead);
-		}
-		buffer.flush();
-		return buffer.toByteArray();
-	}
 }

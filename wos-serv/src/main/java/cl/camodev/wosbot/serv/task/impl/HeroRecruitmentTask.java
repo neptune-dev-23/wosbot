@@ -33,7 +33,7 @@ public class HeroRecruitmentTask extends DelayedTask {
 
         logInfo("evaluating advanced recruitment");
         DTOImageSearchResult claimResult = emuManager.searchTemplate(EMULATOR_NUMBER,
-                EnumTemplates.HERO_RECRUIT_CLAIM.getTemplate(), 40, 800, 300, 95, 95);
+                EnumTemplates.HERO_RECRUIT_CLAIM.getTemplate(), new DTOPoint(40, 800), new DTOPoint(340, 1100), 95);
         LocalDateTime nextAdvanced = null;
         String text = "";
         if (claimResult.isFound()) {
@@ -68,7 +68,7 @@ public class HeroRecruitmentTask extends DelayedTask {
         nextAdvanced = parseNextFree(text);
         logInfo("evaluating epic recruitment");
         DTOImageSearchResult claimResultEpic = emuManager.searchTemplate(EMULATOR_NUMBER,
-                EnumTemplates.HERO_RECRUIT_CLAIM.getTemplate(), 40, 1160, 300, 95, 95);
+                EnumTemplates.HERO_RECRUIT_CLAIM.getTemplate(), new DTOPoint(40, 1160), new DTOPoint(340, 1255), 95);
         LocalDateTime nextEpic;
         if (claimResultEpic.isFound()) {
             logInfo("epic recruitment available, tapping");
