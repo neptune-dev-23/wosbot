@@ -108,11 +108,9 @@ public class TaskQueue {
 
 			boolean idlingTimeExceded = false;
 			ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "Getting queue slot"));
-			logger.info("Profile " + profile.getName() + " is getting queue slot.");
 			try {
-				EmulatorManager.getInstance().adquireEmulatorSlot(profile.getId(), (thread, position) -> {
+				EmulatorManager.getInstance().adquireEmulatorSlot(profile, (thread, position) -> {
 					ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "Waiting for slot, position: " + position));
-					logger.info("Profile " + profile.getName() + " waiting for slot, position: " + position);
 				});
 			} catch (InterruptedException e) {
 				logger.error("Interrupted while acquiring emulator slot for profile " + profile.getName(), e);
@@ -290,14 +288,14 @@ public class TaskQueue {
 		LocalDateTime scheduledTime = LocalDateTime.now().plusSeconds(minDelay);
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 		ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "Idling till " + formatter.format(scheduledTime)));
-		EmulatorManager.getInstance().releaseEmulatorSlot();
+		EmulatorManager.getInstance().releaseEmulatorSlot(profile);
 	}
 
 	private void encolarNuevaTarea() {
         ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueue", profile.getName(), "shcheduled task's will start soon");
 
         try {
-            EmulatorManager.getInstance().adquireEmulatorSlot(profile.getId(), (thread, position) -> {
+            EmulatorManager.getInstance().adquireEmulatorSlot(profile, (thread, position) -> {
                 ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "Waiting for slot, position: " + position));
             });
         } catch (InterruptedException e) {

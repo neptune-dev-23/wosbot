@@ -145,7 +145,8 @@ public abstract class DelayedTask implements Runnable, Delayed, Comparable<Delay
 
     protected void sleepTask(long millis) {
         try {
-            Thread.sleep(millis);
+            long speedFactor = (long) (millis*1.3);
+            Thread.sleep(speedFactor);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("Task was interrupted during sleep", e);
