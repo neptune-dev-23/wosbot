@@ -31,7 +31,7 @@ public class ProfileRepository implements IProfileRepository {
 
 	@Override
 	public List<DTOProfiles> getProfiles() {
-		String queryProfiles = "SELECT new cl.camodev.wosbot.ot.DTOProfiles(p.id, p.name, p.emulatorNumber, p.enabled) FROM Profile p";
+		String queryProfiles = "SELECT new cl.camodev.wosbot.ot.DTOProfiles(p.id, p.name, p.emulatorNumber, p.enabled, p.priority) FROM Profile p";
 
 		// Obtener perfiles usando getQueryResults
 		List<DTOProfiles> profiles = persistence.getQueryResults(queryProfiles, DTOProfiles.class, null);
@@ -42,6 +42,7 @@ public class ProfileRepository implements IProfileRepository {
 			defaultProfile.setName("Default");
 			defaultProfile.setEmulatorNumber("0");
 			defaultProfile.setEnabled(true);
+			defaultProfile.setPriority(50L);
 
 			persistence.createEntity(defaultProfile);
 

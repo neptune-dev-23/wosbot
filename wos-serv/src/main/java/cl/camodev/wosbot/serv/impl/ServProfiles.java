@@ -100,6 +100,7 @@ public class ServProfiles implements IServProfile {
 			existingProfile.setName(profileDTO.getName());
 			existingProfile.setEmulatorNumber(profileDTO.getEmulatorNumber());
 			existingProfile.setEnabled(profileDTO.getEnabled());
+			existingProfile.setPriority(profileDTO.getPriority());
 
 			List<Config> existingConfigs = iConfigRepository.getProfileConfigs(existingProfile.getId());
 			for (Config config : existingConfigs) {
@@ -168,20 +169,12 @@ public class ServProfiles implements IServProfile {
 
 			for (DTOProfiles profile : allProfiles) {
 				try {
-					// Create a copy of the profile with updated configurations
-					DTOProfiles updatedProfile = new DTOProfiles(
-						profile.getId(), 
-						profile.getName(), 
-						profile.getEmulatorNumber(), 
-						profile.getEnabled()
-					);
-					
 					// Copy all configurations from template profile
-					updatedProfile.getConfigs().clear();
-					updatedProfile.getConfigs().addAll(templateProfile.getConfigs());
+					profile.getConfigs().clear();
+					profile.getConfigs().addAll(templateProfile.getConfigs());
 					
 					// Save the updated profile
-					boolean saved = saveProfile(updatedProfile);
+					boolean saved = saveProfile(profile);
 					if (!saved) {
 						allSuccessful = false;
 						System.err.println("Failed to update profile: " + profile.getName());

@@ -30,6 +30,9 @@ public class Profile {
 	@Column(name = "enabled", nullable = false)
 	private Boolean enabled;
 
+	@Column(name = "priority", nullable = false, columnDefinition = "BIGINT DEFAULT 50")
+	private Long priority;
+
 	@OneToMany(mappedBy = "profile", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<Config> configs = new ArrayList<>();
 
@@ -73,5 +76,13 @@ public class Profile {
 
 	public void setConfigs(List<Config> configs) {
 		this.configs = configs;
+	}
+
+	public Long getPriority() {
+		return priority;
+	}
+
+	public void setPriority(Long priority) {
+		this.priority = priority;
 	}
 }
