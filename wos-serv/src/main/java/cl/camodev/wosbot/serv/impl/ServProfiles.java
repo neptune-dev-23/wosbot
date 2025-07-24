@@ -27,9 +27,9 @@ public class ServProfiles implements IServProfile {
 	private static ServProfiles instance;
 
 
-	private IProfileRepository iProfileRepository;
+	private final IProfileRepository iProfileRepository;
 
-	private IConfigRepository iConfigRepository;
+	private final IConfigRepository iConfigRepository;
 
 	private List<IProfileStatusChangeListener> listeners;
 
