@@ -9,6 +9,8 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 
@@ -25,6 +27,12 @@ public class EditProfileController implements Initializable {
 
     @FXML
     private CheckBox chkEnabled;
+
+    @FXML
+    private Slider sliderPriority;
+
+    @FXML
+    private Label lblPriorityValue;
 
     @FXML
     private Button btnSave;
@@ -52,6 +60,12 @@ public class EditProfileController implements Initializable {
                 txtEmulatorNumber.setText(oldValue);
             }
         });
+
+        // Configurar el slider de prioridad
+        sliderPriority.valueProperty().addListener((observable, oldValue, newValue) -> {
+            int priorityValue = newValue.intValue();
+            lblPriorityValue.setText(String.valueOf(priorityValue));
+        });
     }
 
     public void setProfileToEdit(ProfileAux profile) {
@@ -76,6 +90,8 @@ public class EditProfileController implements Initializable {
             txtProfileName.setText(profileToEdit.getName());
             txtEmulatorNumber.setText(profileToEdit.getEmulatorNumber());
             chkEnabled.setSelected(profileToEdit.isEnabled());
+            sliderPriority.setValue(profileToEdit.getPriority().doubleValue());
+            lblPriorityValue.setText(String.valueOf(profileToEdit.getPriority()));
         }
     }
 
@@ -86,6 +102,7 @@ public class EditProfileController implements Initializable {
             profileToEdit.setName(txtProfileName.getText());
             profileToEdit.setEmulatorNumber(txtEmulatorNumber.getText());
             profileToEdit.setEnabled(chkEnabled.isSelected());
+            profileToEdit.setPriority((long) sliderPriority.getValue());
 
             // Save to database
             boolean success = actionController.saveProfile(profileToEdit);
@@ -148,7 +165,7 @@ public class EditProfileController implements Initializable {
             }
         }
 
-        if (errorMessage.length() > 0) {
+        if (!errorMessage.isEmpty()) {
             // Show validation error
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Invalid Input");

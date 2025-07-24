@@ -227,7 +227,7 @@ public class EmulatorManager {
 			}
 
 			// Crear el objeto que representa al hilo actual con su prioridad
-			WaitingThread currentWaiting = new WaitingThread(Thread.currentThread(), profile.getId());
+			WaitingThread currentWaiting = new WaitingThread(Thread.currentThread(), profile.getPriority());
 			waitingQueue.add(currentWaiting);
 
 			// Esperar con timeout para poder notificar la posición periódicamente.
