@@ -387,4 +387,7 @@ public class TaskQueue {
 		ServTaskManager.getInstance().setTaskState(profile.getId(), taskState);
 	}
 
+	public DTOProfiles getProfile() {
+		return profile;
+	}
 }
