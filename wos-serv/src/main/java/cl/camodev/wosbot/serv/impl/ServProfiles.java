@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
-
 import cl.camodev.wosbot.almac.entity.Config;
 import cl.camodev.wosbot.almac.entity.Profile;
 import cl.camodev.wosbot.almac.entity.TpConfig;
@@ -18,10 +17,15 @@ import cl.camodev.wosbot.ot.DTOProfileStatus;
 import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.serv.IProfileStatusChangeListener;
 import cl.camodev.wosbot.serv.IServProfile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ServProfiles implements IServProfile {
 
+	private final static Logger logger = LoggerFactory.getLogger(ServProfiles.class);
+
 	private static ServProfiles instance;
+
 
 	private IProfileRepository iProfileRepository;
 
@@ -71,13 +75,12 @@ public class ServProfiles implements IServProfile {
 			newProfile.setName(profile.getName());
 			newProfile.setEmulatorNumber(profile.getEmulatorNumber());
 			newProfile.setEnabled(profile.getEnabled());
+			newProfile.setPriority(profile.getPriority());
 
-			boolean result = iProfileRepository.addProfile(newProfile);
-
-			return result;
+            return iProfileRepository.addProfile(newProfile);
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("Error occurred while adding profile: {}", e.getMessage());
 			return false;
 		}
 	}
@@ -120,7 +123,7 @@ public class ServProfiles implements IServProfile {
 			return iProfileRepository.saveProfile(existingProfile);
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("Error occurred while saving profile: {}", e.getMessage());
 			return false;
 		}
 	}
@@ -146,7 +149,7 @@ public class ServProfiles implements IServProfile {
 			return iProfileRepository.deleteProfile(existingProfile);
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("Error occurred while deleting profile: {}", e.getMessage());
 			return false;
 		}
 	}
@@ -177,10 +180,10 @@ public class ServProfiles implements IServProfile {
 					boolean saved = saveProfile(profile);
 					if (!saved) {
 						allSuccessful = false;
-						System.err.println("Failed to update profile: " + profile.getName());
+						logger.warn("Failed to save profile: {}", profile.getName());
 					}
 				} catch (Exception e) {
-					e.printStackTrace();
+				logger.error("Error occurred while updating profile {}: {}", profile.getName(), e.getMessage());
 					allSuccessful = false;
 				}
 			}
@@ -188,7 +191,7 @@ public class ServProfiles implements IServProfile {
 			return allSuccessful;
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("Error occurred while bulk updating profiles: {}", e.getMessage());
 			return false;
 		}
 	}
