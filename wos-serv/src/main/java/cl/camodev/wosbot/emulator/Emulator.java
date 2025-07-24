@@ -38,14 +38,13 @@ import org.slf4j.LoggerFactory;
  * @author cacuna
  */
 public abstract class Emulator {
-	private static final Logger logger = LoggerFactory.getLogger(Emulator.class);
-	protected String consolePath;
-	protected AndroidDebugBridge bridge = null;
-
 	protected static final int MAX_RETRIES = 10;
 	protected static final int RETRY_DELAY_MS = 3000;
 	protected static final int INIT_LOOPS = 10;
 	protected static final int INIT_DELAY_MS = 500;
+	private static final Logger logger = LoggerFactory.getLogger(Emulator.class);
+	protected String consolePath;
+	protected AndroidDebugBridge bridge = null;
 
 	public Emulator(String consolePath) {
 		this.consolePath = consolePath;
@@ -240,8 +239,26 @@ public abstract class Emulator {
 			}
 		}
 
-        logger.error("All attempts for {} failed on {}", actionName, emulatorNumber);
-		throw new RuntimeException("All attempts for " + actionName + " failed on " + emulatorNumber);
+		// Last resort: restart ADB and try one final time after all retries are exhausted
+		logger.warn("All {} attempts failed for {} on {}. Attempting final ADB restart and retry...",
+					MAX_RETRIES, actionName, emulatorNumber);
+		try {
+			restartAdb();
+			Thread.sleep(RETRY_DELAY_MS);
+
+			// Final attempt after ADB restart
+			IDevice device = findDevice(emulatorNumber);
+			if (device != null && device.isOnline()) {
+				logger.info("Final attempt after ADB restart for {} on {}", actionName, emulatorNumber);
+				return action.apply(device);
+			}
+		} catch (Exception e) {
+			logger.error("Final attempt after ADB restart also failed for {} on {}: {}",
+						actionName, emulatorNumber, e.getMessage());
+		}
+
+        logger.error("All attempts including final ADB restart failed for {} on {}", actionName, emulatorNumber);
+		throw new RuntimeException("All attempts including final ADB restart failed for " + actionName + " on " + emulatorNumber);
 	}
 
 	/**
