@@ -14,6 +14,7 @@ import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.emulator.EmulatorManager;
+import cl.camodev.wosbot.ex.ADBConnectionException;
 import cl.camodev.wosbot.ex.HomeNotFoundException;
 import cl.camodev.wosbot.ex.StopExecutionException;
 import cl.camodev.wosbot.ot.DTOProfileStatus;
@@ -170,8 +171,10 @@ public class TaskQueue {
 					} catch (StopExecutionException e){
 						logger.error("Execution stopped for task " + task.getTaskName() + " for profile " + profile.getName() + ": " + e.getMessage(), e);
 						stop();
-					}
-					catch (Exception e) {
+					}catch (ADBConnectionException e){
+                        logger.error("ADB connection error executing task {} for profile {}: {}", task.getTaskName(), profile.getName(), e.getMessage(), e);
+						addTask(new InitializeTask(profile, TpDailyTaskEnum.INITIALIZE));
+					}catch (Exception e) {
 						ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, task.getTaskName(), profile.getName(), e.getMessage());
 						logger.error("Error executing task " + task.getTaskName() + " for profile " + profile.getName() + ": " + e.getMessage(), e);
 					}
@@ -220,7 +223,8 @@ public class TaskQueue {
 
 					}
 
-					taskState.setExecuting(false);
+                    assert taskState != null;
+                    taskState.setExecuting(false);
 					taskState.setScheduled(task.isRecurring());
 					taskState.setLastExecutionTime(LocalDateTime.now());
 					taskState.setNextExecutionTime(task.getScheduled());

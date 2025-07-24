@@ -15,6 +15,7 @@ import java.util.function.Function;
 
 import javax.imageio.ImageIO;
 
+import cl.camodev.wosbot.ex.ADBConnectionException;
 import com.android.ddmlib.*;
 
 import cl.camodev.wosbot.ot.DTOPoint;
@@ -189,6 +190,11 @@ public abstract class Emulator {
 	 * @return Result of the action
 	 */
 	protected <T> T withRetries(String emulatorNumber, Function<IDevice, T> action, String actionName) {
+		if (!isRunning(emulatorNumber)){
+			logger.error("Emulator {} is not running, cannot perform action {}", emulatorNumber, actionName);
+			throw new ADBConnectionException("Emulator " + emulatorNumber + " is not running, cannot perform action " + actionName);
+		}
+
 		for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
 			try {
 				// Use optimized findDevice that includes automatic connection
@@ -258,7 +264,7 @@ public abstract class Emulator {
 		}
 
         logger.error("All attempts including final ADB restart failed for {} on {}", actionName, emulatorNumber);
-		throw new RuntimeException("All attempts including final ADB restart failed for " + actionName + " on " + emulatorNumber);
+		throw new ADBConnectionException("All attempts including final ADB restart failed for " + actionName + " on " + emulatorNumber);
 	}
 
 	/**
