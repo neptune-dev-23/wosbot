@@ -53,14 +53,42 @@ public abstract class Emulator {
 	}
 
 	/**
-	 * Initializes the ddmlib bridge for ADB communication.
+	 * Gets the ADB executable path from the project's execution directory.
+	 * @return Path to the ADB executable
+	 */
+	private String getProjectAdbPath() {
+		// Get the current working directory (where the application is running)
+		String currentDir = System.getProperty("user.dir");
+
+		// Check if we're in the wos-hmi directory or the root project directory
+		File adbFile = new File(currentDir, "adb" + File.separator + "adb.exe");
+		if (adbFile.exists()) {
+			return adbFile.getAbsolutePath();
+		}
+
+		// Try the wos-hmi subdirectory if we're in the root
+		adbFile = new File(currentDir, "wos-hmi" + File.separator + "adb" + File.separator + "adb.exe");
+		if (adbFile.exists()) {
+			return adbFile.getAbsolutePath();
+		}
+
+		// Fallback to the original console path if project ADB not found
+		logger.warn("Project ADB not found, falling back to console path: {}", consolePath);
+		return consolePath + File.separator + "adb.exe";
+	}
+
+	/**
+	 * Initializes the ddmlib bridge for ADB communication using the project's ADB.
 	 */
 	protected void initializeBridge() {
 		if (bridge == null) {
 			AndroidDebugBridge.disconnectBridge(5000, TimeUnit.MILLISECONDS);
 			AndroidDebugBridge.terminate();
 			AndroidDebugBridge.init(false);
-			bridge = AndroidDebugBridge.createBridge(this.consolePath+ File.separator + "adb.exe", true, 5000, TimeUnit.MILLISECONDS);
+
+			String adbPath = getProjectAdbPath();
+			logger.info("Initializing ADB bridge with path: {}", adbPath);
+			bridge = AndroidDebugBridge.createBridge(adbPath, true, 5000, TimeUnit.MILLISECONDS);
 		}
 	}
 
@@ -156,7 +184,7 @@ public abstract class Emulator {
 			String address = extractAddressFromSerial(serial);
             logger.info("Attempting to connect to: {}", address);
 
-			String adbPath = this.consolePath+ File.separator + "adb.exe";
+			String adbPath = getProjectAdbPath();
 			ProcessBuilder pb = new ProcessBuilder(adbPath, "connect", address);
 			pb.directory(new File(adbPath).getParentFile());
 
@@ -366,13 +394,16 @@ public abstract class Emulator {
 	}
 
 	/**
-	 * Restarts the ADB bridge using ddmlib.
+	 * Restarts the ADB bridge using the project's ADB executable.
 	 */
 	public void restartAdb() {
 		AndroidDebugBridge.disconnectBridge(5000, TimeUnit.MILLISECONDS);
 		AndroidDebugBridge.terminate();
 		AndroidDebugBridge.init(false);
-		bridge = AndroidDebugBridge.createBridge(consolePath + File.separator + "adb.exe", true, 5000, TimeUnit.MILLISECONDS);
+
+		String adbPath = getProjectAdbPath();
+		logger.info("Restarting ADB bridge with path: {}", adbPath);
+		bridge = AndroidDebugBridge.createBridge(adbPath, true, 5000, TimeUnit.MILLISECONDS);
 		logger.info("ADB restarted successfully");
 	}
 
