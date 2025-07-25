@@ -12,8 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
-
-import cl.camodev.utiles.UtilCV;
+import cl.camodev.utiles.ImageSearchUtil;
 import cl.camodev.wosbot.alliance.view.AllianceLayoutController;
 import cl.camodev.wosbot.city.view.CityEventsLayoutController;
 import cl.camodev.wosbot.city.view.CityUpgradesLayoutController;
@@ -355,7 +354,7 @@ public class LauncherLayoutController implements IProfileLoadListener {
 
 	private void initializeExternalLibraries() {
 		try {
-			UtilCV.loadNativeLibrary("/native/opencv/opencv_java4110.dll");
+			ImageSearchUtil.loadNativeLibrary("/native/opencv/opencv_java4110.dll");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
