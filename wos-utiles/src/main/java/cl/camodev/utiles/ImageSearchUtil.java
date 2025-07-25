@@ -2,6 +2,8 @@ package cl.camodev.utiles;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 
 import org.opencv.core.Core;
@@ -131,6 +133,142 @@ public class ImageSearchUtil {
 			logger.error("Exception during template search.", e);
 			return new DTOImageSearchResult(false, null, 0.0);
 		}
+	}
+
+	/**
+	 * Performs the search for multiple matches of a template within a main image.
+	 * <p>
+	 * The main image is loaded from an external path, while the template is obtained from the jar resources. A region of
+	 * interest (ROI) is defined in the main image to limit the search. Matching is performed using OpenCV's TM_CCOEFF_NORMED method.
+	 * All matches that exceed the specified threshold are searched for.
+	 * </p>
+	 *
+	 * @param image                Byte array of the main image.
+	 * @param templateResourcePath Path of the template within the jar resources.
+	 * @param topLeftCorner        Point of the upper left corner of the ROI.
+	 * @param bottomRightCorner    Point of the lower right corner of the ROI.
+	 * @param thresholdPercentage  Match threshold as a percentage (0 to 100). Only matches that exceed this value will be included.
+	 * @param maxResults           Maximum number of results to return. If 0 or negative, returns all results.
+	 * @return A list of {@link DTOImageSearchResult} objects containing all found matches that exceed the threshold.
+	 */
+	public static List<DTOImageSearchResult> searchTemplateMultiple(byte[] image, String templateResourcePath, DTOPoint topLeftCorner, DTOPoint bottomRightCorner, double thresholdPercentage, int maxResults) {
+		List<DTOImageSearchResult> results = new ArrayList<>();
+
+		try {
+			// Calculate ROI from corners
+			int roiX = topLeftCorner.getX();
+			int roiY = topLeftCorner.getY();
+			int roiWidth = bottomRightCorner.getX() - topLeftCorner.getX();
+			int roiHeight = bottomRightCorner.getY() - topLeftCorner.getY();
+
+			// Validate that coordinates form a valid rectangle
+			if (roiWidth <= 0 || roiHeight <= 0) {
+				logger.error("Invalid ROI: bottomRightCorner must be greater than topLeftCorner in both dimensions.");
+				return results;
+			}
+
+			// Decode the main image directly from byte[]
+			MatOfByte matOfByte = new MatOfByte(image);
+			Mat mainImage = Imgcodecs.imdecode(matOfByte, Imgcodecs.IMREAD_COLOR);
+
+			if (mainImage.empty()) {
+				logger.error("Error while loading image from byte array.");
+				return results;
+			}
+
+			// Load template from resources
+			InputStream is = ImageSearchUtil.class.getResourceAsStream(templateResourcePath);
+			if (is == null) {
+				logger.error("Template resource not found: {}", templateResourcePath);
+				return results;
+			}
+
+			// Read template bytes
+			byte[] templateBytes = is.readAllBytes();
+			is.close();
+
+			// Decode template into a Mat
+			MatOfByte templateMatOfByte = new MatOfByte(templateBytes);
+			Mat template = Imgcodecs.imdecode(templateMatOfByte, Imgcodecs.IMREAD_COLOR);
+
+			if (template.empty()) {
+				logger.error("Error decoding template.");
+				return results;
+			}
+
+			// Validate ROI
+			if (roiX + roiWidth > mainImage.cols() || roiY + roiHeight > mainImage.rows()) {
+				logger.error("ROI exceeds image dimensions. Image size: {}x{}, ROI: {}x{} at ({}, {})",
+						mainImage.cols(), mainImage.rows(), roiWidth, roiHeight, roiX, roiY);
+				return results;
+			}
+
+			// Create ROI
+			Rect roi = new Rect(roiX, roiY, roiWidth, roiHeight);
+			Mat imageROI = new Mat(mainImage, roi);
+
+			// Verify size
+			int resultCols = imageROI.cols() - template.cols() + 1;
+			int resultRows = imageROI.rows() - template.rows() + 1;
+			if (resultCols <= 0 || resultRows <= 0) {
+				logger.error("Template size is larger than ROI size. Template size: {}x{}, ROI size: {}x{}",
+						template.cols(), template.rows(), imageROI.cols(), imageROI.rows());
+				return results;
+			}
+
+			// Template matching
+			Mat matchResult = new Mat(resultRows, resultCols, CvType.CV_32FC1);
+			Imgproc.matchTemplate(imageROI, template, matchResult, Imgproc.TM_CCOEFF_NORMED);
+
+			// Search for all matches that exceed the threshold
+			double thresholdDecimal = thresholdPercentage / 100.0;
+
+			// Create a copy to filter found results
+			Mat resultCopy = matchResult.clone();
+			int templateWidth = template.cols();
+			int templateHeight = template.rows();
+
+			while (true) {
+				Core.MinMaxLocResult mmr = Core.minMaxLoc(resultCopy);
+				double matchValue = mmr.maxVal;
+				double matchPercentage = matchValue * 100.0;
+
+				if (matchValue < thresholdDecimal) {
+					break; // No more valid matches
+				}
+
+				// Adjust coordinate to be at the center of the match
+				Point matchLoc = mmr.maxLoc;
+				double centerX = matchLoc.x + roi.x + (templateWidth / 2.0);
+				double centerY = matchLoc.y + roi.y + (templateHeight / 2.0);
+
+				results.add(new DTOImageSearchResult(true, new DTOPoint((int) centerX, (int) centerY), matchPercentage));
+
+				// Check if we have reached the maximum number of results
+				if (maxResults > 0 && results.size() >= maxResults) {
+					break;
+				}
+
+				// Suppress this match and surrounding area to avoid duplicates
+				int suppressX = Math.max(0, (int)matchLoc.x - templateWidth/2);
+				int suppressY = Math.max(0, (int)matchLoc.y - templateHeight/2);
+				int suppressWidth = Math.min(templateWidth, resultCopy.cols() - suppressX);
+				int suppressHeight = Math.min(templateHeight, resultCopy.rows() - suppressY);
+
+				if (suppressWidth > 0 && suppressHeight > 0) {
+					Rect suppressRect = new Rect(suppressX, suppressY, suppressWidth, suppressHeight);
+					Mat suppressArea = new Mat(resultCopy, suppressRect);
+					suppressArea.setTo(new org.opencv.core.Scalar(0)); // Set to 0 to remove this area
+				}
+			}
+
+			logger.info("Found {} matches for template {} with threshold {}%", results.size(), templateResourcePath, thresholdPercentage);
+
+		} catch (IOException e) {
+			logger.error("Exception during multiple template search.", e);
+		}
+
+		return results;
 	}
 
 }
