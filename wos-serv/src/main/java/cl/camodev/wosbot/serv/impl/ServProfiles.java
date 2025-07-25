@@ -76,6 +76,7 @@ public class ServProfiles implements IServProfile {
 			newProfile.setEmulatorNumber(profile.getEmulatorNumber());
 			newProfile.setEnabled(profile.getEnabled());
 			newProfile.setPriority(profile.getPriority());
+			newProfile.setReconnectionTime(profile.getReconnectionTime());
 
             return iProfileRepository.addProfile(newProfile);
 
@@ -99,11 +100,12 @@ public class ServProfiles implements IServProfile {
 				return false;
 			}
 
-			// Actualizar datos del perfil
+			// Actualizar los campos del perfil
 			existingProfile.setName(profileDTO.getName());
 			existingProfile.setEmulatorNumber(profileDTO.getEmulatorNumber());
 			existingProfile.setEnabled(profileDTO.getEnabled());
 			existingProfile.setPriority(profileDTO.getPriority());
+			existingProfile.setReconnectionTime(profileDTO.getReconnectionTime());
 
 			List<Config> existingConfigs = iConfigRepository.getProfileConfigs(existingProfile.getId());
 			for (Config config : existingConfigs) {

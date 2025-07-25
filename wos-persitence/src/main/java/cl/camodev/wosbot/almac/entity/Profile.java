@@ -33,6 +33,9 @@ public class Profile {
 	@Column(name = "priority", nullable = false, columnDefinition = "BIGINT DEFAULT 50")
 	private Long priority;
 
+	@Column(name = "reconnection_time", nullable = false, columnDefinition = "BIGINT DEFAULT 0")
+	private Long reconnectionTime;
+
 	@OneToMany(mappedBy = "profile", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<Config> configs = new ArrayList<>();
 
@@ -84,5 +87,13 @@ public class Profile {
 
 	public void setPriority(Long priority) {
 		this.priority = priority;
+	}
+
+	public Long getReconnectionTime() {
+		return reconnectionTime;
+	}
+
+	public void setReconnectionTime(Long reconnectionTime) {
+		this.reconnectionTime = reconnectionTime;
 	}
 }

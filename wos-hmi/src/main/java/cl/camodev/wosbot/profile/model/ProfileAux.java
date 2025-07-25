@@ -20,18 +20,19 @@ public class ProfileAux {
 	private BooleanProperty enabled;
 	private LongProperty priority;
 	private StringProperty status;
+	private LongProperty reconnectionTime;
 
 	private List<ConfigAux> configs = new ArrayList<ConfigAux>();
 
 
-	// Constructor completo con prioridad
-	public ProfileAux(Long id, String name, String emulatorNumber, boolean enabled, Long priority, String status) {
+	public ProfileAux(Long id, String name, String emulatorNumber, boolean enabled, Long priority, String status, Long reconnectionTime) {
 		this.id = new SimpleLongProperty(id);
 		this.name = new SimpleStringProperty(name);
 		this.emulatorNumber = new SimpleStringProperty(emulatorNumber);
 		this.enabled = new SimpleBooleanProperty(enabled);
 		this.priority = new SimpleLongProperty(priority);
 		this.status = new SimpleStringProperty(status);
+		this.reconnectionTime = new SimpleLongProperty(reconnectionTime);
 	}
 
 	// Métodos para la propiedad 'id'
@@ -110,6 +111,18 @@ public class ProfileAux {
 
 	public LongProperty priorityProperty() {
 		return priority;
+	}
+
+	public Long getReconnectionTime() {
+		return reconnectionTime.get();
+	}
+
+	public void setReconnectionTime(Long reconnectionTime) {
+		this.reconnectionTime.set(reconnectionTime);
+	}
+
+	public LongProperty reconnectionTimeProperty() {
+		return reconnectionTime;
 	}
 
 	public List<ConfigAux> getConfigs() {
