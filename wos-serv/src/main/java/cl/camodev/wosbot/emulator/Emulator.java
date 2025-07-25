@@ -47,6 +47,8 @@ public abstract class Emulator {
 	protected String consolePath;
 	protected AndroidDebugBridge bridge = null;
 
+	private final ThreadLocal<BufferedImage> reusableImage = new ThreadLocal<>();
+
 	public Emulator(String consolePath) {
 		this.consolePath = consolePath;
 		initializeBridge();
@@ -298,12 +300,12 @@ public abstract class Emulator {
 	/**
 	 * Converts a RawImage to BufferedImage.
 	 * @param rawImage RawImage from ddmlib
-	 * @return BufferedImage representation
+	 * @param image BufferedImage to fill
 	 */
-	protected BufferedImage convertRawImageToBufferedImage(RawImage rawImage) {
-		BufferedImage image = new BufferedImage(rawImage.width, rawImage.height, BufferedImage.TYPE_INT_ARGB);
-
+	protected void convertRawImageToBufferedImage(RawImage rawImage, BufferedImage image) {
+		int[] pixels = new int[rawImage.width * rawImage.height];
 		int index = 0;
+
 		for (int y = 0; y < rawImage.height; y++) {
 			for (int x = 0; x < rawImage.width; x++) {
 				int offset = index * rawImage.bpp / 8;
@@ -311,16 +313,13 @@ public abstract class Emulator {
 				int r = getColorComponent(rawImage, offset, rawImage.red_offset);
 				int g = getColorComponent(rawImage, offset, rawImage.green_offset);
 				int b = getColorComponent(rawImage, offset, rawImage.blue_offset);
-				int a = rawImage.alpha_offset != -1 ? getColorComponent(rawImage, offset, rawImage.alpha_offset) : 255;
 
-				int argb = (a << 24) | (r << 16) | (g << 8) | b;
-
-				image.setRGB(x, y, argb);
+				pixels[index] = (r << 16) | (g << 8) | b; // Sin canal alpha
 				index++;
 			}
 		}
 
-		return image;
+		image.setRGB(0, 0, rawImage.width, rawImage.height, pixels, 0, rawImage.width);
 	}
 
 	/**
@@ -350,7 +349,14 @@ public abstract class Emulator {
 					throw new RuntimeException("RawImage es null");
 				}
 
-				BufferedImage image = convertRawImageToBufferedImage(rawImage);
+				BufferedImage image = reusableImage.get();
+				if (image == null ||
+						image.getWidth() != rawImage.width ||
+						image.getHeight() != rawImage.height) {
+						image = new BufferedImage(rawImage.width, rawImage.height, BufferedImage.TYPE_INT_RGB);
+					reusableImage.set(image);
+				}
+				convertRawImageToBufferedImage(rawImage, image);
 				ByteArrayOutputStream baos = new ByteArrayOutputStream();
 				ImageIO.write(image, "png", baos);
 				return baos.toByteArray();
