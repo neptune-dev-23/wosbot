@@ -303,7 +303,7 @@ public class ProfileManagerLayoutController implements IProfileChangeObserver {
 			Platform.runLater(() -> {
 				profiles.clear();
 				dtoProfiles.forEach(dtoProfile -> {
-					ProfileAux profileAux = new ProfileAux(dtoProfile.getId(), dtoProfile.getName(), dtoProfile.getEmulatorNumber(), dtoProfile.getEnabled(), dtoProfile.getPriority(), "NOT RUNNING");
+					ProfileAux profileAux = new ProfileAux(dtoProfile.getId(), dtoProfile.getName(), dtoProfile.getEmulatorNumber(), dtoProfile.getEnabled(), dtoProfile.getPriority(), "NOT RUNNING", dtoProfile.getReconnectionTime());
 					dtoProfile.getConfigs().forEach(config -> {
 						profileAux.getConfigs().add(new ConfigAux(config.getNombreConfiguracion(), config.getValor()));
 					});

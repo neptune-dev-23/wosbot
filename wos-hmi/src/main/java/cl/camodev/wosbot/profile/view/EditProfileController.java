@@ -40,6 +40,9 @@ public class EditProfileController implements Initializable {
     @FXML
     private Button btnCancel;
 
+    @FXML
+    private TextField txtReconnectionTime;
+
     private ProfileAux profileToEdit;
     private ProfileManagerActionController actionController;
     private Stage dialogStage;
@@ -58,6 +61,13 @@ public class EditProfileController implements Initializable {
         txtEmulatorNumber.textProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue.length() > 3) {
                 txtEmulatorNumber.setText(oldValue);
+            }
+        });
+
+        // Add input validation to reconnection time field - only allow numbers
+        txtReconnectionTime.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (!newValue.matches("\\d*")) {
+                txtReconnectionTime.setText(newValue.replaceAll("[^\\d]", ""));
             }
         });
 
@@ -92,6 +102,7 @@ public class EditProfileController implements Initializable {
             chkEnabled.setSelected(profileToEdit.isEnabled());
             sliderPriority.setValue(profileToEdit.getPriority().doubleValue());
             lblPriorityValue.setText(String.valueOf(profileToEdit.getPriority()));
+            txtReconnectionTime.setText(String.valueOf(profileToEdit.getReconnectionTime()));
         }
     }
 
@@ -103,6 +114,10 @@ public class EditProfileController implements Initializable {
             profileToEdit.setEmulatorNumber(txtEmulatorNumber.getText());
             profileToEdit.setEnabled(chkEnabled.isSelected());
             profileToEdit.setPriority((long) sliderPriority.getValue());
+
+            // Update reconnection time
+            long reconnectionTime = Long.parseLong(txtReconnectionTime.getText().isEmpty() ? "0" : txtReconnectionTime.getText());
+            profileToEdit.setReconnectionTime(reconnectionTime);
 
             // Save to database
             boolean success = actionController.saveProfile(profileToEdit);
@@ -162,6 +177,21 @@ public class EditProfileController implements Initializable {
                 }
             } catch (NumberFormatException e) {
                 errorMessage.append("Emulator number must be a valid integer.\n");
+            }
+        }
+
+        // Validate reconnection time
+        if (txtReconnectionTime.getText() == null || txtReconnectionTime.getText().trim().isEmpty()) {
+            errorMessage.append("Reconnection time cannot be empty.\n");
+        } else {
+            String reconnectionTimeText = txtReconnectionTime.getText().trim();
+            try {
+                long reconnectionTime = Long.parseLong(reconnectionTimeText);
+                if (reconnectionTime < 0) {
+                    errorMessage.append("Reconnection time must be a non-negative number (0 or greater).\n");
+                }
+            } catch (NumberFormatException e) {
+                errorMessage.append("Reconnection time must be a valid number.\n");
             }
         }
 

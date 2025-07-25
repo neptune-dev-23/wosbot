@@ -14,6 +14,7 @@ public class DTOProfiles {
     private Boolean enabled;
     private Long priority;
     private String status;
+    private Long reconnectionTime; // Tiempo de reconexión en segundos
     private List<DTOConfig> configs = new ArrayList<>();
     private HashMap<String, String> globalsettings = new HashMap<>();
 
@@ -24,16 +25,16 @@ public class DTOProfiles {
      */
     public DTOProfiles(Long id) {
         this.id = id;
-
     }
 
-
-    public DTOProfiles(Long id, String name, String emulatorNumber, Boolean enabled, Long priority) {
+    // Constructor completo incluyendo reconnectionTime
+    public DTOProfiles(Long id, String name, String emulatorNumber, Boolean enabled, Long priority, Long reconnectionTime) {
         this.id = id;
         this.name = name;
         this.emulatorNumber = emulatorNumber;
         this.enabled = enabled;
         this.priority = priority;
+        this.reconnectionTime = reconnectionTime;
     }
 
     // Getters y Setters
@@ -134,6 +135,14 @@ public class DTOProfiles {
 
     public void setPriority(Long priority) {
         this.priority = priority;
+    }
+
+    public Long getReconnectionTime() {
+        return reconnectionTime;
+    }
+
+    public void setReconnectionTime(Long reconnectionTime) {
+        this.reconnectionTime = reconnectionTime != null && reconnectionTime >= 0 ? reconnectionTime : 30L;
     }
 
 }
