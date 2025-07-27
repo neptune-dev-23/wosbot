@@ -4,6 +4,7 @@ import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.emulator.EmulatorManager;
+import cl.camodev.wosbot.ex.ProfileInReconnectStateException;
 import cl.camodev.wosbot.ex.StopExecutionException;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOProfiles;
@@ -29,8 +30,8 @@ public class InitializeTask extends DelayedTask {
 			} else {
 				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "emulator not found, trying to start it");
 				EmulatorManager.getInstance().launchEmulator(EMULATOR_NUMBER);
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "waiting 30 seconds before checking again");
-				sleepTask(30000);
+				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "waiting 10 seconds before checking again");
+				sleepTask(10000);
 			}
 
 		}
@@ -42,11 +43,10 @@ public class InitializeTask extends DelayedTask {
 
 			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "launching game");
 			EmulatorManager.getInstance().launchApp(EMULATOR_NUMBER, EmulatorManager.WHITEOUT_PACKAGE);
-			sleepTask(15000);
+			sleepTask(10000);
 
 			final int MAX_ATTEMPTS = 10;
 			final int WAIT_TIME = 5000;
-			final int RECONNECT_WAIT = 4000;
 
 			boolean homeScreen = false;
 			int attempts = 0;
@@ -62,8 +62,7 @@ public class InitializeTask extends DelayedTask {
 
 				DTOImageSearchResult reconnect = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_RECONNECT.getTemplate(), 90);
 				if (reconnect.isFound()) {
-					tapPoint(reconnect.getPoint());
-					sleepTask(RECONNECT_WAIT);
+					throw new ProfileInReconnectStateException("Profile " + profile.getName() + " is in reconnect state, cannot execute task: " + taskName);
 				}
 
 				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "screen not found, esperando 5 segundos antes de volver a intentar");
