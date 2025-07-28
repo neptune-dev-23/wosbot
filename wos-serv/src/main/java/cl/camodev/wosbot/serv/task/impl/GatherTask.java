@@ -66,11 +66,11 @@ public class GatherTask extends DelayedTask {
 
     @Override
     protected void execute() {
-        // Check if IntelligenceTask is not processed yet or reschedule time is lower
-        // than 60 minutes
+        // If IntelligenceTask remaining minutes is less than 60, we will wait until it is processed
+        // if there is no remaining time, we will proceed with gathering
         long intelRemainingMinutes = isIntelligenceTaskReadyForGathering();
-        if (profile.getConfig(EnumConfigurationKey.INTEL_BOOL, Boolean.class) && intelRemainingMinutes > 0) {
-            logInfo("Waiting for IntelligenceTask to be processed or reschedule time to exceed intel remaining minutes");
+        if (profile.getConfig(EnumConfigurationKey.INTEL_BOOL, Boolean.class) && intelRemainingMinutes > 0 & intelRemainingMinutes < 60) {
+            logInfo("Waiting for IntelligenceTask to be processed since remaining time is less than 60 minutes.");
             reschedule(LocalDateTime.now().plusMinutes(intelRemainingMinutes)); // Check again in intelRemaining minutes
             return;
         }

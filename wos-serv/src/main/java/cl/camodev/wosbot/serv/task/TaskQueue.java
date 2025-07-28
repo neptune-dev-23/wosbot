@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 import cl.camodev.utiles.UtilTime;
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
+import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.emulator.EmulatorManager;
@@ -18,6 +19,7 @@ import cl.camodev.wosbot.ex.ADBConnectionException;
 import cl.camodev.wosbot.ex.HomeNotFoundException;
 import cl.camodev.wosbot.ex.ProfileInReconnectStateException;
 import cl.camodev.wosbot.ex.StopExecutionException;
+import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOProfileStatus;
 import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.ot.DTOTaskState;
@@ -41,6 +43,7 @@ public class TaskQueue {
 	// Hilo que se encargará de evaluar y ejecutar las tareas.
 	private Thread schedulerThread;
 	private DTOProfiles profile;
+	protected EmulatorManager emuManager = EmulatorManager.getInstance();
 
 	public TaskQueue(DTOProfiles profile) {
 		this.profile = profile;
@@ -149,122 +152,130 @@ public class TaskQueue {
 					}
 
 
-				// Remover la tarea de la cola
-				taskQueue.poll();
-				LocalDateTime scheduledBefore = task.getScheduled();
-				try {
-					ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Starting task execution");
-					ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "Executing " + task.getTaskName()));
+					// Remover la tarea de la cola
+					taskQueue.poll();
+					LocalDateTime scheduledBefore = task.getScheduled();
+					try {
+						ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Starting task execution");
+						ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "Executing " + task.getTaskName()));
 
-					taskState = new DTOTaskState();
-					taskState.setProfileId(profile.getId());
-					taskState.setTaskId(task.getTpDailyTaskId());
-					taskState.setScheduled(true);
-					taskState.setExecuting(true);
+						taskState = new DTOTaskState();
+						taskState.setProfileId(profile.getId());
+						taskState.setTaskId(task.getTpDailyTaskId());
+						taskState.setScheduled(true);
+						taskState.setExecuting(true);
+						taskState.setLastExecutionTime(LocalDateTime.now());
+						taskState.setNextExecutionTime(task.getScheduled());
+						ServTaskManager.getInstance().setTaskState(profile.getId(), taskState);
+
+
+						task.run();
+
+					} catch (HomeNotFoundException e) {
+						ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, task.getTaskName(), profile.getName(), e.getMessage());
+						logger.error("Error executing task " + task.getTaskName() + " for profile " + profile.getName() + ": " + e.getMessage(), e);
+						addTask(new InitializeTask(profile, TpDailyTaskEnum.INITIALIZE));
+					} catch (StopExecutionException e) {
+						logger.error("Execution stopped for task " + task.getTaskName() + " for profile " + profile.getName() + ": " + e.getMessage(), e);
+						stop();
+					} catch (ProfileInReconnectStateException e) {
+						Long reconnectionTime = profile.getReconnectionTime();
+						if (reconnectionTime != null && reconnectionTime > 0) {
+							ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Profile in reconnect state before executing task, pausing queue for " + reconnectionTime + " minutes");
+							logger.info("Profile {} is in reconnect state, pausing TaskQueue for {} minutes", profile.getName(), reconnectionTime);
+							paused = true;
+							new Thread(() -> {
+								try {
+									Thread.sleep(TimeUnit.MINUTES.toMillis(reconnectionTime));
+								} catch (InterruptedException ignored) { }
+
+								if (paused) {
+									paused = false;
+									ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "RESUMING AFTER PAUSE"));
+									logger.info("TaskQueue resumed for profile {} after {} minutes pause", profile.getName(), reconnectionTime);
+									
+									// Click reconnect button if found and reinitialize the task
+									DTOImageSearchResult reconnect = emuManager.searchTemplate(profile.getEmulatorNumber(), EnumTemplates.GAME_HOME_RECONNECT.getTemplate(), 90);
+									if (reconnect.isFound()) {
+										emuManager.tapAtPoint(profile.getEmulatorNumber(), reconnect.getPoint());
+									}
+
+									addTask(new InitializeTask(profile, TpDailyTaskEnum.INITIALIZE));
+								}
+							}).start();
+							break; // Exit the loop to wait for reconnection
+						} else {
+							ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, task.getTaskName(), profile.getName(), "Profile in reconnect state, but no reconnection time set");
+							logger.error("Profile {} is in reconnect state, but no reconnection time set, resuming execution", profile.getName());
+							addTask(new InitializeTask(profile, TpDailyTaskEnum.INITIALIZE));
+						}
+					} catch (ADBConnectionException e) {
+						logger.error("ADB connection error executing task {} for profile {}: {}", task.getTaskName(), profile.getName(), e.getMessage(), e);
+						addTask(new InitializeTask(profile, TpDailyTaskEnum.INITIALIZE));
+					} catch (Exception e) {
+						ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, task.getTaskName(), profile.getName(), e.getMessage());
+						logger.error("Error executing task " + task.getTaskName() + " for profile " + profile.getName() + ": " + e.getMessage(), e);
+					}
+					LocalDateTime scheduledAfter = task.getScheduled();
+					if (scheduledBefore.equals(scheduledAfter)) {
+						logger.info("Task {} for profile {} executed without rescheduling, changing scheduled time to now to avoid infinite loop", task.getTaskName(), profile.getName());
+						task.reschedule(LocalDateTime.now());
+					}
+
+					if (task.isRecurring()) {
+						ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Next schedule: " + UtilTime.localDateTimeToDDHHMMSS(task.getScheduled()));
+						addTask(task);
+					} else {
+						ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Task removed from schedule");
+					}
+
+					boolean dailyAutoSchedule = profile.getConfig(EnumConfigurationKey.DAILY_MISSION_AUTO_SCHEDULE_BOOL, Boolean.class);
+					if (dailyAutoSchedule) {
+						DTOTaskState state = ServTaskManager.getInstance().getTaskState(profile.getId(), TpDailyTaskEnum.DAILY_MISSIONS.getId());
+						LocalDateTime next = (state != null) ? state.getNextExecutionTime() : null;
+						LocalDateTime now = LocalDateTime.now();
+						if (task.provideDailyMissionProgress() && (state == null || next == null || next.isAfter(now))) {
+							DelayedTask prototype = DelayedTaskRegistry.create(TpDailyTaskEnum.DAILY_MISSIONS, profile);
+
+							// verify if the task already exists in the queue
+							DelayedTask existing = taskQueue.stream().filter(prototype::equals).findFirst().orElse(null);
+
+							if (existing != null) {
+								// task already exists, reschedule it to run now
+								taskQueue.remove(existing);
+								existing.reschedule(LocalDateTime.now());
+								existing.setRecurring(true);
+								taskQueue.offer(existing);
+
+								ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueue", profile.getName(), "Rescheduled existing " + TpDailyTaskEnum.DAILY_MISSIONS + " to run now");
+							} else {
+								// task does not exist, create a new instance and schedule it just once
+								prototype.reschedule(LocalDateTime.now());
+								prototype.setRecurring(false);
+								taskQueue.offer(prototype);
+								ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueue", profile.getName(), "Enqueued new immediate " + TpDailyTaskEnum.DAILY_MISSIONS);
+							}
+
+
+						}
+					}
+
+
+					if (task.provideTriumphProgress()) {
+
+					}
+
+					assert taskState != null;
+					taskState.setExecuting(false);
+					taskState.setScheduled(task.isRecurring());
 					taskState.setLastExecutionTime(LocalDateTime.now());
 					taskState.setNextExecutionTime(task.getScheduled());
+
 					ServTaskManager.getInstance().setTaskState(profile.getId(), taskState);
+					ServScheduler.getServices().updateDailyTaskStatus(profile, task.getTpTask(), task.getScheduled());
 
-
-					task.run();
-
-				} catch (HomeNotFoundException e) {
-					ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, task.getTaskName(), profile.getName(), e.getMessage());
-					logger.error("Error executing task " + task.getTaskName() + " for profile " + profile.getName() + ": " + e.getMessage(), e);
-					addTask(new InitializeTask(profile, TpDailyTaskEnum.INITIALIZE));
-				} catch (StopExecutionException e) {
-					logger.error("Execution stopped for task " + task.getTaskName() + " for profile " + profile.getName() + ": " + e.getMessage(), e);
-					stop();
-				} catch (ProfileInReconnectStateException e) {
-					Long reconnectionTime = profile.getReconnectionTime();
-					if (reconnectionTime != null && reconnectionTime > 0) {
-						ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Profile in reconnect state before executing task, pausing queue for " + reconnectionTime + " minutes");
-						logger.info("Profile {} is in reconnect state, pausing TaskQueue for {} minutes", profile.getName(), reconnectionTime);
-						paused = true;
-						new Thread(() -> {
-							try {
-								Thread.sleep(TimeUnit.MINUTES.toMillis(reconnectionTime));
-							} catch (InterruptedException ignored) {
-							}
-							if (paused) {
-								paused = false;
-								ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "RESUMING AFTER PAUSE"));
-								logger.info("TaskQueue resumed for profile {} after {} minutes pause", profile.getName(), reconnectionTime);
-								addTask(new InitializeTask(profile, TpDailyTaskEnum.INITIALIZE));
-							}
-						}).start();
-					} else {
-						ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, task.getTaskName(), profile.getName(), "Profile in reconnect state, but no reconnection time set");
-						logger.error("Profile {} is in reconnect state, but no reconnection time set, resuming execution", profile.getName());
-						addTask(new InitializeTask(profile, TpDailyTaskEnum.INITIALIZE));
-					}
-				} catch (ADBConnectionException e) {
-					logger.error("ADB connection error executing task {} for profile {}: {}", task.getTaskName(), profile.getName(), e.getMessage(), e);
-					addTask(new InitializeTask(profile, TpDailyTaskEnum.INITIALIZE));
-				} catch (Exception e) {
-					ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, task.getTaskName(), profile.getName(), e.getMessage());
-					logger.error("Error executing task " + task.getTaskName() + " for profile " + profile.getName() + ": " + e.getMessage(), e);
+					executedTask = true;
 				}
-				LocalDateTime scheduledAfter = task.getScheduled();
-				if (scheduledBefore.equals(scheduledAfter)) {
-					logger.info("Task {} for profile {} executed without rescheduling, changing scheduled time to now to avoid infinite loop", task.getTaskName(), profile.getName());
-					task.reschedule(LocalDateTime.now());
-				}
-
-				if (task.isRecurring()) {
-					ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Next schedule: " + UtilTime.localDateTimeToDDHHMMSS(task.getScheduled()));
-					addTask(task);
-				} else {
-					ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Task removed from schedule");
-				}
-
-				boolean dailyAutoSchedule = profile.getConfig(EnumConfigurationKey.DAILY_MISSION_AUTO_SCHEDULE_BOOL, Boolean.class);
-				if (dailyAutoSchedule) {
-					DTOTaskState state = ServTaskManager.getInstance().getTaskState(profile.getId(), TpDailyTaskEnum.DAILY_MISSIONS.getId());
-					LocalDateTime next = (state != null) ? state.getNextExecutionTime() : null;
-					LocalDateTime now = LocalDateTime.now();
-					if (task.provideDailyMissionProgress() && (state == null || next == null || next.isAfter(now))) {
-						DelayedTask prototype = DelayedTaskRegistry.create(TpDailyTaskEnum.DAILY_MISSIONS, profile);
-
-						// verify if the task already exists in the queue
-						DelayedTask existing = taskQueue.stream().filter(prototype::equals).findFirst().orElse(null);
-
-						if (existing != null) {
-							// task already exists, reschedule it to run now
-							taskQueue.remove(existing);
-							existing.reschedule(LocalDateTime.now());
-							existing.setRecurring(true);
-							taskQueue.offer(existing);
-
-							ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueue", profile.getName(), "Rescheduled existing " + TpDailyTaskEnum.DAILY_MISSIONS + " to run now");
-						} else {
-							// task does not exist, create a new instance and schedule it just once
-							prototype.reschedule(LocalDateTime.now());
-							prototype.setRecurring(false);
-							taskQueue.offer(prototype);
-							ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueue", profile.getName(), "Enqueued new immediate " + TpDailyTaskEnum.DAILY_MISSIONS);
-						}
-
-
-					}
-				}
-
-
-				if (task.provideTriumphProgress()) {
-
-				}
-
-				assert taskState != null;
-				taskState.setExecuting(false);
-				taskState.setScheduled(task.isRecurring());
-				taskState.setLastExecutionTime(LocalDateTime.now());
-				taskState.setNextExecutionTime(task.getScheduled());
-
-				ServTaskManager.getInstance().setTaskState(profile.getId(), taskState);
-				ServScheduler.getServices().updateDailyTaskStatus(profile, task.getTpTask(), task.getScheduled());
-
-				executedTask = true;
-			}
 
 				// Si no se ejecutó ninguna tarea, obtener el delay de la próxima tarea
 				if (!executedTask && !taskQueue.isEmpty()) {
@@ -301,7 +312,8 @@ public class TaskQueue {
 						} else {
 							DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
 							// Convertir minDelay (segundos) a formato HH:mm:ss
-							formattedTime = LocalTime.ofSecondOfDay(minDelay).format(timeFormatter);
+							long safeDelay = Math.max(0, minDelay);
+							formattedTime = LocalTime.ofSecondOfDay(safeDelay).format(timeFormatter);
 						}
 
 						ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "Idling for " + formattedTime + "\nNext task: " + (taskQueue.isEmpty() ? "None" : taskQueue.peek().getTaskName())));
