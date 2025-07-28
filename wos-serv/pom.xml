@@ -58,10 +58,10 @@
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
 		</dependency>
-		<!-- Binding/implementación en tiempo de ejecución -->
+		<!-- Implementación Logback (reemplaza slf4j-log4j12) -->
 		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-log4j12</artifactId>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
 			<scope>runtime</scope>
 		</dependency>
 
