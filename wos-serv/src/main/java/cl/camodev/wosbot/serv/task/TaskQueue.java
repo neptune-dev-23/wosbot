@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 import cl.camodev.utiles.UtilTime;
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
+import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.emulator.EmulatorManager;
@@ -18,6 +19,7 @@ import cl.camodev.wosbot.ex.ADBConnectionException;
 import cl.camodev.wosbot.ex.HomeNotFoundException;
 import cl.camodev.wosbot.ex.ProfileInReconnectStateException;
 import cl.camodev.wosbot.ex.StopExecutionException;
+import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOProfileStatus;
 import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.ot.DTOTaskState;
@@ -41,6 +43,7 @@ public class TaskQueue {
 	// Hilo que se encargará de evaluar y ejecutar las tareas.
 	private Thread schedulerThread;
 	private DTOProfiles profile;
+	protected EmulatorManager emuManager = EmulatorManager.getInstance();
 
 	public TaskQueue(DTOProfiles profile) {
 		this.profile = profile;
@@ -190,6 +193,13 @@ public class TaskQueue {
 									paused = false;
 									ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "RESUMING AFTER PAUSE"));
 									logger.info("TaskQueue resumed for profile {} after {} minutes pause", profile.getName(), reconnectionTime);
+									
+									// Click reconnect button if found and reinitialize the task
+									DTOImageSearchResult reconnect = emuManager.searchTemplate(profile.getEmulatorNumber(), EnumTemplates.GAME_HOME_RECONNECT.getTemplate(), 90);
+									if (reconnect.isFound()) {
+										emuManager.tapAtPoint(profile.getEmulatorNumber(), reconnect.getPoint());
+									}
+
 									addTask(new InitializeTask(profile, TpDailyTaskEnum.INITIALIZE));
 								}
 							}).start();
