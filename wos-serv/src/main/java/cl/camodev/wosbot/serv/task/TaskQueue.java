@@ -302,7 +302,8 @@ public class TaskQueue {
 						} else {
 							DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
 							// Convertir minDelay (segundos) a formato HH:mm:ss
-							formattedTime = LocalTime.ofSecondOfDay(minDelay).format(timeFormatter);
+							long safeDelay = Math.max(0, minDelay);
+							formattedTime = LocalTime.ofSecondOfDay(safeDelay).format(timeFormatter);
 						}
 
 						ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "Idling for " + formattedTime + "\nNext task: " + (taskQueue.isEmpty() ? "None" : taskQueue.peek().getTaskName())));
