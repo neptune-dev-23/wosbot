@@ -141,15 +141,10 @@ public class TaskQueue {
 
 				// Procesar tareas que están listas para ejecutar
 				DelayedTask task;
-				while ((task = taskQueue.peek()) != null) {
-					DTOTaskState taskState = null;
-					long delayInSeconds = task.getDelay(TimeUnit.SECONDS);
 
-					// Si la primera tarea no está lista, ninguna lo estará (cola ordenada)
-					if (delayInSeconds > 0) {
-						minDelay = delayInSeconds;
-						break;
-					}
+				if ((task = taskQueue.peek()) != null && task.getDelay(TimeUnit.SECONDS) <= 0) {
+					DTOTaskState taskState = null;
+					minDelay = task.getDelay(TimeUnit.SECONDS);
 
 
 					// Remover la tarea de la cola
@@ -168,7 +163,7 @@ public class TaskQueue {
 						taskState.setNextExecutionTime(task.getScheduled());
 						ServTaskManager.getInstance().setTaskState(profile.getId(), taskState);
 
-
+						task.setLastExecutionTime(LocalDateTime.now());
 						task.run();
 
 					} catch (HomeNotFoundException e) {

@@ -119,6 +119,7 @@ public class ServScheduler {
 							if (status != null) {
 								LocalDateTime next = status.getNextSchedule();
 								task.reschedule(next);
+								task.setLastExecutionTime(status.getLastExecution());
 								taskState.setLastExecutionTime(status.getLastExecution());
 								taskState.setNextExecutionTime(next);
 								ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Next Execution: " + next.format(fmt));
