@@ -1,6 +1,6 @@
-# Whiteout Survival Bot (WIP)
+# Whiteout Survival Bot (PAUSED)
 
-**The development of the project is currently on pause due to issues I'm experiencing with the emulator**
+**The development of the project is currently on pause due some personal issues**
 
 A bot for automating tasks in **Whiteout Survival**. This project is a work in progress and is developed in my free time. If you have any requests or suggestions, feel free to ask—I’ll try to respond as soon as possible.
 
@@ -88,5 +88,6 @@ Simply double-click `wos-bot-x.x.x.jar`.
 🔹 **Beast Slay** – Implement automatic beast hunting.  
 
 🔹 **and more ofc** 🔥
+
 
 
