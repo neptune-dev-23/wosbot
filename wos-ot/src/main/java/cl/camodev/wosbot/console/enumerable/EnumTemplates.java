@@ -76,6 +76,7 @@ public enum EnumTemplates {
 	CRYSTAL_LAB_FC_BUTTON("/templates/crystallab/fcButton.png"),
 	
 	ALLIANCE_CHEST_BUTTON("/templates/alliance/chestButton.png"),
+	ALLIANCE_HONOR_CHEST("/templates/alliance/honorChest.png"),
 	ALLIANCE_TECH_BUTTON("/templates/alliance/techButton.png"),
 	ALLIANCE_TRIUMPH_BUTTON("/templates/alliance/triumphButton.png"),
 	ALLIANCE_TRIUMPH_DAILY_CLAIMED("/templates/alliance/triumphDailyClaimed.png"),
@@ -86,8 +87,8 @@ public enum EnumTemplates {
 	ALLIANCE_HELP_BUTTON("/templates/alliance/helpButton.png"),
 	ALLIANCE_HELP_REQUESTS("/templates/alliance/helpRequests.png"),
 	
-	
-	ALLIANCE_CHEST_LOOT_CLAIM_BUTTON("/templates/alliance/lootClaimAllButton.png"),
+	ALLIANCE_CHEST_CLAIM_BUTTON("/templates/dailymission/claimButton.png"),
+	ALLIANCE_CHEST_CLAIM_ALL_BUTTON("/templates/alliance/lootClaimAllButton.png"),
 	
 	STOREHOUSE_CHEST("/templates/storehouse/chest.png"),
 	STOREHOUSE_STAMINA("/templates/storehouse/stamina.png"),
@@ -244,7 +245,7 @@ public enum EnumTemplates {
 	TRAINING_MARKSMAN_T2("/templates/training/marksman2.png"),
 	TRAINING_MARKSMAN_T1("/templates/training/marksman1.png"),
 
-
+	MAIL_UNCLAIMED_REWARDS("/templates/mail/unclaimedRewards.png"),
 
 	VALIDATION_WAR_ACADEMY_UI("/templates/validation/warAcademy.png")
 	;

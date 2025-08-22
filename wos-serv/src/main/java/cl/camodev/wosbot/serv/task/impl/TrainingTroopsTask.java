@@ -40,8 +40,8 @@ public class TrainingTroopsTask extends DelayedTask {
     // CONSTRUCTOR
     // ===============================
 
-    public TrainingTroopsTask(DTOProfiles profile, TpDailyTaskEnum heroRecruitment, TroopType troopType) {
-        super(profile, heroRecruitment);
+    public TrainingTroopsTask(DTOProfiles profile, TpDailyTaskEnum tpDailyTask, TroopType troopType) {
+        super(profile, tpDailyTask);
         this.troopType = troopType;
     }
 

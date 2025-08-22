@@ -5,15 +5,19 @@ import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
 
 public class ShopLayoutController extends AbstractProfileController {
 
 	@FXML
-	private CheckBox checkBoxNomadicMerchant, checkBoxNomadicMerchantVip, 
-	checkBoxBank, checkBoxMysteryShop;
+	private CheckBox checkBoxNomadicMerchant, checkBoxNomadicMerchantVip,
+			checkBoxBank, checkBoxMysteryShop;
 
 	@FXML
 	private ComboBox<Integer> comboBoxBankDelay;
+
+	@FXML
+	private Label labelPeriod;
 
 	@FXML
 	private void initialize() {
@@ -26,6 +30,13 @@ public class ShopLayoutController extends AbstractProfileController {
 		// Initialize ComboBox with bank delay values
 		comboBoxBankDelay.getItems().addAll(1, 7, 15, 30);
 		comboBoxMappings.put(comboBoxBankDelay, EnumConfigurationKey.INT_BANK_DELAY);
+
+		labelPeriod.setVisible(checkBoxBank.isSelected());
+		comboBoxBankDelay.setVisible(checkBoxBank.isSelected());
+		checkBoxBank.selectedProperty().addListener((obs, oldVal, newVal) -> {
+			labelPeriod.setVisible(newVal);
+			comboBoxBankDelay.setVisible(newVal);
+		});
 
 		initializeChangeEvents();
 	}
