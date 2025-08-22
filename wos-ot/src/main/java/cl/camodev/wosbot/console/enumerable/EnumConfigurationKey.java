@@ -111,7 +111,7 @@ public enum EnumConfigurationKey {
     }
 
     /**
-     * Método que convierte un String al tipo definido en 'type'. Agrega conversiones según los tipos que necesites.
+     * Method that converts a String to the type defined in 'type'. Add conversions according to the types you need..
      */
     @SuppressWarnings("unchecked")
     public <T> T castValue(String value) {
@@ -124,7 +124,7 @@ public enum EnumConfigurationKey {
         } else if (type.equals(String.class)) {
             return (T) value;
         }
-        // Agrega otros if/else según los tipos soportados
-        throw new UnsupportedOperationException("Tipo " + type.getSimpleName() + " no soportado");
+        // Add other if/else according to the supported types
+        throw new UnsupportedOperationException("Type " + type.getSimpleName() + " not supported for casting.");
     }
 }

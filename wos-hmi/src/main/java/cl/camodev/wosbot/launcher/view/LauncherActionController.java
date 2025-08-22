@@ -1,7 +1,6 @@
 package cl.camodev.wosbot.launcher.view;
 
 import cl.camodev.wosbot.ot.DTOBotState;
-import cl.camodev.wosbot.profile.model.IProfileLoadListener;
 import cl.camodev.wosbot.profile.model.ProfileAux;
 import cl.camodev.wosbot.profile.view.ProfileManagerLayoutController;
 import cl.camodev.wosbot.serv.IBotStateListener;

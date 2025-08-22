@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -15,7 +16,6 @@ import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
-import cl.camodev.wosbot.emulator.EmulatorManager;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
@@ -32,7 +32,6 @@ public class IntelligenceTask extends DelayedTask {
 
 	public IntelligenceTask(DTOProfiles profile, TpDailyTaskEnum tpTask) {
 		super(profile, tpTask);
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override
@@ -85,7 +84,7 @@ public class IntelligenceTask extends DelayedTask {
 			if (profile.getConfig(EnumConfigurationKey.INTEL_FIRE_BEAST_BOOL, Boolean.class)) {
 				sleepTask(500);
 				servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Searching for fire beasts");
-				if (searchAndProcessBeast(EnumTemplates.INTEL_FIRE_BEAST, 5)) {
+				if (searchAndProcess(EnumTemplates.INTEL_FIRE_BEAST, 5, 90, this::processBeast)) {
 					intelFound = true;
 				}
 				if (marchQueueLimitReached)
@@ -122,7 +121,7 @@ public class IntelligenceTask extends DelayedTask {
 				// @formatter:on
 				servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Searching for beasts");
 				for (EnumTemplates beast : beastPriorities) {
-					if (searchAndProcessBeast(beast, 5)) {
+					if (searchAndProcess(beast, 5, 90, this::processBeast)) {
 						intelFound = true;
 						break;
 					}
@@ -160,7 +159,7 @@ public class IntelligenceTask extends DelayedTask {
 				// @formatter:on
 				servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Searching for survivors");
 				for (EnumTemplates beast : priorities) {
-					if (searchAndProcessSurvivor(beast, 5)) {
+					if (searchAndProcess(beast, 5, 90, this::processSurvivor)) {
 						intelFound = true;
 						break;
 					}
@@ -198,7 +197,7 @@ public class IntelligenceTask extends DelayedTask {
 				}
 				servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Searching for explorations");
 				for (EnumTemplates beast : priorities) {
-					if (searchAndProcessExploration(beast, 5)) {
+					if (searchAndProcess(beast, 5, 90, this::processJourney)) {
 						intelFound = true;
 						break;
 					}
@@ -234,19 +233,33 @@ public class IntelligenceTask extends DelayedTask {
 
 	}
 
-	private boolean searchAndProcessExploration(EnumTemplates exploration, int maxAttempts) {
+	private boolean searchAndProcess(EnumTemplates template, int maxAttempts, int confidence, Consumer<DTOImageSearchResult> processMethod) {
 		for (int attempt = 0; attempt < maxAttempts; attempt++) {
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), "Searching for " + exploration + " attempt " + attempt);
-			DTOImageSearchResult result = emuManager.searchTemplate(EMULATOR_NUMBER, exploration.getTemplate(),  95);
+			ServLogs.getServices().appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), "Searching for " + template + " attempt " + attempt);
+			DTOImageSearchResult result = emuManager.searchTemplate(EMULATOR_NUMBER, template.getTemplate(), confidence);
 
 			if (result.isFound()) {
-				servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Found :" + exploration);
-				processJourney(result);
-				return true; // Salir del bucle, bestia encontrada
+				servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Found :" + template);
+				processMethod.accept(result);
+				return true;
 			}
 		}
-		return false; // No se encontró la bestia después de maxAttempts intentos
+		return false;
 	}
+
+	// private boolean searchAndProcessExploration(EnumTemplates exploration, int maxAttempts) {
+	// 	for (int attempt = 0; attempt < maxAttempts; attempt++) {
+	// 		ServLogs.getServices().appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), "Searching for " + exploration + " attempt " + attempt);
+	// 		DTOImageSearchResult result = emuManager.searchTemplate(EMULATOR_NUMBER, exploration.getTemplate(),  95);
+
+	// 		if (result.isFound()) {
+	// 			servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Found :" + exploration);
+	// 			processJourney(result);
+	// 			return true; // Salir del bucle, bestia encontrada
+	// 		}
+	// 	}
+	// 	return false; // No se encontró la bestia después de maxAttempts intentos
+	// }
 
 	private void processJourney(DTOImageSearchResult result) {
 		emuManager.tapAtPoint(EMULATOR_NUMBER, result.getPoint());
@@ -275,19 +288,19 @@ public class IntelligenceTask extends DelayedTask {
 		}
 	}
 
-	private boolean searchAndProcessSurvivor(EnumTemplates survivor, int maxAttempts) {
-		for (int attempt = 0; attempt < maxAttempts; attempt++) {
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), "Searching for " + survivor + " attempt " + attempt);
-			DTOImageSearchResult result = emuManager.searchTemplate(EMULATOR_NUMBER, survivor.getTemplate(),  95);
+	// private boolean searchAndProcessSurvivor(EnumTemplates survivor, int maxAttempts) {
+	// 	for (int attempt = 0; attempt < maxAttempts; attempt++) {
+	// 		ServLogs.getServices().appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), "Searching for " + survivor + " attempt " + attempt);
+	// 		DTOImageSearchResult result = emuManager.searchTemplate(EMULATOR_NUMBER, survivor.getTemplate(),  95);
 
-			if (result.isFound()) {
-				servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Found :" + survivor);
-				processSurvivor(result);
-				return true; // Salir del bucle, bestia encontrada
-			}
-		}
-		return false; // No se encontró la bestia después de maxAttempts intentos
-	}
+	// 		if (result.isFound()) {
+	// 			servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Found :" + survivor);
+	// 			processSurvivor(result);
+	// 			return true; // Salir del bucle, bestia encontrada
+	// 		}
+	// 	}
+	// 	return false; // No se encontró la bestia después de maxAttempts intentos
+	// }
 
 	private void processSurvivor(DTOImageSearchResult result) {
 		emuManager.tapAtPoint(EMULATOR_NUMBER, result.getPoint());
@@ -312,19 +325,19 @@ public class IntelligenceTask extends DelayedTask {
 		}
 	}
 
-	private boolean searchAndProcessBeast(EnumTemplates beast, int maxAttempts) {
-		for (int attempt = 0; attempt < maxAttempts; attempt++) {
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), "Searching for " + beast + " attempt " + attempt);
-			DTOImageSearchResult result = emuManager.searchTemplate(EMULATOR_NUMBER, beast.getTemplate(),  80);
+	// private boolean searchAndProcessBeast(EnumTemplates beast, int maxAttempts) {
+	// 	for (int attempt = 0; attempt < maxAttempts; attempt++) {
+	// 		ServLogs.getServices().appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), "Searching for " + beast + " attempt " + attempt);
+	// 		DTOImageSearchResult result = emuManager.searchTemplate(EMULATOR_NUMBER, beast.getTemplate(),  80);
 
-			if (result.isFound()) {
-				servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Found :" + beast);
-				processBeast(result);
-				return true; // Salir del bucle, bestia encontrada
-			}
-		}
-		return false; // No se encontró la bestia después de maxAttempts intentos
-	}
+	// 		if (result.isFound()) {
+	// 			servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Found :" + beast);
+	// 			processBeast(result);
+	// 			return true; // Salir del bucle, bestia encontrada
+	// 		}
+	// 	}
+	// 	return false; // No se encontró la bestia después de maxAttempts intentos
+	// }
 
 	private void processBeast(DTOImageSearchResult beast) {
 		emuManager.tapAtPoint(EMULATOR_NUMBER, beast.getPoint());

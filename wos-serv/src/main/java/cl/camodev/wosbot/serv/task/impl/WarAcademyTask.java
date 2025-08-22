@@ -25,10 +25,9 @@ public class WarAcademyTask extends DelayedTask {
         super(profile, tpDailyTask);
     }
 
-
     @Override
     protected void execute() {
-        //STEP 1: i need to go to left menu, then cheok if there's 2 matches of research template
+        //STEP 1: I need to go to left menu, then check if there's 2 matches of research template
         // left menu
         tapRandomPoint(new DTOPoint(3, 513), new DTOPoint(26, 588));
 
@@ -88,7 +87,7 @@ public class WarAcademyTask extends DelayedTask {
             } else {
                 logWarning("Research button not found on attempt " + buttonAttempt);
                 if (buttonAttempt < MAX_RETRY_ATTEMPTS) {
-                    sleepTask(1000); // Wait a bit before next attempt
+                    sleepTask(1000); // Wait 1s before next attempt
                 }
             }
         }
@@ -101,7 +100,7 @@ public class WarAcademyTask extends DelayedTask {
         tapPoint(researchButton.getPoint());
         sleepTask(500);
 
-        //STEP 4: check if we are in war academy ui with retry logic
+        //STEP 4: check if we are in war academy UI with retry logic
 
 
         DTOImageSearchResult warAcademyUi = null;
@@ -117,7 +116,7 @@ public class WarAcademyTask extends DelayedTask {
             } else {
                 logWarning("War Academy UI not found on attempt " + uiAttempt);
                 if (uiAttempt < MAX_RETRY_ATTEMPTS) {
-                    sleepTask(1000); // Wait a bit before next attempt
+                    sleepTask(1000); // Wait 1s before next attempt
                 }
             }
         }
@@ -154,19 +153,19 @@ public class WarAcademyTask extends DelayedTask {
                 } else {
                     logWarning("OCR attempt " + ocrAttempt + " failed to find numeric value in result: " + ocrResult);
                     if (ocrAttempt < MAX_RETRY_ATTEMPTS) {
-                        sleepTask(1000); // Wait before retry
+                        sleepTask(1000); // Wait 1s before retry
                     }
                 }
             } catch (Exception e) {
                 logWarning("OCR attempt " + ocrAttempt + " throws exception: " + e.getMessage());
                 if (ocrAttempt < MAX_RETRY_ATTEMPTS) {
-                    sleepTask(1000); // Wait before retry
+                    sleepTask(1000); // Wait 1s before retry
                 }
             }
         }
 
         if (remainingShards == -1) {
-            logError("OCR failed to find any numeric value after " + MAX_RETRY_ATTEMPTS + " attempts");
+            logError("OCR failed to find any numeric value after " + MAX_RETRY_ATTEMPTS + " attempts. Rescheduling task.");
             reschedule(LocalDateTime.now().plusMinutes(5));
             return;
         }
@@ -207,13 +206,13 @@ public class WarAcademyTask extends DelayedTask {
                 } else {
                     logWarning("Final OCR attempt " + finalOcrAttempt + " failed to find numeric value in result: " + ocrResult);
                     if (finalOcrAttempt < MAX_RETRY_ATTEMPTS) {
-                        sleepTask(1000); // Wait before retry
+                        sleepTask(1000); // Wait 1s before retry
                     }
                 }
             } catch (Exception e) {
                 logWarning("Final OCR attempt " + finalOcrAttempt + " threw exception: " + e.getMessage());
                 if (finalOcrAttempt < MAX_RETRY_ATTEMPTS) {
-                    sleepTask(1000); // Wait before retry
+                    sleepTask(1000); // Wait 1s before retry
                 }
             }
         }
