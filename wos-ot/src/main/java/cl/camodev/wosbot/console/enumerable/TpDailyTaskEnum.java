@@ -42,7 +42,7 @@ public enum TpDailyTaskEnum {
 	    GATHER_BOOST(101, "Gather Speed Boost",       EnumConfigurationKey.GATHER_SPEED_BOOL),
 	    GATHER_MEAT(102, "Gather Meat",               EnumConfigurationKey.GATHER_MEAT_BOOL),
 	    GATHER_WOOD(103, "Gather Wood",               EnumConfigurationKey.GATHER_WOOD_BOOL),
-	    GATHER_COAL(104, "Gather Stone",              EnumConfigurationKey.GATHER_COAL_BOOL),
+	    GATHER_COAL(104, "Gather Coal",               EnumConfigurationKey.GATHER_COAL_BOOL),
 	    GATHER_IRON(105, "Gather Iron",               EnumConfigurationKey.GATHER_IRON_BOOL),
 
 	    CITY_UPGRADE_FURNACE(70, "City Upgrade Furnace", EnumConfigurationKey.CITY_UPGRADE_FURNACE_BOOL),

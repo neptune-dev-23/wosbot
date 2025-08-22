@@ -2,6 +2,7 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.ColumnConstraints?>
@@ -55,11 +56,11 @@
          </GridPane.margin>
       </Label>
       <Label text="Offset Time" GridPane.columnIndex="1" GridPane.rowIndex="5" />
-      <TextField fx:id="textfieldAutojoinQueues" GridPane.columnIndex="2" GridPane.rowIndex="4">
+      <ComboBox fx:id="comboBoxAutojoinQueues" GridPane.columnIndex="2" GridPane.rowIndex="4">
          <GridPane.margin>
             <Insets />
          </GridPane.margin>
-      </TextField>
+      </ComboBox>
       <TextField fx:id="textfieldChestOffset" GridPane.columnIndex="2" GridPane.rowIndex="1">
          <GridPane.margin>
             <Insets />
