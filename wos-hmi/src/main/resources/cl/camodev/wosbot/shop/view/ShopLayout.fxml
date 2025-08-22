@@ -37,7 +37,7 @@
       </CheckBox>
       <HBox alignment="CENTER_LEFT" spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
          <children>
-            <Label text="Period:" />
+            <Label fx:id="labelPeriod" text="Period:" />
             <ComboBox fx:id="comboBoxBankDelay" prefWidth="100.0" promptText="Bank delay" />
          </children>
          <GridPane.margin>

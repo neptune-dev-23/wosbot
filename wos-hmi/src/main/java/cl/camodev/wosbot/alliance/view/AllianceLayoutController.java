@@ -10,14 +10,15 @@ import javafx.scene.control.TextField;
 public class AllianceLayoutController extends AbstractProfileController {
 
 	@FXML
-	private CheckBox checkBoxAutojoin, checkBoxChests, 
-	checkBoxTechContribution, checkBoxHelpRequests, 
-	checkBoxTriumph, checkBoxAlliesEssence;
+	private CheckBox checkBoxAutojoin, checkBoxChests,
+			checkBoxTechContribution, checkBoxHelpRequests,
+			checkBoxTriumph, checkBoxAlliesEssence,
+			checkBoxHonorChest;
 
 	@FXML
-	private TextField textfieldAutojoinQueues, textfieldChestOffset, 
-	textfieldTechOffset, textfieldHelpRequstOffset, 
-	textfieldTriumphOffset, textfieldAlliesEssenceOffsett;
+	private TextField textfieldAutojoinQueues, textfieldChestOffset,
+			textfieldTechOffset, textfieldHelpRequstOffset,
+			textfieldTriumphOffset, textfieldAlliesEssenceOffsett;
 
 	@FXML
 	private ComboBox<Integer> comboBoxAutojoinQueues;
@@ -26,6 +27,7 @@ public class AllianceLayoutController extends AbstractProfileController {
 	private void initialize() {
 		checkBoxMappings.put(checkBoxAutojoin, EnumConfigurationKey.ALLIANCE_AUTOJOIN_BOOL);
 		checkBoxMappings.put(checkBoxChests, EnumConfigurationKey.ALLIANCE_CHESTS_BOOL);
+		checkBoxMappings.put(checkBoxHonorChest, EnumConfigurationKey.ALLIANCE_HONOR_CHEST_BOOL);
 		checkBoxMappings.put(checkBoxTechContribution, EnumConfigurationKey.ALLIANCE_TECH_BOOL);
 		checkBoxMappings.put(checkBoxHelpRequests, EnumConfigurationKey.ALLIANCE_HELP_REQUESTS_BOOL);
 		checkBoxMappings.put(checkBoxTriumph, EnumConfigurationKey.ALLIANCE_TRIUMPH_BOOL);
