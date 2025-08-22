@@ -37,6 +37,7 @@ public enum EnumConfigurationKey {
 
 	ALLIANCE_CHESTS_BOOL("false",Boolean.class),
 	ALLIANCE_CHESTS_OFFSET_INT("60",Integer.class),
+	ALLIANCE_HONOR_CHEST_BOOL("false",Boolean.class),
 	ALLIANCE_TECH_BOOL("false",Boolean.class),
 	ALLIANCE_TECH_OFFSET_INT("60",Integer.class),
 	ALLIANCE_AUTOJOIN_BOOL("false",Boolean.class),

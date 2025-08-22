@@ -90,6 +90,11 @@ public class EmulatorManager {
 		}
 	}
 
+	public void initializeTesting() {
+        String consolePath = "C:\\Program Files\\Netease\\MuMuPlayer\\nx_main"; // Replace with actual path for testing
+        this.emulator = new MuMuEmulator(consolePath);
+    }
+
 	/**
 	 * Verifica si el emulador ha sido configurado antes de ejecutar cualquier acción.
 	 */
