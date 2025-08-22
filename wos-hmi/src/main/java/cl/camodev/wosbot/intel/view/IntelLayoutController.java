@@ -4,7 +4,6 @@ import cl.camodev.wosbot.common.view.AbstractProfileController;
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
-import javafx.scene.control.ComboBox;
 
 public class IntelLayoutController extends AbstractProfileController {
 

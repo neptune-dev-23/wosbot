@@ -12,7 +12,6 @@ import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.serv.impl.ServLogs;
 import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.task.impl.InitializeTask;
-import cl.camodev.wosbot.serv.task.impl.WarAcademyTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +22,7 @@ import java.util.Objects;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
 
-public abstract class DelayedTask implements Runnable, Delayed, Comparable<Delayed> {
+public abstract class DelayedTask implements Runnable, Delayed {
 
     private static final Logger logger = LoggerFactory.getLogger(DelayedTask.class);
 

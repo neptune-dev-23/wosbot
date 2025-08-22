@@ -9,19 +9,11 @@ import javafx.scene.control.ComboBox;
 public class ShopLayoutController extends AbstractProfileController {
 
 	@FXML
-	private CheckBox checkBoxNomadicMerchant;
-
-	@FXML
-	private CheckBox checkBoxNomadicMerchantVip;
-
-	@FXML
-	private CheckBox checkBoxBank;
+	private CheckBox checkBoxNomadicMerchant, checkBoxNomadicMerchantVip, 
+	checkBoxBank, checkBoxMysteryShop;
 
 	@FXML
 	private ComboBox<Integer> comboBoxBankDelay;
-
-	@FXML
-	private CheckBox checkBoxMysteryShop;
 
 	@FXML
 	private void initialize() {
