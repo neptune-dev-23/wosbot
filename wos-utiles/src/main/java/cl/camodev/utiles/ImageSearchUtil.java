@@ -244,6 +244,8 @@ public class ImageSearchUtil {
 				return new DTOImageSearchResult(false, null, matchPercentage);
 			}
 
+			logger.info("Template {} found with match percentage: {}", templateResourcePath, matchPercentage);
+
 			// Calcular coordenadas del centro
 			Point matchLoc = mmr.maxLoc;
 			double centerX = matchLoc.x + roi.x + (template.cols() / 2.0);

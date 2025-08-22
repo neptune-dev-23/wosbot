@@ -507,8 +507,11 @@ public class TaskManagerLayoutController {
 			}
 		});
 
-		table.getColumns().addAll(colTaskName, colLastExecution, colNextExecution, colActions);
-		table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+		table.getColumns().add(colTaskName);
+		table.getColumns().add(colLastExecution);
+		table.getColumns().add(colNextExecution);
+		table.getColumns().add(colActions);
+		table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
 
 		return table;
 	}
