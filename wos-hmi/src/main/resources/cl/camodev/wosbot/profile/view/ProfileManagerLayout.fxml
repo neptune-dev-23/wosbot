@@ -21,12 +21,12 @@
             <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
          </columnResizePolicy>
          <columns>
-            <TableColumn fx:id="columnEnabled" maxWidth="50.0" minWidth="50.0" prefWidth="50.0" resizable="false" text="ENABLED"/>
-            <TableColumn fx:id="columnEmulatorNumber" maxWidth="40.0" minWidth="40.0" prefWidth="40.0" resizable="false" text="ID" />
-            <TableColumn fx:id="columnProfileName" maxWidth="1.7976931348623157E308" prefWidth="204.0" text="NAME" />
-            <TableColumn fx:id="columnPriority" maxWidth="90.0" minWidth="90.0" prefWidth="90.0" resizable="false" text="PRIORITY" />
-            <TableColumn fx:id="columnStatus" maxWidth="200.0" minWidth="200.0" prefWidth="200.0" resizable="false" text="STATUS" />
-            <TableColumn fx:id="columnDelete" maxWidth="140.0" minWidth="140.0" prefWidth="140.0" resizable="false" text="ACTIONS" />
+            <TableColumn fx:id="columnEnabled" maxWidth="90.0" minWidth="90.0" prefWidth="90.0" resizable="false" text="ENABLED" style="-fx-alignment: CENTER;" />
+            <TableColumn fx:id="columnEmulatorNumber" maxWidth="40.0" minWidth="40.0" prefWidth="40.0" resizable="false" text="ID" style="-fx-alignment: CENTER;" />
+            <TableColumn fx:id="columnProfileName" maxWidth="1.7976931348623157E308" prefWidth="204.0" text="NAME" style="-fx-alignment: CENTER;" />
+            <TableColumn fx:id="columnPriority" maxWidth="90.0" minWidth="90.0" prefWidth="90.0" resizable="false" text="PRIORITY" style="-fx-alignment: CENTER;" />
+            <TableColumn fx:id="columnStatus" maxWidth="200.0" minWidth="200.0" prefWidth="200.0" resizable="false" text="STATUS" style="-fx-alignment: CENTER;" />
+            <TableColumn fx:id="columnDelete" maxWidth="140.0" minWidth="140.0" prefWidth="140.0" resizable="false" text="ACTIONS" style="-fx-alignment: CENTER;" />
          </columns>
       </TableView>
       <HBox alignment="CENTER_RIGHT" prefHeight="100.0" prefWidth="200.0" GridPane.rowIndex="1">
