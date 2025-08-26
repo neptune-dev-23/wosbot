@@ -22,6 +22,7 @@ import net.sourceforge.tess4j.TesseractException;
 public class IntelligenceTask extends DelayedTask {
 
 	private boolean marchQueueLimitReached = false;
+	private boolean beastMarchSent = false;
 	private boolean fcEra = false;
 
 	public IntelligenceTask(DTOProfiles profile, TpDailyTaskEnum tpTask) {
@@ -30,14 +31,18 @@ public class IntelligenceTask extends DelayedTask {
 
 	@Override
 	protected void execute() {
-		fcEra = profile.getConfig(EnumConfigurationKey.INTEL_FC_ERA_BOOL,Boolean.class);
-
+		logInfo("Starting Intel Task.");
+		fcEra = profile.getConfig(EnumConfigurationKey.INTEL_FC_ERA_BOOL, Boolean.class);
 
 		boolean intelFound = false;
+		boolean nonBeastIntelFound = false;
 		marchQueueLimitReached = false;
+		beastMarchSent = false;
 
-		DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(),  90);
-		DTOImageSearchResult worldResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(),  90);
+		DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER,
+				EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 90);
+		DTOImageSearchResult worldResult = emuManager.searchTemplate(EMULATOR_NUMBER,
+				EnumTemplates.GAME_HOME_WORLD.getTemplate(), 90);
 
 		if (homeResult.isFound() || worldResult.isFound()) {
 			if (homeResult.isFound()) {
@@ -50,56 +55,65 @@ public class IntelligenceTask extends DelayedTask {
 			logInfo("Searching for completed missions.");
 			for (int i = 0; i < 5; i++) {
 				logDebug("Searching for completed missions attempt " + (i + 1));
-				DTOImageSearchResult completed = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_COMPLETED.getTemplate(),  90);
+				DTOImageSearchResult completed = emuManager.searchTemplate(EMULATOR_NUMBER,
+						EnumTemplates.INTEL_COMPLETED.getTemplate(), 90);
 				if (completed.isFound()) {
 					emuManager.tapAtPoint(EMULATOR_NUMBER, completed.getPoint());
-					emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(700, 1270), new DTOPoint(710, 1280), 10, 100);
+					emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(700, 1270), new DTOPoint(710, 1280), 10,
+							100);
 				} else {
 					break; // No more completed missions found
 				}
 			}
 
-
 			if (profile.getConfig(EnumConfigurationKey.INTEL_FIRE_BEAST_BOOL, Boolean.class)) {
-				ensureOnIntelScreen();
-				logInfo("Searching for fire beasts.");
-				if (searchAndProcess(EnumTemplates.INTEL_FIRE_BEAST, 5, 90, this::processBeast)) {
-					intelFound = true;
+				if (marchQueueLimitReached) {
+					logInfo("Skipping fire beast search: march queue is full.");
+				} else {
+					ensureOnIntelScreen();
+					logInfo("Searching for fire beasts.");
+					if (searchAndProcess(EnumTemplates.INTEL_FIRE_BEAST, 5, 90, this::processBeast)) {
+						intelFound = true;
+					}
 				}
-				if (marchQueueLimitReached)
-					return;
 			}
 
 			if (profile.getConfig(EnumConfigurationKey.INTEL_BEASTS_BOOL, Boolean.class)) {
-				ensureOnIntelScreen();
-				// @formatter:off
+				if (marchQueueLimitReached) {
+					logInfo("Skipping beast search: march queue is full.");
+				} else {
+					ensureOnIntelScreen();
+					// @formatter:off
 
-				List<EnumTemplates> beastPriorities=null;
-				if (fcEra){
-					beastPriorities = Arrays.asList(
-							EnumTemplates.INTEL_BEAST_YELLOW,
-							EnumTemplates.INTEL_BEAST_PURPLE,
-							EnumTemplates.INTEL_BEAST_BLUE);
-					logInfo("Searching for beasts in FC era.");
-				}else{
-					beastPriorities = Arrays.asList(
-							EnumTemplates.INTEL_PREFC_BEAST_YELLOW,
-							EnumTemplates.INTEL_PREFC_BEAST_PURPLE,
-							EnumTemplates.INTEL_PREFC_BEAST_BLUE,
-							EnumTemplates.INTEL_PREFC_BEAST_GREEN,
-							EnumTemplates.INTEL_PREFC_BEAST_GREY);
-					logInfo("Searching for beasts in pre-FC era.");
-				}
-
-				// @formatter:on
-				logInfo("Searching for beasts.");
-				for (EnumTemplates beast : beastPriorities) {
-					if (searchAndProcess(beast, 5, 90, this::processBeast)) {
-						intelFound = true;
-						break;
+					List<EnumTemplates> beastPriorities=null;
+					if (fcEra){
+						beastPriorities = Arrays.asList(
+								EnumTemplates.INTEL_BEAST_YELLOW,
+								EnumTemplates.INTEL_BEAST_PURPLE,
+								EnumTemplates.INTEL_BEAST_BLUE);
+						logInfo("Searching for beasts in FC era.");
+					}else{
+						beastPriorities = Arrays.asList(
+								EnumTemplates.INTEL_PREFC_BEAST_YELLOW,
+								EnumTemplates.INTEL_PREFC_BEAST_PURPLE,
+								EnumTemplates.INTEL_PREFC_BEAST_BLUE,
+								EnumTemplates.INTEL_PREFC_BEAST_GREEN,
+								EnumTemplates.INTEL_PREFC_BEAST_GREY);
+						logInfo("Searching for beasts in pre-FC era.");
 					}
-					if (marchQueueLimitReached)
-						return;
+
+					// @formatter:on
+					logInfo("Searching for beasts.");
+					for (EnumTemplates beast : beastPriorities) {
+						if (marchQueueLimitReached) {
+							logInfo("March queue is full, skipping remaining beasts.");
+							break;
+						}
+						if (searchAndProcess(beast, 5, 90, this::processBeast)) {
+							intelFound = true;
+							break;
+						}
+					}
 				}
 			}
 
@@ -128,10 +142,9 @@ public class IntelligenceTask extends DelayedTask {
 				for (EnumTemplates beast : priorities) {
 					if (searchAndProcess(beast, 5, 90, this::processSurvivor)) {
 						intelFound = true;
+						nonBeastIntelFound = true;
 						break;
 					}
-					if (marchQueueLimitReached)
-						return;
 				}
 
 			}
@@ -160,16 +173,16 @@ public class IntelligenceTask extends DelayedTask {
 				for (EnumTemplates beast : priorities) {
 					if (searchAndProcess(beast, 5, 90, this::processJourney)) {
 						intelFound = true;
+						nonBeastIntelFound = true;
 						break;
 					}
-					if (marchQueueLimitReached)
-						return;
 				}
 
 			}
 
 			sleepTask(500);
 			if (intelFound == false) {
+				logDebug("No intel items found, attempting to read cooldown timer.");
 				try {
 					String rescheduleTimeStr = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(120, 110), new DTOPoint(600, 146));
 					LocalDateTime rescheduleTime = parseAndAddTime(rescheduleTimeStr);
@@ -182,27 +195,55 @@ public class IntelligenceTask extends DelayedTask {
 					logError("Error reading intel cooldown timer: " + e.getMessage());
 					e.printStackTrace();
 				}
-			} else {
+			} else if (marchQueueLimitReached && !nonBeastIntelFound && !beastMarchSent) {
+				LocalDateTime rescheduleTime = LocalDateTime.now().plusMinutes(5);
+				this.reschedule(rescheduleTime);
+				ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, rescheduleTime);
+				logInfo("March queue is full and only beasts remain. Rescheduling for 5 minutes later at " + rescheduleTime);
+			} else if (!beastMarchSent) {
 				this.reschedule(LocalDateTime.now());
 				logInfo("Intel tasks processed. Rescheduling immediately to check for more.");
 			}
 
 		} else {
+			logWarning("Not on home or world screen, going back to find it.");
 			emuManager.tapBackButton(EMULATOR_NUMBER);
 			reschedule(LocalDateTime.now());
 		}
-
+		logInfo("Intel Task finished.");
 	}
 
 	private void ensureOnIntelScreen() {
 		sleepTask(500);
-		DTOImageSearchResult intelligence = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_INTEL.getTemplate(), 90);
-		if (intelligence.isFound()) {
-			emuManager.tapAtPoint(EMULATOR_NUMBER, intelligence.getPoint());
-			sleepTask(500); // Wait for screen transition
-		}
-	}
+		logInfo("Ensuring we are on the intel screen.");
 
+		for (int i = 0; i < 5; i++) {
+			DTOImageSearchResult intelScreenResult = emuManager.searchTemplate(EMULATOR_NUMBER,
+					EnumTemplates.INTEL_SCREEN.getTemplate(), 90);
+			if (intelScreenResult.isFound()) {
+				logInfo("Already on the intel screen.");
+				return;
+			}
+			logDebug("Intel screen not found, attempt " + (i + 1) + "/5. Retrying...");
+			sleepTask(300);
+		}
+		logWarning("Failed to find intel screen after 5 attempts.");
+
+		for (int i = 0; i < 5; i++) {
+			DTOImageSearchResult intelligence = emuManager.searchTemplate(EMULATOR_NUMBER,
+					EnumTemplates.GAME_HOME_INTEL.getTemplate(), 90);
+			if (intelligence.isFound()) {
+				logInfo("Intel button found, tapping to open intel screen.");
+				emuManager.tapAtPoint(EMULATOR_NUMBER, intelligence.getPoint());
+				sleepTask(500); // Wait for screen transition
+				return; // Success
+			}
+			logDebug("Intel button not found, attempt " + (i + 1) + "/5. Retrying...");
+			sleepTask(300);
+		}
+		logWarning("Failed to find intel button after 5 attempts.");
+	}	
+	
 	private boolean searchAndProcess(EnumTemplates template, int maxAttempts, int confidence, Consumer<DTOImageSearchResult> processMethod) {
 		for (int attempt = 0; attempt < maxAttempts; attempt++) {
 			logDebug("Searching for " + template + ", attempt " + (attempt + 1));
@@ -233,12 +274,7 @@ public class IntelligenceTask extends DelayedTask {
 				sleepTask(1000);
 				emuManager.tapBackButton(EMULATOR_NUMBER);
 			} else {
-				// March queue limit reached, cannot process exploration
-				logError("March queue is full, cannot process exploration. Rescheduling for 1 hour.");
-				LocalDateTime rescheduleTime = LocalDateTime.now().plusHours(1);
-				this.reschedule(rescheduleTime);
-				ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, rescheduleTime);
-				marchQueueLimitReached = true;
+				logWarning("Could not find 'Explore' button for journey. Going back.");
 				emuManager.tapBackButton(EMULATOR_NUMBER); // Back from journey screen
 				return;
 			}
@@ -257,12 +293,7 @@ public class IntelligenceTask extends DelayedTask {
 			if (rescue.isFound()) {
 				emuManager.tapAtPoint(EMULATOR_NUMBER, rescue.getPoint());
 			} else {
-				// March queue limit reached, cannot process survivor
-				logError("March queue is full, cannot process survivor. Rescheduling for 1 hour.");
-				LocalDateTime rescheduleTime = LocalDateTime.now().plusHours(1);
-				this.reschedule(rescheduleTime);
-				ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, rescheduleTime);
-				marchQueueLimitReached = true;
+				logWarning("Could not find 'Rescue' button for survivor. Going back.");
 				emuManager.tapBackButton(EMULATOR_NUMBER); // Back from survivor screen
 				return;
 			}
@@ -291,6 +322,15 @@ public class IntelligenceTask extends DelayedTask {
 		emuManager.tapAtPoint(EMULATOR_NUMBER, attack.getPoint());
 		sleepTask(500);
 
+		// Check if the march screen is open before proceeding
+		DTOImageSearchResult deployButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.DEPLOY_BUTTON.getTemplate(),  90);
+		if (!deployButton.isFound()) {
+			// March queue limit reached, cannot process beast
+			logError("March queue is full, cannot start new march.");
+			marchQueueLimitReached = true;
+			return;
+		}
+
 		boolean useFlag = profile.getConfig(EnumConfigurationKey.INTEL_USE_FLAG_BOOL, Boolean.class);
 		if (useFlag) {
 			// Select the specified flag
@@ -302,27 +342,11 @@ public class IntelligenceTask extends DelayedTask {
 		DTOImageSearchResult equalizeButton = emuManager.searchTemplate(EMULATOR_NUMBER,
 				EnumTemplates.RALLY_EQUALIZE_BUTTON.getTemplate(),  90);
 
-		if (equalizeButton.isFound()){
+		if (equalizeButton.isFound()) {
 			emuManager.tapAtPoint(EMULATOR_NUMBER, equalizeButton.getPoint());
-		}else{
-			//hard coded coords
+		} else {
 			emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(198, 1188));
 			sleepTask(500);
-		}
-
-		DTOImageSearchResult deployButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.DEPLOY_BUTTON.getTemplate(),  90);
-		if (!deployButton.isFound()) {
-			// March queue limit reached, cannot process beast
-			logError("March queue is full. Rescheduling task for 1 hour.");
-			LocalDateTime rescheduleTime = LocalDateTime.now().plusHours(1);
-			this.reschedule(rescheduleTime);
-			ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, rescheduleTime);
-			marchQueueLimitReached = true;
-			// Also need to back out of the screens
-			emuManager.tapBackButton(EMULATOR_NUMBER); // back from march screen
-			sleepTask(500);
-			emuManager.tapBackButton(EMULATOR_NUMBER); // back from beast screen
-			return;
 		}
 
 		try {
@@ -337,7 +361,7 @@ public class IntelligenceTask extends DelayedTask {
 				this.reschedule(rescheduleTime);
 				ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, rescheduleTime);
 				logInfo("Beast march sent. Task will run again at " + rescheduleTime);
-				marchQueueLimitReached = true; // This will stop the current execution from looking for more tasks
+				beastMarchSent = true;
 			} else {
 				logError("Failed to parse march time. Aborting attack.");
 				emuManager.tapBackButton(EMULATOR_NUMBER); // Go back from march screen

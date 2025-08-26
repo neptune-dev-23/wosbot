@@ -1,7 +1,7 @@
 # Whiteout Survival Bot
 
-[![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/Wk6YSr6mUp)
 [![](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://buymeacoffee.com/cearivera1z)
+[![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/Wk6YSr6mUp)
 
 > **⚠️ Project Status: Paused** - The development of this project is currently on hold due to personal matters.
 
