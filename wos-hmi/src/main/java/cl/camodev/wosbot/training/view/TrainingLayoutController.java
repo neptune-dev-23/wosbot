@@ -32,6 +32,5 @@ public class TrainingLayoutController extends AbstractProfileController {
 
 		initializeChangeEvents();
 		checkBoxUseResources.setDisable(true);
-		//checkBoxTrainPrioritizePromotion.setDisable(true);
 	}
 }

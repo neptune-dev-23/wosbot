@@ -4,7 +4,6 @@ import cl.camodev.wosbot.common.view.AbstractProfileController;
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
-import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
 
 public class CityEventsLayoutController extends AbstractProfileController {
@@ -28,16 +27,16 @@ public class CityEventsLayoutController extends AbstractProfileController {
 	private CheckBox checkBoxLifeEssence;
 
 	@FXML
-	private CheckBox checkBoxDailyMission, checkboxAutoScheduleDailyMission;
+	private CheckBox checkBoxDailyMission, checkBoxAutoScheduleDailyMission;
 
 	@FXML
 	private CheckBox checkBoxDailyLabyrinth;
 
 	@FXML
-	private RadioButton radioButtonStorehouseChest;
+	private CheckBox checkBoxTrekSupplies;
 
 	@FXML
-	private RadioButton radioButtonStorehouseStamina;
+	private CheckBox checkBoxStorehouseChest;
 
 	@FXML
 	private CheckBox checkBoxWarAcademyShards;
@@ -69,18 +68,15 @@ public class CityEventsLayoutController extends AbstractProfileController {
 		checkBoxMappings.put(checkBoxBuyMonthlyVip, EnumConfigurationKey.VIP_BUY_MONTHLY);
 		checkBoxMappings.put(checkBoxLifeEssence, EnumConfigurationKey.LIFE_ESSENCE_BOOL);
 		checkBoxMappings.put(checkBoxDailyMission, EnumConfigurationKey.DAILY_MISSION_BOOL);
-		checkBoxMappings.put(checkboxAutoScheduleDailyMission, EnumConfigurationKey.DAILY_MISSION_AUTO_SCHEDULE_BOOL);
+		checkBoxMappings.put(checkBoxAutoScheduleDailyMission, EnumConfigurationKey.DAILY_MISSION_AUTO_SCHEDULE_BOOL);
 		checkBoxMappings.put(checkBoxDailyLabyrinth, EnumConfigurationKey.DAILY_LABYRINTH_BOOL);
+		checkBoxMappings.put(checkBoxTrekSupplies, EnumConfigurationKey.TUNDRA_TREK_SUPPLIES_BOOL);
+		checkBoxMappings.put(checkBoxStorehouseChest, EnumConfigurationKey.STOREHOUSE_CHEST_BOOL);
 
 		textFieldMappings.put(textfieldExplorationOffset, EnumConfigurationKey.INT_EXPLORATION_CHEST_OFFSET);
 		textFieldMappings.put(textfieldMailOffset, EnumConfigurationKey.MAIL_REWARDS_OFFSET_INT);
 		textFieldMappings.put(textfieldLifeEssenceOffset, EnumConfigurationKey.LIFE_ESSENCE_OFFSET_INT);
 		textFieldMappings.put(textfieldDailyMissionOffset, EnumConfigurationKey.DAILY_MISSION_OFFSET_INT);
-
-		radioButtonMappings.put(radioButtonStorehouseChest, EnumConfigurationKey.STOREHOUSE_CHEST_BOOL);
-		radioButtonMappings.put(radioButtonStorehouseStamina, EnumConfigurationKey.STOREHOUSE_STAMINA_BOOL);
-
-		createToggleGroup(radioButtonStorehouseChest, radioButtonStorehouseStamina);
 
 		initializeChangeEvents();
 	}

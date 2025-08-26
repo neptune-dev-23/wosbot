@@ -35,7 +35,7 @@ public class StorehouseChest extends DelayedTask {
 			return now;
 		}
 
-		// Corrección de errores OCR comunes
+		// Correcting common OCR misreads
 		String correctedTime = ocrTime.replaceAll("[Oo]", "0").replaceAll("[lI]", "1").replaceAll("S", "5").replaceAll("[^0-9:]", "");
 
 		try {
@@ -84,7 +84,7 @@ public class StorehouseChest extends DelayedTask {
 						chest = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.STOREHOUSE_CHEST.getTemplate(),  90);
 
 						if (chest.isFound()) {
-							// debo obtener la recompensa y verificar caundo es la proxima via ocr
+							// Claim reward, check for stamina and reschedule
 							System.out.println("Chest found, tapping");
 							servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Claiming chest");
 							emuManager.tapAtRandomPoint(EMULATOR_NUMBER, chest.getPoint(), chest.getPoint());
@@ -109,7 +109,6 @@ public class StorehouseChest extends DelayedTask {
 
 							break;
 						} else {
-							// debo verrificar solo depues de los 5 intento si exsite la stamina, si no hacer ocr para verificar el proximo reward
 							System.out.println("Chest not found, sleeping");
 							sleepTask(100);
 						}
@@ -135,8 +134,7 @@ public class StorehouseChest extends DelayedTask {
 						}
 					}
 
-					// debo hacer ocr para verificar el proximo reward
-
+					// Do OCR to find next reward time and reschedule
 					try {
 						String nextRewardTime = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(285, 642), new DTOPoint(430, 666));
 						System.out.println("Next reward time: " + nextRewardTime);
@@ -150,10 +148,8 @@ public class StorehouseChest extends DelayedTask {
 						ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, scheduledTime);
 
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					} catch (TesseractException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 
