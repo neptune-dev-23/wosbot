@@ -43,10 +43,12 @@ A bot for automating tasks in **Whiteout Survival**. This project is a work in p
 
 | | | |
 |:----------------------------------------------------------:|:----------------------------------------------------------:|:----------------------------------------------------------:|
-| ![image1](./images/picture1.png) | ![image2](./images/picture2.png) | ![image3](./images/picture3.png) |
-| ![image4](./images/picture4.png) | ![image5](./images/picture5.png) | ![image6](./images/picture6.png) |
-| ![image7](./images/picture7.png) | ![image8](./images/picture8.png) | ![image9](./images/picture9.png) |
-| ![image10](./images/picture10.png) | ![image11](./images/picture11.png) | ![image12](./images/picture12.png) |
+| ![image1](./images/picture1.png) | ![image2](./images/picture2.png) |
+| ![image3](./images/picture3.png) | ![image4](./images/picture4.png) | 
+| ![image5](./images/picture5.png) | ![image6](./images/picture6.png) |
+| ![image7](./images/picture7.png) | ![image8](./images/picture8.png) |
+| ![image9](./images/picture9.png) | ![image10](./images/picture10.png) |
+| ![image11](./images/picture11.png) | ![image12](./images/picture12.png) |
 | ![image13](./images/picture13.png) |
 
 ---
@@ -90,6 +92,7 @@ You can also run the bot by double-clicking the `wos-bot-x.x.x.jar` file. Note t
 - 🔹 **Beast Hunt** – Implement automatic beast hunting.
 - 🔹 **Polar Terror Hunt** – Implement automatic polar terror hunting.
 - 🔹 **And more...** 🔥
+
 
 
 
