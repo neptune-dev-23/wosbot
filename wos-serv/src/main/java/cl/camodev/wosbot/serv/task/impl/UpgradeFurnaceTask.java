@@ -251,7 +251,7 @@ public class UpgradeFurnaceTask extends DelayedTask {
 
 
 			} catch (Exception e) {
-				// TODO: handle exception
+				e.printStackTrace();
 			}
 
 		} else{

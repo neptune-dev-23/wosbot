@@ -92,20 +92,14 @@ public class AllianceChestTask extends DelayedTask {
 		boolean honorChestEnabled = profile.getConfig(EnumConfigurationKey.ALLIANCE_HONOR_CHEST_BOOL, Boolean.class);
 		
 		if (honorChestEnabled) {
-			
 			// Search for the honor chest
 			logInfo("Opening honor chest");
-			DTOImageSearchResult honorChest = emuManager.searchTemplate(EMULATOR_NUMBER,
-			EnumTemplates.ALLIANCE_HONOR_CHEST.getTemplate(), 90);
-			if (honorChest.isFound()) {
-				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, honorChest.getPoint(), honorChest.getPoint(),
-				2, 500);
-				sleepTask(500);
+			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(320, 200), new DTOPoint(400, 250));
+			sleepTask(300);
 				
-				// Close the window
-				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(578, 1180), new DTOPoint(641, 1200), 2, 500);
-			}
-			sleepTask(500);
+			// Close the window
+			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(578, 1180), new DTOPoint(641, 1200), 2, 500);
+			sleepTask(300);
 		}
 		
 		emuManager.tapBackButton(EMULATOR_NUMBER);

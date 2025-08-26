@@ -7,6 +7,7 @@ public enum EnumTemplates {
 	GAME_HOME_WORLD("/templates/world.png"),
 	GAME_HOME_PETS("/templates/home/petsButton.png"),
 	GAME_HOME_INTEL("/templates/home/intelButton.png"),
+	GAME_HOME_INTEL_DONE("/templates/intel/intelDone.png"),
 	GAME_HOME_RECONNECT("/templates/home/reconnectButton.png"),
 	
 	GAME_HOME_SHORTCUTS_INFANTRY("/templates/shortcuts/infantry.png"),
@@ -58,11 +59,11 @@ public enum EnumTemplates {
 	
 	GAME_HOME_SHORTCUTS_FARM_TICK("/templates/shortcuts/farmTick.png"),
 	GAME_HOME_SHORTCUTS_FARM_GATHER("/templates/shortcuts/farmGather.png"),
-	
-	RALLY_REMOVE_HERO_BUTTON("/templates/rally/removeHeroButton.png"),
-	RALLY_GATHER_BUTTON("/templates/rally/gatherButton.png"),
-	RALLY_GATHER_ALREADY_MARCHING("/templates/rally/gatherAlreadyMarching.png"),
-	RALLY_POLAR_BUTTON("/templates/rally/rallyPolarButton.png"),
+
+	GATHER_DEPLOY_BUTTON("/templates/shortcuts/gatherDeploy.png"),
+
+	TROOPS_ALREADY_MARCHING("/templates/rally/troopsAlreadyMarching.png"),
+	RALLY_BUTTON("/templates/rally/rallyButton.png"),
 
 	RALLY_EQUALIZE_BUTTON("/templates/rally/equalizeButton.png"),
 	
@@ -104,10 +105,9 @@ public enum EnumTemplates {
 	INTEL_ATTACK("/templates/intel/beastAttack.png"),
 	INTEL_RESCUE("/templates/intel/survivorRescue.png"),
 	INTEL_EXPLORE("/templates/intel/journeyExplore.png"),
-	INTEL_ATTACK_CONFIRM("/templates/intel/beastAttackConfirm.png"),
-	
 	INTEL_FIRE_BEAST("/templates/intel/beastFire.png"),
-
+	
+	DEPLOY_BUTTON("/templates/intel/deploy.png"),
 
 	INTEL_BEAST_YELLOW("/templates/intel/beast10.png"),
 	INTEL_BEAST_PURPLE("/templates/intel/beast9.png"),
@@ -247,7 +247,24 @@ public enum EnumTemplates {
 
 	MAIL_UNCLAIMED_REWARDS("/templates/mail/unclaimedRewards.png"),
 
-	VALIDATION_WAR_ACADEMY_UI("/templates/validation/warAcademy.png")
+	VALIDATION_WAR_ACADEMY_UI("/templates/validation/warAcademy.png"),
+
+	TUNDRA_TRUCK_TAB("/templates/tundratruck/tundraTruckTab.png"),
+	TUNDRA_TRUCK_ARRIVED("/templates/tundratruck/tundraTruckArrived.png"),
+	TUNDRA_TRUCK_YELLOW("/templates/tundratruck/tundraTruckLegendary.png"),
+	TUNDRA_TRUCK_PURPLE("/templates/tundratruck/tundraTruckEpic.png"),
+	TUNDRA_TRUCK_BLUE("/templates/tundratruck/tundraTruckRare.png"),
+	TUNDRA_TRUCK_GREEN("/templates/tundratruck/tundraTruckNormal.png"),
+	TUNDRA_TRUCK_REFRESH("/templates/tundratruck/tundraTruckRefresh.png"),
+	TUNDRA_TRUCK_REFRESH_GEMS("/templates/tundratruck/tundraTruckRefreshGems.png"),
+	TUNDRA_TRUCK_YELLOW_RAID("/templates/tundratruck/tundraTruckLegendaryRaid.png"),
+	TUNDRA_TRUCK_ESCORT("/templates/tundratruck/tundraTruckEscort.png"),
+	TUNDRA_TRUCK_DEPARTED("/templates/tundratruck/tundraTruckDeparted.png"),
+	TUNDRA_TRUCK_ENDED("/templates/tundratruck/tundraTruckEnded.png"),
+
+	TUNDRA_TREK_SUPPLIES("/templates/tundratrek/trekSupplies.png"),
+	TUNDRA_TREK_CLAIM_BUTTON("/templates/tundratrek/trekClaimButton.png")
+	
 	;
 	// @formatter:on
 
