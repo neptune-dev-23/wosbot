@@ -37,10 +37,10 @@ public class GatherTask extends DelayedTask {
         if (timeStr == null) {
             return LocalDateTime.now();
         }
-        // Elimina saltos de línea y espacios extra
+        // Removes line breaks and extra spaces
         timeStr = timeStr.replaceAll("\\r?\\n", "").trim();
 
-        // Se espera el formato hh:mm:ss
+        // The hh:mm:ss format is expected
         String[] parts = timeStr.split(":");
         if (parts.length != 3) {
             return LocalDateTime.now();
@@ -52,25 +52,16 @@ public class GatherTask extends DelayedTask {
             int seconds = Integer.parseInt(parts[2].trim());
 
             LocalDateTime now = LocalDateTime.now();
-            // Se suma el tiempo parseado al instante actual
+            // The parsed time is added to the current time
             return now.plusHours(hours).plusMinutes(minutes).plusSeconds(seconds);
         } catch (NumberFormatException e) {
-            // Si ocurre algún error durante el parseo, se retorna LocalDateTime.now()
+            // If an error occurs during parsing, LocalDateTime.now() is returned with an addition of 3 minutes
             return LocalDateTime.now().plusMinutes(3);
         }
     }
 
     @Override
     protected void execute() {
-        // If IntelligenceTask remaining minutes is less than 60, we will wait until it is processed
-        // if there is no remaining time, we will proceed with gathering
-        long intelRemainingMinutes = isIntelligenceTaskReadyForGathering();
-        if (profile.getConfig(EnumConfigurationKey.INTEL_BOOL, Boolean.class) && intelRemainingMinutes > 0 & intelRemainingMinutes < 60) {
-            logInfo("Waiting for IntelligenceTask to be processed since remaining time is less than 60 minutes.");
-            reschedule(LocalDateTime.now().plusMinutes(intelRemainingMinutes)); // Check again in intelRemaining minutes
-            return;
-        }
-
         // Check if GatherSpeedTask is not processed yet
         if (profile.getConfig(EnumConfigurationKey.GATHER_SPEED_BOOL, Boolean.class)
                 && !isGatherSpeedTaskReadyForGathering()) {
@@ -90,12 +81,12 @@ public class GatherTask extends DelayedTask {
                 sleepTask(4000);
             }
 
-            // verificar marchas activas
+            // Check active marches
             emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(2, 550));
             sleepTask(500);
             emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(340, 265));
             sleepTask(500);
-            logInfo("looking for " + gatherType);
+            logInfo("Looking for " + gatherType);
 
             // Get active march queue setting and calculate search region
             int activeMarchQueues = profile.getConfig(EnumConfigurationKey.GATHER_ACTIVE_MARCH_QUEUE_INT,
@@ -108,37 +99,48 @@ public class GatherTask extends DelayedTask {
 
             if (resource.isFound()) {
                 logInfo("Resource found, getting remaining time");
-                int index = obtenerIndice(resource.getPoint());
+                int index = getIndex(resource.getPoint());
                 if (index != -1) {
                     try {
                         String time = emuManager.ocrRegionText(EMULATOR_NUMBER, queues[index][2],
                                 new DTOPoint(queues[index][2].getX() + 140, queues[index][2].getY() + 19));
                         LocalDateTime nextSchedule = parseRemaining(time).plusMinutes(2);
+                        logInfo("Gathering in progress. Rescheduling for: " + nextSchedule);
                         this.reschedule(nextSchedule);
                     } catch (Exception e) {
-
+                        logError("Failed to parse remaining time for active gather march. Rescheduling in 5 minutes. " + e.getMessage());
+                        reschedule(LocalDateTime.now().plusMinutes(5));
                     }
+                } else {
+                    logWarning("Could not determine queue index for active gather march. Rescheduling in 5 minutes.");
+                    reschedule(LocalDateTime.now().plusMinutes(5));
                 }
+                // Go back to home screen
                 emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(110, 270));
                 emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(464, 551));
             } else {
+                logInfo("No active gathering march found for " + gatherType + ". Starting a new one.");
+                // Go back to home screen before starting search
                 emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(110, 270));
                 emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(464, 551));
+                sleepTask(1000);
+
+                // Ensure we are on the home screen before tapping world view
                 homeResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 90);
                 if (homeResult.isFound()) {
                     emuManager.tapAtPoint(EMULATOR_NUMBER, homeResult.getPoint());
                     sleepTask(3000);
                 }
-                // debo mandar un escuadro a recojer recursos
-                // ir a la lupa
+
+                // Open search (magnifying glass)
                 emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(25, 850), new DTOPoint(67, 898));
                 sleepTask(2000);
 
-                // hacer swipe a la izquierda
+                // Swipe left to find resource tiles
                 emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(678, 913), new DTOPoint(40, 913));
-                sleepTask(300);
+                sleepTask(500);
 
-                // verify if
+                // Find the correct resource tile
                 DTOImageSearchResult tile = null;
                 int attempts = 0;
                 while (attempts < 4) {
@@ -147,177 +149,114 @@ public class GatherTask extends DelayedTask {
                         break;
                     }
                     attempts++;
+                    logInfo("Swiping to find resource tile, attempt " + attempts);
                     emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(678, 913), new DTOPoint(40, 913));
                     sleepTask(500);
                 }
+
                 if (tile.isFound()) {
+                    logInfo("Resource tile found: " + gatherType.getTile());
                     emuManager.tapAtPoint(EMULATOR_NUMBER, tile.getPoint());
-                    // regresar al nivel 1
                     sleepTask(500);
-                    emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(435, 1052), new DTOPoint(40, 1052));
+
+                    // Set resource level
+                    logInfo("Setting resource level.");
+                    emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(435, 1052), new DTOPoint(40, 1052)); // Swipe to level 1
                     sleepTask(300);
-                    emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(487, 1055), new DTOPoint(487, 1055),
-                            (profile.getConfig(gatherType.getConfig(), Integer.class) - 1), 100);
+                    int level = profile.getConfig(gatherType.getConfig(), Integer.class);
+                    if (level > 1) {
+                        emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(487, 1055), new DTOPoint(487, 1055),
+                                (level - 1), 100);
+                    }
 
                     DTOImageSearchResult tick = emuManager.searchTemplate(EMULATOR_NUMBER,
                             EnumTemplates.GAME_HOME_SHORTCUTS_FARM_TICK.getTemplate(), 90);
                     if (!tick.isFound()) {
                         emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(183, 1140));
-
                     }
 
-                    // click Search
+                    // Click Search
+                    logInfo("Searching for tile...");
                     emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(301, 1200), new DTOPoint(412, 1229));
                     sleepTask(3000);
-                    // click gather
 
+                    // Click Gather button on the map
                     DTOImageSearchResult gather = emuManager.searchTemplate(EMULATOR_NUMBER,
                             EnumTemplates.GAME_HOME_SHORTCUTS_FARM_GATHER.getTemplate(), 90);
                     if (gather.isFound()) {
                         emuManager.tapAtPoint(EMULATOR_NUMBER, gather.getPoint());
-                        sleepTask(500);
+                        sleepTask(1000);
 
-                        // verificar el heroe y remover restantes
-                        logInfo("Removing unused heroes");
-                        emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(171, 430));
+                        // Remove 2nd and 3rd heroes
+                        logInfo("Removing default heroes from march.");
+                        emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(426, 304)); // Hero 2
                         sleepTask(200);
-                        // remover restantes
-                        emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(560, 348));
-
-                        sleepTask(200);
-                        DTOImageSearchResult remove = emuManager.searchTemplate(EMULATOR_NUMBER,
-                                EnumTemplates.RALLY_REMOVE_HERO_BUTTON.getTemplate(), 90);
-                        if (remove.isFound()) {
-                            emuManager.tapAtPoint(EMULATOR_NUMBER, remove.getPoint());
-                            sleepTask(200);
-                        }
-
-                        emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(362, 348));
-                        sleepTask(200);
-                        remove = emuManager.searchTemplate(EMULATOR_NUMBER,
-                                EnumTemplates.RALLY_REMOVE_HERO_BUTTON.getTemplate(), 90);
-                        if (remove.isFound()) {
-                            emuManager.tapAtPoint(EMULATOR_NUMBER, remove.getPoint());
-                            sleepTask(200);
-                        }
-                        emuManager.tapBackButton(EMULATOR_NUMBER);
-                        // falta fverificar si esta el heroe adecuado
+                        emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(616, 304)); // Hero 3
                         sleepTask(200);
 
-                        // Click equalize
+                        // Click gather button on tile
+                        logInfo("Starting gather.");
+                        DTOImageSearchResult deployButton = emuManager.searchTemplate(EMULATOR_NUMBER,
+                                EnumTemplates.GATHER_DEPLOY_BUTTON.getTemplate(), 90); // Deploy button
+                        if (deployButton.isFound()) {
+                            emuManager.tapAtPoint(EMULATOR_NUMBER, deployButton.getPoint());
+                            sleepTask(1000);
 
-                        DTOImageSearchResult equalizeButton = emuManager.searchTemplate(EMULATOR_NUMBER,
-                                EnumTemplates.RALLY_EQUALIZE_BUTTON.getTemplate(), 90);
-
-                        if (equalizeButton.isFound()) {
-                            emuManager.tapAtPoint(EMULATOR_NUMBER, equalizeButton.getPoint());
-                        } else {
-                            //hard coded coords
-                            emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(198, 1188));
-                            sleepTask(500);
-                        }
-
-
-                        // click gather
-                        DTOImageSearchResult gatherButton = emuManager.searchTemplate(EMULATOR_NUMBER,
-                                EnumTemplates.RALLY_GATHER_BUTTON.getTemplate(), 90);
-                        if (gatherButton.isFound()) {
-                            emuManager.tapAtPoint(EMULATOR_NUMBER, gatherButton.getPoint());
-                            sleepTask(200);
-                            // verificar si ya hay un marcha en curso
+                            // Check if another march is already on the way
                             DTOImageSearchResult march = emuManager.searchTemplate(EMULATOR_NUMBER,
-                                    EnumTemplates.RALLY_GATHER_ALREADY_MARCHING.getTemplate(), 90);
+                                    EnumTemplates.TROOPS_ALREADY_MARCHING.getTemplate(), 90);
                             if (march.isFound()) {
+                                logWarning("Tile is already being gathered by another player, rescheduling task.");
                                 emuManager.tapBackButton(EMULATOR_NUMBER);
                                 emuManager.tapBackButton(EMULATOR_NUMBER);
-                                reschedule(LocalDateTime.now());
-                                logInfo("Tile is already being gathered, rescheduling task");
+                                reschedule(LocalDateTime.now().plusMinutes(1)); // Try again soon for a new tile
                             } else {
-                                logInfo("March started");
+                                logInfo("March started successfully.");
                                 reschedule(LocalDateTime.now().plusMinutes(5));
                             }
+                        } else {
+                             logError("March button not found. Aborting.");
+                             emuManager.tapBackButton(EMULATOR_NUMBER);
+                             reschedule(LocalDateTime.now().plusMinutes(5));
                         }
 
                     } else {
+                        logWarning("Gather button on map not found. The tile might be occupied. Rescheduling.");
                         emuManager.tapBackButton(EMULATOR_NUMBER);
                         reschedule(LocalDateTime.now().plusMinutes(5));
-                        logWarning("Tile not found");
                     }
                 } else {
+                    logError("Resource tile not found after multiple swipes. Aborting.");
                     emuManager.tapBackButton(EMULATOR_NUMBER);
-                    reschedule(LocalDateTime.now().plusMinutes(5));
-                    logError("resource not found");
+                    reschedule(LocalDateTime.now().plusMinutes(15)); // Wait longer if tiles can't be found
                 }
             }
 
         } else {
+            logWarning("Not on home or world screen. Tapping back button and rescheduling.");
             emuManager.tapBackButton(EMULATOR_NUMBER);
             reschedule(LocalDateTime.now());
-
         }
-
     }
 
-    public int obtenerIndice(DTOPoint punto) {
+    public int getIndex(DTOPoint point) {
         // Get active march queue setting and limit the search to only active queues
         int activeMarchQueues = profile.getConfig(EnumConfigurationKey.GATHER_ACTIVE_MARCH_QUEUE_INT, Integer.class);
         int maxQueues = Math.min(activeMarchQueues, queues.length);
 
         for (int i = 0; i < maxQueues; i++) {
-            // Obtener los límites del rango (para asegurar el orden correcto, usamos
-            // Math.min y Math.max)
+            // Get the range limits (to ensure correct order, we use Math.min and Math.max)
             int minX = Math.min(queues[i][0].getX(), queues[i][1].getX());
             int maxX = Math.max(queues[i][0].getX(), queues[i][1].getX());
             int minY = Math.min(queues[i][0].getY(), queues[i][1].getY());
             int maxY = Math.max(queues[i][0].getY(), queues[i][1].getY());
 
-            // Verificar si el punto está dentro de los límites
-            if (punto.getX() >= minX && punto.getX() <= maxX && punto.getY() >= minY && punto.getY() <= maxY) {
-                return i; // Retorna el índice del par encontrado
+            // Check if the point is within the limits
+            if (point.getX() >= minX && point.getX() <= maxX && point.getY() >= minY && point.getY() <= maxY) {
+                return i; // Returns the index of the found pair
             }
         }
-        return -1; // Retorna -1 si el punto no se encuentra en ninguno de los rangos
-    }
-
-    private long isIntelligenceTaskReadyForGathering() {
-        try {
-            DailyTask intelligenceTask = iDailyTaskRepository.findByProfileIdAndTaskName(profile.getId(),
-                    TpDailyTaskEnum.INTEL);
-
-            if (intelligenceTask == null) {
-                // IntelligenceTask has never been executed, so gathering should wait
-                logDebug("IntelligenceTask has never been executed, should wait");
-                return (long) 2; // Wait for 2 minutes
-            }
-
-            LocalDateTime nextSchedule = intelligenceTask.getNextSchedule();
-            if (nextSchedule == null) {
-                // If there's no next schedule, check again in 2 minutes
-                logDebug("IntelligenceTask has no next schedule, should wait");
-                return (long) 2; // Wait for 2 minutes
-            }
-
-            // Check if the next schedule is more than 60 minutes from now
-            long minutesUntilNextSchedule = ChronoUnit.MINUTES.between(LocalDateTime.now(), nextSchedule);
-
-            if (minutesUntilNextSchedule <= 0) {
-                // If the next schedule is in the past, check again in 2 minutes
-                logDebug("IntelligenceTask next schedule is in the past and will start soon, should wait");
-                return (long) 2; // Wait for 2 minutes
-            }
-            if (minutesUntilNextSchedule > 300) {
-                logDebug("IntelligenceTask next schedule is in " + minutesUntilNextSchedule
-                        + " minutes, gathering can start");
-                return (long) 0; // Allow gathering to proceed
-            } else {
-                logDebug("IntelligenceTask next schedule is in " + minutesUntilNextSchedule + " minutes, should wait");
-                return minutesUntilNextSchedule; // Wait for the remaining minutes
-            }
-
-        } catch (Exception e) {
-            logDebug("Error checking IntelligenceTask status: " + e.getMessage() + ", should wait");
-            return (long) 2; // Wait for 2 minutes
-        }
+        return -1; // Returns -1 if the point is not in any of the ranges
     }
 
     private boolean isGatherSpeedTaskReadyForGathering() {

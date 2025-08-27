@@ -446,28 +446,34 @@ public class TrainingTroopsTask extends DelayedTask {
      */
     private boolean attemptSingleTroopPromotion(EnumTemplates template) {
         logInfo("Attempting promotion for: " + template.name());
-
-        DTOImageSearchResult troop = emuManager.searchTemplate(EMULATOR_NUMBER, template.getTemplate(), 98);
-
-        if (troop.isFound()) {
-            // Tap on troop to check promotion availability
-            tapPoint(troop.getPoint());
-            sleepTask(500);
-
-            DTOImageSearchResult promoteButton = emuManager.searchTemplate(EMULATOR_NUMBER,
-                EnumTemplates.TRAINING_TROOP_PROMOTE.getTemplate(), 90);
-
-            if (promoteButton.isFound()) {
-                return executePromotion(template, promoteButton);
+        int attempts = 0;
+    
+        while(attempts < 3) {
+            DTOImageSearchResult troop = emuManager.searchTemplate(EMULATOR_NUMBER, template.getTemplate(), 98);
+            
+            if (troop.isFound()) {
+                // Tap on troop to check promotion availability
+                tapPoint(troop.getPoint());
+                sleepTask(500);
+    
+                DTOImageSearchResult promoteButton = emuManager.searchTemplate(EMULATOR_NUMBER,
+                    EnumTemplates.TRAINING_TROOP_PROMOTE.getTemplate(), 90);
+    
+                if (promoteButton.isFound()) {
+                    return executePromotion(template, promoteButton);
+                } else {
+                    logInfo("No promotion button found for: " + template.name());
+                }
             } else {
-                logInfo("No promotion button found for: " + template.name());
-                navigateToNextTroop();
-                return false;
+                logInfo("Template not found for: " + template.name() + " (attempt " + (attempts + 1) + ")");
             }
-        } else {
-            navigateToNextTroop();
-            return false;
+
+            attempts++;
+            sleepTask(300);
         }
+        logInfo("Template search attempts exhausted for: " + template.name() + ", moving to next troop level");
+        navigateToNextTroop();
+        return false;
     }
 
     /**

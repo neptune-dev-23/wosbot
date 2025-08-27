@@ -3,6 +3,8 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.RowConstraints?>
@@ -38,7 +40,17 @@
          </GridPane.margin>
       </CheckBox>
       <CheckBox fx:id="checkBoxFireBeast" graphicTextGap="3.0" mnemonicParsing="false" text="Fire Beast" GridPane.rowIndex="1" />
-      <HBox alignment="CENTER_LEFT" prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+      <HBox fx:id="hboxFlagSelection" alignment="CENTER_LEFT" prefHeight="100.0" prefWidth="200.0" spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
+         <children>
+            <Label text="Flag selection" />
+            <ComboBox fx:id="comboBoxBeastFlag" prefWidth="150.0" />
+         </children>
+      </HBox>
+      <HBox alignment="CENTER_LEFT" prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+         <children>
+            <CheckBox fx:id="checkBoxUseFlag" mnemonicParsing="false" text="Use flag" />
+         </children>
+      </HBox>
       <CheckBox fx:id="checkBoxJourney" graphicTextGap="3.0" mnemonicParsing="false" text="Journey" GridPane.rowIndex="4" />
       <HBox alignment="CENTER_LEFT" prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="1">
          <children>

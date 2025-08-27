@@ -1,7 +1,7 @@
 package cl.camodev.wosbot.console.enumerable;
 
 public enum TpDailyTaskEnum {
-	// Enumeración de tareas diarias
+	// Daily task enumeration
 	//@formatter:off
 	 	HERO_RECRUITMENT(1, "Hero Recruitment",      	EnumConfigurationKey.BOOL_HERO_RECRUITMENT),
 	    NOMADIC_MERCHANT(2, "Nomadic Merchant",       	EnumConfigurationKey.BOOL_NOMADIC_MERCHANT),
@@ -10,18 +10,17 @@ public enum TpDailyTaskEnum {
 	    VIP_POINTS(5, "VIP Points",                   	EnumConfigurationKey.BOOL_VIP_POINTS),
 	    PET_ADVENTURE(6, "Pet Adventure",             	EnumConfigurationKey.PET_PERSONAL_TREASURE_BOOL),
 	    EXPLORATION_CHEST(7, "Exploration Chest",       EnumConfigurationKey.BOOL_EXPLORATION_CHEST),
-
+		TREK_SUPPLIES(8, "Trek Supplies",            	EnumConfigurationKey.TUNDRA_TREK_SUPPLIES_BOOL),
 	    LIFE_ESSENCE(9, "Life Essence",                	EnumConfigurationKey.LIFE_ESSENCE_BOOL),
 	    LIFE_ESSENCE_CARING(10, "Life Essence Caring",  EnumConfigurationKey.ALLIANCE_LIFE_ESSENCE_BOOL),
 		LABYRINTH(11, "Labyrinth",                   	EnumConfigurationKey.DAILY_LABYRINTH_BOOL),
 
-
+	
 
 	    MAIL_REWARDS(30, "Mail Rewards",               	EnumConfigurationKey.MAIL_REWARDS_BOOL),
 	    DAILY_MISSIONS(31, "Daily Missions",           	EnumConfigurationKey.DAILY_MISSION_BOOL),
 	    STOREHOUSE_CHEST(32, "Storehouse Chest",       	EnumConfigurationKey.STOREHOUSE_CHEST_BOOL),
 	    INTEL(33, "Intel",                             	EnumConfigurationKey.INTEL_BOOL),
-	    STOREHOUSE_STAMINA(34, "Storehouse Stamina",   	EnumConfigurationKey.STOREHOUSE_STAMINA_BOOL),
 
 	    ALLIANCE_AUTOJOIN(40, "Alliance Autojoin",     	EnumConfigurationKey.ALLIANCE_AUTOJOIN_BOOL),
 	    ALLIANCE_HELP(41, "Alliance Help",             	EnumConfigurationKey.ALLIANCE_HELP_REQUESTS_BOOL),
@@ -50,7 +49,14 @@ public enum TpDailyTaskEnum {
 
 		BANK(14, "Bank",                              EnumConfigurationKey.BOOL_BANK),
 		SHOP_MYSTERY(80, "Shop Mystery",              EnumConfigurationKey.BOOL_MYSTERY_SHOP),
-		INITIALIZE(100, "Initialize",                  null);
+		INITIALIZE(100, "Initialize",                  null),
+		
+		EVENT_TUNDRA_TRUCK(200, "Tundra Truck Event",    EnumConfigurationKey.TUNDRA_TRUCK_EVENT_BOOL),
+		EVENT_HERO_MISSION(201, "Hero Mission Event",    EnumConfigurationKey.HERO_MISSION_EVENT_BOOL),
+		
+		
+		
+		;
 
 
     private final int id;
@@ -69,7 +75,7 @@ public enum TpDailyTaskEnum {
                 return t;
             }
         }
-        throw new IllegalArgumentException("No existe un TpDailyTaskEnum con id " + id);
+        throw new IllegalArgumentException("No TpDailyTaskEnum exists with id " + id);
     }
 
     public int getId() {
@@ -80,7 +86,7 @@ public enum TpDailyTaskEnum {
         return name;
     }
 
-    /** Clave que usará el perfil para saber si esta tarea está habilitada */
+    /** Daily task enumeration */
     public EnumConfigurationKey getConfigKey() {
         return configKey;
     }
