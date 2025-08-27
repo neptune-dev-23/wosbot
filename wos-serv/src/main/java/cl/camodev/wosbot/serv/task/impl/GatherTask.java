@@ -193,13 +193,13 @@ public class GatherTask extends DelayedTask {
                         if (removeHeros) {
                             // Remove 2nd and 3rd heroes
                             logInfo("Removing default heroes from march.");
-                            List<DTOImageSearchResult> researchResults = emuManager.searchTemplates(EMULATOR_NUMBER, EnumTemplates.RALLY_REMOVE_HERO_BUTTON.getTemplate(), 90, 3);
+                            List<DTOImageSearchResult> esults = emuManager.searchTemplates(EMULATOR_NUMBER, EnumTemplates.RALLY_REMOVE_HERO_BUTTON.getTemplate(), 90, 3);
 
-                            researchResults.sort(Comparator.comparingInt(r -> r.getPoint().getX()));
+                            esults.sort(Comparator.comparingInt(r -> r.getPoint().getX()));
 
-                            for (int i = 1; i < researchResults.size(); i++) {
-                                emuManager.tapAtPoint(EMULATOR_NUMBER, researchResults.get(i).getPoint());
-                                sleepTask(200);
+                            for (int i = 1; i < esults.size(); i++) {
+                                emuManager.tapAtPoint(EMULATOR_NUMBER, results.get(i).getPoint());
+                                sleepTask(300);
                             }
 
                         }
