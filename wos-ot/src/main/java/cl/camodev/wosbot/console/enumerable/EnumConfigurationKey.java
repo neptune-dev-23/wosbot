@@ -65,6 +65,8 @@ public enum EnumConfigurationKey {
 	INTEL_CAMP_BOOL("false",Boolean.class),
 	INTEL_EXPLORATION_BOOL("false",Boolean.class),
 	INTEL_BEASTS_EVENT_BOOL("false",Boolean.class),
+	INTEL_BEASTS_FLAG_INT("1", Integer.class),
+	INTEL_USE_FLAG_BOOL("false", Boolean.class),
 	INTEL_FC_ERA_BOOL("false",Boolean.class),
 	
 	LIFE_ESSENCE_BOOL("false",Boolean.class),
@@ -80,7 +82,6 @@ public enum EnumConfigurationKey {
 	DAILY_MISSION_AUTO_SCHEDULE_BOOL("false",Boolean.class),
 	
 	STOREHOUSE_CHEST_BOOL("false",Boolean.class),
-	STOREHOUSE_STAMINA_BOOL("false",Boolean.class),
 
 	PET_SKILL_STAMINA_BOOL("false",Boolean.class),
 	PET_SKILL_FOOD_BOOL("false",Boolean.class),
@@ -93,6 +94,14 @@ public enum EnumConfigurationKey {
 	BOOL_BANK("false",Boolean.class),
 	INT_BANK_DELAY("1",Integer.class),
 	BOOL_MYSTERY_SHOP("false",Boolean.class),
+
+	TUNDRA_TRUCK_EVENT_BOOL("false",Boolean.class),
+	TUNDRA_TRUCK_USE_GEMS_BOOL("false",Boolean.class),
+	TUNDRA_TRUCK_SSR_BOOL("false",Boolean.class),
+	MERCENARY_EVENT_BOOL("false",Boolean.class),
+	HERO_MISSION_EVENT_BOOL("false",Boolean.class),
+
+	TUNDRA_TREK_SUPPLIES_BOOL("false",Boolean.class),
 	;
 	//@formatter:on
     private final String defaultValue;

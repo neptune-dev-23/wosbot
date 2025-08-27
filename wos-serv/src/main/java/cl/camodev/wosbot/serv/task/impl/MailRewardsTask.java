@@ -30,7 +30,7 @@ public class MailRewardsTask extends DelayedTask {
 
 		if (homeResult.isFound() || worldResult.isFound()) {
 			sleepTask(1000);
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "going to mail");
+			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Going to mail");
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(640, 1033),
 					new DTOPoint(686, 1064));
 			sleepTask(1000);
@@ -64,14 +64,9 @@ public class MailRewardsTask extends DelayedTask {
 
 						// Claim rewards
 						emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(420, 1227),
-								new DTOPoint(450, 1250), 2, 500);
+								new DTOPoint(450, 1250), 3, 1000);
 						sleepTask(500);
 
-						// Close the window
-						emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(578, 1180), new DTOPoint(641, 1200),
-								2,
-								500);
-						
 						searchAttempts++;
 					} else {
 						break;

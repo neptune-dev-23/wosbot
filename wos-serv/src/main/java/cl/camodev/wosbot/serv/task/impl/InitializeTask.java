@@ -1,14 +1,12 @@
 package cl.camodev.wosbot.serv.task.impl;
 
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
-import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.emulator.EmulatorManager;
 import cl.camodev.wosbot.ex.ProfileInReconnectStateException;
 import cl.camodev.wosbot.ex.StopExecutionException;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOProfiles;
-import cl.camodev.wosbot.serv.impl.ServLogs;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 
 public class InitializeTask extends DelayedTask {
@@ -21,28 +19,29 @@ public class InitializeTask extends DelayedTask {
 	@Override
 	protected void execute() {
 		this.setRecurring(false);
-		ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Checking emulator status");
+		logInfo("Starting Initialization Task.");
+		logInfo("Checking emulator status...");
 		while (!isStarted) {
 
-			if (EmulatorManager.getInstance().isRunning(EMULATOR_NUMBER)) {
+			if (emuManager.isRunning(EMULATOR_NUMBER)) {
 				isStarted = true;
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "emulator found");
+				logInfo("Emulator is running.");
 			} else {
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "emulator not found, trying to start it");
-				EmulatorManager.getInstance().launchEmulator(EMULATOR_NUMBER);
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "waiting 10 seconds before checking again");
+				logInfo("Emulator not found. Attempting to start it...");
+				emuManager.launchEmulator(EMULATOR_NUMBER);
+				logInfo("Waiting 10 seconds before checking again.");
 				sleepTask(10000);
 			}
 
 		}
 
-		if (!EmulatorManager.getInstance().isWhiteoutSurvivalInstalled(EMULATOR_NUMBER)) {
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(), "whiteout survival not installed, stopping queue");
+		if (!emuManager.isWhiteoutSurvivalInstalled(EMULATOR_NUMBER)) {
+			logError("Whiteout Survival is not installed. Stopping task queue.");
 			throw new StopExecutionException("Game not installed");
 		} else {
 
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "launching game");
-			EmulatorManager.getInstance().launchApp(EMULATOR_NUMBER, EmulatorManager.WHITEOUT_PACKAGE);
+			logInfo("Whiteout Survival is installed. Launching the game...");
+			emuManager.launchApp(EMULATOR_NUMBER, EmulatorManager.WHITEOUT_PACKAGE);
 			sleepTask(10000);
 
 			final int MAX_ATTEMPTS = 10;
@@ -56,7 +55,7 @@ public class InitializeTask extends DelayedTask {
 
 				if (home.isFound() || world.isFound()) {
 					homeScreen = true;
-					ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "home screen found");
+					logInfo("Home screen found.");
 					break;
 				}
 
@@ -65,15 +64,15 @@ public class InitializeTask extends DelayedTask {
 					throw new ProfileInReconnectStateException("Profile " + profile.getName() + " is in reconnect state, cannot execute task: " + taskName);
 				}
 
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "screen not found, esperando 5 segundos antes de volver a intentar");
-				EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
+				logWarning("Home screen not found. Waiting 5 seconds before retrying...");
+				emuManager.tapBackButton(EMULATOR_NUMBER);
 				sleepTask(WAIT_TIME);
 				attempts++;
 			}
 
 			if (!homeScreen) {
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(), "screen no encontrado tras varios intentos, reiniciando emulador");
-				EmulatorManager.getInstance().closeEmulator(EMULATOR_NUMBER);
+				logError("Home screen not found after multiple attempts. Restarting emulator.");
+				emuManager.closeEmulator(EMULATOR_NUMBER);
 				isStarted = false;
 				this.setRecurring(true);
 			}
