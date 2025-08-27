@@ -58,6 +58,7 @@ public enum EnumConfigurationKey {
 	GATHER_MEAT_LEVEL_INT("1",Integer.class),
 	GATHER_IRON_LEVEL_INT("1",Integer.class),
 	GATHER_ACTIVE_MARCH_QUEUE_INT("6",Integer.class),
+    GATHER_REMOVE_HEROS_BOOL("false",Boolean.class),
 	
 	INTEL_BOOL("false",Boolean.class),
 	INTEL_FIRE_BEAST_BOOL("false",Boolean.class),

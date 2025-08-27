@@ -15,6 +15,7 @@ public enum EnumTemplates {
 	GAME_HOME_SHORTCUTS_MARKSMAN("/templates/shortcuts/marksman.png"),
 	GAME_HOME_SHORTCUTS_RESEARCH_CENTER("/templates/shortcuts/researchCenter.png"),
 	GAME_HOME_SHORTCUTS_HELP_REQUEST("/templates/shortcuts/helpRequest.png"),
+	GAME_HOME_SHORTCUTS_HELP_REQUEST2("/templates/shortcuts/helpRequest2.png"),
 	
 	GAME_HOME_SHORTCUTS_UPGRADE("/templates/shortcuts/upgrade.png"),
 	GAME_HOME_SHORTCUTS_OBTAIN("/templates/shortcuts/obtain.png"),
@@ -64,7 +65,7 @@ public enum EnumTemplates {
 
 	TROOPS_ALREADY_MARCHING("/templates/rally/troopsAlreadyMarching.png"),
 	RALLY_BUTTON("/templates/rally/rallyButton.png"),
-
+    RALLY_REMOVE_HERO_BUTTON("/templates/rally/removeHeroButton.png"),
 	RALLY_EQUALIZE_BUTTON("/templates/rally/equalizeButton.png"),
 	
 	HOME_DEALS_BUTTON("/templates/home/dealsButton.png"),
