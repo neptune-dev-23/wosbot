@@ -11,7 +11,7 @@ public class GatherLayoutController extends AbstractProfileController {
 	@FXML
 	private CheckBox checkBoxGatherCoal, checkBoxGatherIron, 
 	checkBoxGatherMeat, checkBoxGatherWood, 
-	checkBoxGatherSpeedBoost;
+	checkBoxGatherSpeedBoost,checkBoxRemoveHeros;
 
 	@FXML
 	private ComboBox<Integer> comboBoxActiveMarchQueue, comboBoxLevelCoal, 
@@ -25,6 +25,7 @@ public class GatherLayoutController extends AbstractProfileController {
 		checkBoxMappings.put(checkBoxGatherMeat, EnumConfigurationKey.GATHER_MEAT_BOOL);
 		checkBoxMappings.put(checkBoxGatherWood, EnumConfigurationKey.GATHER_WOOD_BOOL);
 		checkBoxMappings.put(checkBoxGatherSpeedBoost, EnumConfigurationKey.GATHER_SPEED_BOOL);
+        checkBoxMappings.put(checkBoxRemoveHeros, EnumConfigurationKey.GATHER_REMOVE_HEROS_BOOL);
 
 		comboBoxLevelCoal.getItems().addAll(1, 2, 3, 4, 5, 6, 7, 8);
 		comboBoxLevelIron.getItems().addAll(1, 2, 3, 4, 5, 6, 7, 8);

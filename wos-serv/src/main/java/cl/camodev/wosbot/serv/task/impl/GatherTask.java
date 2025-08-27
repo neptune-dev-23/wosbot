@@ -2,6 +2,8 @@ package cl.camodev.wosbot.serv.task.impl;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Comparator;
+import java.util.List;
 
 import cl.camodev.wosbot.almac.entity.DailyTask;
 import cl.camodev.wosbot.almac.repo.DailyTaskRepository;
@@ -166,7 +168,7 @@ public class GatherTask extends DelayedTask {
                     int level = profile.getConfig(gatherType.getConfig(), Integer.class);
                     if (level > 1) {
                         emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(487, 1055), new DTOPoint(487, 1055),
-                                (level - 1), 100);
+                                (level - 1), 150);
                     }
 
                     DTOImageSearchResult tick = emuManager.searchTemplate(EMULATOR_NUMBER,
@@ -187,12 +189,20 @@ public class GatherTask extends DelayedTask {
                         emuManager.tapAtPoint(EMULATOR_NUMBER, gather.getPoint());
                         sleepTask(1000);
 
-                        // Remove 2nd and 3rd heroes
-                        logInfo("Removing default heroes from march.");
-                        emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(426, 304)); // Hero 2
-                        sleepTask(200);
-                        emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(616, 304)); // Hero 3
-                        sleepTask(200);
+                        boolean removeHeros = profile.getConfig(EnumConfigurationKey.GATHER_REMOVE_HEROS_BOOL, Boolean.class);
+                        if (removeHeros) {
+                            // Remove 2nd and 3rd heroes
+                            logInfo("Removing default heroes from march.");
+                            List<DTOImageSearchResult> researchResults = emuManager.searchTemplates(EMULATOR_NUMBER, EnumTemplates.RALLY_REMOVE_HERO_BUTTON.getTemplate(), 90, 3);
+
+                            researchResults.sort(Comparator.comparingInt(r -> r.getPoint().getX()));
+
+                            for (int i = 1; i < researchResults.size(); i++) {
+                                emuManager.tapAtPoint(EMULATOR_NUMBER, researchResults.get(i).getPoint());
+                                sleepTask(200);
+                            }
+
+                        }
 
                         // Click gather button on tile
                         logInfo("Starting gather.");
