@@ -8,12 +8,10 @@ import java.util.regex.Pattern;
 
 import cl.camodev.utiles.UtilTime;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
-import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
-import cl.camodev.wosbot.serv.impl.ServLogs;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 import cl.camodev.wosbot.serv.task.EnumStartLocation;
 
@@ -41,7 +39,8 @@ public class WarAcademyTask extends DelayedTask {
         List<DTOImageSearchResult> researchResults = null;
 
         for (int attempt = 1; attempt <= MAX_RETRY_ATTEMPTS; attempt++) {
-            ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Searching for research centers, attempt " + attempt + " of " + MAX_RETRY_ATTEMPTS);
+            logInfo("Searching for research centers");
+            logDebug("Searching for research centers (Attempt " + attempt + "/" + MAX_RETRY_ATTEMPTS + ")...");
 
             swipe(new DTOPoint(255, 477), new DTOPoint(255, 425));
             sleepTask(500);
@@ -49,10 +48,10 @@ public class WarAcademyTask extends DelayedTask {
             researchResults = emuManager.searchTemplates(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_SHORTCUTS_RESEARCH_CENTER.getTemplate(), 90, 2);
 
             if (researchResults.size() >= 2) {
-                ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Found " + researchResults.size() + " research centers on attempt " + attempt);
+                logInfo("Found " + researchResults.size() + " research centers on attempt " + attempt + ".");
                 break;
             } else {
-                ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, taskName, profile.getName(), "Only found " + researchResults.size() + " research centers on attempt " + attempt);
+                logWarning("Only " + researchResults.size() + " research centers were found on attempt " + attempt + ".");
                 if (attempt < MAX_RETRY_ATTEMPTS) {
                     sleepTask(1000); // Wait a bit before next attempt
                 }
@@ -60,7 +59,7 @@ public class WarAcademyTask extends DelayedTask {
         }
 
         if (researchResults.size() < 2) {
-            ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(), "Not enough research centers found after " + MAX_RETRY_ATTEMPTS + " attempts, stopping task");
+            logError("Not enough research centers were found after " + MAX_RETRY_ATTEMPTS + " attempts. Stopping the task.");
             return;
         }
         //STEP 2: tap on the match with highest y coordinate
@@ -77,15 +76,16 @@ public class WarAcademyTask extends DelayedTask {
         DTOImageSearchResult researchButton = null;
 
         for (int buttonAttempt = 1; buttonAttempt <= MAX_RETRY_ATTEMPTS; buttonAttempt++) {
-            logInfo("Searching for research button, attempt " + buttonAttempt + " of " + MAX_RETRY_ATTEMPTS);
+            logInfo("Searching for the research button");
+            logDebug("Searching for the research button (Attempt " + buttonAttempt + "/" + MAX_RETRY_ATTEMPTS + ")...");
 
             researchButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.BUILDING_BUTTON_RESEARCH.getTemplate(), 90);
 
             if (researchButton.isFound()) {
-                logInfo("Research button found on attempt " + buttonAttempt);
+                logInfo("The research button was found on attempt " + buttonAttempt + ".");
                 break;
             } else {
-                logWarning("Research button not found on attempt " + buttonAttempt);
+                logWarning("The research button was not found on attempt " + buttonAttempt + ".");
                 if (buttonAttempt < MAX_RETRY_ATTEMPTS) {
                     sleepTask(1000); // Wait 1s before next attempt
                 }
@@ -93,7 +93,7 @@ public class WarAcademyTask extends DelayedTask {
         }
 
         if (!researchButton.isFound()) {
-            logError("Research button not found after " + MAX_RETRY_ATTEMPTS + " attempts, stopping task");
+            logError("The research button was not found after " + MAX_RETRY_ATTEMPTS + " attempts. Stopping the task.");
             reschedule(LocalDateTime.now().plusMinutes(5));
             return;
         }
@@ -106,15 +106,16 @@ public class WarAcademyTask extends DelayedTask {
         DTOImageSearchResult warAcademyUi = null;
 
         for (int uiAttempt = 1; uiAttempt <= MAX_RETRY_ATTEMPTS; uiAttempt++) {
-            logInfo("Searching for War Academy UI, attempt " + uiAttempt + " of " + MAX_RETRY_ATTEMPTS);
+            logInfo("Searching for the War Academy UI");
+            logDebug("Searching for the War Academy UI (Attempt " + uiAttempt + "/" + MAX_RETRY_ATTEMPTS + ")...");
 
             warAcademyUi = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.VALIDATION_WAR_ACADEMY_UI.getTemplate(), 90);
 
             if (warAcademyUi.isFound()) {
-                logInfo("War Academy UI found on attempt " + uiAttempt);
+                logInfo("The War Academy UI was found on attempt " + uiAttempt + ".");
                 break;
             } else {
-                logWarning("War Academy UI not found on attempt " + uiAttempt);
+                logWarning("The War Academy UI was not found on attempt " + uiAttempt + ".");
                 if (uiAttempt < MAX_RETRY_ATTEMPTS) {
                     sleepTask(1000); // Wait 1s before next attempt
                 }
@@ -122,7 +123,7 @@ public class WarAcademyTask extends DelayedTask {
         }
 
         if (!warAcademyUi.isFound()) {
-            logError("War Academy UI not found after " + MAX_RETRY_ATTEMPTS + " attempts");
+            logError("The War Academy UI was not found after " + MAX_RETRY_ATTEMPTS + " attempts.");
             reschedule(LocalDateTime.now().plusMinutes(5));
             return;
         }
@@ -139,7 +140,8 @@ public class WarAcademyTask extends DelayedTask {
         int remainingShards = -1;
 
         for (int ocrAttempt = 1; ocrAttempt <= MAX_RETRY_ATTEMPTS; ocrAttempt++) {
-            logInfo("Reading remaining shards via OCR, attempt " + ocrAttempt + " of " + MAX_RETRY_ATTEMPTS);
+            logInfo("Reading the number of remaining shards via OCR");
+            logDebug("Reading the number of remaining shards via OCR (Attempt " + ocrAttempt + "/" + MAX_RETRY_ATTEMPTS + ")...");
 
             try {
                 ocrResult = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(466, 456), new DTOPoint(624, 484));
@@ -148,16 +150,16 @@ public class WarAcademyTask extends DelayedTask {
                 if (matcher.find()) {
                     String numericValue = matcher.group();
                     remainingShards = Integer.parseInt(numericValue);
-                    logInfo("OCR successful on attempt " + ocrAttempt + ", found " + remainingShards + " shards");
+                    logInfo("OCR was successful on attempt " + ocrAttempt + ". Found " + remainingShards + " shards.");
                     break;
                 } else {
-                    logWarning("OCR attempt " + ocrAttempt + " failed to find numeric value in result: " + ocrResult);
+                    logWarning("OCR attempt " + ocrAttempt + " failed to find a numeric value in the result: " + ocrResult);
                     if (ocrAttempt < MAX_RETRY_ATTEMPTS) {
                         sleepTask(1000); // Wait 1s before retry
                     }
                 }
             } catch (Exception e) {
-                logWarning("OCR attempt " + ocrAttempt + " throws exception: " + e.getMessage());
+                logWarning("OCR attempt " + ocrAttempt + " threw an exception: " + e.getMessage());
                 if (ocrAttempt < MAX_RETRY_ATTEMPTS) {
                     sleepTask(1000); // Wait 1s before retry
                 }
@@ -165,14 +167,14 @@ public class WarAcademyTask extends DelayedTask {
         }
 
         if (remainingShards == -1) {
-            logError("OCR failed to find any numeric value after " + MAX_RETRY_ATTEMPTS + " attempts. Rescheduling task.");
+            logError("OCR failed to find any numeric value after " + MAX_RETRY_ATTEMPTS + " attempts. Rescheduling the task.");
             reschedule(LocalDateTime.now().plusMinutes(5));
             return;
         }
 
         //STEP 7: check if the remaining shards are greater than 0
         if (remainingShards <= 0) {
-            logInfo("No remaining shards to redeem");
+            logInfo("There are no remaining shards to redeem.");
             reschedule(UtilTime.getGameReset());
             return;
         }
@@ -192,7 +194,8 @@ public class WarAcademyTask extends DelayedTask {
         int finalRemainingShards = -1;
 
         for (int finalOcrAttempt = 1; finalOcrAttempt <= MAX_RETRY_ATTEMPTS; finalOcrAttempt++) {
-            logInfo("Reading final remaining shards via OCR, attempt " + finalOcrAttempt + " of " + MAX_RETRY_ATTEMPTS);
+            logInfo("Reading the final number of remaining shards via OCR");
+            logDebug("Reading the final number of remaining shards via OCR (Attempt " + finalOcrAttempt + "/" + MAX_RETRY_ATTEMPTS + ")...");
 
             try {
                 ocrResult = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(466, 456), new DTOPoint(624, 484));
@@ -201,16 +204,16 @@ public class WarAcademyTask extends DelayedTask {
                 if (matcher.find()) {
                     String numericValue = matcher.group();
                     finalRemainingShards = Integer.parseInt(numericValue);
-                    logInfo("Final OCR successful on attempt " + finalOcrAttempt + ", found " + finalRemainingShards + " shards");
+                    logInfo("Final OCR was successful on attempt " + finalOcrAttempt + ". Found " + finalRemainingShards + " shards.");
                     break;
                 } else {
-                    logWarning("Final OCR attempt " + finalOcrAttempt + " failed to find numeric value in result: " + ocrResult);
+                    logWarning("Final OCR attempt " + finalOcrAttempt + " failed to find a numeric value in the result: " + ocrResult);
                     if (finalOcrAttempt < MAX_RETRY_ATTEMPTS) {
                         sleepTask(1000); // Wait 1s before retry
                     }
                 }
             } catch (Exception e) {
-                logWarning("Final OCR attempt " + finalOcrAttempt + " threw exception: " + e.getMessage());
+                logWarning("Final OCR attempt " + finalOcrAttempt + " threw an exception: " + e.getMessage());
                 if (finalOcrAttempt < MAX_RETRY_ATTEMPTS) {
                     sleepTask(1000); // Wait 1s before retry
                 }
@@ -218,18 +221,18 @@ public class WarAcademyTask extends DelayedTask {
         }
 
         if (finalRemainingShards == -1) {
-            ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(), "Final OCR failed to find any numeric value after " + MAX_RETRY_ATTEMPTS + " attempts");
+            logError("The final OCR failed to find any numeric value after " + MAX_RETRY_ATTEMPTS + " attempts.");
             reschedule(LocalDateTime.now().plusMinutes(5));
             return;
         }
 
         //STEP 10: check if the remaining shards are greater than 0
         if (finalRemainingShards > 0) {
-            logInfo("Additional shards found: " + finalRemainingShards + ", rescheduling task to redeem them");
+            logInfo("Additional shards were found: " + finalRemainingShards + ". Rescheduling the task to redeem them.");
             reschedule(LocalDateTime.now().plusHours(2));
 
         } else {
-            logInfo("No additional shards found after final check");
+            logInfo("No additional shards were found after the final check.");
             reschedule(UtilTime.getGameReset());
 
         }

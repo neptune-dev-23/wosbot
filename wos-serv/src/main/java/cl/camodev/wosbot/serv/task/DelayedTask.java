@@ -72,6 +72,7 @@ public abstract class DelayedTask implements Runnable, Delayed {
         }
 
         EnumStartLocation requiredLocation = getRequiredStartLocation();
+        logDebug("Verifying screen location. Required: " + requiredLocation);
 
         for (int attempt = 1; attempt <= 10; attempt++) {
             DTOImageSearchResult home = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 90);
@@ -86,6 +87,7 @@ public abstract class DelayedTask implements Runnable, Delayed {
                 // Found either home or world, now check if we need to navigate to the correct location
                 if (requiredLocation == EnumStartLocation.HOME && !home.isFound()) {
                     // We need HOME but we're in WORLD, navigate to HOME
+                    logInfo("Navigating from WORLD to HOME screen...");
                     emuManager.tapAtPoint(EMULATOR_NUMBER, world.getPoint());
                     sleepTask(2000); // Wait for navigation
 
@@ -95,9 +97,11 @@ public abstract class DelayedTask implements Runnable, Delayed {
                         logWarning("Failed to navigate to HOME, retrying...");
                         continue; // Try again
                     }
+                    logInfo("Successfully navigated to HOME screen.");
 
                 } else if (requiredLocation == EnumStartLocation.WORLD && !world.isFound()) {
                     // We need WORLD but we're in HOME, navigate to WORLD
+                    logInfo("Navigating from HOME to WORLD screen...");
                     emuManager.tapAtPoint(EMULATOR_NUMBER, home.getPoint());
                     sleepTask(2000); // Wait for navigation
 
@@ -107,17 +111,20 @@ public abstract class DelayedTask implements Runnable, Delayed {
                         logWarning("Failed to navigate to WORLD, retrying...");
                         continue; // Try again
                     }
+                    logInfo("Successfully navigated to WORLD screen.");
                 }
                 // If requiredLocation is ANY, we can execute from either location
 
                 execute();
                 return;
             } else {
+                logWarning("Home/World screen not found. Tapping back button (Attempt " + attempt + "/10)");
                 EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
                 sleepTask(100);
             }
         }
 
+        logError("Failed to find Home/World screen after 10 attempts.");
         throw new HomeNotFoundException("Home not found after 10 attempts");
     }
 
@@ -248,6 +255,11 @@ public abstract class DelayedTask implements Runnable, Delayed {
 
     public void logError(String message) {
         logger.error(message);
+        servLogs.appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(), message);
+    }
+
+    public void logError(String message, Throwable t) {
+        logger.error(message, t);
         servLogs.appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(), message);
     }
 

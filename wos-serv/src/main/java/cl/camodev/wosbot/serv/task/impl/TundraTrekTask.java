@@ -29,14 +29,14 @@ public class TundraTrekTask extends DelayedTask {
                 EnumTemplates.GAME_HOME_WORLD.getTemplate(), 90);
 
         if (!homeResult.isFound() && !worldResult.isFound()) {
-            logInfo("Not on a known screen. Tapping back button.");
+            logInfo("Current screen is unknown. Tapping the back button to navigate.");
             emuManager.tapBackButton(EMULATOR_NUMBER);
             reschedule(LocalDateTime.now().plusSeconds(10)); // Reschedule to try again shortly
             return;
         }
 
         if (worldResult.isFound()) {
-            logInfo("On world screen, navigating to city.");
+            logInfo("Currently on the world screen. Navigating back to the city.");
             emuManager.tapAtPoint(EMULATOR_NUMBER, worldResult.getPoint());
             sleepTask(3000);
         }
@@ -46,11 +46,11 @@ public class TundraTrekTask extends DelayedTask {
             DTOImageSearchResult trekClaimButton = emuManager.searchTemplate(EMULATOR_NUMBER,
                     EnumTemplates.TUNDRA_TREK_CLAIM_BUTTON.getTemplate(), 90);
             if (trekClaimButton.isFound()) {
-                logInfo("Claiming Trek Supplies...");
+                logInfo("Trek Supplies are available. Claiming now...");
                 emuManager.tapAtPoint(EMULATOR_NUMBER, trekClaimButton.getPoint());
-                sleepTask(500);
+                sleepTask(1000);
             } else {
-                logInfo("Trek Supplies already claimed or not available.");
+                logInfo("Trek Supplies have already been claimed or are not yet available.");
             }
             sleepTask(1000);
 
@@ -60,23 +60,23 @@ public class TundraTrekTask extends DelayedTask {
                         new DTOPoint(627, 616));
                 LocalDateTime nextRewardTime = addTimeToLocalDateTime(LocalDateTime.now(), nextRewardTimeStr);
                 this.reschedule(nextRewardTime);
-                logInfo("Successfully parsed next reward time. Rescheduling task for: " + nextRewardTime);
+                logInfo("Successfully parsed the next reward time. Rescheduling the task for: " + nextRewardTime);
             } catch (IOException | TesseractException | IllegalArgumentException e) {
-                logError("Failed to read or parse next reward time. Rescheduling for 1 hour from now. Error: " + e.getMessage());
+                logError("Failed to read or parse the next reward time. Rescheduling for 1 hour from now.", e);
                 this.reschedule(LocalDateTime.now().plusHours(1));
             }
             
             // Safely exit back to the main screen
             returnToMainScreen();
         } else {
-            logError("Failed to navigate to Tundra Trek Supplies after multiple attempts.");
+            logError("Failed to navigate to Tundra Trek Supplies after multiple attempts. Rescheduling for 1 hour.");
             returnToMainScreen();
             reschedule(LocalDateTime.now().plusHours(1)); // Reschedule for later
         }
     }
 
     private boolean navigateToTrekSupplies() {
-        logInfo("Navigating to Trek Supplies...");
+        logInfo("Navigating to Tundra Trek Supplies...");
         // This sequence of taps is intended to open the event list.
         emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(3, 513), new DTOPoint(26, 588));
         sleepTask(500);
@@ -91,7 +91,7 @@ public class TundraTrekTask extends DelayedTask {
                     EnumTemplates.TUNDRA_TREK_SUPPLIES.getTemplate(), 90);
 
             if (trekSupplies.isFound()) {
-                logInfo("Found Tundra Trek Supplies button.");
+                logInfo("Found the Tundra Trek Supplies button.");
                 emuManager.tapAtPoint(EMULATOR_NUMBER, trekSupplies.getPoint());
                 sleepTask(500);
                 // This tap seems necessary to open the final claim screen
@@ -99,7 +99,7 @@ public class TundraTrekTask extends DelayedTask {
                 sleepTask(500);
                 return true;
             } else {
-                logInfo("Tundra Trek Supplies not visible, swiping down... (Attempt " + (i + 1) + ")");
+                logInfo("Tundra Trek Supplies not visible. Swiping down to search... (Attempt " + (i + 1) + "/5)");
                 emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(320, 765), new DTOPoint(50, 500));
                 sleepTask(500);
             }
@@ -108,18 +108,18 @@ public class TundraTrekTask extends DelayedTask {
     }
 
     private void returnToMainScreen() {
-        logInfo("Returning to main city screen...");
+        logInfo("Returning to the main city screen...");
         for (int i = 0; i < 5; i++) { // Try up to 5 times to get back
             DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER,
                     EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 90);
             if (homeResult.isFound()) {
-                logInfo("Successfully returned to main screen.");
+                logInfo("Successfully returned to the main screen.");
                 return;
             }
             emuManager.tapBackButton(EMULATOR_NUMBER);
             sleepTask(500);
         }
-        logWarning("Could not confirm return to main screen after multiple back taps.");
+        logWarning("Could not confirm the return to the main screen after multiple back taps.");
     }
 
     /**

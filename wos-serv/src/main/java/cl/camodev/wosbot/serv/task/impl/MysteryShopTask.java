@@ -1,7 +1,6 @@
 package cl.camodev.wosbot.serv.task.impl;
 
 import java.time.LocalDateTime;
-
 import cl.camodev.utiles.UtilTime;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
@@ -33,7 +32,7 @@ public class MysteryShopTask extends DelayedTask {
 				return;
 			} else {
 				// If home screen is not found, log warning and go back
-				logWarning("Home not found");
+				logWarning("Home screen not found. Tapping the back button.");
 				emuManager.tapBackButton(EMULATOR_NUMBER);
 				sleepTask(2000);
 			}
@@ -42,7 +41,7 @@ public class MysteryShopTask extends DelayedTask {
 
 		// If menu is not found after 5 attempts, reschedule for 1 hour
 		if (attempt >= 5) {
-			logWarning("Menu not found, rescheduling task for 1 hour");
+			logWarning("Could not find the Mystery Shop menu after multiple attempts. Rescheduling for 1 hour.");
 			LocalDateTime nextAttempt = LocalDateTime.now().plusHours(1);
 			this.reschedule(nextAttempt);
 		}
@@ -54,6 +53,7 @@ public class MysteryShopTask extends DelayedTask {
 	 * @return true if navigation was successful, false otherwise
 	 */
 	private boolean navigateToShop() {
+        logInfo("Navigating to the Mystery Shop.");
 		// STEP 1: Search for the bottom bar shop button
 		DTOImageSearchResult shopButtonResult = emuManager.searchTemplate(
 			EMULATOR_NUMBER,
@@ -62,7 +62,7 @@ public class MysteryShopTask extends DelayedTask {
 		);
 
 		if (!shopButtonResult.isFound()) {
-			logWarning("Shop button not found, rescheduling task for 1 hour");
+			logWarning("Shop button on the main screen not found. Rescheduling for 1 hour.");
 			LocalDateTime nextAttempt = LocalDateTime.now().plusHours(1);
 			this.reschedule(nextAttempt);
 			return false;
@@ -80,7 +80,7 @@ public class MysteryShopTask extends DelayedTask {
 		);
 
 		if (!mysteryShopResult.isFound()) {
-			logWarning("Mystery shop button not found, rescheduling task for 1 hour");
+			logWarning("Mystery Shop button not found inside the shop. Rescheduling for 1 hour.");
 			emuManager.tapBackButton(EMULATOR_NUMBER);
 			LocalDateTime nextAttempt = LocalDateTime.now().plusHours(1);
 			this.reschedule(nextAttempt);
@@ -90,6 +90,7 @@ public class MysteryShopTask extends DelayedTask {
 		// Tap on mystery shop
 		emuManager.tapAtRandomPoint(EMULATOR_NUMBER, mysteryShopResult.getPoint(), mysteryShopResult.getPoint());
 		sleepTask(1000);
+        logInfo("Successfully navigated to the Mystery Shop.");
 		return true;
 	}
 
@@ -97,6 +98,7 @@ public class MysteryShopTask extends DelayedTask {
 	 * Handles all mystery shop operations: scroll, claim free rewards, use daily refresh
 	 */
 	private void handleMysteryShopOperations() {
+        logInfo("Starting Mystery Shop operations: claiming free items and using daily refresh.");
 		// STEP 3: Scroll down in specific area to reveal all items
 		DTOPoint scrollStart = new DTOPoint(350, 1100);
 		DTOPoint scrollEnd = new DTOPoint(350, 650);
@@ -138,12 +140,12 @@ public class MysteryShopTask extends DelayedTask {
 		if (!foundFreeRewards && usedDailyRefresh) {
 			LocalDateTime nextReset = UtilTime.getGameReset();
 			this.reschedule(nextReset);
-			logInfo("Free rewards claimed");
+			logInfo("All free rewards claimed and daily refresh used. Rescheduling for the next game reset.");
 		} else if (!foundFreeRewards) {
 			// No free rewards and no daily refresh available, reschedule to next reset
 			LocalDateTime nextReset = UtilTime.getGameReset();
 			this.reschedule(nextReset);
-			logInfo("No free rewards or daily refresh available");
+			logInfo("No more free rewards or daily refresh available. Rescheduling for the next game reset.");
 		}
 	}
 
@@ -180,7 +182,7 @@ public class MysteryShopTask extends DelayedTask {
 				emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(360, 830));
 				sleepTask(300);
 
-				logInfo("Free reward claimed");
+				logInfo("A free reward has been claimed.");
 				foundAnyReward = true;
 				foundRewardInThisIteration = true;
 
@@ -213,11 +215,11 @@ public class MysteryShopTask extends DelayedTask {
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(410, 870), new DTOPoint(410, 870));
 			sleepTask(2000);
 
-			logInfo("Daily refresh used successfully");
+			logInfo("Daily refresh used successfully.");
 			return true;
 		}
 
-		logInfo("Daily refresh not available");
+		logInfo("Daily refresh is not available.");
 		return false;
 	}
 }

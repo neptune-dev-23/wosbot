@@ -4,12 +4,10 @@ import java.time.LocalDateTime;
 
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
-import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
-import cl.camodev.wosbot.serv.impl.ServLogs;
 import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 
@@ -30,7 +28,7 @@ public class MailRewardsTask extends DelayedTask {
 
 		if (homeResult.isFound() || worldResult.isFound()) {
 			sleepTask(1000);
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Going to mail");
+			logInfo("Navigating to the mail screen.");
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(640, 1033),
 					new DTOPoint(686, 1064));
 			sleepTask(1000);
@@ -40,7 +38,7 @@ public class MailRewardsTask extends DelayedTask {
 				sleepTask(1000);
 
 				// Claim rewards
-				logInfo("Claiming rewards");
+				logInfo("Attempting to claim rewards in the current tab.");
 				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(420, 1227),
 						new DTOPoint(450, 1250), 2, 500);
 				sleepTask(500);
@@ -53,7 +51,7 @@ public class MailRewardsTask extends DelayedTask {
 					if (unclaimedRewards.isFound()) {
 						
 						if(searchAttempts > 0) {
-							logInfo("Excess unread mail found, swiping down and claiming");
+							logInfo("More unread mail found. Swiping down to reveal more and claiming again.");
 							
 							// Swipe down 10 times
 							for (int i = 0; i < 10; i++) {
@@ -78,11 +76,11 @@ public class MailRewardsTask extends DelayedTask {
 					.plusMinutes(profile.getConfig(EnumConfigurationKey.MAIL_REWARDS_OFFSET_INT, Integer.class));
 			this.reschedule(nextSchedule);
 			ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, nextSchedule);
+			logInfo("Mail rewards claimed. Rescheduling task for " + nextSchedule);
 			emuManager.tapBackButton(EMULATOR_NUMBER);
 
 		} else {
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, taskName, profile.getName(),
-					"Home not found");
+			logWarning("Home screen not found. Tapping the back button.");
 			emuManager.tapBackButton(EMULATOR_NUMBER);
 
 		}

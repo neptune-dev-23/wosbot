@@ -20,12 +20,12 @@ import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.text.Text;
 
 public class ConsoleLogLayoutController {
-
-	private ConsoleLogActionController actionController;
 
 	@FXML
 	private Button buttonClearLogs;
@@ -62,7 +62,7 @@ public class ConsoleLogLayoutController {
 
 	@FXML
 	private void initialize() {
-		actionController = new ConsoleLogActionController(this);
+		new ConsoleLogActionController(this);
 		logMessages = FXCollections.observableArrayList();
 		filteredLogMessages = new FilteredList<>(logMessages);
 		
@@ -71,6 +71,30 @@ public class ConsoleLogLayoutController {
 		columnLevel.setCellValueFactory(cellData -> cellData.getValue().severityProperty());
 		columnTask.setCellValueFactory(cellData -> cellData.getValue().taskProperty());
 		columnProfile.setCellValueFactory(cellData -> cellData.getValue().profileProperty());
+		
+		columnMessage.setCellFactory(column -> {
+			return new TableCell<>() {
+				private final Text text = new Text();
+
+				{
+					setGraphic(text);
+					text.wrappingWidthProperty().bind(widthProperty());
+					text.fillProperty().bind(textFillProperty()); // Inherit text color
+					setPrefHeight(USE_COMPUTED_SIZE);
+				}
+
+				@Override
+				protected void updateItem(String item, boolean empty) {
+					super.updateItem(item, empty);
+					if (empty || item == null) {
+						text.setText(null);
+					} else {
+						text.setText(item);
+					}
+				}
+			};
+		});
+		
 		tableviewLogMessages.setItems(filteredLogMessages);
 
 		// Botón para agregar datos (simula nuevos mensajes)

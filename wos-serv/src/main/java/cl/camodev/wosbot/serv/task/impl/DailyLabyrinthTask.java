@@ -8,8 +8,6 @@ import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 import cl.camodev.wosbot.serv.task.EnumStartLocation;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
@@ -24,8 +22,6 @@ import java.util.List;
 public class DailyLabyrinthTask extends DelayedTask {
 
     // =========================== CONSTANTS ===========================
-
-    private static final Logger logger = LoggerFactory.getLogger(DailyLabyrinthTask.class);
 
     // Navigation points
     private static final DTOPoint SIDE_MENU_AREA_START = new DTOPoint(3, 513);
@@ -64,23 +60,23 @@ public class DailyLabyrinthTask extends DelayedTask {
 
     @Override
     protected void execute() {
-        logger.info("Starting Daily Labyrinth Task execution for profile: {}", profile.getName());
+        logInfo("Starting Daily Labyrinth task for profile: " + profile.getName());
 
         try {
             // Step 1: Navigate to labyrinth menu
             if (!navigateToLabyrinthMenu()) {
-                rescheduleOneHourLater("Failed to navigate to labyrinth menu");
+                rescheduleOneHourLater("Failed to navigate to the Labyrinth menu");
                 return;
             }
 
             // Step 2: Execute challenges based on current day
             executeLabyrinthChallenges();
 
-            logger.info("Daily Labyrinth Task completed successfully for profile: {}", profile.getName());
+            logInfo("Daily Labyrinth task completed successfully for profile: " + profile.getName());
             reschedule(UtilTime.getGameReset());
 
         } catch (Exception e) {
-            logger.error("Error during labyrinth task execution: {}", e.getMessage(), e);
+            logError("An error occurred during the Labyrinth task: " + e.getMessage());
             rescheduleOneHourLater("Unexpected error during execution: " + e.getMessage());
         }
     }
@@ -92,7 +88,7 @@ public class DailyLabyrinthTask extends DelayedTask {
      * @return true if navigation was successful, false otherwise
      */
     private boolean navigateToLabyrinthMenu() {
-        logger.debug("Navigating to labyrinth menu");
+        logInfo("Navigating to the Labyrinth menu...");
 
         // Open side menu
         tapRandomPoint(SIDE_MENU_AREA_START, SIDE_MENU_AREA_END);
@@ -116,10 +112,10 @@ public class DailyLabyrinthTask extends DelayedTask {
         if (labyrinthResult.isFound()) {
             tapPoint(labyrinthResult.getPoint());
             sleepTask(LABYRINTH_LOAD_DELAY);
-            logInfo("Successfully navigated to labyrinth menu");
+            logInfo("Successfully navigated to the Labyrinth menu.");
             return true;
         } else {
-            logWarning("Labyrinth menu item not found");
+            logWarning("Labyrinth menu item not found.");
             return false;
         }
     }
@@ -133,20 +129,19 @@ public class DailyLabyrinthTask extends DelayedTask {
         DayOfWeek currentDay = LocalDateTime.now().getDayOfWeek();
         List<Integer> availableDungeons = getAvailableDungeons(currentDay);
 
-        logger.info("Executing challenges for {}, available dungeons: {}", currentDay, availableDungeons);
+        logInfo("Executing challenges for " + currentDay + ". Available dungeons: " + availableDungeons);
 
         boolean anyCompleted = false;
         for (Integer dungeonNumber : availableDungeons) {
             if (executeDungeonChallenge(dungeonNumber)) {
-                logger.info("Successfully completed challenge for dungeon {}", dungeonNumber);
-                logInfo("Successfully completed challenge for dungeon " + dungeonNumber);
+                logInfo("Successfully completed challenge for dungeon " + dungeonNumber + ".");
                 anyCompleted = true;
 
             }
         }
 
         if (!anyCompleted) {
-            logWarning("No dungeons were successfully completed for today");
+            logWarning("No dungeons were successfully completed today.");
         }
     }
 
@@ -156,7 +151,7 @@ public class DailyLabyrinthTask extends DelayedTask {
      * @return true if challenge was completed successfully
      */
     private boolean executeDungeonChallenge(int dungeonNumber) {
-        logger.debug("Attempting to execute dungeon {} challenge", dungeonNumber);
+        logInfo("Attempting to execute challenge for dungeon " + dungeonNumber + ".");
 
         DTOImageSearchResult labyrinthResult = emuManager.searchTemplate(
                 EMULATOR_NUMBER,
@@ -165,8 +160,7 @@ public class DailyLabyrinthTask extends DelayedTask {
         );
 
         if (!labyrinthResult.isFound()) {
-            logger.debug("Dungeon {} not available for today", dungeonNumber);
-            logWarning("Dungeon " + dungeonNumber + " not available for today");
+            logWarning("Dungeon " + dungeonNumber + " is not available today.");
             return false;
         }
 
@@ -200,8 +194,7 @@ public class DailyLabyrinthTask extends DelayedTask {
         );
 
         if (quickChallengeResult.isFound()) {
-            logger.info("Quick Challenge available for dungeon: {}", dungeonNumber);
-            logInfo("Quick Challenge available for dungeon: " + dungeonNumber);
+            logInfo("'Quick Challenge' is available for dungeon " + dungeonNumber + ".");
             tapPoint(quickChallengeResult.getPoint());
             sleepTask(MENU_NAVIGATION_DELAY);
 
@@ -226,8 +219,7 @@ public class DailyLabyrinthTask extends DelayedTask {
         );
 
         if (raidResult.isFound()) {
-            logger.info("Raid challenge available for dungeon: {}", dungeonNumber);
-            logInfo("Raid challenge available for dungeon: " + dungeonNumber);
+            logInfo("'Raid Challenge' is available for dungeon " + dungeonNumber + ".");
             tapPoint(raidResult.getPoint());
             sleepTask(400);
             tapRandomPoint(SKIP_BUTTON, SKIP_BUTTON, 10, 50);
@@ -248,8 +240,7 @@ public class DailyLabyrinthTask extends DelayedTask {
         );
 
         if (!normalChallengeResult.isFound()) {
-            logger.debug("No normal challenge available for dungeon: {}", dungeonNumber);
-            logWarning("No normal challenge available for dungeon: " + dungeonNumber);
+            logWarning("No 'Normal Challenge' button found for dungeon " + dungeonNumber + ".");
             return false;
         }
 
@@ -264,8 +255,7 @@ public class DailyLabyrinthTask extends DelayedTask {
         );
 
         if (quickDeployResult.isFound()) {
-            logger.info("Quick deploying for dungeon: {}", dungeonNumber);
-            logInfo("Quick deploying for dungeon: " + dungeonNumber);
+            logInfo("'Quick Deploy' button found. Deploying for dungeon " + dungeonNumber + ".");
             tapPoint(quickDeployResult.getPoint());
             sleepTask(100);
         }
@@ -278,8 +268,7 @@ public class DailyLabyrinthTask extends DelayedTask {
         );
 
         if (deployResult.isFound()) {
-            logger.info("Deploying troops for dungeon: {}", dungeonNumber);
-            logInfo("Deploying troops for dungeon: " + dungeonNumber);
+            logInfo("'Deploy' button found. Deploying troops for dungeon " + dungeonNumber + ".");
             tapPoint(deployResult.getPoint());
             sleepTask(BATTLE_COMPLETION_DELAY);
 
@@ -289,8 +278,7 @@ public class DailyLabyrinthTask extends DelayedTask {
             return true;
         }
 
-        logger.warn("Could not deploy troops for dungeon: {}", dungeonNumber);
-        logWarning("Could not deploy troops for dungeon: " + dungeonNumber);
+        logWarning("Could not find 'Deploy' button for dungeon " + dungeonNumber + ".");
         return false;
     }
 
@@ -334,7 +322,7 @@ public class DailyLabyrinthTask extends DelayedTask {
             case 5 -> EnumTemplates.LABYRINTH_DUNGEON_5;
             case 6 -> EnumTemplates.LABYRINTH_DUNGEON_6;
             default -> {
-                logger.warn("Invalid dungeon number: {}, using dungeon 1 as fallback", dungeonNumber);
+                logWarning("Invalid dungeon number: " + dungeonNumber + ". Using dungeon 1 as a fallback.");
                 yield EnumTemplates.LABYRINTH_DUNGEON_1;
             }
         };
@@ -346,8 +334,7 @@ public class DailyLabyrinthTask extends DelayedTask {
      */
     private void rescheduleOneHourLater(String reason) {
         LocalDateTime nextExecution = LocalDateTime.now().plusHours(1);
-        logger.warn("Rescheduling task for one hour later. Reason: {}", reason);
-        logWarning("Task rescheduled: " + reason);
+        logWarning(reason + ". Rescheduling task for one hour later.");
         this.reschedule(nextExecution);
     }
 

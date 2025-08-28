@@ -8,21 +8,15 @@ import java.time.format.DateTimeParseException;
 
 import cl.camodev.utiles.UtilTime;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
-import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
-import cl.camodev.wosbot.emulator.EmulatorManager;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
-import cl.camodev.wosbot.serv.impl.ServLogs;
 import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 import net.sourceforge.tess4j.TesseractException;
 
 public class StorehouseChest extends DelayedTask {
-
-	private final EmulatorManager emuManager = EmulatorManager.getInstance();
-	private final ServLogs servLogs = ServLogs.getServices();
 
 	public StorehouseChest(DTOProfiles profile, TpDailyTaskEnum tpDailyTask) {
 		super(profile, tpDailyTask);
@@ -42,7 +36,7 @@ public class StorehouseChest extends DelayedTask {
 			LocalTime parsedTime = LocalTime.parse(correctedTime, DateTimeFormatter.ofPattern("HH:mm:ss"));
 			return now.plusHours(parsedTime.getHour()).plusMinutes(parsedTime.getMinute()).plusSeconds(parsedTime.getSecond());
 		} catch (DateTimeParseException e) {
-			System.err.println("Error al parsear la hora: " + correctedTime);
+			System.err.println("Error parsing time: " + correctedTime);
 			return now;
 		}
 	}
@@ -56,13 +50,13 @@ public class StorehouseChest extends DelayedTask {
 			if (worldResult.isFound()) {
 				emuManager.tapAtPoint(EMULATOR_NUMBER, worldResult.getPoint());
 				sleepTask(3000);
-				servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Going to storehouse");
+				logInfo("Navigating to the Storehouse.");
 			}
 
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(3, 513), new DTOPoint(26, 588));
 			sleepTask(500);
 
-			EmulatorManager.getInstance().tapAtPoint(EMULATOR_NUMBER, new DTOPoint(110, 270));
+			emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(110, 270));
 			sleepTask(500);
 
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(20, 250), new DTOPoint(200, 280));
@@ -78,15 +72,13 @@ public class StorehouseChest extends DelayedTask {
 					sleepTask(500);
 
 					DTOImageSearchResult chest = null;
-					System.out.println("Searching for chest");
-					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Searching for chest");
+					logInfo("Searching for the storehouse chest.");
 					for (int i = 0; i < 5; i++) {
 						chest = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.STOREHOUSE_CHEST.getTemplate(),  90);
 
 						if (chest.isFound()) {
 							// Claim reward, check for stamina and reschedule
-							System.out.println("Chest found, tapping");
-							servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Claiming chest");
+							logInfo("Storehouse chest found. Tapping to claim.");
 							emuManager.tapAtRandomPoint(EMULATOR_NUMBER, chest.getPoint(), chest.getPoint());
 							sleepTask(500);
 
@@ -95,40 +87,40 @@ public class StorehouseChest extends DelayedTask {
 								DTOImageSearchResult stamina = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.STOREHOUSE_STAMINA.getTemplate(), 90);
 
 								if (stamina.isFound()) {
-									servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Claiming stamina");
+									logInfo("Stamina reward found. Claiming it.");
 									emuManager.tapAtRandomPoint(EMULATOR_NUMBER, stamina.getPoint(), stamina.getPoint());
 									sleepTask(500);
 									emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(250, 930), new DTOPoint(450, 950));
 									sleepTask(3000);
 									break;
 								} else {
-									System.out.println("Stamina not found, sleeping");
+									logDebug("Stamina reward not found on this attempt.");
 									sleepTask(100);
 								}
 							}
 
 							break;
 						} else {
-							System.out.println("Chest not found, sleeping");
+							logDebug("Storehouse chest not found on this attempt.");
 							sleepTask(100);
 						}
 
 					}
 
 					if (!chest.isFound()) {
-						System.out.println("Chest not found, verifying stamina");
+						logInfo("Storehouse chest not found after multiple attempts. Checking for stamina separately.");
 						for (int i = 0; i < 5; i++) {
 							DTOImageSearchResult stamina = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.STOREHOUSE_STAMINA.getTemplate(),  90);
 
 							if (stamina.isFound()) {
-								servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Claiming stamina");
+								logInfo("Stamina reward found. Claiming it.");
 								emuManager.tapAtRandomPoint(EMULATOR_NUMBER, stamina.getPoint(), stamina.getPoint());
 								sleepTask(500);
 								emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(250, 930), new DTOPoint(450, 950));
 								sleepTask(3000);
 								break;
 							} else {
-								System.out.println("Stamina not found, sleeping");
+								logDebug("Stamina reward not found on this attempt.");
 								sleepTask(100);
 							}
 						}
@@ -137,8 +129,7 @@ public class StorehouseChest extends DelayedTask {
 					// Do OCR to find next reward time and reschedule
 					try {
 						String nextRewardTime = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(285, 642), new DTOPoint(430, 666));
-						System.out.println("Next reward time: " + nextRewardTime);
-						servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Next reward time: " + nextRewardTime);
+						logInfo("Next reward cooldown from OCR: " + nextRewardTime);
 						LocalDateTime nextReward = parseNextReward(nextRewardTime);
 						LocalDateTime reset = UtilTime.getGameReset();
 
@@ -146,11 +137,11 @@ public class StorehouseChest extends DelayedTask {
 
 						this.reschedule(scheduledTime);
 						ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, scheduledTime);
+						logInfo("Storehouse task rescheduled for " + scheduledTime);
 
-					} catch (IOException e) {
-						e.printStackTrace();
-					} catch (TesseractException e) {
-						e.printStackTrace();
+					} catch (IOException | TesseractException e) {
+						logError("Error during OCR for the next reward time. Rescheduling for 5 minutes.", e);
+                        this.reschedule(LocalDateTime.now().plusMinutes(5));
 					}
 
 				}

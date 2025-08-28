@@ -7,20 +7,14 @@ import java.util.regex.Pattern;
 
 import cl.camodev.utiles.UtilTime;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
-import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
-import cl.camodev.wosbot.emulator.EmulatorManager;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
-import cl.camodev.wosbot.serv.impl.ServLogs;
 import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 
 public class PetAdventureChestTask extends DelayedTask {
-
-	private final EmulatorManager emuManager = EmulatorManager.getInstance();
-	private final ServLogs servLogs = ServLogs.getServices();
 
 	private int attempts = 0;
 
@@ -31,7 +25,7 @@ public class PetAdventureChestTask extends DelayedTask {
 	@Override
 	protected void execute() {
 		if (attempts >= 3) {
-			servLogs.appendLog(EnumTpMessageSeverity.WARNING, taskName, profile.getName(), "Menu not found, removing task from scheduler");
+			logWarning("Could not find the Pet Adventure menu after multiple attempts. Removing task from scheduler.");
 			this.setRecurring(false);
 			return;
 		}
@@ -39,11 +33,11 @@ public class PetAdventureChestTask extends DelayedTask {
 		DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 90);
 		DTOImageSearchResult worldResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 90);
 		if (homeResult.isFound() || worldResult.isFound()) {
-			servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "going pet skills");
+			logInfo("Navigating to the Pet Adventures screen.");
 
 			DTOImageSearchResult petsResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_PETS.getTemplate(),  90);
 			if (petsResult.isFound()) {
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "button pets found, taping");
+				logInfo("Pets button found. Tapping to open.");
 				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, petsResult.getPoint(), petsResult.getPoint());
 				sleepTask(3000);
 
@@ -54,7 +48,7 @@ public class PetAdventureChestTask extends DelayedTask {
 					emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(547, 1150), new DTOPoint(650, 1210));
 
 					for (int i = 0; i < 10; i++) {
-						servLogs.appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), "Searching completed chest");
+						logDebug("Searching for completed chests to claim.");
 						DTOImageSearchResult doneChest = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_CHEST_COMPLETED.getTemplate(), 90);
 						if (doneChest.isFound()) {
 							emuManager.tapAtRandomPoint(EMULATOR_NUMBER, doneChest.getPoint(), doneChest.getPoint());
@@ -63,7 +57,7 @@ public class PetAdventureChestTask extends DelayedTask {
 
 							DTOImageSearchResult share = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_CHEST_SHARE.getTemplate(),  90);
 							if (share.isFound()) {
-								servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Sharing chest");
+								logInfo("Sharing the completed chest with the alliance.");
 								emuManager.tapAtRandomPoint(EMULATOR_NUMBER, share.getPoint(), share.getPoint());
 								sleepTask(500);
 							}
@@ -81,13 +75,13 @@ public class PetAdventureChestTask extends DelayedTask {
 
 						for (EnumTemplates enumTemplates : chests) {
 							for (int attempt = 0; attempt < 5; attempt++) {
-								ServLogs.getServices().appendLog(EnumTpMessageSeverity.DEBUG, taskName, profile.getName(), "Searching for " + enumTemplates + " attempt " + attempt);
+								logDebug("Searching for " + enumTemplates + ", attempt " + (attempt + 1) + ".");
 
 								DTOImageSearchResult result = emuManager.searchTemplate(EMULATOR_NUMBER, enumTemplates.getTemplate(),  90);
 								if (result.isFound()) {
 									foundAnyChest = true; // Se encontró un cofre, el bucle se repetirá
 
-									servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Found: " + enumTemplates);
+									logInfo("Found chest: " + enumTemplates + ". Attempting to start adventure.");
 
 									emuManager.tapAtRandomPoint(EMULATOR_NUMBER, result.getPoint(), result.getPoint());
 									sleepTask(500);
@@ -110,7 +104,7 @@ public class PetAdventureChestTask extends DelayedTask {
 										} else {
 											DTOImageSearchResult attempts = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_CHEST_ATTEMPT.getTemplate(),  90);
 											if (attempts.isFound()) {
-												servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "No more attempts");
+												logInfo("No more adventure attempts available. Rescheduling for the next game reset.");
 												this.reschedule(UtilTime.getGameReset());
 												ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, UtilTime.getGameReset());
 												emuManager.tapBackButton(EMULATOR_NUMBER);
@@ -126,13 +120,13 @@ public class PetAdventureChestTask extends DelayedTask {
 						}
 
 						if (foundAnyChest) {
-							servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "At least one chest was found. Restarting search...");
+							logInfo("At least one chest was found and started. Restarting search for more chests.");
 							sleepTask(500); // Espera 5 segundos antes de repetir
 						}
 
 					} while (foundAnyChest); // El bucle se repite hasta que no se encuentren más cofres
 
-					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "No chests found");
+					logInfo("No more available chests found to start. Rescheduling for 2 hours.");
 					ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, LocalDateTime.now().plusHours(2));
 					this.reschedule(LocalDateTime.now().plusHours(2));
 					emuManager.tapBackButton(EMULATOR_NUMBER);
@@ -141,14 +135,14 @@ public class PetAdventureChestTask extends DelayedTask {
 				}
 
 			} else {
-				ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, taskName, profile.getName(), "button pets not found retrying later");
+				logWarning("Pets button not found. Retrying later.");
 				attempts++;
 			}
 
 		} else
 
 		{
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, taskName, profile.getName(), "Home not found");
+			logWarning("Home screen not found. Tapping the back button.");
 			emuManager.tapBackButton(EMULATOR_NUMBER);
 
 		}

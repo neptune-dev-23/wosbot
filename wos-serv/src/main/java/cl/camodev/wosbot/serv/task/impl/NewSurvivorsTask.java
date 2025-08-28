@@ -19,29 +19,34 @@ public class NewSurvivorsTask extends DelayedTask {
 
     @Override
     protected void execute() {
+        logInfo("Starting the New Survivors task.");
 
         DTOImageSearchResult world = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 90);
         if (world.isFound()) {
+            logInfo("Navigating from the world view to the city view.");
             emuManager.tapAtPoint(EMULATOR_NUMBER, world.getPoint());
             sleepTask(2000);
         }
 
         //i need to search for New Survivors Template
+        logInfo("Searching for the 'New Survivors' notification.");
         DTOImageSearchResult newSurvivors = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_NEW_SURVIVORS.getTemplate(),  90);
         if (newSurvivors.isFound()) {
             emuManager.tapAtPoint(EMULATOR_NUMBER, newSurvivors.getPoint());
             sleepTask(1000);
             //i need to accept the survivors then check if there's empty spots in the buildings
+            logInfo("New survivors found. Welcoming them in.");
             DTOImageSearchResult welcomeIn = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_NEW_SURVIVORS_WELCOME_IN.getTemplate(),  90);
             if (welcomeIn.isFound()) {
                 emuManager.tapAtPoint(EMULATOR_NUMBER, welcomeIn.getPoint());
-                logInfo("Waiting a little before going go reassign survivors");
+                logInfo("Waiting briefly before reassigning survivors to buildings.");
                 sleepTask(10000);
 
                 emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(309,20));
                 sleepTask(300);
 
                 //reset scroll (just in case)
+                logInfo("Assigning survivors to available building slots.");
                 emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(340, 610), new DTOPoint(340, 900));
                 sleepTask(200);
 
@@ -59,11 +64,13 @@ public class NewSurvivorsTask extends DelayedTask {
                     sleepTask(50);
                 }
 
+                logInfo("Survivor assignment complete. Rescheduling task.");
                 this.reschedule(LocalDateTime.now().plusMinutes(profile.getConfig(EnumConfigurationKey.CITY_ACCEPT_NEW_SURVIVORS_OFFSET_INT,Integer.class)));
             }
 
 
         } else {
+            logInfo("No new survivors found. Rescheduling task.");
             this.reschedule(LocalDateTime.now().plusMinutes(profile.getConfig(EnumConfigurationKey.CITY_ACCEPT_NEW_SURVIVORS_OFFSET_INT,Integer.class)));
 
         }
