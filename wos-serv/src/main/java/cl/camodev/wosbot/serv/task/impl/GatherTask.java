@@ -193,7 +193,7 @@ public class GatherTask extends DelayedTask {
                         boolean removeHeros = profile.getConfig(EnumConfigurationKey.GATHER_REMOVE_HEROS_BOOL, Boolean.class);
                         if (removeHeros) {
                             // Remove 2nd and 3rd heroes
-                            logInfo("Removing default heroes from the march.");
+                            logInfo("Removing default heroes from march.");
                             List<DTOImageSearchResult> results = emuManager.searchTemplates(EMULATOR_NUMBER, EnumTemplates.RALLY_REMOVE_HERO_BUTTON.getTemplate(), 90, 3);
 
                             results.sort(Comparator.comparingInt(r -> r.getPoint().getX()));
