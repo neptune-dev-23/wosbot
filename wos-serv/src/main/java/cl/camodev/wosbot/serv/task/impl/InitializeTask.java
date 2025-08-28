@@ -19,7 +19,7 @@ public class InitializeTask extends DelayedTask {
 	@Override
 	protected void execute() {
 		this.setRecurring(false);
-		logInfo("Starting Initialization Task.");
+		logInfo("Starting initialization task...");
 		logInfo("Checking emulator status...");
 		while (!isStarted) {
 
@@ -36,7 +36,7 @@ public class InitializeTask extends DelayedTask {
 		}
 
 		if (!emuManager.isWhiteoutSurvivalInstalled(EMULATOR_NUMBER)) {
-			logError("Whiteout Survival is not installed. Stopping task queue.");
+			logError("Whiteout Survival is not installed. Stopping the task queue.");
 			throw new StopExecutionException("Game not installed");
 		} else {
 
@@ -61,7 +61,7 @@ public class InitializeTask extends DelayedTask {
 
 				DTOImageSearchResult reconnect = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_RECONNECT.getTemplate(), 90);
 				if (reconnect.isFound()) {
-					throw new ProfileInReconnectStateException("Profile " + profile.getName() + " is in reconnect state, cannot execute task: " + taskName);
+					throw new ProfileInReconnectStateException("Profile " + profile.getName() + " is in a reconnect state and cannot execute the task: " + taskName);
 				}
 
 				logWarning("Home screen not found. Waiting 5 seconds before retrying...");
@@ -71,7 +71,7 @@ public class InitializeTask extends DelayedTask {
 			}
 
 			if (!homeScreen) {
-				logError("Home screen not found after multiple attempts. Restarting emulator.");
+				logError("Home screen not found after multiple attempts. Restarting the emulator.");
 				emuManager.closeEmulator(EMULATOR_NUMBER);
 				isStarted = false;
 				this.setRecurring(true);

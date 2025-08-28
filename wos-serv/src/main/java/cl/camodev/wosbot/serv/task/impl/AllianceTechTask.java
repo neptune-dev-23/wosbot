@@ -20,15 +20,16 @@ public class AllianceTechTask extends DelayedTask {
 	@Override
 	protected void execute() {
 
-		logInfo("Going to alliance chest");
+		logInfo("Starting alliance tech task.");
 
-		// Ir a la sección de cofres de alianza
+		// Go to the alliance tech section
 		emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(493, 1187), new DTOPoint(561, 1240));
 		sleepTask(3000);
 
 		DTOImageSearchResult menuResult = emuManager.searchTemplate(EMULATOR_NUMBER,
 				EnumTemplates.ALLIANCE_TECH_BUTTON.getTemplate(),  90);
 		if (!menuResult.isFound()) {
+			logWarning("Alliance tech button not found. Rescheduling.");
 			this.reschedule(LocalDateTime.now()
 					.plusMinutes(profile.getConfig(EnumConfigurationKey.ALLIANCE_TECH_OFFSET_INT, Integer.class)));
 			return;
@@ -38,29 +39,32 @@ public class AllianceTechTask extends DelayedTask {
 		sleepTask(500);
 
 		// search for thumb up button
-
 		DTOImageSearchResult thumbUpResult = emuManager.searchTemplate(EMULATOR_NUMBER,
 				EnumTemplates.ALLIANCE_TECH_THUMB_UP.getTemplate(),  90);
 
 		if (!thumbUpResult.isFound()) {
-			logError("No task marked for upgrade, rescheduling task");
+			logWarning("No task marked for upgrade. Rescheduling.");
 			this.reschedule(LocalDateTime.now()
 					.plusMinutes(profile.getConfig(EnumConfigurationKey.ALLIANCE_TECH_OFFSET_INT, Integer.class)));
 			return;
 		}
 
+		logInfo("Thumb-up button found. Proceeding with donation.");
 		emuManager.tapAtRandomPoint(EMULATOR_NUMBER, thumbUpResult.getPoint(), thumbUpResult.getPoint());
 
 		sleepTask(500);
 
+		logInfo("Donating to alliance tech...");
 		emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(450, 1000), new DTOPoint(580, 1050), 25, 150);
 		emuManager.tapBackButton(EMULATOR_NUMBER);
 		emuManager.tapBackButton(EMULATOR_NUMBER);
 		emuManager.tapBackButton(EMULATOR_NUMBER);
 
+		Integer minutes = profile.getConfig(EnumConfigurationKey.ALLIANCE_TECH_OFFSET_INT, Integer.class);
 		LocalDateTime nextSchedule = LocalDateTime.now()
-				.plusMinutes(profile.getConfig(EnumConfigurationKey.ALLIANCE_TECH_OFFSET_INT, Integer.class));
+				.plusMinutes(minutes);
 		this.reschedule(nextSchedule);
+		logInfo("Alliance tech task completed. Next execution scheduled in " + minutes + " minutes.");
 		ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, nextSchedule);
 
 	}

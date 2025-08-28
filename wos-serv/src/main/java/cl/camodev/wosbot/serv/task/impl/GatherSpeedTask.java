@@ -28,7 +28,7 @@ public class GatherSpeedTask extends DelayedTask {
 				sleepTask(3000);
 			}
 
-			logInfo("Starting gather speed boost");
+			logInfo("Starting gather speed boost task.");
 
 			// Click the small icon under the profile picture
 			emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(40, 118));
@@ -54,22 +54,24 @@ public class GatherSpeedTask extends DelayedTask {
 			emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(382, 784));
 			sleepTask(500);
 
-			logInfo("Gather speed boost completed");
+			logInfo("Gather speed boost activated successfully.");
 
 			// Reschedule task for 8 hours later
 			LocalDateTime nextSchedule = LocalDateTime.now().plusHours(8);
 			this.reschedule(nextSchedule);
+			logInfo("Gather speed boost task completed. Rescheduled for 8 hours later.");
 
 			// Go back to home
 			emuManager.tapBackButton(EMULATOR_NUMBER);
 			emuManager.tapBackButton(EMULATOR_NUMBER);
 			emuManager.tapBackButton(EMULATOR_NUMBER);
 		} else {
-			logWarning("Home not found");
+			logWarning("Home screen not found. Rescheduling task.");
 			emuManager.tapBackButton(EMULATOR_NUMBER);
 
 			LocalDateTime retrySchedule = LocalDateTime.now().plusMinutes(5);
 			this.reschedule(retrySchedule);
+			logInfo("Retrying in 5 minutes...");
 		}
 	}
 }

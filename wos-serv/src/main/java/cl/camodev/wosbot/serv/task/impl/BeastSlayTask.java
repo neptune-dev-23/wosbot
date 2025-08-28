@@ -10,21 +10,15 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
-import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
-import cl.camodev.wosbot.emulator.EmulatorManager;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
-import cl.camodev.wosbot.serv.impl.ServLogs;
 import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 import net.sourceforge.tess4j.TesseractException;
 
 public class BeastSlayTask extends DelayedTask {
-
-	private final EmulatorManager emuManager = EmulatorManager.getInstance();
-	private final ServLogs servLogs = ServLogs.getServices();
 
 	private int stamina = 0;
 	private int availableQueues = 0;
@@ -55,7 +49,7 @@ public class BeastSlayTask extends DelayedTask {
 			if (homeResult.isFound()) {
 				emuManager.tapAtPoint(EMULATOR_NUMBER, homeResult.getPoint());
 				sleepTask(3000);
-				servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Going to beast slay");
+				logInfo("Navigating to the beast menu.");
 			}
 
 			// ir al perfil a ver la stamina
@@ -68,7 +62,7 @@ public class BeastSlayTask extends DelayedTask {
 
 			try {
 				String staminaText = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(350, 270), new DTOPoint(490, 300));
-				System.out.println(staminaText);
+				logInfo("Stamina detected: " + staminaText);
 				emuManager.tapBackButton(EMULATOR_NUMBER);
 				emuManager.tapBackButton(EMULATOR_NUMBER);
 
@@ -76,14 +70,15 @@ public class BeastSlayTask extends DelayedTask {
 
 				if (stamina < 10) {
 					LocalDateTime fullStaminaTime = calculateFullStaminaTime(stamina, 100, 5);
-//					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Stamina is less than 10, rescheduling to " + UtilTime.localDateTimeToDDHHMMSS(fullStaminaTime));
+					logInfo("Stamina (" + stamina + ") is below the threshold (10). Rescheduling task to " + fullStaminaTime);
 					this.reschedule(fullStaminaTime);
 					ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, fullStaminaTime);
 					return;
 				}
 
 			} catch (IOException | TesseractException e) {
-				e.printStackTrace();
+				logError("An error occurred during stamina OCR: " + e.getMessage());
+				return; // Can't continue without stamina info
 			}
 
 			// deberoa obtener la cantidad de colas disponibles para atacar bestias
@@ -98,28 +93,28 @@ public class BeastSlayTask extends DelayedTask {
 				sleepTask(1000);
 
 				String queueText = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(280, 230), new DTOPoint(340, 252));
-				System.out.println(queueText);
+				logInfo("Available queues detected: " + queueText);
 				emuManager.tapBackButton(EMULATOR_NUMBER);
 				emuManager.tapBackButton(EMULATOR_NUMBER);
 
 				availableQueues = extractFirstNumber(queueText);
 
 				if (stamina < 10) {
-//					LocalDateTime fullStaminaTime = calculateFullStaminaTime(stamina, 100, 5);
-//					UtilTime.localDateTimeToDDHHMMSS(fullStaminaTime);
-//					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "Stamina is less than 10, rescheduling to " + UtilTime.localDateTimeToDDHHMMSS(fullStaminaTime));
+					LocalDateTime fullStaminaTime = calculateFullStaminaTime(stamina, 100, 5);
+					logInfo("Stamina (" + stamina + ") is below the threshold (10). Rescheduling task to " + fullStaminaTime);
 					return;
 				}
 
 			} catch (IOException | TesseractException e) {
-				e.printStackTrace();
+				logError("An error occurred during queue OCR: " + e.getMessage());
+				return;
 			}
 
 			// si llego hasta aqui, tengo mas de 10 de stamina y deberia atacar bestias hasta que la stamina sea menor a 10, el consumo es de 8-10 por
 			// ataque
 			int beastLevel = 30;
 			List<Long> activeBeasts = new ArrayList<>(); // Lista de tiempos de finalización de las bestias
-			System.out.println("Atacando bestias");
+			logInfo("Starting beast attacks.");
 
 			while (stamina >= 10) {
 
@@ -130,7 +125,7 @@ public class BeastSlayTask extends DelayedTask {
 					if (currentTime >= iterator.next()) {
 						iterator.remove(); // Eliminar bestia que ya terminó su tiempo
 						availableQueues++; // Liberar una queue
-						System.out.println("Una bestia ha terminado su tiempo. Queue disponible: " + availableQueues);
+						logInfo("A beast attack has finished. Available queues: " + availableQueues);
 					}
 				}
 
@@ -168,7 +163,7 @@ public class BeastSlayTask extends DelayedTask {
 							// Obtener stamina y tiempo restante via OCR
 
 							String timeText = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(519, 1141), new DTOPoint(618, 1164));
-							System.out.println("Time remaining: " + timeText);
+							logInfo("Attack time detected: " + timeText);
 
 							timeText = timeText.trim().replaceAll("[^0-9:]", ""); // Solo dejar números y ":"
 
@@ -189,21 +184,22 @@ public class BeastSlayTask extends DelayedTask {
 								totalSeconds = Integer.parseInt(timeParts[0]) * 60 + Integer.parseInt(timeParts[1]);
 							} else {
 								// Formato inválido o incompleto, asignar un valor por defecto
+								logWarning("Invalid time format from OCR: '" + timeText + "'. Using default 10 seconds.");
 								totalSeconds = 10; // Por defecto 10 segundos de espera
 							}
 
 							// Calcular el tiempo de finalización de la bestia
 							long finishTime = System.currentTimeMillis() + ((totalSeconds * 1000L) * 2);
 							activeBeasts.add(finishTime);
-							System.out.println("Bestia atacada, finalizará en " + (totalSeconds * 2) + " segundos.");
+							logInfo("Beast attacked. March will return in approximately " + (totalSeconds * 2) + " seconds.");
 
 						} catch (Exception e) {
-							System.out.println("Error al obtener información de la bestia.");
+							logError("Failed to get beast information: " + e.getMessage());
 						}
 					}
 				} else {
 					// Si no hay queues disponibles, esperar un poco antes de volver a verificar
-					System.out.println("Esperando a que una bestia termine...");
+					logInfo("All queues are busy. Waiting for a beast attack to finish...");
 					sleepTask(5000); // Espera de 5 segundos antes de revisar de nuevo
 				}
 			}

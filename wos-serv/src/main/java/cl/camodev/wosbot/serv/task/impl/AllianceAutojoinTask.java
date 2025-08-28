@@ -20,7 +20,7 @@ public class AllianceAutojoinTask extends DelayedTask {
 	protected void execute() {
 		// Verificar si estamos en HOME o en WORLD
 
-		logInfo("Going to alliance chest");
+		logInfo("Starting alliance auto-join task");
 
 		// Ir a la sección de cofres de alianza
 		emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(493, 1187), new DTOPoint(561, 1240));
@@ -53,6 +53,7 @@ public class AllianceAutojoinTask extends DelayedTask {
 
 		LocalDateTime nextSchedule = LocalDateTime.now().plusHours(7);
 		this.reschedule(nextSchedule);
+		logInfo("Alliance autojoin task completed. Next execution in 7 hours.");
 
 		emuManager.tapBackButton(EMULATOR_NUMBER);
 		emuManager.tapBackButton(EMULATOR_NUMBER);
