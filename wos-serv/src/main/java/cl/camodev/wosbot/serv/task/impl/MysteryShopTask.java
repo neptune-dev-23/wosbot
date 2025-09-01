@@ -21,28 +21,19 @@ public class MysteryShopTask extends DelayedTask {
 		int attempt = 0;
 
 		while (attempt < 5) {
-			// Check if we are on the home screen
-			DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(),  90);
-			DTOImageSearchResult worldResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(),  90);
-
-			if (homeResult.isFound() || worldResult.isFound()) {
-				if (navigateToShop()) {
-					handleMysteryShopOperations();
-					return;
-				}
+			if (navigateToShop()) {
+				handleMysteryShopOperations();
 				return;
 			} else {
-				// If home screen is not found, log warning and go back
-				logWarning("Home not found");
-				emuManager.tapBackButton(EMULATOR_NUMBER);
+				logWarning("Navigate to shop failed, retrying...");
 				sleepTask(2000);
 			}
 			attempt++;
 		}
 
-		// If menu is not found after 5 attempts, reschedule for 1 hour
+		// If navigation fails after 5 attempts, reschedule for 1 hour
 		if (attempt >= 5) {
-			logWarning("Menu not found, rescheduling task for 1 hour");
+			logWarning("Shop navigation failed after multiple attempts, rescheduling task for 1 hour");
 			LocalDateTime nextAttempt = LocalDateTime.now().plusHours(1);
 			this.reschedule(nextAttempt);
 		}
@@ -105,26 +96,39 @@ public class MysteryShopTask extends DelayedTask {
 
 		// STEP 4: Process free rewards and daily refresh in a loop
 		boolean foundFreeRewards = true;
-		boolean usedDailyRefresh = false;
-		int maxIterations = 5; // Prevent infinite loops
+		int dailyRefreshUsedCount = 0;
+		final int maxDailyRefreshes = 10; // configurable limit to avoid abusing refresh
+		int maxIterations = 15; // Prevent infinite loops
 		int iteration = 0;
+		boolean totalClaimedAny = false;
 
-		while ((foundFreeRewards || !usedDailyRefresh) && iteration < maxIterations) {
+		while ((foundFreeRewards || dailyRefreshUsedCount < maxDailyRefreshes) && iteration < maxIterations) {
 			iteration++;
 
 			// First, try to claim all free rewards
 			foundFreeRewards = claimAllFreeRewards();
+			totalClaimedAny = totalClaimedAny || foundFreeRewards;
 
-			// If no free rewards found, check for daily refresh
-			if (!foundFreeRewards && !usedDailyRefresh) {
-				usedDailyRefresh = tryUseDailyRefresh();
+			// If no free rewards found, try to use daily refresh one or more times (up to remaining limit)
+			if (!foundFreeRewards && dailyRefreshUsedCount < maxDailyRefreshes) {
+				// Try using daily refresh repeatedly until no more refresh is available or we reach the limit
+				while (dailyRefreshUsedCount < maxDailyRefreshes) {
+					boolean used = tryUseDailyRefresh();
+					if (!used) break; // no refresh available now
+					dailyRefreshUsedCount++;
 
-				// If we used daily refresh, scroll again and continue looking for rewards
-				if (usedDailyRefresh) {
+					// After using a refresh, give UI a moment to update and scroll again to reveal new items
 					sleepTask(1000);
 					emuManager.executeSwipe(EMULATOR_NUMBER, scrollStart, scrollEnd);
 					sleepTask(1000);
-					foundFreeRewards = true; // Continue the loop to check for new rewards
+
+					// After refresh, attempt to claim rewards again
+					foundFreeRewards = claimAllFreeRewards();
+					totalClaimedAny = totalClaimedAny || foundFreeRewards;
+
+					// If we found rewards after this refresh, break inner refresh loop and continue outer loop
+					if (foundFreeRewards) break;
+					// otherwise continue trying another refresh (if any left)
 				}
 			}
 		}
@@ -135,15 +139,16 @@ public class MysteryShopTask extends DelayedTask {
 		emuManager.tapBackButton(EMULATOR_NUMBER);
 
 		// If no more actions possible, reschedule to game reset time
-		if (!foundFreeRewards && usedDailyRefresh) {
+		if (!foundFreeRewards) {
 			LocalDateTime nextReset = UtilTime.getGameReset();
 			this.reschedule(nextReset);
-			logInfo("Free rewards claimed");
-		} else if (!foundFreeRewards) {
-			// No free rewards and no daily refresh available, reschedule to next reset
-			LocalDateTime nextReset = UtilTime.getGameReset();
-			this.reschedule(nextReset);
-			logInfo("No free rewards or daily refresh available");
+			if (totalClaimedAny) {
+				logInfo("Free rewards claimed");
+			} else if (dailyRefreshUsedCount > 0) {
+				logInfo("Daily refresh used but no rewards found");
+			} else {
+				logInfo("No free rewards or daily refresh available");
+			}
 		}
 	}
 
@@ -209,15 +214,10 @@ public class MysteryShopTask extends DelayedTask {
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, dailyRefreshResult.getPoint(), dailyRefreshResult.getPoint());
 			sleepTask(1000);
 
-			// Confirm the refresh
-			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(410, 870), new DTOPoint(410, 870));
-			sleepTask(2000);
-
 			logInfo("Daily refresh used successfully");
 			return true;
 		}
 
-		logInfo("Daily refresh not available");
 		return false;
 	}
 }
