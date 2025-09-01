@@ -387,7 +387,7 @@ public class IntelligenceTask extends DelayedTask {
             case 5: flagPoint = new DTOPoint(350, 120); break;
             case 6: flagPoint = new DTOPoint(420, 120); break;
             case 7: flagPoint = new DTOPoint(490, 120); break;
-            case 8: flagPoint = new DTOPoint(560, 160); break;
+            case 8: flagPoint = new DTOPoint(560, 120); break;
             default:
                 logError("Invalid flag number: " + flagNumber + ". Defaulting to 1.");
                 flagPoint = new DTOPoint(70, 120);
