@@ -128,10 +128,10 @@
 							<goal>copy-resources</goal>
 						</goals>
 						<configuration>
-							<outputDirectory>${project.build.directory}/lib/tesseract</outputDirectory>
+							<outputDirectory>${project.build.directory}/lib/tessdata</outputDirectory>
 							<resources>
 								<resource>
-									<directory>${project.basedir}/lib/tesseract</directory>
+									<directory>${project.parent.basedir}/lib/tesseract</directory>
 									<filtering>false</filtering>
 								</resource>
 							</resources>
@@ -144,10 +144,10 @@
 							<goal>copy-resources</goal>
 						</goals>
 						<configuration>
-							<outputDirectory>${project.build.directory}/adb</outputDirectory>
+							<outputDirectory>${project.build.directory}/lib/adb</outputDirectory>
 							<resources>
 								<resource>
-									<directory>${project.basedir}/adb</directory>
+									<directory>${project.parent.basedir}/lib/adb</directory>
 									<filtering>false</filtering>
 								</resource>
 							</resources>
