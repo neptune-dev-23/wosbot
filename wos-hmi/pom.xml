@@ -54,7 +54,8 @@
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
-			<scope>runtime</scope>
+            <version>1.5.13</version>
+            <scope>runtime</scope>
 		</dependency>
 
 
@@ -128,7 +129,7 @@
 							<goal>copy-resources</goal>
 						</goals>
 						<configuration>
-							<outputDirectory>${project.build.directory}/lib/tessdata</outputDirectory>
+							<outputDirectory>${project.build.directory}/lib/tesseract</outputDirectory>
 							<resources>
 								<resource>
 									<directory>${project.parent.basedir}/lib/tesseract</directory>
@@ -156,7 +157,6 @@
 				</executions>
 			</plugin>
 
-			<!-- 4. Plugin para empaquetar todo en un 7z con el JAR renombrado -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
