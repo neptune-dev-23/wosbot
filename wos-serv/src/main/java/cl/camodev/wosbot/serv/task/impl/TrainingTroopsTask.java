@@ -281,7 +281,7 @@ public class TrainingTroopsTask extends DelayedTask {
 
         // Verify we're in the correct location by searching for training template
         DTOImageSearchResult trainingResult = EmulatorManager.getInstance()
-            .searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_CAMP_TRAIN.getTemplate(), 90);
+            .searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_CAMP_TRAIN, 90);
 
         boolean found = trainingResult.isFound();
         logInfo("Training camp template found: " + found);
@@ -370,7 +370,7 @@ public class TrainingTroopsTask extends DelayedTask {
         for (EnumTemplates template : templates) {
             logInfo("Checking template: " + template.name());
 
-            DTOImageSearchResult troop = emuManager.searchTemplate(EMULATOR_NUMBER, template.getTemplate(), 98);
+            DTOImageSearchResult troop = emuManager.searchTemplate(EMULATOR_NUMBER, template, 98);
 
             if (troop.isFound()) {
                 int level = extractLevelFromTemplateName(template.name());
@@ -449,7 +449,7 @@ public class TrainingTroopsTask extends DelayedTask {
         int attempts = 0;
     
         while(attempts < 3) {
-            DTOImageSearchResult troop = emuManager.searchTemplate(EMULATOR_NUMBER, template.getTemplate(), 98);
+            DTOImageSearchResult troop = emuManager.searchTemplate(EMULATOR_NUMBER, template, 98);
             
             if (troop.isFound()) {
                 // Tap on troop to check promotion availability
@@ -457,7 +457,7 @@ public class TrainingTroopsTask extends DelayedTask {
                 sleepTask(500);
     
                 DTOImageSearchResult promoteButton = emuManager.searchTemplate(EMULATOR_NUMBER,
-                    EnumTemplates.TRAINING_TROOP_PROMOTE.getTemplate(), 90);
+                    EnumTemplates.TRAINING_TROOP_PROMOTE, 90);
     
                 if (promoteButton.isFound()) {
                     return executePromotion(template, promoteButton);
@@ -527,7 +527,7 @@ public class TrainingTroopsTask extends DelayedTask {
      */
     private void executeNormalTraining() {
         DTOImageSearchResult trainingButtonResult = EmulatorManager.getInstance()
-            .searchTemplate(EMULATOR_NUMBER, EnumTemplates.TRAINING_TRAIN_BUTTON.getTemplate(), 90);
+            .searchTemplate(EMULATOR_NUMBER, EnumTemplates.TRAINING_TRAIN_BUTTON, 90);
 
         if (trainingButtonResult.isFound()) {
             ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(),
@@ -682,8 +682,8 @@ public class TrainingTroopsTask extends DelayedTask {
             this.template = template;
         }
 
-        public String getTemplate() {
-            return template.getTemplate();
+        public EnumTemplates getTemplate() {
+            return template;
         }
     }
 

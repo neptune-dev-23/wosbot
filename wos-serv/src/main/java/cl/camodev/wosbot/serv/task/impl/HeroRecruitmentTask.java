@@ -33,7 +33,7 @@ public class HeroRecruitmentTask extends DelayedTask {
 
         logInfo("evaluating advanced recruitment");
         DTOImageSearchResult claimResult = emuManager.searchTemplate(EMULATOR_NUMBER,
-                EnumTemplates.HERO_RECRUIT_CLAIM.getTemplate(), new DTOPoint(40, 800), new DTOPoint(340, 1100), 95);
+                EnumTemplates.HERO_RECRUIT_CLAIM, new DTOPoint(40, 800), new DTOPoint(340, 1100), 95);
         LocalDateTime nextAdvanced = null;
         String text = "";
         if (claimResult.isFound()) {
@@ -67,7 +67,7 @@ public class HeroRecruitmentTask extends DelayedTask {
         nextAdvanced = parseNextFree(text);
         logInfo("evaluating epic recruitment");
         DTOImageSearchResult claimResultEpic = emuManager.searchTemplate(EMULATOR_NUMBER,
-                EnumTemplates.HERO_RECRUIT_CLAIM.getTemplate(), new DTOPoint(40, 1160), new DTOPoint(340, 1255), 95);
+                EnumTemplates.HERO_RECRUIT_CLAIM, new DTOPoint(40, 1160), new DTOPoint(340, 1255), 95);
         LocalDateTime nextEpic;
         if (claimResultEpic.isFound()) {
             logInfo("epic recruitment available, tapping");
@@ -110,21 +110,36 @@ public class HeroRecruitmentTask extends DelayedTask {
     }
 
     public LocalDateTime parseNextFree(String input) {
-        // Regular expression to match the input format [n]d HH:mm:ss' o 'HH:mm:ss
-        Pattern pattern = Pattern.compile("(?i).*?(?:(\\d+)\\s*d\\s*)?(\\d{1,2}:\\d{2}:\\d{2}).*", Pattern.DOTALL);
+        // Expresión regular más simple que extrae solo números y tiempo
+        // Busca: número opcional seguido de cualquier carácter, luego HH:mm:ss
+        Pattern pattern = Pattern.compile("(?i).*?(\\d+)[^\\d:]*?(\\d{1,2}:\\d{2}:\\d{2}).*", Pattern.DOTALL);
         Matcher matcher = pattern.matcher(input.trim());
 
         if (!matcher.matches()) {
-            throw new IllegalArgumentException("Input does not match the expected format. Expected format: [n]d HH:mm:ss' o 'HH:mm:ss");
+            // Si no encuentra el patrón con días, intenta solo con tiempo
+            Pattern timeOnlyPattern = Pattern.compile("(?i).*?(\\d{1,2}:\\d{2}:\\d{2}).*", Pattern.DOTALL);
+            Matcher timeOnlyMatcher = timeOnlyPattern.matcher(input.trim());
+
+            if (timeOnlyMatcher.matches()) {
+                String timeStr = timeOnlyMatcher.group(1);
+                DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("H:mm:ss");
+                LocalTime timePart = LocalTime.parse(timeStr, timeFormatter);
+
+                return LocalDateTime.now()
+                        .plusHours(timePart.getHour())
+                        .plusMinutes(timePart.getMinute())
+                        .plusSeconds(timePart.getSecond());
+            }
+
+            throw new IllegalArgumentException("Input does not match expected format. Input: " + input);
         }
 
+        String daysStr = matcher.group(1);   // número antes del tiempo
+        String timeStr = matcher.group(2);   // tiempo HH:mm:ss
 
-        String daysStr = matcher.group(1);   // optional, can be null
-        String timeStr = matcher.group(2);   // always present
+        int daysToAdd = Integer.parseInt(daysStr);
 
-        int daysToAdd = (daysStr != null) ? Integer.parseInt(daysStr) : 0;
-
-        // parser for time part
+        // parser para la parte del tiempo
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("H:mm:ss");
         LocalTime timePart = LocalTime.parse(timeStr, timeFormatter);
 

@@ -18,9 +18,9 @@ public class GatherSpeedTask extends DelayedTask {
 	@Override
 	protected void execute() {
 		DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER,
-				EnumTemplates.GAME_HOME_FURNACE.getTemplate(),  90);
+				EnumTemplates.GAME_HOME_FURNACE,  90);
 		DTOImageSearchResult worldResult = emuManager.searchTemplate(EMULATOR_NUMBER,
-				EnumTemplates.GAME_HOME_WORLD.getTemplate(),  90);
+				EnumTemplates.GAME_HOME_WORLD,  90);
 
 		if (homeResult.isFound() || worldResult.isFound()) {
 			if (worldResult.isFound()) {

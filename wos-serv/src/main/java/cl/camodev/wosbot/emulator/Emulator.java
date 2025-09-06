@@ -595,7 +595,7 @@ public abstract class Emulator {
 		BufferedImage subImage = image.getSubimage(x, y, width, height);
 		Tesseract tesseract = new Tesseract();
 		tesseract.setDatapath("lib/tesseract");
-		tesseract.setLanguage("eng");
+		tesseract.setLanguage("eng+chi_sim");
 
 		return tesseract.doOCR(subImage);
 	}

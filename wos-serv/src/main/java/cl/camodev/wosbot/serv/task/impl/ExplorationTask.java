@@ -24,15 +24,15 @@ public class ExplorationTask extends DelayedTask {
 
 		// Buscar la plantilla de la pantalla HOME
 		DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER,
-				EnumTemplates.GAME_HOME_FURNACE.getTemplate(),  90);
+				EnumTemplates.GAME_HOME_FURNACE,  90);
 		DTOImageSearchResult worldResult = emuManager.searchTemplate(EMULATOR_NUMBER,
-				EnumTemplates.GAME_HOME_WORLD.getTemplate(),  90);
+				EnumTemplates.GAME_HOME_WORLD,  90);
 		if (homeResult.isFound() || worldResult.isFound()) {
 			logInfo("going to exploration");
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(40, 1190), new DTOPoint(100, 1250));
 			sleepTask(500);
 			DTOImageSearchResult claimResult = emuManager.searchTemplate(EMULATOR_NUMBER,
-					EnumTemplates.EXPLORATION_CLAIM.getTemplate(),  95);
+					EnumTemplates.EXPLORATION_CLAIM,  95);
 			if (claimResult.isFound()) {
 				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(),
 						"claiming rewards");

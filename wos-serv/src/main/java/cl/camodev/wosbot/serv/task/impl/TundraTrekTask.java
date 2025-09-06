@@ -24,9 +24,9 @@ public class TundraTrekTask extends DelayedTask {
     @Override
     protected void execute() {
         DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER,
-                EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 90);
+                EnumTemplates.GAME_HOME_FURNACE, 90);
         DTOImageSearchResult worldResult = emuManager.searchTemplate(EMULATOR_NUMBER,
-                EnumTemplates.GAME_HOME_WORLD.getTemplate(), 90);
+                EnumTemplates.GAME_HOME_WORLD, 90);
 
         if (!homeResult.isFound() && !worldResult.isFound()) {
             logInfo("Not on a known screen. Tapping back button.");
@@ -44,15 +44,15 @@ public class TundraTrekTask extends DelayedTask {
         if (navigateToTrekSupplies()) {
             // Search for claim button
             DTOImageSearchResult trekClaimButton = emuManager.searchTemplate(EMULATOR_NUMBER,
-                    EnumTemplates.TUNDRA_TREK_CLAIM_BUTTON.getTemplate(), 90);
+                    EnumTemplates.TUNDRA_TREK_CLAIM_BUTTON, 90);
             if (trekClaimButton.isFound()) {
                 logInfo("Claiming Trek Supplies...");
                 emuManager.tapAtPoint(EMULATOR_NUMBER, trekClaimButton.getPoint());
-                sleepTask(500);
+                sleepTask(2000);
             } else {
                 logInfo("Trek Supplies already claimed or not available.");
             }
-            sleepTask(1000);
+            sleepTask(3000);
 
             // Do OCR to find next reward time and reschedule
             try {
@@ -88,7 +88,7 @@ public class TundraTrekTask extends DelayedTask {
         // Now in the event list, search for the supplies by swiping
         for (int i = 0; i < 5; i++) { // Try up to 5 times (swipes)
             DTOImageSearchResult trekSupplies = emuManager.searchTemplate(EMULATOR_NUMBER,
-                    EnumTemplates.TUNDRA_TREK_SUPPLIES.getTemplate(), 90);
+                    EnumTemplates.TUNDRA_TREK_SUPPLIES, 90);
 
             if (trekSupplies.isFound()) {
                 logInfo("Found Tundra Trek Supplies button.");
@@ -96,7 +96,7 @@ public class TundraTrekTask extends DelayedTask {
                 sleepTask(500);
                 // This tap seems necessary to open the final claim screen
                 emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(344, 29), new DTOPoint(413, 49));
-                sleepTask(500);
+                sleepTask(3000);
                 return true;
             } else {
                 logInfo("Tundra Trek Supplies not visible, swiping down... (Attempt " + (i + 1) + ")");
@@ -111,7 +111,7 @@ public class TundraTrekTask extends DelayedTask {
         logInfo("Returning to main city screen...");
         for (int i = 0; i < 5; i++) { // Try up to 5 times to get back
             DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER,
-                    EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 90);
+                    EnumTemplates.GAME_HOME_FURNACE, 90);
             if (homeResult.isFound()) {
                 logInfo("Successfully returned to main screen.");
                 return;

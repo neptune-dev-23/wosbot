@@ -73,9 +73,9 @@ public class GatherTask extends DelayedTask {
         }
 
         DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER,
-                EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 90);
+                EnumTemplates.GAME_HOME_FURNACE, 90);
         DTOImageSearchResult worldResult = emuManager.searchTemplate(EMULATOR_NUMBER,
-                EnumTemplates.GAME_HOME_WORLD.getTemplate(), 90);
+                EnumTemplates.GAME_HOME_WORLD, 90);
 
         if (homeResult.isFound() || worldResult.isFound()) {
             if (worldResult.isFound()) {
@@ -96,7 +96,7 @@ public class GatherTask extends DelayedTask {
             int maxY = queues[Math.min(activeMarchQueues - 1, queues.length - 1)][1].getY(); // Use the Y coordinate of
             // the last active queue
 
-            DTOImageSearchResult resource = emuManager.searchTemplate(EMULATOR_NUMBER, gatherType.getTemplate(), new DTOPoint(10,
+            DTOImageSearchResult resource = emuManager.searchTemplate(EMULATOR_NUMBER, gatherType.getTile(), new DTOPoint(10,
                     342), new DTOPoint(415, maxY), 90);
 
             if (resource.isFound()) {
@@ -128,7 +128,7 @@ public class GatherTask extends DelayedTask {
                 sleepTask(1000);
 
                 // Ensure we are on the home screen before tapping world view
-                homeResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 90);
+                homeResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE, 90);
                 if (homeResult.isFound()) {
                     emuManager.tapAtPoint(EMULATOR_NUMBER, homeResult.getPoint());
                     sleepTask(3000);
@@ -172,7 +172,7 @@ public class GatherTask extends DelayedTask {
                     }
 
                     DTOImageSearchResult tick = emuManager.searchTemplate(EMULATOR_NUMBER,
-                            EnumTemplates.GAME_HOME_SHORTCUTS_FARM_TICK.getTemplate(), 90);
+                            EnumTemplates.GAME_HOME_SHORTCUTS_FARM_TICK, 90);
                     if (!tick.isFound()) {
                         emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(183, 1140));
                     }
@@ -184,7 +184,7 @@ public class GatherTask extends DelayedTask {
 
                     // Click Gather button on the map
                     DTOImageSearchResult gather = emuManager.searchTemplate(EMULATOR_NUMBER,
-                            EnumTemplates.GAME_HOME_SHORTCUTS_FARM_GATHER.getTemplate(), 90);
+                            EnumTemplates.GAME_HOME_SHORTCUTS_FARM_GATHER, 90);
                     if (gather.isFound()) {
                         emuManager.tapAtPoint(EMULATOR_NUMBER, gather.getPoint());
                         sleepTask(1000);
@@ -193,7 +193,7 @@ public class GatherTask extends DelayedTask {
                         if (removeHeros) {
                             // Remove 2nd and 3rd heroes
                             logInfo("Removing default heroes from march.");
-                            List<DTOImageSearchResult> results = emuManager.searchTemplates(EMULATOR_NUMBER, EnumTemplates.RALLY_REMOVE_HERO_BUTTON.getTemplate(), 90, 3);
+                            List<DTOImageSearchResult> results = emuManager.searchTemplates(EMULATOR_NUMBER, EnumTemplates.RALLY_REMOVE_HERO_BUTTON, 90, 3);
 
                             results.sort(Comparator.comparingInt(r -> r.getPoint().getX()));
 
@@ -207,14 +207,14 @@ public class GatherTask extends DelayedTask {
                         // Click gather button on tile
                         logInfo("Starting gather.");
                         DTOImageSearchResult deployButton = emuManager.searchTemplate(EMULATOR_NUMBER,
-                                EnumTemplates.GATHER_DEPLOY_BUTTON.getTemplate(), 90); // Deploy button
+                                EnumTemplates.GATHER_DEPLOY_BUTTON, 90); // Deploy button
                         if (deployButton.isFound()) {
                             emuManager.tapAtPoint(EMULATOR_NUMBER, deployButton.getPoint());
                             sleepTask(1000);
 
                             // Check if another march is already on the way
                             DTOImageSearchResult march = emuManager.searchTemplate(EMULATOR_NUMBER,
-                                    EnumTemplates.TROOPS_ALREADY_MARCHING.getTemplate(), 90);
+                                    EnumTemplates.TROOPS_ALREADY_MARCHING, 90);
                             if (march.isFound()) {
                                 logWarning("Tile is already being gathered by another player, rescheduling task.");
                                 emuManager.tapBackButton(EMULATOR_NUMBER);
@@ -342,8 +342,8 @@ public class GatherTask extends DelayedTask {
             return template.getTemplate();
 		}
 
-		public String getTile() {
-            return tile.getTemplate();
+		public EnumTemplates getTile() {
+            return tile;
 		}
 
 		public EnumConfigurationKey getConfig() {

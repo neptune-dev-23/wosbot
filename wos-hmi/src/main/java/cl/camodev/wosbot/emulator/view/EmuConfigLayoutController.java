@@ -5,6 +5,7 @@ import java.util.HashMap;
 
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.emulator.EmulatorType;
+import cl.camodev.wosbot.console.enumerable.GameVersion;
 import cl.camodev.wosbot.emulator.model.EmulatorAux;
 import cl.camodev.wosbot.serv.impl.ServConfig;
 import cl.camodev.wosbot.serv.impl.ServScheduler;
@@ -13,6 +14,7 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
@@ -44,6 +46,9 @@ public class EmuConfigLayoutController {
 
 	@FXML
 	private TextField textfieldMaxIdleTime;
+
+	@FXML
+	private ComboBox<GameVersion> comboboxGameVersion;
 
 	private final FileChooser fileChooser = new FileChooser();
 
@@ -133,6 +138,10 @@ public class EmuConfigLayoutController {
 
 		textfieldMaxConcurrentInstances.setText(globalConfig.getOrDefault(EnumConfigurationKey.MAX_RUNNING_EMULATORS_INT.name(), "1"));
 		textfieldMaxIdleTime.setText(globalConfig.getOrDefault(EnumConfigurationKey.MAX_IDLE_TIME_INT.name(), "15"));
+
+		comboboxGameVersion.setItems(FXCollections.observableArrayList(GameVersion.values()));
+		String gameVersionName = globalConfig.getOrDefault(EnumConfigurationKey.GAME_VERSION_STRING.name(), GameVersion.GLOBAL.name());
+		comboboxGameVersion.setValue(GameVersion.valueOf(gameVersionName));
 	}
 
 	// Guarda la configuración, recorriendo la lista para extraer la ruta y determinar el emulador activo
@@ -166,6 +175,11 @@ public class EmuConfigLayoutController {
 		// Guarda la configuración usando la clave definida en cada valor del enum
 		for (EmulatorAux emulator : emulatorList) {
 			ServScheduler.getServices().saveEmulatorPath(emulator.getEmulatorType().getConfigKey(), emulator.getPath());
+		}
+
+		GameVersion selectedGameVersion = comboboxGameVersion.getValue();
+		if (selectedGameVersion != null) {
+			ServScheduler.getServices().saveEmulatorPath(EnumConfigurationKey.GAME_VERSION_STRING.name(), selectedGameVersion.name());
 		}
 
 		ServScheduler.getServices().saveEmulatorPath(EnumConfigurationKey.MAX_IDLE_TIME_INT.name(), maxIdleTime);

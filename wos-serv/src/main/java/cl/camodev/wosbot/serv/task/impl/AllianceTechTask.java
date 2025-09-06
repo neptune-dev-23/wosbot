@@ -27,7 +27,7 @@ public class AllianceTechTask extends DelayedTask {
 		sleepTask(3000);
 
 		DTOImageSearchResult menuResult = emuManager.searchTemplate(EMULATOR_NUMBER,
-				EnumTemplates.ALLIANCE_TECH_BUTTON.getTemplate(),  90);
+				EnumTemplates.ALLIANCE_TECH_BUTTON,  90);
 		if (!menuResult.isFound()) {
 			this.reschedule(LocalDateTime.now()
 					.plusMinutes(profile.getConfig(EnumConfigurationKey.ALLIANCE_TECH_OFFSET_INT, Integer.class)));
@@ -40,7 +40,7 @@ public class AllianceTechTask extends DelayedTask {
 		// search for thumb up button
 
 		DTOImageSearchResult thumbUpResult = emuManager.searchTemplate(EMULATOR_NUMBER,
-				EnumTemplates.ALLIANCE_TECH_THUMB_UP.getTemplate(),  90);
+				EnumTemplates.ALLIANCE_TECH_THUMB_UP,  90);
 
 		if (!thumbUpResult.isFound()) {
 			logError("No task marked for upgrade, rescheduling task");

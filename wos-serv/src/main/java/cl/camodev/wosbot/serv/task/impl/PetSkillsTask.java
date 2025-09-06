@@ -35,12 +35,12 @@ public class PetSkillsTask extends DelayedTask {
 			return;
 		}
 
-		DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(),  90);
-		DTOImageSearchResult worldResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(),  90);
+		DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE,  90);
+		DTOImageSearchResult worldResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD,  90);
 		if (homeResult.isFound() || worldResult.isFound()) {
 			servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "going pet skills");
 
-			DTOImageSearchResult petsResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_PETS.getTemplate(),  90);
+			DTOImageSearchResult petsResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_PETS,  90);
 			if (petsResult.isFound()) {
 				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "button pets found, taping");
 				EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, petsResult.getPoint(), petsResult.getPoint());
@@ -49,7 +49,7 @@ public class PetSkillsTask extends DelayedTask {
 				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, petSkill.getPoint1(), petSkill.getPoint2());
 				sleepTask(300);
 
-				DTOImageSearchResult infoSkill = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_INFO_SKILLS.getTemplate(),  90);
+				DTOImageSearchResult infoSkill = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_INFO_SKILLS,  90);
 
 				if (!infoSkill.isFound()) {
 					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "skill not learned");
@@ -58,7 +58,7 @@ public class PetSkillsTask extends DelayedTask {
 					return;
 				}
 
-				DTOImageSearchResult unlockText = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_UNLOCK_TEXT.getTemplate(),  90);
+				DTOImageSearchResult unlockText = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_UNLOCK_TEXT,  90);
 
 				if (unlockText.isFound()) {
 					servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "skill is locked");
@@ -67,7 +67,7 @@ public class PetSkillsTask extends DelayedTask {
 					return;
 				}
 
-				DTOImageSearchResult skillButton = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_SKILL_USE.getTemplate(),  90);
+				DTOImageSearchResult skillButton = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_SKILL_USE,  90);
 				if (skillButton.isFound()) {
 					EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, skillButton.getPoint(), skillButton.getPoint(), 10, 100);
 					sleepTask(500);

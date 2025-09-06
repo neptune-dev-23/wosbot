@@ -48,7 +48,7 @@ public class MysteryShopTask extends DelayedTask {
 		// STEP 1: Search for the bottom bar shop button
 		DTOImageSearchResult shopButtonResult = emuManager.searchTemplate(
 			EMULATOR_NUMBER,
-			EnumTemplates.GAME_HOME_BOTTOM_BAR_SHOP_BUTTON.getTemplate(),
+			EnumTemplates.GAME_HOME_BOTTOM_BAR_SHOP_BUTTON,
 			 90
 		);
 
@@ -66,7 +66,7 @@ public class MysteryShopTask extends DelayedTask {
 		// STEP 2: Search for mystery shop within the shop menu
 		DTOImageSearchResult mysteryShopResult = emuManager.searchTemplate(
 			EMULATOR_NUMBER,
-			EnumTemplates.SHOP_MYSTERY_BUTTON.getTemplate(),
+			EnumTemplates.SHOP_MYSTERY_BUTTON,
 			 90
 		);
 
@@ -171,7 +171,7 @@ public class MysteryShopTask extends DelayedTask {
 			// Search for free reward button on screen (one at a time)
 			DTOImageSearchResult freeRewardResult = emuManager.searchTemplate(
 				EMULATOR_NUMBER,
-				EnumTemplates.MYSTERY_SHOP_FREE_REWARD.getTemplate(),
+				EnumTemplates.MYSTERY_SHOP_FREE_REWARD,
 				 90
 			);
 
@@ -205,7 +205,7 @@ public class MysteryShopTask extends DelayedTask {
 	private boolean tryUseDailyRefresh() {
 		DTOImageSearchResult dailyRefreshResult = emuManager.searchTemplate(
 			EMULATOR_NUMBER,
-			EnumTemplates.MYSTERY_SHOP_DAILY_REFRESH.getTemplate(),
+			EnumTemplates.MYSTERY_SHOP_DAILY_REFRESH,
 			 90
 		);
 
