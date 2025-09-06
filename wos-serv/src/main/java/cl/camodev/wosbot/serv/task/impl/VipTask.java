@@ -31,7 +31,7 @@ public class VipTask extends DelayedTask {
 
 		if (profile.getConfig(EnumConfigurationKey.VIP_BUY_MONTHLY, Boolean.class)) {
 			logInfo("Verifying VIP status.");
-			DTOImageSearchResult monthlyVip = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.VIP_UNLOCK_BUTTON.getTemplate(),  90);
+			DTOImageSearchResult monthlyVip = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.VIP_UNLOCK_BUTTON,  90);
 			if (monthlyVip.isFound()) {
 				logInfo("VIP is not active. Purchasing the monthly VIP pass.");
 				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, monthlyVip.getPoint(), monthlyVip.getPoint());

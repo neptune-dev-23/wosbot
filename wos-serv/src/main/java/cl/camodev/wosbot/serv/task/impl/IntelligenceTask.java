@@ -45,7 +45,7 @@ public class IntelligenceTask extends DelayedTask {
 		for (int i = 0; i < 5; i++) {
 			logDebug("Searching for completed missions. Attempt " + (i + 1) + ".");
 			DTOImageSearchResult completed = emuManager.searchTemplate(EMULATOR_NUMBER,
-					EnumTemplates.INTEL_COMPLETED.getTemplate(), 90);
+					EnumTemplates.INTEL_COMPLETED, 90);
 			if (completed.isFound()) {
 				emuManager.tapAtPoint(EMULATOR_NUMBER, completed.getPoint());
 				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(700, 1270), new DTOPoint(710, 1280), 10,
@@ -190,7 +190,7 @@ public class IntelligenceTask extends DelayedTask {
 	private boolean searchAndProcess(EnumTemplates template, int maxAttempts, int confidence, Consumer<DTOImageSearchResult> processMethod) {
 		for (int attempt = 0; attempt < maxAttempts; attempt++) {
 			logDebug("Searching for template '" + template + "', attempt " + (attempt + 1) + ".");
-			DTOImageSearchResult result = emuManager.searchTemplate(EMULATOR_NUMBER, template.getTemplate(), confidence);
+			DTOImageSearchResult result = emuManager.searchTemplate(EMULATOR_NUMBER, template, confidence);
 			
 			if (result.isFound()) {
 				logInfo("Template found: " + template);
@@ -205,11 +205,11 @@ public class IntelligenceTask extends DelayedTask {
 		emuManager.tapAtPoint(EMULATOR_NUMBER, result.getPoint());
 		sleepTask(2000);
 		
-		DTOImageSearchResult view = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_VIEW.getTemplate(),  90);
+		DTOImageSearchResult view = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_VIEW,  90);
 		if (view.isFound()) {
 			emuManager.tapAtPoint(EMULATOR_NUMBER, view.getPoint());
 			sleepTask(500);
-			DTOImageSearchResult explore = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_EXPLORE.getTemplate(),  90);
+			DTOImageSearchResult explore = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_EXPLORE,  90);
 			if (explore.isFound()) {
 				emuManager.tapAtPoint(EMULATOR_NUMBER, explore.getPoint());
 				sleepTask(500);
@@ -228,11 +228,11 @@ public class IntelligenceTask extends DelayedTask {
 		emuManager.tapAtPoint(EMULATOR_NUMBER, result.getPoint());
 		sleepTask(2000);
 		
-		DTOImageSearchResult view = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_VIEW.getTemplate(),  90);
+		DTOImageSearchResult view = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_VIEW,  90);
 		if (view.isFound()) {
 			emuManager.tapAtPoint(EMULATOR_NUMBER, view.getPoint());
 			sleepTask(500);
-			DTOImageSearchResult rescue = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_RESCUE.getTemplate(),  90);
+			DTOImageSearchResult rescue = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_RESCUE,  90);
 			if (rescue.isFound()) {
 				emuManager.tapAtPoint(EMULATOR_NUMBER, rescue.getPoint());
 			} else {
@@ -247,7 +247,7 @@ public class IntelligenceTask extends DelayedTask {
 		emuManager.tapAtPoint(EMULATOR_NUMBER, beast.getPoint());
 		sleepTask(2000);
 		
-		DTOImageSearchResult view = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_VIEW.getTemplate(),  90);
+		DTOImageSearchResult view = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_VIEW,  90);
 		if (!view.isFound()) {
 			logWarning("Could not find the 'View' button for the beast. Going back.");
 			emuManager.tapBackButton(EMULATOR_NUMBER);
@@ -256,7 +256,7 @@ public class IntelligenceTask extends DelayedTask {
 		emuManager.tapAtPoint(EMULATOR_NUMBER, view.getPoint());
 		sleepTask(500);
 		
-		DTOImageSearchResult attack = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_ATTACK.getTemplate(),  90);
+		DTOImageSearchResult attack = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_ATTACK,  90);
 		if (!attack.isFound()) {
 			logWarning("Could not find the 'Attack' button for the beast. Going back.");
 			emuManager.tapBackButton(EMULATOR_NUMBER);
@@ -266,7 +266,7 @@ public class IntelligenceTask extends DelayedTask {
 		sleepTask(500);
 		
 		// Check if the march screen is open before proceeding
-		DTOImageSearchResult deployButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.DEPLOY_BUTTON.getTemplate(),  90);
+		DTOImageSearchResult deployButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.DEPLOY_BUTTON,  90);
 		if (!deployButton.isFound()) {
 			// March queue limit reached, cannot process beast
 			logError("March queue is full. Cannot start a new march.");
@@ -283,7 +283,7 @@ public class IntelligenceTask extends DelayedTask {
 		}
 		
 		DTOImageSearchResult equalizeButton = emuManager.searchTemplate(EMULATOR_NUMBER,
-		EnumTemplates.RALLY_EQUALIZE_BUTTON.getTemplate(),  90);
+		EnumTemplates.RALLY_EQUALIZE_BUTTON,  90);
 		
 		if (equalizeButton.isFound()) {
 			emuManager.tapAtPoint(EMULATOR_NUMBER, equalizeButton.getPoint());

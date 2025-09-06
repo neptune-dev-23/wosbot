@@ -27,7 +27,7 @@ public class ExpertsRomulusTagTask extends DelayedTask {
         for (int i = 0; i < 10; i++) {
             logDebug("Searching for claim button (Attempt " + (i + 1) + "/10).");
             DTOImageSearchResult claimButton = emuManager.searchTemplate(EMULATOR_NUMBER,
-                    EnumTemplates.ROMULUS_CLAIM_TAG_BUTTON.getTemplate(), 85);
+                    EnumTemplates.ROMULUS_CLAIM_TAG_BUTTON, 85);
             if (claimButton.isFound()) {
                 logInfo("Claiming loyalty tags from Romulus. Rescheduling for next reset.");
                 emuManager.tapAtPoint(EMULATOR_NUMBER, claimButton.getPoint());
@@ -54,7 +54,7 @@ public class ExpertsRomulusTagTask extends DelayedTask {
         emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(20, 250), new DTOPoint(200, 280));
 		sleepTask(500);
 
-        DTOImageSearchResult researchCenter = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_SHORTCUTS_RESEARCH_CENTER.getTemplate(),  90);
+        DTOImageSearchResult researchCenter = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_SHORTCUTS_RESEARCH_CENTER, 90);
 
 		if (researchCenter.isFound()) {
 			emuManager.tapAtPoint(EMULATOR_NUMBER, researchCenter.getPoint());

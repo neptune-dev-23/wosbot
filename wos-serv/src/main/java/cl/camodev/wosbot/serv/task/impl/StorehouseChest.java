@@ -60,7 +60,7 @@ public class StorehouseChest extends DelayedTask {
 		emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(20, 250), new DTOPoint(200, 280));
 		sleepTask(500);
 
-		DTOImageSearchResult researchCenter = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_SHORTCUTS_RESEARCH_CENTER.getTemplate(),  90);
+		DTOImageSearchResult researchCenter = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_SHORTCUTS_RESEARCH_CENTER,  90);
 
 		if (researchCenter.isFound()) {
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, researchCenter.getPoint(), researchCenter.getPoint());
@@ -71,7 +71,7 @@ public class StorehouseChest extends DelayedTask {
 			DTOImageSearchResult chest = null;
 			logInfo("Searching for the storehouse chest.");
 			for (int i = 0; i < 5; i++) {
-				chest = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.STOREHOUSE_CHEST.getTemplate(),  90);
+				chest = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.STOREHOUSE_CHEST,  90);
 
 				if (chest.isFound()) {
 					// Claim reward, check for stamina and reschedule
@@ -81,7 +81,7 @@ public class StorehouseChest extends DelayedTask {
 
 					emuManager.tapBackButton(EMULATOR_NUMBER);
 					for (int j = 0; j < 5; j++) {
-						DTOImageSearchResult stamina = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.STOREHOUSE_STAMINA.getTemplate(), 90);
+						DTOImageSearchResult stamina = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.STOREHOUSE_STAMINA, 90);
 
 						if (stamina.isFound()) {
 							logInfo("Stamina reward found. Claiming it.");

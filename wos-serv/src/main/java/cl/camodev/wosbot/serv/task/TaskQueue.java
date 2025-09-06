@@ -190,7 +190,7 @@ public class TaskQueue {
 									logger.info("TaskQueue resumed for profile {} after {} minutes pause", profile.getName(), reconnectionTime);
 									
 									// Click reconnect button if found and reinitialize the task
-									DTOImageSearchResult reconnect = emuManager.searchTemplate(profile.getEmulatorNumber(), EnumTemplates.GAME_HOME_RECONNECT.getTemplate(), 90);
+									DTOImageSearchResult reconnect = emuManager.searchTemplate(profile.getEmulatorNumber(), EnumTemplates.GAME_HOME_RECONNECT, 90);
 									if (reconnect.isFound()) {
 										emuManager.tapAtPoint(profile.getEmulatorNumber(), reconnect.getPoint());
 									}

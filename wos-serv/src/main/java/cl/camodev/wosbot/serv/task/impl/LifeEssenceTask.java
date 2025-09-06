@@ -38,7 +38,7 @@ public class LifeEssenceTask extends DelayedTask {
 		// hacer swipe hacia abajo
 		emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(220, 845), new DTOPoint(220, 94));
 		sleepTask(1000);
-		DTOImageSearchResult lifeEssenceMenu = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.LIFE_ESSENCE_MENU.getTemplate(),  90);
+		DTOImageSearchResult lifeEssenceMenu = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.LIFE_ESSENCE_MENU,  90);
 		int claim = 0;
 		if (lifeEssenceMenu.isFound()) {
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, lifeEssenceMenu.getPoint(), lifeEssenceMenu.getPoint());
@@ -48,7 +48,7 @@ public class LifeEssenceTask extends DelayedTask {
 			logInfo("Searching for Life Essence to claim.");
 			for (int i = 1; i < 11; i++) {
 				logDebug("Searching for Life Essence, attempt " + i + ".");
-				DTOImageSearchResult lifeEssence = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.LIFE_ESSENCE_CLAIM.getTemplate(), new DTOPoint(0, 80), new DTOPoint(720, 1280), 90);
+				DTOImageSearchResult lifeEssence = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.LIFE_ESSENCE_CLAIM, new DTOPoint(0, 80), new DTOPoint(720, 1280), 90);
 				if (lifeEssence.isFound()) {
 					emuManager.tapAtPoint(EMULATOR_NUMBER, lifeEssence.getPoint());
 					sleepTask(100);

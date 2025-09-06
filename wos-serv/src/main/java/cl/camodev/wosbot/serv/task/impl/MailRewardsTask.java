@@ -41,7 +41,7 @@ public class MailRewardsTask extends DelayedTask {
 			int searchAttempts = 0;
 			while (true) {
 				DTOImageSearchResult unclaimedRewards = emuManager.searchTemplate(EMULATOR_NUMBER,
-						EnumTemplates.MAIL_UNCLAIMED_REWARDS.getTemplate(), 90);
+						EnumTemplates.MAIL_UNCLAIMED_REWARDS, 90);
 				if (unclaimedRewards.isFound()) {
 					
 					if(searchAttempts > 0) {

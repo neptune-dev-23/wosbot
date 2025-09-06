@@ -75,14 +75,14 @@ public class UpgradeFurnaceTask extends DelayedTask {
 				sleepTask(500);
 
 				// search for cookhouse
-				DTOImageSearchResult result = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_CITY_STATUS_COOKHOUSE.getTemplate(),  90);
+				DTOImageSearchResult result = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_CITY_STATUS_COOKHOUSE,  90);
 				if (result.isFound()) {
 					// click on cookhouse
 					emuManager.tapAtRandomPoint(EMULATOR_NUMBER, result.getPoint(), result.getPoint());
 					sleepTask(500);
 
 					// search go button
-					DTOImageSearchResult goButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_CITY_STATUS_GO_BUTTON.getTemplate(),  90);
+					DTOImageSearchResult goButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_CITY_STATUS_GO_BUTTON,  90);
 					if (goButton.isFound()) {
 						// click on go button
 						emuManager.tapAtRandomPoint(EMULATOR_NUMBER, goButton.getPoint(), goButton.getPoint());
@@ -97,13 +97,13 @@ public class UpgradeFurnaceTask extends DelayedTask {
 						sleepTask(500);
 
 						// click on upgrade
-						DTOImageSearchResult upgradeButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.BUILDING_BUTTON_UPGRADE.getTemplate(),  90);
+						DTOImageSearchResult upgradeButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.BUILDING_BUTTON_UPGRADE,  90);
 						if (upgradeButton.isFound()) {
 							emuManager.tapAtPoint(EMULATOR_NUMBER, upgradeButton.getPoint());
 							sleepTask(500);
 
 							// check if can upgrade
-							DTOImageSearchResult upgradeConfirmButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.BUILDING_BUTTON_UPGRADE.getTemplate(),  90);
+							DTOImageSearchResult upgradeConfirmButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.BUILDING_BUTTON_UPGRADE,  90);
 							if (upgradeConfirmButton.isFound()) {
 								emuManager.tapAtPoint(EMULATOR_NUMBER, upgradeConfirmButton.getPoint());
 								logInfo("Furnace upgrade started successfully.");
