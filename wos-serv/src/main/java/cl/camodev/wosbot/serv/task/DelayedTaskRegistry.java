@@ -40,6 +40,9 @@ public class DelayedTaskRegistry {
         registry.put(TpDailyTaskEnum.DAILY_MISSIONS, profile -> new DailyMissionTask(profile, TpDailyTaskEnum.DAILY_MISSIONS));
         registry.put(TpDailyTaskEnum.STOREHOUSE_CHEST, profile -> new StorehouseChest(profile, TpDailyTaskEnum.STOREHOUSE_CHEST));
         registry.put(TpDailyTaskEnum.INTEL, profile -> new IntelligenceTask(profile, TpDailyTaskEnum.INTEL));
+        registry.put(TpDailyTaskEnum.EXPERT_AGNES_INTEL, profile -> new ExpertsAgnesIntelTask(profile, TpDailyTaskEnum.EXPERT_AGNES_INTEL));
+        registry.put(TpDailyTaskEnum.EXPERT_ROMULUS_TAG, profile -> new ExpertsRomulusTagTask(profile, TpDailyTaskEnum.EXPERT_ROMULUS_TAG));
+        registry.put(TpDailyTaskEnum.EXPERT_ROMULUS_TROOPS, profile -> new ExpertsRomulusTroopsTask(profile, TpDailyTaskEnum.EXPERT_ROMULUS_TROOPS));
 
         // Alliance tasks
         registry.put(TpDailyTaskEnum.ALLIANCE_AUTOJOIN, profile -> new AllianceAutojoinTask(profile, TpDailyTaskEnum.ALLIANCE_AUTOJOIN));
