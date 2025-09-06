@@ -1,13 +1,17 @@
 package cl.camodev.wosbot.serv.task;
 
+import cl.camodev.wosbot.ot.DTOProfiles;
+
 public class WaitingThread implements Comparable<WaitingThread> {
 	final Thread thread;
 	final Long priority;
 	final Long arrivalTime;
+	final Long profileId;
 
-	public WaitingThread(Thread thread, Long priority) {
+	public WaitingThread(Thread thread, DTOProfiles profile) {
 		this.thread = thread;
-		this.priority = priority;
+		this.priority = profile.getPriority();
+		this.profileId = profile.getId();
 		this.arrivalTime = System.nanoTime(); // Timestamp for tiebreaking
 	}
 
@@ -22,4 +26,6 @@ public class WaitingThread implements Comparable<WaitingThread> {
 		return cmp;
 	}
 
+	public Long getProfileId() { return profileId; }
+	public Thread getThread() { return thread; }
 }
