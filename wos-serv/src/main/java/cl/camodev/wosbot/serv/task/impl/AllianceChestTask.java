@@ -26,7 +26,7 @@ public class AllianceChestTask extends DelayedTask {
 		sleepTask(3000);
 
 		DTOImageSearchResult allianceChestResult = emuManager.searchTemplate(EMULATOR_NUMBER,
-				EnumTemplates.ALLIANCE_CHEST_BUTTON.getTemplate(), 90);
+				EnumTemplates.ALLIANCE_CHEST_BUTTON, 90);
 		if (!allianceChestResult.isFound()) {
 
 			LocalDateTime nextExecutionTime = LocalDateTime.now()
@@ -46,7 +46,7 @@ public class AllianceChestTask extends DelayedTask {
 		
 		// Search for the claim rewards button
 		DTOImageSearchResult claimAllButton = emuManager.searchTemplate(EMULATOR_NUMBER,
-		EnumTemplates.ALLIANCE_CHEST_CLAIM_ALL_BUTTON.getTemplate(), 98);
+		EnumTemplates.ALLIANCE_CHEST_CLAIM_ALL_BUTTON, 98);
 		if (claimAllButton.isFound()) {
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, claimAllButton.getPoint(), claimAllButton.getPoint(), 2,
 			500);
@@ -64,7 +64,7 @@ public class AllianceChestTask extends DelayedTask {
 		
 		// Search for the claim rewards button
 		DTOImageSearchResult claimAllButtonGifts = emuManager.searchTemplate(EMULATOR_NUMBER,
-		EnumTemplates.ALLIANCE_CHEST_CLAIM_ALL_BUTTON.getTemplate(), 98);
+		EnumTemplates.ALLIANCE_CHEST_CLAIM_ALL_BUTTON, 98);
 		if (claimAllButtonGifts.isFound()) {
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, claimAllButtonGifts.getPoint(),
 			claimAllButtonGifts.getPoint(),
@@ -76,7 +76,7 @@ public class AllianceChestTask extends DelayedTask {
 		} else {
 			while (true) {
 				DTOImageSearchResult claimButton = emuManager.searchTemplate(EMULATOR_NUMBER,
-				EnumTemplates.ALLIANCE_CHEST_CLAIM_BUTTON.getTemplate(), 90);
+				EnumTemplates.ALLIANCE_CHEST_CLAIM_BUTTON, 90);
 				if (claimButton.isFound()) {
 					emuManager.tapAtRandomPoint(EMULATOR_NUMBER, claimButton.getPoint(), claimButton.getPoint(), 1,
 					500);

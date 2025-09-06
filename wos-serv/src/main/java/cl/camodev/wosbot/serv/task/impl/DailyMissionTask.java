@@ -23,10 +23,10 @@ public class DailyMissionTask extends DelayedTask {
 		logInfo("Going to Daily Mission Tab");
 
 		emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(50, 1050));
-		sleepTask(2000);
+		sleepTask(3000);
 
 		DTOImageSearchResult result = emuManager.searchTemplate(EMULATOR_NUMBER,
-				EnumTemplates.DAILY_MISSION_DAILY_TAB.getTemplate(),  90);
+				EnumTemplates.DAILY_MISSION_DAILY_TAB,  90);
 
 		if (result.isFound()) {
 			servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(),
@@ -36,7 +36,7 @@ public class DailyMissionTask extends DelayedTask {
 		}
 
 		logInfo("Searching for Claim All button");
-		result = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.DAILY_MISSION_CLAIMALL_BUTTON.getTemplate(),
+		result = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.DAILY_MISSION_CLAIMALL_BUTTON,
 				90);
 
 		if (result.isFound()) {
@@ -46,7 +46,7 @@ public class DailyMissionTask extends DelayedTask {
 		} else {
 			logWarning("Claim All button not found, trying to each mission");
 			while ((result = emuManager.searchTemplate(EMULATOR_NUMBER,
-					EnumTemplates.DAILY_MISSION_CLAIM_BUTTON.getTemplate(), 90)).isFound()) {
+					EnumTemplates.DAILY_MISSION_CLAIM_BUTTON, 90)).isFound()) {
 
 				logInfo("Claim button found, tapping on it");
 

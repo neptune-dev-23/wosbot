@@ -9,7 +9,8 @@ public enum EnumConfigurationKey {
 	MEMU_PATH_STRING("", String.class),
 	LDPLAYER_PATH_STRING("", String.class),
 	CURRENT_EMULATOR_STRING("", String.class),
-	
+
+    GAME_VERSION_STRING("GLOBAL", String.class),
 	MAX_RUNNING_EMULATORS_INT("1", Integer.class),
 	MAX_IDLE_TIME_INT("1", Integer.class),
 	

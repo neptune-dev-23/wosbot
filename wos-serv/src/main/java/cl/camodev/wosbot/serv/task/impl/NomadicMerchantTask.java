@@ -26,7 +26,7 @@ public class NomadicMerchantTask extends DelayedTask {
         // STEP 1: Navigate to shop - Search for the bottom bar shop button
         DTOImageSearchResult shopButtonResult = emuManager.searchTemplate(
                 EMULATOR_NUMBER,
-                EnumTemplates.GAME_HOME_BOTTOM_BAR_SHOP_BUTTON.getTemplate(),
+                EnumTemplates.GAME_HOME_BOTTOM_BAR_SHOP_BUTTON,
                 90
         );
 
@@ -57,7 +57,7 @@ public class NomadicMerchantTask extends DelayedTask {
                 for (EnumTemplates template : TEMPLATES) {
                     DTOImageSearchResult result = emuManager.searchTemplate(
                             EMULATOR_NUMBER,
-                            template.getTemplate(),
+                            template,
                             new DTOPoint(25,412),
                             new DTOPoint(690,1200),
                             90
@@ -66,7 +66,7 @@ public class NomadicMerchantTask extends DelayedTask {
                     if (result.isFound()) {
                         logInfo("Found resource template: " + template.name() + ", purchasing");
                         tapPoint(result.getPoint());
-                        sleepTask(300);
+                        sleepTask(500);
                         foundResourceTemplate = true;
                         break; // Restart resource search from beginning
                     }
@@ -83,7 +83,7 @@ public class NomadicMerchantTask extends DelayedTask {
                 // Search for VIP template in the entire screen
                 DTOImageSearchResult vipResult = emuManager.searchTemplate(
                         EMULATOR_NUMBER,
-                        EnumTemplates.NOMADIC_MERCHANT_VIP.getTemplate(),
+                        EnumTemplates.NOMADIC_MERCHANT_VIP,
                         90
                 );
 
@@ -115,7 +115,7 @@ public class NomadicMerchantTask extends DelayedTask {
             logInfo("No resources or VIP found, checking for daily refresh");
             DTOImageSearchResult dailyRefreshResult = emuManager.searchTemplate(
                     EMULATOR_NUMBER,
-                    EnumTemplates.MYSTERY_SHOP_DAILY_REFRESH.getTemplate(),
+                    EnumTemplates.MYSTERY_SHOP_DAILY_REFRESH,
                     90
             );
 

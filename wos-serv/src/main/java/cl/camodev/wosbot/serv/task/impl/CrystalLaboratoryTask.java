@@ -46,8 +46,8 @@ public class CrystalLaboratoryTask extends DelayedTask {
 	@Override
 	protected void execute() {
 
-		DTOImageSearchResult homeResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(),  90);
-		DTOImageSearchResult worldResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(),  90);
+		DTOImageSearchResult homeResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE,  90);
+		DTOImageSearchResult worldResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD,  90);
 		if (homeResult.isFound() || worldResult.isFound()) {
 			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "going to crystal laboratory");
 			EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(1, 500), new DTOPoint(25, 590));
@@ -59,11 +59,11 @@ public class CrystalLaboratoryTask extends DelayedTask {
 			EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(530, 860), new DTOPoint(600, 1000));
 			sleepTask(3000);
 
-			DTOImageSearchResult claim = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.CRYSTAL_LAB_FC_BUTTON.getTemplate(),  90);
+			DTOImageSearchResult claim = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.CRYSTAL_LAB_FC_BUTTON,  90);
 			while (claim.isFound()) {
 				EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, claim.getPoint(), claim.getPoint());
 				sleepTask(100);
-				claim = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.CRYSTAL_LAB_FC_BUTTON.getTemplate(), 90);
+				claim = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.CRYSTAL_LAB_FC_BUTTON, 90);
 			}
 
 			reschedule(UtilTime.getGameReset());

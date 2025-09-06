@@ -28,18 +28,18 @@ public class PetAllianceTreasuresTask extends DelayedTask {
 			return;
 		}
 
-		DTOImageSearchResult homeResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(),  90);
-		DTOImageSearchResult worldResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(),  90);
+		DTOImageSearchResult homeResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE,  90);
+		DTOImageSearchResult worldResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD,  90);
 		if (homeResult.isFound() || worldResult.isFound()) {
 			ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "going beast cage");
 
-			DTOImageSearchResult petsResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_PETS.getTemplate(),  90);
+			DTOImageSearchResult petsResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_PETS,  90);
 			if (petsResult.isFound()) {
 				ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "button pets found, taping");
 				EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, petsResult.getPoint(), petsResult.getPoint());
 				sleepTask(3000);
 
-				DTOImageSearchResult beastCageResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_BEAST_CAGE.getTemplate(),  90);
+				DTOImageSearchResult beastCageResult = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_BEAST_CAGE,  90);
 				if (beastCageResult.isFound()) {
 					EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, beastCageResult.getPoint(), beastCageResult.getPoint());
 					sleepTask(500);
@@ -49,7 +49,7 @@ public class PetAllianceTreasuresTask extends DelayedTask {
 					EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(612, 1184), new DTOPoint(653, 1211));
 					sleepTask(500);
 
-					DTOImageSearchResult claimButton = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_BEAST_ALLIANCE_CLAIM.getTemplate(),  90);
+					DTOImageSearchResult claimButton = EmulatorManager.getInstance().searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_BEAST_ALLIANCE_CLAIM,  90);
 					if (claimButton.isFound()) {
 						ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(), "claim button found, taping");
 						EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER, claimButton.getPoint(), claimButton.getPoint());

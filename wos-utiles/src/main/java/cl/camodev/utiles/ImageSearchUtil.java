@@ -84,27 +84,7 @@ public class ImageSearchUtil {
 
 	/**
 	 * Realiza la búsqueda de un template (plantilla) dentro de una imagen principal.
-	 * <p>
-	 * La imagen principal se carga desde una ruta externa, mientras que el template se obtiene de los recursos del jar. Se define una región de
-	 * interés (ROI) en la imagen principal para limitar la búsqueda. La coincidencia se realiza utilizando el método TM_CCOEFF_NORMED de
-	 * OpenCV. El porcentaje de coincidencia se obtiene multiplicando el valor máximo de la coincidencia por 100, y se compara con el umbral
-	 * proporcionado.
-	 * </p>
-	 *
-	 * @param templateResourcePath Ruta del template dentro de los recursos del jar.
-	 * @param topLeftCorner        Punto de la esquina superior izquierda del ROI.
-	 * @param bottomRightCorner    Punto de la esquina inferior derecha del ROI.
-	 * @param thresholdPercentage  Umbral de coincidencia en porcentaje (0 a 100). Si el porcentaje de coincidencia es menor que este valor, se
-	 *                             considerará que no hay coincidencia suficiente.
-	 * @return Un objeto {@link DTOImageSearchResult} que contiene:
-	 *         <ul>
-	 *         <li>El estado de la búsqueda (true si se encontró una coincidencia adecuada, false en caso contrario).</li>
-	 *         <li>La posición de la coincidencia (como {@link DTOPoint}) en la imagen principal, ajustada al sistema de coordenadas de la
-	 *         misma.</li>
-	 *         <li>El porcentaje de coincidencia obtenido.</li>
-	 *         </ul>
 	 */
-
 	public static DTOImageSearchResult buscarTemplate(byte[] image, String templateResourcePath, DTOPoint topLeftCorner, DTOPoint bottomRightCorner, double thresholdPercentage) {
 		// Delegar al método optimizado manteniendo la misma firma
 		return buscarTemplateOptimized(image, templateResourcePath, topLeftCorner, bottomRightCorner, thresholdPercentage);
@@ -112,19 +92,6 @@ public class ImageSearchUtil {
 
 	/**
 	 * Performs the search for multiple matches of a template within a main image.
-	 * <p>
-	 * The main image is loaded from an external path, while the template is obtained from the jar resources. A region of
-	 * interest (ROI) is defined in the main image to limit the search. Matching is performed using OpenCV's TM_CCOEFF_NORMED method.
-	 * All matches that exceed the specified threshold are searched for.
-	 * </p>
-	 *
-	 * @param image                Byte array of the main image.
-	 * @param templateResourcePath Path of the template within the jar resources.
-	 * @param topLeftCorner        Point of the upper left corner of the ROI.
-	 * @param bottomRightCorner    Point of the lower right corner of the ROI.
-	 * @param thresholdPercentage  Match threshold as a percentage (0 to 100). Only matches that exceed this value will be included.
-	 * @param maxResults           Maximum number of results to return. If 0 or negative, returns all results.
-	 * @return A list of {@link DTOImageSearchResult} objects containing all found matches that exceed the threshold.
 	 */
 	public static List<DTOImageSearchResult> searchTemplateMultiple(byte[] image, String templateResourcePath, DTOPoint topLeftCorner, DTOPoint bottomRightCorner, double thresholdPercentage, int maxResults) {
 		// Delegar al método optimizado manteniendo la misma firma
