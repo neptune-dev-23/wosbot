@@ -86,7 +86,7 @@ public class GatherTask extends DelayedTask {
         int maxY = queues[Math.min(activeMarchQueues - 1, queues.length - 1)][1].getY(); // Use the Y coordinate of
         // the last active queue
 
-        DTOImageSearchResult resource = emuManager.searchTemplate(EMULATOR_NUMBER, gatherType, new DTOPoint(10,
+        DTOImageSearchResult resource = emuManager.searchTemplate(EMULATOR_NUMBER, gatherType.getTemplate(), new DTOPoint(10,
                 342), new DTOPoint(415, maxY), 90);
 
         if (resource.isFound()) {
@@ -310,18 +310,17 @@ public class GatherTask extends DelayedTask {
 		COAL( EnumTemplates.GAME_HOME_SHORTCUTS_COAL, EnumTemplates.GAME_HOME_SHORTCUTS_FARM_COAL, EnumConfigurationKey.GATHER_COAL_LEVEL_INT),
 		IRON( EnumTemplates.GAME_HOME_SHORTCUTS_IRON, EnumTemplates.GAME_HOME_SHORTCUTS_FARM_IRON, EnumConfigurationKey.GATHER_IRON_LEVEL_INT);
 
-
 		EnumTemplates template;
 		EnumTemplates tile;
 		EnumConfigurationKey level;
 
-		GatherType(EnumTemplates enumTemplate,EnumTemplates tile, EnumConfigurationKey level) {
-		this.template = enumTemplate;
-		this.tile = tile;
-		this.level = level;
+		GatherType(EnumTemplates enumTemplate, EnumTemplates tile, EnumConfigurationKey level) {
+            this.template = enumTemplate;
+            this.tile = tile;
+            this.level = level;
 		}
 
-		public String getTemplate() {
+		public EnumTemplates getTemplate() {
             return template;
 		}
 
@@ -332,7 +331,6 @@ public class GatherTask extends DelayedTask {
 		public EnumConfigurationKey getConfig() {
             return level;
         }
-
 
 	}
 
