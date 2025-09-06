@@ -13,6 +13,7 @@ import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.serv.task.DelayedTask;
+import cl.camodev.wosbot.serv.task.EnumStartLocation;
 import net.sourceforge.tess4j.TesseractException;
 
 public class TundraTrekTask extends DelayedTask {
@@ -22,25 +23,12 @@ public class TundraTrekTask extends DelayedTask {
     }
 
     @Override
+    public EnumStartLocation getRequiredStartLocation() {
+        return EnumStartLocation.HOME;
+    }
+
+    @Override
     protected void execute() {
-        DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER,
-                EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 90);
-        DTOImageSearchResult worldResult = emuManager.searchTemplate(EMULATOR_NUMBER,
-                EnumTemplates.GAME_HOME_WORLD.getTemplate(), 90);
-
-        if (!homeResult.isFound() && !worldResult.isFound()) {
-            logInfo("Current screen is unknown. Tapping the back button to navigate.");
-            emuManager.tapBackButton(EMULATOR_NUMBER);
-            reschedule(LocalDateTime.now().plusSeconds(10)); // Reschedule to try again shortly
-            return;
-        }
-
-        if (worldResult.isFound()) {
-            logInfo("Currently on the world screen. Navigating back to the city.");
-            emuManager.tapAtPoint(EMULATOR_NUMBER, worldResult.getPoint());
-            sleepTask(3000);
-        }
-
         if (navigateToTrekSupplies()) {
             // Search for claim button
             DTOImageSearchResult trekClaimButton = emuManager.searchTemplate(EMULATOR_NUMBER,

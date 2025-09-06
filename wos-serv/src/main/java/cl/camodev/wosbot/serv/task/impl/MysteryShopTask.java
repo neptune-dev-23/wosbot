@@ -17,31 +17,10 @@ public class MysteryShopTask extends DelayedTask {
 
 	@Override
 	protected void execute() {
-		int attempt = 0;
-
-		while (attempt < 5) {
-			// Check if we are on the home screen
-			DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(),  90);
-			DTOImageSearchResult worldResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(),  90);
-
-			if (homeResult.isFound() || worldResult.isFound()) {
-				if (navigateToShop()) {
-					handleMysteryShopOperations();
-					return;
-				}
-				return;
-			} else {
-				// If home screen is not found, log warning and go back
-				logWarning("Home screen not found. Tapping the back button.");
-				emuManager.tapBackButton(EMULATOR_NUMBER);
-				sleepTask(2000);
-			}
-			attempt++;
-		}
-
-		// If menu is not found after 5 attempts, reschedule for 1 hour
-		if (attempt >= 5) {
-			logWarning("Could not find the Mystery Shop menu after multiple attempts. Rescheduling for 1 hour.");
+		if (navigateToShop()) {
+			handleMysteryShopOperations();
+		} else {
+			logWarning("Could not navigate to the Mystery Shop. Rescheduling for 1 hour.");
 			LocalDateTime nextAttempt = LocalDateTime.now().plusHours(1);
 			this.reschedule(nextAttempt);
 		}
@@ -222,4 +201,5 @@ public class MysteryShopTask extends DelayedTask {
 		logInfo("Daily refresh is not available.");
 		return false;
 	}
+
 }

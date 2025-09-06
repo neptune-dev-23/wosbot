@@ -8,6 +8,7 @@ import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.serv.task.DelayedTask;
+import cl.camodev.wosbot.serv.task.EnumStartLocation;
 
 import java.time.LocalDateTime;
 
@@ -135,5 +136,10 @@ public class NomadicMerchantTask extends DelayedTask {
         // Final step: schedule task till game reset
         logInfo("Rescheduling Nomadic Merchant task for the next game reset.");
         reschedule(UtilTime.getGameReset());
+    }
+
+    @Override
+    protected EnumStartLocation getRequiredStartLocation() {
+        return EnumStartLocation.HOME;
     }
 }

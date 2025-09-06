@@ -1,258 +1,144 @@
 package cl.camodev.wosbot.serv.task.impl;
 
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
-import cl.camodev.wosbot.ot.DTOTaskState;
-import cl.camodev.wosbot.serv.impl.ServTaskManager;
 import cl.camodev.wosbot.serv.task.DelayedTask;
+import cl.camodev.wosbot.serv.task.EnumStartLocation;
+
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class UpgradeFurnaceTask extends DelayedTask {
-
-	private final Map<EnumTemplates, TpDailyTaskEnum> TROOP_TASK_MAP = Map.of(
-			EnumTemplates.BUILDING_DETAILS_INFANTRY, TpDailyTaskEnum.TRAINING_INFANTRY,
-			EnumTemplates.BUILDING_DETAILS_MARKSMAN,  TpDailyTaskEnum.TRAINING_MARKSMAN,
-			EnumTemplates.BUILDING_DETAILS_LANCER,    TpDailyTaskEnum.TRAINING_LANCER
-	);
 
 	public UpgradeFurnaceTask(DTOProfiles profile, TpDailyTaskEnum tpDailyTask) {
 		super(profile, tpDailyTask);
 	}
 
 	@Override
-	protected void execute() {
-		DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(),  90);
-		DTOImageSearchResult worldResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(),  90);
+	public EnumStartLocation getRequiredStartLocation() {
+		return EnumStartLocation.HOME;
+	}
 
-		if (homeResult.isFound() || worldResult.isFound()) {
-			if (worldResult.isFound()) {
-				emuManager.tapAtPoint(EMULATOR_NUMBER, worldResult.getPoint());
-				sleepTask(3000);
+	@Override
+	protected void execute() {
+		logInfo("Checking the current building queue status...");
+
+		// left menu
+		emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(3, 513), new DTOPoint(26, 588));
+		sleepTask(500);
+
+		// city tab
+		emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(20, 250), new DTOPoint(200, 280));
+		sleepTask(500);
+
+		// ocr to check current building queue status
+
+		final int MAX_ATTEMPTS = 10;
+		boolean success = false;
+		LocalDateTime upgradeTime = null;
+
+		try {
+			for (int i = 0; i < MAX_ATTEMPTS; i++) {
+				try {
+					String rawText = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(162, 378), new DTOPoint(293, 397));
+					if (rawText.contains("Idle")) {
+						break;
+					}
+
+					// Sumar la mitad al tiempo actual
+					upgradeTime = parseNextFree(rawText);
+
+					success = true;
+					break;
+				} catch (Exception e) {
+					// Opcional: loggear intento fallido
+					// System.out.println("OCR parsing failed at attempt " + (i + 1));
+				}
 			}
 
-			logInfo("Checking the current building queue status...");
+			if (success) {
+				logInfo("The building queue is currently busy. Rescheduling for later.");
+				reschedule(upgradeTime);
+				return;
+			} else {
 
-			// left menu
-			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(3, 513), new DTOPoint(26, 588));
-			sleepTask(500);
+				logInfo("No upgrades are in progress. Proceeding to upgrade the furnace.");
+				// going to check current furnace requierements
+				// survivor status
+				emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(320, 30));
+				sleepTask(500);
 
-			// city tab
-			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(20, 250), new DTOPoint(200, 280));
-			sleepTask(500);
-
-			// ocr to check current building queue status
-
-			final int MAX_ATTEMPTS = 10;
-			boolean success = false;
-			LocalDateTime upgradeTime = null;
-
-			try {
-				for (int i = 0; i < MAX_ATTEMPTS; i++) {
-					try {
-						String rawText = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(162, 378), new DTOPoint(293, 397));
-						if (rawText.contains("Idle")) {
-							break;
-						}
-
-						// Sumar la mitad al tiempo actual
-						upgradeTime = parseNextFree(rawText);
-
-						success = true;
-						break;
-					} catch (Exception e) {
-						// Opcional: loggear intento fallido
-						// System.out.println("OCR parsing failed at attempt " + (i + 1));
-					}
-				}
-
-				if (success) {
-					logInfo("The building queue is currently busy. Rescheduling for later.");
-					reschedule(upgradeTime);
-					return;
-				} else {
-
-					logInfo("No upgrades are in progress. Proceeding to upgrade the furnace.");
-					// going to check current furnace requierements
-					// survivor status
-					emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(320, 30));
+				// search for cookhouse
+				DTOImageSearchResult result = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_CITY_STATUS_COOKHOUSE.getTemplate(),  90);
+				if (result.isFound()) {
+					// click on cookhouse
+					emuManager.tapAtRandomPoint(EMULATOR_NUMBER, result.getPoint(), result.getPoint());
 					sleepTask(500);
 
-					// search for cookhouse
-					DTOImageSearchResult result = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_CITY_STATUS_COOKHOUSE.getTemplate(),  90);
-					if (result.isFound()) {
-						// click on cookhouse
-						emuManager.tapAtRandomPoint(EMULATOR_NUMBER, result.getPoint(), result.getPoint());
+					// search go button
+					DTOImageSearchResult goButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_CITY_STATUS_GO_BUTTON.getTemplate(),  90);
+					if (goButton.isFound()) {
+						// click on go button
+						emuManager.tapAtRandomPoint(EMULATOR_NUMBER, goButton.getPoint(), goButton.getPoint());
+						sleepTask(3000);
+
+						// click on furnace
+						emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(320, 600));
 						sleepTask(500);
 
-						// search go button
-						DTOImageSearchResult goButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_CITY_STATUS_GO_BUTTON.getTemplate(),  90);
-						if (goButton.isFound()) {
-							// click on go button
-							emuManager.tapAtRandomPoint(EMULATOR_NUMBER, goButton.getPoint(), goButton.getPoint());
+						// click on details
+						emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(320, 880));
+						sleepTask(500);
+
+						// click on upgrade
+						DTOImageSearchResult upgradeButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.BUILDING_BUTTON_UPGRADE.getTemplate(),  90);
+						if (upgradeButton.isFound()) {
+							emuManager.tapAtPoint(EMULATOR_NUMBER, upgradeButton.getPoint());
 							sleepTask(500);
 
-							// go to furnace
-							emuManager.tapBackButton(EMULATOR_NUMBER);
-							sleepTask(500);
-							emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(130, 650));
-							sleepTask(1000);
-
-							// go to upgrade button
-							emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(608, 715), new DTOPoint(625, 728));
-							sleepTask(500);
-
-							// search go button for upgrade pending requirements
-
-							DTOImageSearchResult upgradeGoButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_CITY_STATUS_GO_BUTTON.getTemplate(),  90);
-
-							if (upgradeGoButton.isFound()) {
-								logInfo("Pending upgrade requirements found. Proceeding to upgrade them.");
-								// click on go button
-								emuManager.tapAtRandomPoint(EMULATOR_NUMBER, upgradeGoButton.getPoint(), upgradeGoButton.getPoint());
-								sleepTask(1000);
-								emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(330, 716), new DTOPoint(364, 721), 10, 100);
-
-								DTOImageSearchResult upgradeButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_SHORTCUTS_UPGRADE.getTemplate(),  90);
-								if (upgradeButton.isFound()) {
-									// click on upgrade button
-									emuManager.tapAtRandomPoint(EMULATOR_NUMBER, upgradeButton.getPoint(), upgradeButton.getPoint());
-									sleepTask(1000);
-
-									while ((result = emuManager.searchTemplate(EMULATOR_NUMBER,	EnumTemplates.GAME_HOME_SHORTCUTS_OBTAIN.getTemplate(),  90)).isFound()) {
-										logInfo("Refilling resources for the upgrade...");
-										emuManager.tapAtRandomPoint(EMULATOR_NUMBER, result.getPoint(), result.getPoint());
-										sleepTask(500);
-										// click replenish button
-										emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(358,1135));
-										sleepTask(300);
-
-										// confirm replenish
-										emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(511, 1056));
-										sleepTask(1000);
-									}
-
-									emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(489, 1034), new DTOPoint(500, 1050));
-
-								} else {
-									//verify if the selected building is a troop training building (Infantry, Marksman, Lancer)
-									logWarning("The upgrade button was not found. Checking if it is a troop training building.");
-
-									//if it's a troop training building, we need to reschedule the task till the training is done
-
-									DTOImageSearchResult train = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.BUILDING_BUTTON_TRAIN.getTemplate(),  90);
-
-									if (train.isFound()) {
-										logInfo("A troop training building was found. Rescheduling the task until the training is complete.");
-										// i need to verify which troops are being trained, so I can reschedule the task accordingly
-
-										DTOImageSearchResult detailsButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.BUILDING_BUTTON_DETAILS.getTemplate(),  90);
-										if (detailsButton.isFound()){
-											emuManager.tapAtRandomPoint(EMULATOR_NUMBER, detailsButton.getPoint(), detailsButton.getPoint());
-											sleepTask(500);
-
-											for (var entry : TROOP_TASK_MAP.entrySet()) {
-												DTOImageSearchResult troop = emuManager.searchTemplate(EMULATOR_NUMBER,entry.getKey().getTemplate(), 90
-												);
-												if (troop.isFound()) {
-													handleTroopReschedule(entry.getValue());
-													return;
-												}
-											}
-
-											logWarning("No troop training was found. Rescheduling the task for 1 hour from now.");
-											reschedule(LocalDateTime.now().plusHours(1));
-										}
-
-									}
-
-									logWarning("The upgrade button was not found. Skipping the upgrade.");
-									reschedule(LocalDateTime.now());
-									return;
-								}
-
-								for (int i = 0; i < MAX_ATTEMPTS; i++) {
-									DTOImageSearchResult alliesHelpButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_SHORTCUTS_HELP_REQUEST.getTemplate(), 90);
-
-									if (alliesHelpButton.isFound()) {
-										logInfo("The 'Allies Help' button was found. Requesting help...");
-										emuManager.tapAtRandomPoint(EMULATOR_NUMBER, alliesHelpButton.getPoint(), alliesHelpButton.getPoint());
-										sleepTask(300);
-										break;
-									} else if (i == MAX_ATTEMPTS - 1) {
-										logInfo("The 'Allies Help' button was not found. Skipping the request.");
-										reschedule(LocalDateTime.now());
-										return;
-									}
-								}
-
+							// check if can upgrade
+							DTOImageSearchResult upgradeConfirmButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.BUILDING_BUTTON_UPGRADE.getTemplate(),  90);
+							if (upgradeConfirmButton.isFound()) {
+								emuManager.tapAtPoint(EMULATOR_NUMBER, upgradeConfirmButton.getPoint());
+								logInfo("Furnace upgrade started successfully.");
+								reschedule(LocalDateTime.now().plusMinutes(5));
 							} else {
-								// click on upgrade button
-
-
-								while ((result = emuManager.searchTemplate(EMULATOR_NUMBER,	EnumTemplates.GAME_HOME_SHORTCUTS_OBTAIN.getTemplate(),  90)).isFound()) {
-									logInfo("Refilling resources for the upgrade...");
-									emuManager.tapAtRandomPoint(EMULATOR_NUMBER, result.getPoint(), result.getPoint());
-									sleepTask(500);
-									// click replenish button
-									emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(358,1135));
-									sleepTask(300);
-
-									// confirm replenish
-									emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(511, 1056));
-									sleepTask(1000);
-								}
-
-								logWarning("No pending upgrade requirements were found for the furnace. Upgrading it directly.");
-								emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(470, 1196), new DTOPoint(480, 1216));
-
-
-								sleepTask(1000);
-
-								// check if allies can help
-
-								for (int i = 0; i < MAX_ATTEMPTS; i++) {
-									DTOImageSearchResult alliesHelpButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_SHORTCUTS_HELP_REQUEST.getTemplate(),  90);
-
-									if (alliesHelpButton.isFound()) {
-										logInfo("The 'Allies Help' button was found. Requesting help...");
-										emuManager.tapAtRandomPoint(EMULATOR_NUMBER, alliesHelpButton.getPoint(), alliesHelpButton.getPoint());
-										sleepTask(500);
-										break;
-									} else if (i == MAX_ATTEMPTS - 1) {
-										logWarning("The 'Allies Help' button was not found. Skipping the request.");
-									}
-								}
-								reschedule(LocalDateTime.now());
-								return;
-
+								logInfo("Furnace cannot be upgraded at this time. Checking for missing requirements.");
+								// check for missing requirements
+								// go back
+								emuManager.tapBackButton(EMULATOR_NUMBER);
+								sleepTask(500);
+								emuManager.tapBackButton(EMULATOR_NUMBER);
+								sleepTask(500);
+								emuManager.tapBackButton(EMULATOR_NUMBER);
+								sleepTask(500);
+								emuManager.tapBackButton(EMULATOR_NUMBER);
+								sleepTask(500);
+								reschedule(LocalDateTime.now().plusHours(1));
 							}
-							this.reschedule(LocalDateTime.now());
 						} else {
-							logWarning("The 'Go' button for the cookhouse upgrade was not found.");
+							logInfo("Furnace is max level or cannot be upgraded. Task will not run again.");
+							this.setRecurring(false);
 						}
+					} else {
+						logInfo("Cookhouse not found. Cannot proceed with furnace upgrade check.");
+						reschedule(LocalDateTime.now().plusHours(1));
 					}
-
+				} else {
+					logInfo("Cookhouse not found. Cannot proceed with furnace upgrade check.");
+					reschedule(LocalDateTime.now().plusHours(1));
 				}
-
-
-			} catch (Exception e) {
-				logError("An error occurred during the furnace upgrade process.", e);
 			}
-
-		} else{
-			emuManager.tapBackButton(EMULATOR_NUMBER);
-			this.reschedule(LocalDateTime.now());
+		} catch (Exception e) {
+			logError("An error occurred during the furnace upgrade task.", e);
+			reschedule(LocalDateTime.now().plusMinutes(5));
 		}
-
 	}
 
 	public LocalDateTime parseNextFree(String input) {
@@ -280,27 +166,5 @@ public class UpgradeFurnaceTask extends DelayedTask {
 				.plusHours(timePart.getHour())
 				.plusMinutes(timePart.getMinute())
 				.plusSeconds(timePart.getSecond());
-	}
-
-
-	private void handleTroopReschedule(TpDailyTaskEnum taskEnum) {
-		logInfo("A " + taskEnum.name() + " build was found. Getting the task state to reschedule accordingly.");
-
-		DTOTaskState taskState = ServTaskManager
-				.getInstance()
-				.getTaskState(profile.getId(), taskEnum.getId());
-
-		LocalDateTime now = LocalDateTime.now();
-		LocalDateTime next = (taskState != null && taskState.getNextExecutionTime() != null)
-				? taskState.getNextExecutionTime()
-				: now;
-
-		if (next.isBefore(now)) {
-			logInfo("The next execution time is in the past. Rescheduling the task for the current time.");
-			reschedule(now);
-		} else {
-			logInfo("The next execution time is in the future. Rescheduling the task for 5 seconds before the next execution.");
-			reschedule(next.minusSeconds(5));
-		}
 	}
 }

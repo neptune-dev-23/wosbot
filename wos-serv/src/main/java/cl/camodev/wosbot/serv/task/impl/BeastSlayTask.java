@@ -16,6 +16,7 @@ import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.task.DelayedTask;
+import cl.camodev.wosbot.serv.task.EnumStartLocation;
 import net.sourceforge.tess4j.TesseractException;
 
 public class BeastSlayTask extends DelayedTask {
@@ -42,179 +43,173 @@ public class BeastSlayTask extends DelayedTask {
 	@Override
 	protected void execute() {
 
-		DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 90);
-		DTOImageSearchResult worldResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 90);
+		// ir al perfil a ver la stamina
+		emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(50, 50));
+		sleepTask(500);
+		// ir al menu stamina
+		emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(220, 1100), new DTOPoint(250, 1125));
+		sleepTask(2000);
+		// hacer ocr a la stamina 350,270 490,300
 
-		if (homeResult.isFound() || worldResult.isFound()) {
-			if (homeResult.isFound()) {
-				emuManager.tapAtPoint(EMULATOR_NUMBER, homeResult.getPoint());
-				sleepTask(3000);
-				logInfo("Navigating to the beast menu.");
-			}
+		try {
+			String staminaText = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(350, 270), new DTOPoint(490, 300));
+			logInfo("Stamina detected: " + staminaText);
+			emuManager.tapBackButton(EMULATOR_NUMBER);
+			emuManager.tapBackButton(EMULATOR_NUMBER);
 
-			// ir al perfil a ver la stamina
-			emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(50, 50));
-			sleepTask(500);
-			// ir al menu stamina
-			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(220, 1100), new DTOPoint(250, 1125));
-			sleepTask(2000);
-			// hacer ocr a la stamina 350,270 490,300
+			stamina = extractFirstNumber(staminaText);
 
-			try {
-				String staminaText = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(350, 270), new DTOPoint(490, 300));
-				logInfo("Stamina detected: " + staminaText);
-				emuManager.tapBackButton(EMULATOR_NUMBER);
-				emuManager.tapBackButton(EMULATOR_NUMBER);
-
-				stamina = extractFirstNumber(staminaText);
-
-				if (stamina < 10) {
-					LocalDateTime fullStaminaTime = calculateFullStaminaTime(stamina, 100, 5);
-					logInfo("Stamina (" + stamina + ") is below the threshold (10). Rescheduling task to " + fullStaminaTime);
-					this.reschedule(fullStaminaTime);
-					ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, fullStaminaTime);
-					return;
-				}
-
-			} catch (IOException | TesseractException e) {
-				logError("An error occurred during stamina OCR: " + e.getMessage());
-				return; // Can't continue without stamina info
-			}
-
-			// deberoa obtener la cantidad de colas disponibles para atacar bestias
-
-			try {
-				// ir al perfil
-				emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(50, 50));
-				sleepTask(1000);
-
-				// ir al menu de colas
-				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(210, 1190), new DTOPoint(330, 1250));
-				sleepTask(1000);
-
-				String queueText = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(280, 230), new DTOPoint(340, 252));
-				logInfo("Available queues detected: " + queueText);
-				emuManager.tapBackButton(EMULATOR_NUMBER);
-				emuManager.tapBackButton(EMULATOR_NUMBER);
-
-				availableQueues = extractFirstNumber(queueText);
-
-				if (stamina < 10) {
-					LocalDateTime fullStaminaTime = calculateFullStaminaTime(stamina, 100, 5);
-					logInfo("Stamina (" + stamina + ") is below the threshold (10). Rescheduling task to " + fullStaminaTime);
-					return;
-				}
-
-			} catch (IOException | TesseractException e) {
-				logError("An error occurred during queue OCR: " + e.getMessage());
+			if (stamina < 10) {
+				LocalDateTime fullStaminaTime = calculateFullStaminaTime(stamina, 100, 5);
+				logInfo("Stamina (" + stamina + ") is below the threshold (10). Rescheduling task to " + fullStaminaTime);
+				this.reschedule(fullStaminaTime);
+				ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, fullStaminaTime);
 				return;
 			}
 
-			// si llego hasta aqui, tengo mas de 10 de stamina y deberia atacar bestias hasta que la stamina sea menor a 10, el consumo es de 8-10 por
-			// ataque
-			int beastLevel = 30;
-			List<Long> activeBeasts = new ArrayList<>(); // Lista de tiempos de finalización de las bestias
-			logInfo("Starting beast attacks.");
+		} catch (IOException | TesseractException e) {
+			logError("An error occurred during stamina OCR: " + e.getMessage());
+			return; // Can't continue without stamina info
+		}
 
-			while (stamina >= 10) {
+		// deberoa obtener la cantidad de colas disponibles para atacar bestias
 
-				// Revisar si alguna bestia ha terminado su tiempo
-				long currentTime = System.currentTimeMillis();
-				Iterator<Long> iterator = activeBeasts.iterator();
-				while (iterator.hasNext()) {
-					if (currentTime >= iterator.next()) {
-						iterator.remove(); // Eliminar bestia que ya terminó su tiempo
-						availableQueues++; // Liberar una queue
-						logInfo("A beast attack has finished. Available queues: " + availableQueues);
-					}
-				}
+		try {
+			// ir al perfil
+			emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(50, 50));
+			sleepTask(1000);
 
-				// Solo atacar si hay una queue disponible
-				if (availableQueues > 0) {
-					for (int i = 0; i < maxQueues; i++) {
-						if (availableQueues <= 0)
-							break; // Si no hay más queues, salir del loop
+			// ir al menu de colas
+			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(210, 1190), new DTOPoint(330, 1250));
+			sleepTask(1000);
 
-						sleepTask(6000);
-						// ir a la bestia
-						emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(25, 850), new DTOPoint(67, 898));
-						sleepTask(1000);
+			String queueText = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(280, 230), new DTOPoint(340, 252));
+			logInfo("Available queues detected: " + queueText);
+			emuManager.tapBackButton(EMULATOR_NUMBER);
+			emuManager.tapBackButton(EMULATOR_NUMBER);
 
-						emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(20, 910), new DTOPoint(70, 915));
-						sleepTask(1000);
-						// beast button
-						emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(70, 880), new DTOPoint(120, 930));
-						sleepTask(1000);
-						// ir a nivel 1
-						emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(180, 1050), new DTOPoint(1, 1050));
+			availableQueues = extractFirstNumber(queueText);
 
-						// select beast level
-						emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(470, 1040), new DTOPoint(500, 1070), beastLevel - 1, 100);
-						sleepTask(1000);
-						// click search
-						emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(301, 1200), new DTOPoint(412, 1229));
-						sleepTask(6000);
+			if (stamina < 10) {
+				LocalDateTime fullStaminaTime = calculateFullStaminaTime(stamina, 100, 5);
+				logInfo("Stamina (" + stamina + ") is below the threshold (10). Rescheduling task to " + fullStaminaTime);
+				return;
+			}
 
-						// click attack
-						emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(270, 600), new DTOPoint(460, 630));
-						sleepTask(6000);
+		} catch (IOException | TesseractException e) {
+			logError("An error occurred during queue OCR: " + e.getMessage());
+			return;
+		}
 
-						try {
-							// Obtener stamina y tiempo restante via OCR
+		// si llego hasta aqui, tengo mas de 10 de stamina y deberia atacar bestias hasta que la stamina sea menor a 10, el consumo es de 8-10 por
+		// ataque
+		int beastLevel = 30;
+		List<Long> activeBeasts = new ArrayList<>(); // Lista de tiempos de finalización de las bestias
+		logInfo("Starting beast attacks.");
 
-							String timeText = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(519, 1141), new DTOPoint(618, 1164));
-							logInfo("Attack time detected: " + timeText);
+		while (stamina >= 10) {
 
-							timeText = timeText.trim().replaceAll("[^0-9:]", ""); // Solo dejar números y ":"
-
-							// atacar
-							emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(450, 1183), new DTOPoint(640, 1240));
-
-							stamina -= 10;
-							availableQueues--;
-
-							int totalSeconds = 0;
-							String[] timeParts = timeText.split(":");
-
-							if (timeParts.length == 3) {
-								// Formato HH:mm:ss
-								totalSeconds = Integer.parseInt(timeParts[0]) * 3600 + Integer.parseInt(timeParts[1]) * 60 + Integer.parseInt(timeParts[2]);
-							} else if (timeParts.length == 2) {
-								// Formato mm:ss
-								totalSeconds = Integer.parseInt(timeParts[0]) * 60 + Integer.parseInt(timeParts[1]);
-							} else {
-								// Formato inválido o incompleto, asignar un valor por defecto
-								logWarning("Invalid time format from OCR: '" + timeText + "'. Using default 10 seconds.");
-								totalSeconds = 10; // Por defecto 10 segundos de espera
-							}
-
-							// Calcular el tiempo de finalización de la bestia
-							long finishTime = System.currentTimeMillis() + ((totalSeconds * 1000L) * 2);
-							activeBeasts.add(finishTime);
-							logInfo("Beast attacked. March will return in approximately " + (totalSeconds * 2) + " seconds.");
-
-						} catch (Exception e) {
-							logError("Failed to get beast information: " + e.getMessage());
-						}
-					}
-				} else {
-					// Si no hay queues disponibles, esperar un poco antes de volver a verificar
-					logInfo("All queues are busy. Waiting for a beast attack to finish...");
-					sleepTask(5000); // Espera de 5 segundos antes de revisar de nuevo
+			// Revisar si alguna bestia ha terminado su tiempo
+			long currentTime = System.currentTimeMillis();
+			Iterator<Long> iterator = activeBeasts.iterator();
+			while (iterator.hasNext()) {
+				if (currentTime >= iterator.next()) {
+					iterator.remove(); // Eliminar bestia que ya terminó su tiempo
+					availableQueues++; // Liberar una queue
+					logInfo("A beast attack has finished. Available queues: " + availableQueues);
 				}
 			}
 
+			// Solo atacar si hay una queue disponible
+			if (availableQueues > 0) {
+				for (int i = 0; i < maxQueues; i++) {
+					if (availableQueues <= 0)
+						break; // Si no hay más queues, salir del loop
+
+					sleepTask(6000);
+					// ir a la bestia
+					emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(25, 850), new DTOPoint(67, 898));
+					sleepTask(1000);
+
+					emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(20, 910), new DTOPoint(70, 915));
+					sleepTask(1000);
+					// beast button
+					emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(70, 880), new DTOPoint(120, 930));
+					sleepTask(1000);
+					// ir a nivel 1
+					emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(180, 1050), new DTOPoint(1, 1050));
+
+					// select beast level
+					emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(470, 1040), new DTOPoint(500, 1070), beastLevel - 1, 100);
+					sleepTask(1000);
+					// click search
+					emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(301, 1200), new DTOPoint(412, 1229));
+					sleepTask(6000);
+
+					// click attack
+					emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(270, 600), new DTOPoint(460, 630));
+					sleepTask(6000);
+
+					try {
+						// Obtener stamina y tiempo restante via OCR
+
+						String timeText = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(519, 1141), new DTOPoint(618, 1164));
+						logInfo("Attack time detected: " + timeText);
+
+						timeText = timeText.trim().replaceAll("[^0-9:]", ""); // Solo dejar números y ":"
+
+						// atacar
+						emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(450, 1183), new DTOPoint(640, 1240));
+
+						stamina -= 10;
+						availableQueues--;
+
+						int totalSeconds = 0;
+						String[] timeParts = timeText.split(":");
+
+						if (timeParts.length == 3) {
+							// Formato HH:mm:ss
+							totalSeconds = Integer.parseInt(timeParts[0]) * 3600 + Integer.parseInt(timeParts[1]) * 60 + Integer.parseInt(timeParts[2]);
+						} else if (timeParts.length == 2) {
+							// Formato mm:ss
+							totalSeconds = Integer.parseInt(timeParts[0]) * 60 + Integer.parseInt(timeParts[1]);
+						} else {
+							// Formato inválido o incompleto, asignar un valor por defecto
+							logWarning("Invalid time format from OCR: '" + timeText + "'. Using default 10 seconds.");
+							totalSeconds = 10; // Por defecto 10 segundos de espera
+						}
+
+						// Calcular el tiempo de finalización de la bestia
+						long finishTime = System.currentTimeMillis() + ((totalSeconds * 1000L) * 2);
+						activeBeasts.add(finishTime);
+						logInfo("Beast attacked. March will return in approximately " + (totalSeconds * 2) + " seconds.");
+
+					} catch (Exception e) {
+						logError("Failed to get beast information: " + e.getMessage());
+					}
+				}
+			} else {
+				// Si no hay queues disponibles, esperar un poco antes de volver a verificar
+				logInfo("All queues are busy. Waiting for a beast attack to finish...");
+				sleepTask(5000); // Espera de 5 segundos antes de revisar de nuevo
+			}
 		}
 
+		logInfo("Beast Slay task finished.");
 	}
 
-	public int extractFirstNumber(String ocrText) {
-		if (ocrText == null || ocrText.isEmpty()) {
+	@Override
+	protected EnumStartLocation getRequiredStartLocation() {
+		return EnumStartLocation.WORLD;
+	}
+
+	private int extractFirstNumber(String text) {
+		if (text == null || text.isEmpty()) {
 			throw new IllegalArgumentException("El texto OCR no puede ser nulo o vacío.");
 		}
 
 		// Normalizar el texto OCR (reemplazo de posibles errores comunes)
-		String normalizedText = ocrText.replaceAll("[oO]", "0") // Reemplazar 'o' o 'O' por '0'
+		String normalizedText = text.replaceAll("[oO]", "0") // Reemplazar 'o' o 'O' por '0'
 				.replaceAll("[^0-9/]", "") // Eliminar caracteres que no sean números o '/'
 				.trim(); // Eliminar espacios en los extremos
 

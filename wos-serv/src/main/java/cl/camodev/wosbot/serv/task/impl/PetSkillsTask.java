@@ -9,6 +9,7 @@ import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.task.DelayedTask;
+import cl.camodev.wosbot.serv.task.EnumStartLocation;
 
 public class PetSkillsTask extends DelayedTask {
 
@@ -23,6 +24,11 @@ public class PetSkillsTask extends DelayedTask {
 	}
 
 	@Override
+	public EnumStartLocation getRequiredStartLocation() {
+		return EnumStartLocation.HOME;
+	}
+
+	@Override
 	protected void execute() {
 		if (attempts >= 3) {
 			logWarning("Could not find the Pet Skills menu after multiple attempts. Removing task from scheduler.");
@@ -30,65 +36,56 @@ public class PetSkillsTask extends DelayedTask {
 			return;
 		}
 
-		DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(),  90);
-		DTOImageSearchResult worldResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(),  90);
-		if (homeResult.isFound() || worldResult.isFound()) {
-			logInfo("Starting Pet Skills task for " + petSkill.name() + ".");
+		logInfo("Starting Pet Skills task for " + petSkill.name() + ".");
 
-			DTOImageSearchResult petsResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_PETS.getTemplate(),  90);
-			if (petsResult.isFound()) {
-				logInfo("Pets button found. Tapping to open.");
-				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, petsResult.getPoint(), petsResult.getPoint());
-				sleepTask(1000);
+		DTOImageSearchResult petsResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_PETS.getTemplate(),  90);
+		if (petsResult.isFound()) {
+			logInfo("Pets button found. Tapping to open.");
+			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, petsResult.getPoint(), petsResult.getPoint());
+			sleepTask(1000);
 
-				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, petSkill.getPoint1(), petSkill.getPoint2());
-				sleepTask(300);
+			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, petSkill.getPoint1(), petSkill.getPoint2());
+			sleepTask(300);
 
-				DTOImageSearchResult infoSkill = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_INFO_SKILLS.getTemplate(),  90);
+			DTOImageSearchResult infoSkill = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_INFO_SKILLS.getTemplate(),  90);
 
-				if (!infoSkill.isFound()) {
-					logInfo("Skill " + petSkill.name() + " is not learned yet. Task will not recur.");
-					this.setRecurring(false);
-					emuManager.tapBackButton(EMULATOR_NUMBER);
-					return;
-				}
-
-				DTOImageSearchResult unlockText = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_UNLOCK_TEXT.getTemplate(),  90);
-
-				if (unlockText.isFound()) {
-					logInfo("Skill " + petSkill.name() + " is locked. Task will not recur.");
-					emuManager.tapBackButton(EMULATOR_NUMBER);
-					this.setRecurring(false);
-					return;
-				}
-
-				DTOImageSearchResult skillButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_SKILL_USE.getTemplate(),  90);
-				if (skillButton.isFound()) {
-					emuManager.tapAtRandomPoint(EMULATOR_NUMBER, skillButton.getPoint(), skillButton.getPoint(), 10, 100);
-					sleepTask(500);
-				}
-
-				try {
-					logInfo("Skill used. Parsing cooldown to determine next schedule for " + petSkill.name() + ".");
-					String nextSchedulteText = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(210, 1080), new DTOPoint(520, 1105));
-					LocalDateTime nextSchedule = parseCooldown(nextSchedulteText);
-					this.reschedule(parseCooldown(nextSchedulteText));
-					ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, nextSchedule);
-                    logInfo("Rescheduled " + petSkill.name() + " task for " + nextSchedule);
-				} catch (Exception e) {
-					logError("Error parsing cooldown for " + petSkill.name() + ". Rescheduling for 5 minutes.", e);
-					this.reschedule(LocalDateTime.now().plusMinutes(5));
-				}
+			if (!infoSkill.isFound()) {
+				logInfo("Skill " + petSkill.name() + " is not learned yet. Task will not recur.");
+				this.setRecurring(false);
 				emuManager.tapBackButton(EMULATOR_NUMBER);
-			} else {
-				logWarning("Pets button not found. Retrying later.");
-				attempts++;
+				return;
 			}
 
-		} else {
-			logWarning("Home screen not found. Tapping the back button.");
-			emuManager.tapBackButton(EMULATOR_NUMBER);
+			DTOImageSearchResult unlockText = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_UNLOCK_TEXT.getTemplate(),  90);
 
+			if (unlockText.isFound()) {
+				logInfo("Skill " + petSkill.name() + " is locked. Task will not recur.");
+				emuManager.tapBackButton(EMULATOR_NUMBER);
+				this.setRecurring(false);
+				return;
+			}
+
+			DTOImageSearchResult skillButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_SKILL_USE.getTemplate(),  90);
+			if (skillButton.isFound()) {
+				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, skillButton.getPoint(), skillButton.getPoint(), 10, 100);
+				sleepTask(500);
+			}
+
+			try {
+				logInfo("Skill used. Parsing cooldown to determine next schedule for " + petSkill.name() + ".");
+				String nextSchedulteText = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(210, 1080), new DTOPoint(520, 1105));
+				LocalDateTime nextSchedule = parseCooldown(nextSchedulteText);
+				this.reschedule(parseCooldown(nextSchedulteText));
+				ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, nextSchedule);
+                logInfo("Rescheduled " + petSkill.name() + " task for " + nextSchedule);
+			} catch (Exception e) {
+				logError("Error parsing cooldown for " + petSkill.name() + ". Rescheduling for 5 minutes.", e);
+				this.reschedule(LocalDateTime.now().plusMinutes(5));
+			}
+			emuManager.tapBackButton(EMULATOR_NUMBER);
+		} else {
+			logWarning("Pets button not found. Retrying later.");
+			attempts++;
 		}
 	}
 
