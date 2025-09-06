@@ -1,7 +1,6 @@
 package cl.camodev.wosbot.serv.task.impl;
 
 import java.time.LocalDateTime;
-
 import cl.camodev.utiles.UtilTime;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
@@ -45,6 +44,7 @@ public class MysteryShopTask extends DelayedTask {
 	 * @return true if navigation was successful, false otherwise
 	 */
 	private boolean navigateToShop() {
+        logInfo("Navigating to the Mystery Shop.");
 		// STEP 1: Search for the bottom bar shop button
 		DTOImageSearchResult shopButtonResult = emuManager.searchTemplate(
 			EMULATOR_NUMBER,
@@ -53,7 +53,7 @@ public class MysteryShopTask extends DelayedTask {
 		);
 
 		if (!shopButtonResult.isFound()) {
-			logWarning("Shop button not found, rescheduling task for 1 hour");
+			logWarning("Shop button on the main screen not found. Rescheduling for 1 hour.");
 			LocalDateTime nextAttempt = LocalDateTime.now().plusHours(1);
 			this.reschedule(nextAttempt);
 			return false;
@@ -71,7 +71,7 @@ public class MysteryShopTask extends DelayedTask {
 		);
 
 		if (!mysteryShopResult.isFound()) {
-			logWarning("Mystery shop button not found, rescheduling task for 1 hour");
+			logWarning("Mystery Shop button not found inside the shop. Rescheduling for 1 hour.");
 			emuManager.tapBackButton(EMULATOR_NUMBER);
 			LocalDateTime nextAttempt = LocalDateTime.now().plusHours(1);
 			this.reschedule(nextAttempt);
@@ -81,6 +81,7 @@ public class MysteryShopTask extends DelayedTask {
 		// Tap on mystery shop
 		emuManager.tapAtRandomPoint(EMULATOR_NUMBER, mysteryShopResult.getPoint(), mysteryShopResult.getPoint());
 		sleepTask(1000);
+        logInfo("Successfully navigated to the Mystery Shop.");
 		return true;
 	}
 
@@ -88,6 +89,7 @@ public class MysteryShopTask extends DelayedTask {
 	 * Handles all mystery shop operations: scroll, claim free rewards, use daily refresh
 	 */
 	private void handleMysteryShopOperations() {
+        logInfo("Starting Mystery Shop operations: claiming free items and using daily refresh.");
 		// STEP 3: Scroll down in specific area to reveal all items
 		DTOPoint scrollStart = new DTOPoint(350, 1100);
 		DTOPoint scrollEnd = new DTOPoint(350, 650);
@@ -185,7 +187,7 @@ public class MysteryShopTask extends DelayedTask {
 				emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(360, 830));
 				sleepTask(300);
 
-				logInfo("Free reward claimed");
+				logInfo("A free reward has been claimed.");
 				foundAnyReward = true;
 				foundRewardInThisIteration = true;
 
@@ -220,4 +222,5 @@ public class MysteryShopTask extends DelayedTask {
 
 		return false;
 	}
+
 }

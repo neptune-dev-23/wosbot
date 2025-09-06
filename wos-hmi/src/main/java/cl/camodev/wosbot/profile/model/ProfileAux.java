@@ -125,6 +125,18 @@ public class ProfileAux {
 		return reconnectionTime;
 	}
 
+	public <T> T getConfiguration(EnumConfigurationKey key) {
+		Optional<ConfigAux> config = configs.stream()
+				.filter(c -> c.getName().equals(key.name()))
+				.findFirst();
+
+		if (config.isPresent()) {
+			return key.castValue(config.get().getValue());
+		} else {
+			return key.castValue(key.getDefaultValue());
+		}
+	}
+
 	public List<ConfigAux> getConfigs() {
 		return configs;
 	}

@@ -22,6 +22,7 @@ import cl.camodev.wosbot.console.view.ConsoleLogLayoutController;
 import cl.camodev.wosbot.emulator.EmulatorType;
 import cl.camodev.wosbot.emulator.view.EmuConfigLayoutController;
 import cl.camodev.wosbot.events.view.EventsLayoutController;
+import cl.camodev.wosbot.experts.view.ExpertsLayoutController;
 import cl.camodev.wosbot.gather.view.GatherLayoutController;
 import cl.camodev.wosbot.intel.view.IntelLayoutController;
 import cl.camodev.wosbot.ot.DTOBotState;
@@ -375,6 +376,7 @@ public class LauncherLayoutController implements IProfileLoadListener {
 				new ModuleDefinition("TrainingLayout", "Training", TrainingLayoutController::new),
 				new ModuleDefinition("PetsLayout", "Pets", PetsLayoutController::new),
 				new ModuleDefinition("EventsLayout", "Events", EventsLayoutController::new),
+				new ModuleDefinition("ExpertsLayout", "Experts", ExpertsLayoutController::new),
 				new ModuleDefinition("EmuConfigLayout", "Config", EmuConfigLayoutController::new)
 				
 				);

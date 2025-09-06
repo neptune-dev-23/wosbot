@@ -3,13 +3,9 @@ package cl.camodev.wosbot.serv.task;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.TimeUnit;
-
-
 
 import cl.camodev.utiles.UtilTime;
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
@@ -34,7 +30,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TaskQueue {
-
 
 	private static final Logger logger = LoggerFactory.getLogger(TaskQueue.class);
 	private final PriorityBlockingQueue<DelayedTask> taskQueue = new PriorityBlockingQueue<>();

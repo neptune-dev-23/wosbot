@@ -10,7 +10,6 @@ import java.util.regex.Pattern;
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
-import cl.camodev.wosbot.emulator.EmulatorManager;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
@@ -19,41 +18,16 @@ import net.sourceforge.tess4j.TesseractException;
 
 public class BankTask extends DelayedTask {
 
-	private EmulatorManager emuManager = EmulatorManager.getInstance();
-
 	public BankTask(DTOProfiles profile, TpDailyTaskEnum tpTask) {
 		super(profile, tpTask);
 	}
 
 	@Override
 	protected void execute() {
-		int attempt = 0;
 		int bankDelay = profile.getConfig(EnumConfigurationKey.INT_BANK_DELAY, Integer.class);
 
-		while (attempt < 5) {
-			// Check if we are on the home screen
-			DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE,  90);
-			DTOImageSearchResult worldResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD, 90);
-
-			if (homeResult.isFound() || worldResult.isFound()) {
-				if (navigateToBank()) {
-					handleBankOperations(bankDelay);
-					return;
-				}
-				return;
-			} else {
-				// If home screen is not found, log warning and go back
-				logWarning("Home not found");
-				EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
-				sleepTask(2000);
-			}
-			attempt++;
-		}
-
-		// If menu is not found after 5 attempts, cancel the task
-		if (attempt >= 5) {
-			logWarning("Menu not found, removing task from scheduler");
-			this.setRecurring(false);
+		if (navigateToBank()) {
+			handleBankOperations(bankDelay);
 		}
 	}
 
@@ -66,7 +40,7 @@ public class BankTask extends DelayedTask {
 		// Search for the Deals button
 		DTOImageSearchResult dealsResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.HOME_DEALS_BUTTON,  90);
 		if (!dealsResult.isFound()) {
-			logWarning("Deals button not found");
+			logWarning("Deals button not found. Cannot proceed to bank.");
 			return false;
 		}
 
@@ -79,14 +53,14 @@ public class BankTask extends DelayedTask {
 		// Search for the bank option within events
 		DTOImageSearchResult bankResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.EVENTS_DEALS_BANK, 90);
 		if (!bankResult.isFound()) {
-			logWarning("Bank option not found");
+			logWarning("Bank option not found in deals. Cannot proceed.");
 			return false;
 		}
 
 		emuManager.tapAtRandomPoint(EMULATOR_NUMBER, bankResult.getPoint(), bankResult.getPoint());
 		sleepTask(1000);
 
-		logInfo("Successfully navigated to bank");
+		logInfo("Successfully navigated to the bank.");
 		return true;
 	}
 
@@ -102,7 +76,7 @@ public class BankTask extends DelayedTask {
 
 		if (withdrawAvailableResult.isFound()) {
 			// Deposit is ready - withdraw it
-			logInfo("Deposit ready for withdrawal");
+			logInfo("Deposit is ready for withdrawal.");
 			withdrawDeposit();
 
 			// STEP 2: After withdrawal, make a new deposit
@@ -110,7 +84,7 @@ public class BankTask extends DelayedTask {
 
 		} else {
 			// STEP 3: No deposit ready - check remaining time and reschedule
-			logInfo("No deposit ready for withdrawal, checking remaining time");
+			logInfo("No deposit is ready for withdrawal. Checking remaining time...");
 			checkRemainingTimeAndReschedule();
 		}
 
@@ -129,7 +103,7 @@ public class BankTask extends DelayedTask {
 			// Tap close/back button after withdrawal
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(670, 40), new DTOPoint(670, 40), 15, 100);
 			sleepTask(1000);
-			logInfo("Deposit successfully withdrawn");
+			logInfo("Deposit successfully withdrawn.");
 		}
 	}
 
@@ -175,7 +149,7 @@ public class BankTask extends DelayedTask {
 				depositDays = 30;
 				break;
 			default:
-				logWarning("Invalid bank delay configuration: " + bankDelay + ". Valid values are 1, 7, 15, 30. Using 1-day deposit as fallback");
+				logWarning("Invalid bank delay configuration: " + bankDelay + ". Valid values are 1, 7, 15, 30. Using 1-day deposit as fallback.");
 				searchTopLeft = new DTOPoint(50, 580);
 				searchBottomRight = new DTOPoint(320 , 920 );
 				depositType = "1-day (fallback)";
@@ -195,7 +169,7 @@ public class BankTask extends DelayedTask {
 		if (depositAvailableResult.isFound()) {
 			// Tap on the found deposit option
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, depositAvailableResult.getPoint(), depositAvailableResult.getPoint());
-			logInfo("Selected " + depositType + " deposit at: " + depositAvailableResult.getPoint());
+			logInfo("Selected " + depositType + " deposit.");
 
 			sleepTask(2000);
 			// Confirm deposit
@@ -206,11 +180,9 @@ public class BankTask extends DelayedTask {
 			LocalDateTime nextCheck = LocalDateTime.now().plusDays(depositDays);
 			this.reschedule(nextCheck);
 
-			logInfo("New " + depositType + " deposit created, next check scheduled for: " + nextCheck);
+			logInfo("New " + depositType + " deposit created. Next check scheduled for: " + nextCheck);
 		} else {
-			logWarning(depositType + " deposit option not available in search area [" +
-					searchTopLeft.getX() + "," + searchTopLeft.getY() + " to " +
-					searchBottomRight.getX() + "," + searchBottomRight.getY() + "]");
+			logWarning(depositType + " deposit option not available in the designated search area.");
 		}
 	}
 
@@ -227,7 +199,7 @@ public class BankTask extends DelayedTask {
 
 		if (activeDepositResult.isFound()) {
 			// There's an active deposit - read the remaining time
-			logInfo("Active deposit found, reading remaining time");
+			logInfo("Active deposit found. Reading remaining time...");
 			emuManager.tapAtPoint(EMULATOR_NUMBER, activeDepositResult.getPoint());
 			sleepTask(200);
 
@@ -238,14 +210,15 @@ public class BankTask extends DelayedTask {
 
 			for (int attempt = 1; attempt <= maxOcrAttempts; attempt++) {
 				try {
-					logInfo("OCR attempt " + attempt + " of " + maxOcrAttempts);
+					logDebug("Performing OCR attempt " + attempt + " of " + maxOcrAttempts + " to read remaining time.");
 					timeLeft = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(220, 770), new DTOPoint(490, 810));
+					timeLeft = (timeLeft != null) ? timeLeft.trim() : "";
 
 					// Try to parse the time to validate it's a valid format
 					LocalDateTime nextBank = parseAndAddToNow(timeLeft);
 					this.reschedule(nextBank);
 
-					logInfo("Deposit not ready, rescheduled for: " + nextBank + " (remaining: " + timeLeft + ")");
+					logInfo("Deposit not ready. Rescheduled for: " + nextBank + " (Time left: " + timeLeft + ")");
 					ocrSuccess = true;
 					break; // Success, exit the retry loop
 
@@ -266,15 +239,15 @@ public class BankTask extends DelayedTask {
 
 			// If all OCR attempts failed, use fallback
 			if (!ocrSuccess) {
-				logError("All " + maxOcrAttempts + " OCR attempts failed, using fallback schedule");
+				logError("All " + maxOcrAttempts + " OCR attempts failed. Using fallback schedule.");
 				LocalDateTime fallbackTime = LocalDateTime.now().plusHours(1);
 				this.reschedule(fallbackTime);
-				logWarning("Using fallback schedule: " + fallbackTime);
+				logWarning("Task rescheduled to a fallback time: " + fallbackTime);
 			}
 
 		} else {
 			// No active deposit found - make a new deposit
-			logInfo("No active deposit found, creating new deposit");
+			logInfo("No active deposit found. Creating a new deposit.");
 
 			int bankDelay = profile.getConfig(EnumConfigurationKey.INT_BANK_DELAY, Integer.class);
 			makeNewDeposit(bankDelay);

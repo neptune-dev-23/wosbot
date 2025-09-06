@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
-import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
@@ -20,7 +19,7 @@ public class DailyMissionTask extends DelayedTask {
 	@Override
 	protected void execute() {
 
-		logInfo("Going to Daily Mission Tab");
+		logInfo("Starting daily mission task.");
 
 		emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(50, 1050));
 		sleepTask(3000);
@@ -29,31 +28,31 @@ public class DailyMissionTask extends DelayedTask {
 				EnumTemplates.DAILY_MISSION_DAILY_TAB,  90);
 
 		if (result.isFound()) {
-			servLogs.appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(),
-					"Switching to Daily Mission Tab");
+			logInfo("Switching to the daily mission tab.");
 			emuManager.tapAtPoint(EMULATOR_NUMBER, result.getPoint());
 			sleepTask(500);
 		}
 
-		logInfo("Searching for Claim All button");
+		logInfo("Searching for the 'Claim All' button.");
 		result = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.DAILY_MISSION_CLAIMALL_BUTTON,
 				90);
 
 		if (result.isFound()) {
-			logInfo("Claiming Daily Mission Reward");
+			logInfo("'Claim All' button found. Claiming daily mission rewards.");
 			emuManager.tapAtPoint(EMULATOR_NUMBER, result.getPoint());
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(10, 100), new DTOPoint(600, 120), 20, 50);
 		} else {
-			logWarning("Claim All button not found, trying to each mission");
+			logWarning("'Claim All' button not found. Attempting to claim missions individually.");
 			while ((result = emuManager.searchTemplate(EMULATOR_NUMBER,
 					EnumTemplates.DAILY_MISSION_CLAIM_BUTTON, 90)).isFound()) {
 
-				logInfo("Claim button found, tapping on it");
+				logInfo("Claim button found. Claiming reward.");
 
 				emuManager.tapAtPoint(EMULATOR_NUMBER, result.getPoint());
 				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(10, 100), new DTOPoint(600, 120), 10, 50);
 				sleepTask(500);
 			}
+			logInfo("No more claim buttons found. All available missions claimed.");
 		}
 		emuManager.tapBackButton(EMULATOR_NUMBER);
 		sleepTask(50);
@@ -61,10 +60,13 @@ public class DailyMissionTask extends DelayedTask {
 		this.setRecurring(!profile.getConfig(EnumConfigurationKey.DAILY_MISSION_AUTO_SCHEDULE_BOOL,Boolean.class));
 
 		if (recurring){
-			LocalDateTime nextSchedule = LocalDateTime.now().plusMinutes(profile.getConfig(EnumConfigurationKey.DAILY_MISSION_OFFSET_INT, Integer.class));
+			Integer minutes = profile.getConfig(EnumConfigurationKey.DAILY_MISSION_OFFSET_INT, Integer.class);
+			LocalDateTime nextSchedule = LocalDateTime.now().plusMinutes(minutes);
 			this.reschedule(nextSchedule);
+			logInfo("Daily mission task completed. Next execution scheduled in " + minutes + " minutes.");
 		}else{
 			this.reschedule(LocalDateTime.now().plusMinutes(30));
+			logInfo("Daily mission task completed. Auto-scheduling is disabled. A safety reschedule is set for 30 minutes from now.");
 		}
 
 
