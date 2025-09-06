@@ -2,13 +2,10 @@ package cl.camodev.wosbot.serv.task.impl;
 
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
-import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
-import cl.camodev.wosbot.emulator.EmulatorManager;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
-import cl.camodev.wosbot.serv.impl.ServLogs;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 import cl.camodev.wosbot.serv.task.EnumStartLocation;
 import net.sourceforge.tess4j.TesseractException;
@@ -81,11 +78,10 @@ public class TrainingTroopsTask extends DelayedTask {
 
     @Override
     protected void execute() {
-        logInfo("Starting training execution for troop type: " + troopType);
+        logInfo("Starting training task for troop type: " + troopType);
 
         // Navigate to troops interface
-        ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(),
-                "Navigating to training interface for " + troopType);
+        logInfo("Navigating to the training interface for " + troopType);
 
         // Tap on troops menu
         emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(3, 513), new DTOPoint(26, 588));
@@ -101,7 +97,7 @@ public class TrainingTroopsTask extends DelayedTask {
         if (troopsResult.isFound()) {
             handleTroopStatusCheck(troopsResult);
         } else {
-            logInfo("Troop type " + troopType + " not found, ending execution");
+            logInfo("Troop type " + troopType + " not found. Ending task.");
         }
     }
 
@@ -115,20 +111,26 @@ public class TrainingTroopsTask extends DelayedTask {
         // Attempt multiple times to read troop status (OCR can be unreliable)
         for (int attempt = 1; attempt <= 5; attempt++) {
             try {
-                logInfo("Attempting to read troop status - Attempt " + attempt);
+                logDebug("Reading troop status (Attempt " + attempt + "/5)...");
 
                 DTOPoint[] points = getTroopsPoints(troopType);
                 String rawText = emuManager.ocrRegionText(EMULATOR_NUMBER, points[0], points[1]);
+
+                if (rawText != null) {
+                    rawText = rawText.trim().replaceAll("^[\\p{Punct}\\s]+", "");
+                } else {
+                    rawText = "";
+                }
 
                 if (handleTroopStatus(rawText, troopsResult)) {
                     return; // Status handled successfully, exit
                 }
 
                 // If none of the status conditions were met, try manual attempt
-                logInfo("Manual attempt - tapping on troop and reopening interface");
+                logInfo("Status read failed. Tapping on troop and reopening interface to refresh.");
 
                 // Tap on the troop first
-                EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER,
+                emuManager.tapAtRandomPoint(EMULATOR_NUMBER,
                     troopsResult.getPoint(), troopsResult.getPoint());
                 sleepTask(2000);
 
@@ -140,9 +142,9 @@ public class TrainingTroopsTask extends DelayedTask {
                 reopenTroopsInterface();
 
             } catch (Exception e) {
-                logInfo("Error during training check attempt " + attempt + ": " + e.getMessage());
+                logError("Error during training check attempt " + attempt, e);
                 if (attempt == 5) {
-                    logInfo("All attempts failed, rescheduling in 1 hour");
+                    logInfo("All attempts failed. Rescheduling check in 1 hour.");
                     reschedule(LocalDateTime.now().plusHours(1));
                 }
             }
@@ -154,10 +156,7 @@ public class TrainingTroopsTask extends DelayedTask {
      * This ensures we're in the correct state to read troop status
      */
     private void reopenTroopsInterface() {
-        logInfo("Reopening troops interface for status refresh");
-
-        ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(),
-                "Manual attempt - reopening training interface for " + troopType);
+        logInfo("Reopening troops interface for a status refresh.");
 
         // Tap on troops menu
         emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(3, 513), new DTOPoint(26, 588));
@@ -167,7 +166,7 @@ public class TrainingTroopsTask extends DelayedTask {
         emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(110, 270));
         sleepTask(500);
 
-        logInfo("Troops interface reopened successfully");
+        logInfo("Troops interface reopened successfully.");
     }
 
     /**
@@ -177,18 +176,18 @@ public class TrainingTroopsTask extends DelayedTask {
      * @return true if status was handled, false if should retry
      */
     private boolean handleTroopStatus(String statusText, DTOImageSearchResult troopsResult) {
-        logInfo("Processing troop status: " + statusText);
+        logInfo("Processing troop status text: '" + statusText + "'");
 
         // Check if troops are currently upgrading
         if (statusText.contains("Upgrading")) {
-            logInfo("Troops are upgrading, rescheduling in 1 hour");
+            logInfo("Troops are currently upgrading. Rescheduling check in 1 hour.");
             reschedule(LocalDateTime.now().plusHours(1));
             return true;
         }
 
         // Check if training is completed or troops are idle
         if (statusText.contains("Completed") || statusText.contains("Idle")) {
-            logInfo("Training completed or troops idle, starting new training process");
+            logInfo("Training is complete or troops are idle. Starting new training process.");
 
             // Tap on troop to enter training interface
            emuManager.tapAtRandomPoint(EMULATOR_NUMBER,
@@ -207,11 +206,11 @@ public class TrainingTroopsTask extends DelayedTask {
         // Parse remaining training time and reschedule
         try {
             LocalDateTime nextTrainingTime = parseTime(statusText);
-            logInfo("Training in progress, rescheduling for: " + nextTrainingTime);
+            logInfo("Training in progress. Rescheduling for: " + nextTrainingTime);
             reschedule(nextTrainingTime);
             return true;
         } catch (Exception e) {
-            logInfo("Could not parse training time from: " + statusText);
+            logWarning("Could not parse training time from status text: '" + statusText + "'");
             return false; // Retry reading status
         }
     }
@@ -224,19 +223,18 @@ public class TrainingTroopsTask extends DelayedTask {
      * Extract next training completion time and schedule the task accordingly
      */
     private void scheduleNextTraining() {
-        ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(),
-            "Extracting next training schedule time");
+        logInfo("Extracting next training completion time.");
 
         Optional<LocalDateTime> optionalNextTime = extractNextTime();
 
         if (optionalNextTime.isPresent()) {
             LocalDateTime nextSchedule = optionalNextTime.get();
-            logInfo("Next training scheduled for: " + nextSchedule);
+            logInfo("Next training check scheduled for: " + nextSchedule);
             reschedule(nextSchedule);
         } else {
             // Fallback: reschedule in 1 hour if next time cannot be extracted
             LocalDateTime fallback = LocalDateTime.now().plusHours(1);
-            logInfo("Could not extract next training time, rescheduling in 1 hour as fallback");
+            logInfo("Failed to extract next training time. Rescheduling in 1 hour as a fallback.");
             reschedule(fallback);
         }
     }
@@ -250,7 +248,7 @@ public class TrainingTroopsTask extends DelayedTask {
 
         // Navigate to training camp area
         if (!navigateToTrainingCamp()) {
-            logInfo("Failed to navigate to training camp, aborting training");
+            logInfo("Failed to navigate to the training camp. Aborting training process.");
             return;
         }
 
@@ -260,7 +258,7 @@ public class TrainingTroopsTask extends DelayedTask {
         // Check training mode configuration and execute accordingly
         boolean prioritizePromotion = profile.getConfig(
             EnumConfigurationKey.TRAIN_PRIORITIZE_PROMOTION_BOOL, Boolean.class);
-        logInfo("Training mode - Prioritize promotion: " + prioritizePromotion);
+        logInfo("Promotion priority mode is " + (prioritizePromotion ? "enabled." : "disabled."));
 
         if (prioritizePromotion) {
             handlePromotionPriorityTraining();
@@ -274,17 +272,17 @@ public class TrainingTroopsTask extends DelayedTask {
      * @return true if navigation successful, false otherwise
      */
     private boolean navigateToTrainingCamp() {
-        logInfo("Navigating to training camp");
+        logInfo("Navigating to the training camp.");
 
         // Tap on training camp area
         tapRandomPoint(new DTOPoint(310, 650), new DTOPoint(450, 730), 10, 100);
 
         // Verify we're in the correct location by searching for training template
-        DTOImageSearchResult trainingResult = EmulatorManager.getInstance()
+        DTOImageSearchResult trainingResult = emuManager
             .searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_CAMP_TRAIN, 90);
 
         boolean found = trainingResult.isFound();
-        logInfo("Training camp template found: " + found);
+        logInfo("Successfully navigated to training camp: " + found);
 
         if (found) {
             tapPoint(trainingResult.getPoint());
@@ -302,7 +300,7 @@ public class TrainingTroopsTask extends DelayedTask {
      * Enter the training interface from the training camp
      */
     private void enterTrainingInterface() {
-        logInfo("Entering training interface");
+        logInfo("Entering the training interface.");
 
         // Tap on training interface area
         tapRandomPoint(new DTOPoint(222, 157), new DTOPoint(504, 231), 10, 100);
@@ -314,17 +312,17 @@ public class TrainingTroopsTask extends DelayedTask {
      * Attempts to find and promote lower-tier troops before training new ones
      */
     private void handlePromotionPriorityTraining() {
-        logInfo("Starting promotion-priority training logic");
+        logInfo("Handling promotion-priority training.");
 
         // Reset troop list position to beginning
         resetTroopListPosition();
 
         // Find the maximum available troop level
         int maxLevel = findMaxAvailableTroopLevel();
-        logInfo("Maximum available troop level found: " + maxLevel);
+        logInfo("Found maximum available troop level: " + maxLevel);
 
         if (maxLevel == -1) {
-            logInfo("No troop levels detected, falling back to normal training");
+            logInfo("No troop levels were detected. Falling back to normal training.");
             executeNormalTraining();
             return;
         }
@@ -337,8 +335,7 @@ public class TrainingTroopsTask extends DelayedTask {
         boolean promotionExecuted = attemptTroopPromotions(maxLevel);
 
         if (!promotionExecuted) {
-            ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(),
-                "No promotions available, executing normal training");
+            logInfo("No promotable troops found. Executing normal training instead.");
             executeNormalTraining();
         }
     }
@@ -347,7 +344,7 @@ public class TrainingTroopsTask extends DelayedTask {
      * Reset the troop list to the beginning position by swiping
      */
     private void resetTroopListPosition() {
-        logInfo("Resetting troop list to beginning position");
+        logInfo("Resetting troop list position to the beginning.");
 
         // Swipe from right to left to go to beginning of troop list
         swipe(new DTOPoint(690, 785), new DTOPoint(73, 785));
@@ -362,21 +359,20 @@ public class TrainingTroopsTask extends DelayedTask {
      */
     private int findMaxAvailableTroopLevel() {
         List<EnumTemplates> templates = getTroopsTemplates(troopType);
-        logInfo("Searching for maximum troop level among " + templates.size() + " templates");
+        logInfo("Searching for the maximum troop level among " + templates.size() + " templates...");
 
         int maxLevel = -1;
 
         // Iterate through templates from highest to lowest tier
         for (EnumTemplates template : templates) {
-            logInfo("Checking template: " + template.name());
+            logInfo("Checking for template: " + template.name());
 
             DTOImageSearchResult troop = emuManager.searchTemplate(EMULATOR_NUMBER, template, 98);
 
             if (troop.isFound()) {
                 int level = extractLevelFromTemplateName(template.name());
                 if (level > 0) {
-                    ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(),
-                        "Found troop template: " + template.name() + " (Level " + level + ")");
+                    logInfo("Found troop template: " + template.name() + " (Level " + level + ")");
                     maxLevel = level;
                     break; // Found highest available level
                 }
@@ -401,14 +397,14 @@ public class TrainingTroopsTask extends DelayedTask {
 
             if (!levelStr.isEmpty()) {
                 int level = Integer.parseInt(levelStr);
-                logInfo("Extracted level " + level + " from template: " + templateName);
+                logInfo("Extracted level " + level + " from template name: " + templateName);
                 return level;
             } else {
-                logInfo("No numeric level found in template name: " + templateName);
+                logWarning("No numeric level found in template name: " + templateName);
                 return -1;
             }
         } catch (Exception e) {
-            logInfo("Error extracting level from template " + templateName + ": " + e.getMessage());
+            logError("Error extracting level from template " + templateName, e);
             return -1;
         }
     }
@@ -420,7 +416,7 @@ public class TrainingTroopsTask extends DelayedTask {
      */
     private boolean attemptTroopPromotions(int maxLevel) {
         List<EnumTemplates> templates = getTroopsTemplates(troopType);
-        logInfo("Attempting to find promotable troops (levels below " + maxLevel + ")");
+        logInfo("Searching for promotable troops (levels below " + maxLevel + ")...");
 
         // Search from highest to lowest level to prioritize higher-level promotions
         for (int i = templates.size() - 1; i >= 0; i--) {
@@ -435,7 +431,7 @@ public class TrainingTroopsTask extends DelayedTask {
             }
         }
 
-        logInfo("No promotable troops found");
+        logInfo("No promotable troops found.");
         return false;
     }
 
@@ -445,7 +441,7 @@ public class TrainingTroopsTask extends DelayedTask {
      * @return true if promotion was successful, false otherwise
      */
     private boolean attemptSingleTroopPromotion(EnumTemplates template) {
-        logInfo("Attempting promotion for: " + template.name());
+        logInfo("Attempting to promote: " + template.name());
         int attempts = 0;
     
         while(attempts < 3) {
@@ -462,16 +458,16 @@ public class TrainingTroopsTask extends DelayedTask {
                 if (promoteButton.isFound()) {
                     return executePromotion(template, promoteButton);
                 } else {
-                    logInfo("No promotion button found for: " + template.name());
+                    logInfo("Promotion button not found for: " + template.name());
                 }
             } else {
-                logInfo("Template not found for: " + template.name() + " (attempt " + (attempts + 1) + ")");
+                logDebug("Template " + template.name() + " not found (attempt " + (attempts + 1) + "/3).");
             }
 
             attempts++;
             sleepTask(300);
         }
-        logInfo("Template search attempts exhausted for: " + template.name() + ", moving to next troop level");
+        logWarning("Failed to find template " + template.name() + " after 3 attempts. Moving to the next troop level.");
         navigateToNextTroop();
         return false;
     }
@@ -483,8 +479,7 @@ public class TrainingTroopsTask extends DelayedTask {
      * @return true if promotion executed successfully
      */
     private boolean executePromotion(EnumTemplates template, DTOImageSearchResult promoteButton) {
-        ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(),
-            "Executing promotion for: " + template.name());
+        logInfo("Executing promotion for " + template.name());
 
         // Tap promote button
         emuManager.tapAtRandomPoint(EMULATOR_NUMBER, promoteButton.getPoint(), promoteButton.getPoint());
@@ -494,7 +489,7 @@ public class TrainingTroopsTask extends DelayedTask {
         tapPoint(new DTOPoint(523, 900));
         sleepTask(500);
 
-        logInfo("Promotion completed for: " + template.name());
+        logInfo("Promotion confirmed for: " + template.name());
         return true;
     }
 
@@ -514,7 +509,7 @@ public class TrainingTroopsTask extends DelayedTask {
      * Handle normal training when promotion priority is disabled
      */
     private void handleNormalTraining() {
-        logInfo("Executing normal training mode");
+        logInfo("Handling normal training mode.");
         executeNormalTraining();
     }
 
@@ -526,18 +521,17 @@ public class TrainingTroopsTask extends DelayedTask {
      * Execute normal training by finding and tapping the training button
      */
     private void executeNormalTraining() {
-        DTOImageSearchResult trainingButtonResult = EmulatorManager.getInstance()
+        DTOImageSearchResult trainingButtonResult = emuManager
             .searchTemplate(EMULATOR_NUMBER, EnumTemplates.TRAINING_TRAIN_BUTTON, 90);
 
         if (trainingButtonResult.isFound()) {
-            ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(),
-                "Normal training button found, executing training");
+            logInfo("Normal training button found. Executing training.");
 
-            EmulatorManager.getInstance().tapAtRandomPoint(EMULATOR_NUMBER,
+            emuManager.tapAtRandomPoint(EMULATOR_NUMBER,
                 trainingButtonResult.getPoint(), trainingButtonResult.getPoint());
             sleepTask(500);
         } else {
-            logInfo("Training button not found - no training available");
+            logInfo("Training button not found. No training is available at the moment.");
         }
     }
 
@@ -548,7 +542,7 @@ public class TrainingTroopsTask extends DelayedTask {
     private Optional<LocalDateTime> extractNextTime() {
         try {
             // OCR region containing training completion time
-            String text = EmulatorManager.getInstance().ocrRegionText(EMULATOR_NUMBER,
+            String text = emuManager.ocrRegionText(EMULATOR_NUMBER,
                 new DTOPoint(410, 997), new DTOPoint(586, 1048));
 
             LocalDateTime nextTime = addTimeToLocalDateTime(LocalDateTime.now(), text);
@@ -556,12 +550,10 @@ public class TrainingTroopsTask extends DelayedTask {
             return Optional.of(nextTime);
 
         } catch (IOException | TesseractException e) {
-            ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(),
-                "OCR error while extracting training time: " + e.getMessage());
+            logError("Error during OCR while extracting training time.", e);
             return Optional.empty();
         } catch (Exception e) {
-            ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(),
-                "Unexpected error extracting training time: " + e.getMessage());
+            logError("An unexpected error occurred while extracting training time.", e);
             return Optional.empty();
         }
     }

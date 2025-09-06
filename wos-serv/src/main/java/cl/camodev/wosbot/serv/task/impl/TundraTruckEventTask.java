@@ -11,14 +11,12 @@ import java.util.regex.Pattern;
 import cl.camodev.utiles.UtilTime;
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
-import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
-import cl.camodev.wosbot.emulator.EmulatorManager;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
-import cl.camodev.wosbot.serv.impl.ServLogs;
 import cl.camodev.wosbot.serv.task.DelayedTask;
+import cl.camodev.wosbot.serv.task.EnumStartLocation;
 import net.sourceforge.tess4j.TesseractException;
 
 public class TundraTruckEventTask extends DelayedTask {
@@ -31,34 +29,25 @@ public class TundraTruckEventTask extends DelayedTask {
 	}
 
 	@Override
+	public EnumStartLocation getRequiredStartLocation() {
+		return EnumStartLocation.HOME;
+	}
+
+	@Override
 	protected void execute() {
 		int attempt = 0;
 
 		while (attempt < 5) {
-			// Check if we are on the home screen
-			DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER,
-					EnumTemplates.GAME_HOME_FURNACE, 90);
-			DTOImageSearchResult worldResult = emuManager.searchTemplate(EMULATOR_NUMBER,
-					EnumTemplates.GAME_HOME_WORLD, 90);
-
-			if (homeResult.isFound() || worldResult.isFound()) {
-				if (navigateToTundraEvent()) {
-					handleTundraEvent();
-					return;
-				}
+			if (navigateToTundraEvent()) {
+				handleTundraEvent();
 				return;
-			} else {
-				// If home screen is not found, log warning and go back
-				logWarning("Home not found");
-				EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
-				sleepTask(2000);
 			}
 			attempt++;
 		}
 
 		// If menu is not found after 5 attempts, cancel the task
 		if (attempt >= 5) {
-			logWarning("Menu not found, removing task from scheduler");
+			logWarning("Menu not found after 5 attempts. The task will be removed from the scheduler.");
 			this.setRecurring(false);
 		}
 
@@ -71,14 +60,13 @@ public class TundraTruckEventTask extends DelayedTask {
 	 */
 	private boolean navigateToTundraEvent() {
 
-		ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(),
-				"Executing Tundra Truck Event");
+		logInfo("Starting the Tundra Truck Event task.");
 
 		// Search for the events button
 		DTOImageSearchResult eventsResult = emuManager.searchTemplate(EMULATOR_NUMBER,
 				EnumTemplates.HOME_EVENTS_BUTTON, 90);
 		if (!eventsResult.isFound()) {
-			logWarning("Events button not found");
+			logWarning("The 'Events' button was not found.");
 			return false;
 		}
 
@@ -94,7 +82,7 @@ public class TundraTruckEventTask extends DelayedTask {
 		if (result.isFound()) {
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, result.getPoint(), result.getPoint());
 			sleepTask(1000);
-			logInfo("Successfully navigated to tundra truck event");
+			logInfo("Successfully navigated to the Tundra Truck event.");
 
 			// Check if the event has ended
 			if (eventHasEnded()) {
@@ -105,7 +93,7 @@ public class TundraTruckEventTask extends DelayedTask {
 		}
 
 		// Swipe completely to the left
-		logInfo("Tundra truck event not immediately visible, swiping left to locate");
+		logInfo("Tundra Truck event not immediately visible. Swiping left to locate it.");
 		for (int i = 0; i < 3; i++) {
 			emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(80, 120), new DTOPoint(578, 130));
 			sleepTask(200);
@@ -119,7 +107,7 @@ public class TundraTruckEventTask extends DelayedTask {
 			if (result.isFound()) {
 				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, result.getPoint(), result.getPoint());
 				sleepTask(1000);
-				logInfo("Successfully navigated to tundra truck event");
+				logInfo("Successfully navigated to the Tundra Truck event.");
 
 				// Check if the event has ended
 				if (eventHasEnded()) {
@@ -128,13 +116,13 @@ public class TundraTruckEventTask extends DelayedTask {
 				return true;
 			}
 
-			logInfo("Tundra truck event not found, swiping right and retrying");
+			logInfo("Tundra Truck event not found. Swiping right and retrying...");
 			emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(630, 143), new DTOPoint(500, 128));
 			sleepTask(200);
 			attempts++;
 		}
 
-		logWarning("Tundra truck event not found after multiple attempts, aborting task");
+		logWarning("Tundra Truck event not found after multiple attempts. Aborting the task.");
 		this.setRecurring(false);
 		return false;
 	}
@@ -143,7 +131,7 @@ public class TundraTruckEventTask extends DelayedTask {
 		DTOImageSearchResult endedResult = emuManager.searchTemplate(EMULATOR_NUMBER,
 				EnumTemplates.TUNDRA_TRUCK_ENDED, 90);
 		if (endedResult.isFound()) {
-			logInfo("Tundra Truck event has ended, removing the task.");
+			logInfo("The Tundra Truck event has ended. The task will be removed.");
 			this.setRecurring(false);
 			return true;
 		}
@@ -165,8 +153,7 @@ public class TundraTruckEventTask extends DelayedTask {
 	 * Extract next training completion time and schedule the task accordingly
 	 */
 	private void scheduleNextTruckForBothSides() {
-		ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, taskName, profile.getName(),
-				"Extracting next training schedule time for both trucks");
+		logInfo("Extracting the next schedule time for both trucks.");
 
 		Optional<LocalDateTime> leftTime = extractNextTime(0);
 		Optional<LocalDateTime> rightTime = extractNextTime(1);
@@ -176,15 +163,15 @@ public class TundraTruckEventTask extends DelayedTask {
 
 		if (leftTime.isPresent() && rightTime.isPresent()) {
 			nextSchedule = leftTime.get().isAfter(rightTime.get()) ? leftTime.get() : rightTime.get();
-			logInfo("Both times extracted. Next scheduled for: " + nextSchedule);
+			logInfo("Both truck times were extracted. Next check is scheduled for: " + nextSchedule);
 		} else if (leftTime.isPresent()) {
 			nextSchedule = leftTime.get();
-			logInfo("Only left time extracted. Next scheduled for: " + nextSchedule);
+			logInfo("Only the left truck time was extracted. Next check is scheduled for: " + nextSchedule);
 		} else if (rightTime.isPresent()) {
 			nextSchedule = rightTime.get();
-			logInfo("Only right time extracted. Next scheduled for: " + nextSchedule);
+			logInfo("Only the right truck time was extracted. Next check is scheduled for: " + nextSchedule);
 		} else {
-			logInfo("Could not extract any truck time, rescheduling in 1 hour as fallback");
+			logInfo("Could not extract time for either truck. Rescheduling in 1 hour as a fallback.");
 		}
 
 		reschedule(nextSchedule);
@@ -197,13 +184,13 @@ public class TundraTruckEventTask extends DelayedTask {
 	}
 
 	private void handleGemRefresh(DTOImageSearchResult popupGems) {
-		logInfo("Gem refresh pop-up detected");
+		logInfo("A gem refresh pop-up was detected.");
 		if (useGems) {
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(200, 704), new DTOPoint(220, 722));
 			sleepTask(500);
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, popupGems.getPoint(), popupGems.getPoint());
 		} else {
-			logInfo("Gem refresh requested but useGems is false, cancelling refresh.");
+			logInfo("Gem refresh was requested, but 'useGems' is set to false. Cancelling the refresh.");
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(626, 438), new DTOPoint(643, 454));
 			closeWindow();
 		}
@@ -219,7 +206,7 @@ public class TundraTruckEventTask extends DelayedTask {
 				EMULATOR_NUMBER, EnumTemplates.TUNDRA_TRUCK_REFRESH_GEMS, 98);
 
 		if (popup.isFound()) {
-			logInfo("Valuable cargo refresh pop-up detected");
+			logInfo("A valuable cargo refresh pop-up was detected.");
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(200, 704), new DTOPoint(220, 722));
 			sleepTask(500);
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, popup.getPoint(), popup.getPoint());
@@ -233,7 +220,7 @@ public class TundraTruckEventTask extends DelayedTask {
 				EMULATOR_NUMBER, EnumTemplates.TUNDRA_TRUCK_YELLOW, 90);
 
 		while (!truckRaritySSR.isFound()) {
-			logInfo("SSR Truck not found, refreshing trucks");
+			logInfo("SSR Truck not found. Refreshing trucks...");
 			refreshTrucks();
 			truckRaritySSR = emuManager.searchTemplate(
 					EMULATOR_NUMBER, EnumTemplates.TUNDRA_TRUCK_YELLOW, 90);
@@ -246,7 +233,7 @@ public class TundraTruckEventTask extends DelayedTask {
 				EMULATOR_NUMBER, EnumTemplates.TUNDRA_TRUCK_DEPARTED, 90);
 
 		if (departedTruck.isFound()) {
-			logInfo("Truck already departed on side " + (side == 0 ? "left" : "right") + ", skipping send.");
+			logInfo("The truck on the " + (side == 0 ? "left" : "right") + " side has already departed. Skipping send.");
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(617, 770), new DTOPoint(650, 795));
 			closeWindow();
 			return true;
@@ -269,15 +256,15 @@ public class TundraTruckEventTask extends DelayedTask {
 
 		if (sendTruckResult.isFound()) {
 			if (!truckSSR || findSSRTruck()) {
-				logInfo((truckSSR ? "SSR Truck found" : "Sending any truck") + ", proceeding to send");
+				logInfo((truckSSR ? "An SSR Truck was found" : "Sending a non-SSR truck") + ". Proceeding to send.");
 				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, sendTruckResult.getPoint(), sendTruckResult.getPoint());
 				sleepTask(1000);
 				return true;
 			} else {
-				logInfo("SSR Truck not found and user does not want to use gems or max attempts reached.");
+				logInfo("An SSR Truck was not found, and the user has not enabled gem usage or has reached the maximum number of attempts.");
 			}
 		} else {
-			logInfo("No truck available to send on side " + (side == 0 ? "left" : "right"));
+			logInfo("No truck is available to send on the " + (side == 0 ? "left" : "right") + " side.");
 		}
 		return false;
 	}
@@ -304,19 +291,17 @@ public class TundraTruckEventTask extends DelayedTask {
 		try {
 			String text = emuManager.ocrRegionText(EMULATOR_NUMBER,
 					new DTOPoint(477, 1151), new DTOPoint(527, 1179));
-			logInfo("Remaining trucks OCR result: " + text);
+			logInfo("Remaining trucks OCR result: '" + text + "'");
 
 			if (text != null && text.trim().matches("0\\s*/\\s*\\d+")) {
-				logInfo("No trucks available to send (" + text.trim() + "). Task will be rescheduled.");
+				logInfo("No trucks available to send (" + text.trim() + "). The task will be rescheduled.");
 				reschedule(UtilTime.getGameReset());
 				return false;
 			}
 		} catch (IOException | TesseractException e) {
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, taskName,
-					profile.getName(), "OCR error: " + e.getMessage());
+			logError("An OCR error occurred while checking for available trucks.", e);
 		} catch (Exception e) {
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, taskName,
-					profile.getName(), "Unexpected OCR error: " + e.getMessage());
+			logError("An unexpected error occurred while checking for available trucks.", e);
 		}
 		return true;
 	}
@@ -327,16 +312,16 @@ public class TundraTruckEventTask extends DelayedTask {
 			DTOImageSearchResult result = emuManager.searchTemplate(EMULATOR_NUMBER,
 					EnumTemplates.TUNDRA_TRUCK_ARRIVED, 90);
 
-			logInfo("Searching for arrived trucks, attempt " + (attempts + 1));
+			logInfo("Searching for arrived trucks (Attempt " + (attempts + 1) + "/3)...");
 
 			if (result.isFound()) {
-				logInfo("Arrived truck found, collecting rewards");
+				logInfo("An arrived truck was found. Collecting rewards...");
 				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, result.getPoint(), result.getPoint());
 				sleepTask(1000);
 
 				closeWindow();
 			} else if (++attempts >= 3) {
-				logInfo("No arrived trucks found after multiple attempts, moving on.");
+				logInfo("No arrived trucks were found after 3 attempts. Moving on.");
 				break;
 			}
 		}
@@ -359,25 +344,23 @@ public class TundraTruckEventTask extends DelayedTask {
 			// OCR region containing truck completion time
 			String text;
 			if (side == 0) {
-				text = EmulatorManager.getInstance().ocrRegionText(EMULATOR_NUMBER,
+				text = emuManager.ocrRegionText(EMULATOR_NUMBER,
 						new DTOPoint(185, 852), new DTOPoint(287, 875));
 			} else {
-				text = EmulatorManager.getInstance().ocrRegionText(EMULATOR_NUMBER,
+				text = emuManager.ocrRegionText(EMULATOR_NUMBER,
 						new DTOPoint(432, 852), new DTOPoint(535, 875));
 			}
-			logInfo("OCR extracted text for side " + side + ": " + text);
+			logInfo("OCR extracted the following text for side " + side + ": '" + text + "'");
 
 			LocalDateTime nextTime = addTimeToLocalDateTime(LocalDateTime.now(), text);
-			logInfo("Successfully extracted truck remaining time: " + nextTime);
+			logInfo("Successfully extracted the truck's remaining time: " + nextTime);
 			return Optional.of(nextTime);
 
 		} catch (IOException | TesseractException e) {
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(),
-					"OCR error while extracting truck remaining time: " + e.getMessage());
+			logError("An OCR error occurred while extracting the truck's remaining time.", e);
 			return Optional.empty();
 		} catch (Exception e) {
-			ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, taskName, profile.getName(),
-					"Unexpected error extracting truck remaining time: " + e.getMessage());
+			logError("An unexpected error occurred while extracting the truck's remaining time.", e);
 			return Optional.empty();
 		}
 	}

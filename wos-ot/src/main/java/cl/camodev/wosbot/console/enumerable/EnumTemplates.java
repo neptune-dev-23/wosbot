@@ -108,6 +108,7 @@ public enum EnumTemplates {
 	INTEL_EXPLORE("/templates/intel/journeyExplore.png"),
 	INTEL_FIRE_BEAST("/templates/intel/beastFire.png"),
 	INTEL_SCREEN("/templates/intel/intelScreen.png"),
+	INTEL_AGNES("/templates/experts/intelAgnes.png"),
 	
 	DEPLOY_BUTTON("/templates/intel/deploy.png"),
 
@@ -265,8 +266,10 @@ public enum EnumTemplates {
 	TUNDRA_TRUCK_ENDED("/templates/tundratruck/tundraTruckEnded.png"),
 
 	TUNDRA_TREK_SUPPLIES("/templates/tundratrek/trekSupplies.png"),
-	TUNDRA_TREK_CLAIM_BUTTON("/templates/tundratrek/trekClaimButton.png")
-	
+	TUNDRA_TREK_CLAIM_BUTTON("/templates/tundratrek/trekClaimButton.png"),
+
+	ROMULUS_CLAIM_TROOPS_BUTTON("/templates/experts/romulusClaimTroopsButton.png"),
+	ROMULUS_CLAIM_TAG_BUTTON("/templates/experts/romulusClaimTagButton.png"),
 	;
 	// @formatter:on
 

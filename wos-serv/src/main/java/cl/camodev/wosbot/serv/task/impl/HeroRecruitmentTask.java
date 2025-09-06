@@ -24,20 +24,20 @@ public class HeroRecruitmentTask extends DelayedTask {
     @Override
     protected void execute() {
 
-        logInfo("going hero recruitment");
+        logInfo("Starting hero recruitment task.");
         emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(160, 1190), new DTOPoint(217, 1250));
         sleepTask(500);
         emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(400, 1190), new DTOPoint(660, 1250));
         sleepTask(500);
 
 
-        logInfo("evaluating advanced recruitment");
+        logInfo("Evaluating advanced recruitment...");
         DTOImageSearchResult claimResult = emuManager.searchTemplate(EMULATOR_NUMBER,
                 EnumTemplates.HERO_RECRUIT_CLAIM, new DTOPoint(40, 800), new DTOPoint(340, 1100), 95);
         LocalDateTime nextAdvanced = null;
         String text = "";
         if (claimResult.isFound()) {
-            logInfo("advanced recruitment available, tapping");
+            logInfo("Advanced recruitment is available. Claiming now.");
             emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(80, 827), new DTOPoint(315, 875));
             sleepTask(500);
             emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(80, 90), new DTOPoint(140, 130));
@@ -50,27 +50,27 @@ public class HeroRecruitmentTask extends DelayedTask {
             sleepTask(300);
             emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(80, 90), new DTOPoint(140, 130));
             sleepTask(1000);
-            logInfo("getting next recruitment time");
+            logInfo("Getting the next recruitment time.");
 
 
         } else {
-            logInfo("no rewards to claim, getting next recruitment time");
+            logInfo("No advanced recruitment rewards to claim. Getting the next recruitment time.");
 
         }
 
         try {
             text = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(40, 770), new DTOPoint(350, 810));
         } catch (Exception e) {
-            e.printStackTrace();
+            logError("An error occurred during OCR for advanced recruitment: " + e.getMessage());
         }
-        logInfo(text + " rescheduling task");
+        logInfo("Advanced recruitment OCR text: '" + text + "'. Rescheduling task.");
         nextAdvanced = parseNextFree(text);
-        logInfo("evaluating epic recruitment");
+        logInfo("Evaluating epic recruitment...");
         DTOImageSearchResult claimResultEpic = emuManager.searchTemplate(EMULATOR_NUMBER,
                 EnumTemplates.HERO_RECRUIT_CLAIM, new DTOPoint(40, 1160), new DTOPoint(340, 1255), 95);
         LocalDateTime nextEpic;
         if (claimResultEpic.isFound()) {
-            logInfo("epic recruitment available, tapping");
+            logInfo("Epic recruitment is available. Claiming now.");
             emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(70, 1180), new DTOPoint(315, 1230));
             sleepTask(500);
             emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(80, 90), new DTOPoint(140, 130));
@@ -83,10 +83,10 @@ public class HeroRecruitmentTask extends DelayedTask {
             sleepTask(300);
             emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(80, 90), new DTOPoint(140, 130));
             sleepTask(1000);
-            logInfo("getting next recruitment time");
+            logInfo("Getting the next recruitment time.");
 
         } else {
-            logInfo("no rewards to claim, getting next recruitment time");
+            logInfo("No epic recruitment rewards to claim. Getting the next recruitment time.");
 
         }
 
@@ -94,11 +94,12 @@ public class HeroRecruitmentTask extends DelayedTask {
         try {
             text = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(53, 1130), new DTOPoint(330, 1160));
         } catch (IOException | TesseractException e) {
-            e.printStackTrace();
+            logError("An error occurred during OCR for epic recruitment: " + e.getMessage());
         }
         nextEpic = parseNextFree(text);
 
         LocalDateTime nextExecution = getEarliest(nextAdvanced, nextEpic);
+        logInfo("Next hero recruitment check is scheduled for: " + nextExecution);
         this.reschedule(nextExecution);
         emuManager.tapBackButton(EMULATOR_NUMBER);
         emuManager.tapBackButton(EMULATOR_NUMBER);

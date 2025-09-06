@@ -19,20 +19,19 @@ public class AllianceHelpTask extends DelayedTask {
 	@Override
 	protected void execute() {
 
-		logInfo("Going to alliance help");
+		logInfo("Starting alliance help task.");
 
-		// Ir a la sección de cofres de alianza
+		// Go to the alliance help section
 		emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(493, 1187), new DTOPoint(561, 1240));
 		sleepTask(3000);
 
 		DTOImageSearchResult allianceChestResult = emuManager.searchTemplate(EMULATOR_NUMBER,
 				EnumTemplates.ALLIANCE_HELP_BUTTON,  90);
 		if (!allianceChestResult.isFound()) {
-			logWarning("Alliance help button not found");
+			logWarning("Alliance help button not found. Rescheduling.");
 			rescheduleTask();
 			return;
 		}
-		logInfo("Alliance help button found");
 		emuManager.tapAtRandomPoint(EMULATOR_NUMBER, allianceChestResult.getPoint(), allianceChestResult.getPoint());
 
 		sleepTask(500);
@@ -40,11 +39,11 @@ public class AllianceHelpTask extends DelayedTask {
 		DTOImageSearchResult allianceHelpResult = emuManager.searchTemplate(EMULATOR_NUMBER,
 				EnumTemplates.ALLIANCE_HELP_REQUESTS,  90);
 		if (allianceHelpResult.isFound()) {
-			logInfo("Helping alliance members");
+			logInfo("Helping alliance members.");
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, allianceHelpResult.getPoint(), allianceHelpResult.getPoint());
 
 		} else {
-			logWarning("Alliance help requests not found");
+			logWarning("No alliance help requests found.");
 		}
 		emuManager.tapBackButton(EMULATOR_NUMBER);
 		sleepTask(100);
@@ -57,9 +56,10 @@ public class AllianceHelpTask extends DelayedTask {
 	 * Obtiene el tiempo de reprogramación y actualiza la tarea.
 	 */
 	private void rescheduleTask() {
-
-		LocalDateTime nextExecutionTime = LocalDateTime.now().plusMinutes(profile.getConfig(EnumConfigurationKey.ALLIANCE_HELP_REQUESTS_OFFSET_INT, Integer.class));
+		Integer minutes = profile.getConfig(EnumConfigurationKey.ALLIANCE_HELP_REQUESTS_OFFSET_INT, Integer.class);
+		LocalDateTime nextExecutionTime = LocalDateTime.now().plusMinutes(minutes);
 		this.reschedule(nextExecutionTime);
+		logInfo("Alliance help task completed. Next execution scheduled in " + minutes + " minutes.");
 	}
 
 	@Override
