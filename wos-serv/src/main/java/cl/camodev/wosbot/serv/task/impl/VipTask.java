@@ -9,6 +9,7 @@ import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.task.DelayedTask;
+import cl.camodev.wosbot.serv.task.EnumStartLocation;
 
 public class VipTask extends DelayedTask {
 
@@ -17,47 +18,43 @@ public class VipTask extends DelayedTask {
 	}
 
 	@Override
+	public EnumStartLocation getRequiredStartLocation() {
+		return EnumStartLocation.HOME;
+	}
+
+	@Override
 	protected void execute() {
 
-		DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(),  90);
-		DTOImageSearchResult worldResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(),  90);
-		if (homeResult.isFound() || worldResult.isFound()) {
-			logInfo("Navigating to the VIP menu.");
-			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(430, 48), new DTOPoint(530, 85));
-			sleepTask(3000);
+		logInfo("Navigating to the VIP menu.");
+		emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(430, 48), new DTOPoint(530, 85));
+		sleepTask(3000);
 
-			if (profile.getConfig(EnumConfigurationKey.VIP_BUY_MONTHLY, Boolean.class)) {
-				logInfo("Verifying VIP status.");
-				DTOImageSearchResult monthlyVip = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.VIP_UNLOCK_BUTTON.getTemplate(),  90);
-				if (monthlyVip.isFound()) {
-					logInfo("VIP is not active. Purchasing the monthly VIP pass.");
-					emuManager.tapAtRandomPoint(EMULATOR_NUMBER, monthlyVip.getPoint(), monthlyVip.getPoint());
-					sleepTask(1000);
-					emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(520, 810), new DTOPoint(650, 850));
-					sleepTask(500);
-					emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(250, 770), new DTOPoint(480, 800));
-					sleepTask(500);
-					emuManager.tapBackButton(EMULATOR_NUMBER);
-					sleepTask(500);
+		if (profile.getConfig(EnumConfigurationKey.VIP_BUY_MONTHLY, Boolean.class)) {
+			logInfo("Verifying VIP status.");
+			DTOImageSearchResult monthlyVip = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.VIP_UNLOCK_BUTTON.getTemplate(),  90);
+			if (monthlyVip.isFound()) {
+				logInfo("VIP is not active. Purchasing the monthly VIP pass.");
+				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, monthlyVip.getPoint(), monthlyVip.getPoint());
+				sleepTask(1000);
+				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(520, 810), new DTOPoint(650, 850));
+				sleepTask(500);
+				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(250, 770), new DTOPoint(480, 800));
+				sleepTask(500);
+				emuManager.tapBackButton(EMULATOR_NUMBER);
+				sleepTask(500);
 
-				}
 			}
-
-			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(540, 813), new DTOPoint(624, 835), 7, 300);
-			sleepTask(500);
-
-			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(602, 263), new DTOPoint(650, 293), 7, 300);
-			sleepTask(500);
-
-			reschedule(UtilTime.getGameReset());
-			ServScheduler.getServices().updateDailyTaskStatus(profile, TpDailyTaskEnum.VIP_POINTS, UtilTime.getGameReset());
-			emuManager.tapBackButton(EMULATOR_NUMBER);
-
-		} else {
-			logWarning("Home screen not found. Tapping the back button.");
-			emuManager.tapBackButton(EMULATOR_NUMBER);
-
 		}
+
+		emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(540, 813), new DTOPoint(624, 835), 7, 300);
+		sleepTask(500);
+
+		emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(602, 263), new DTOPoint(650, 293), 7, 300);
+		sleepTask(500);
+
+		reschedule(UtilTime.getGameReset());
+		ServScheduler.getServices().updateDailyTaskStatus(profile, TpDailyTaskEnum.VIP_POINTS, UtilTime.getGameReset());
+		emuManager.tapBackButton(EMULATOR_NUMBER);
 
 	}
 

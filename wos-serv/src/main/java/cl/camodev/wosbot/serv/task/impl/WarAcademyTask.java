@@ -24,6 +24,11 @@ public class WarAcademyTask extends DelayedTask {
     }
 
     @Override
+    public EnumStartLocation getRequiredStartLocation() {
+        return EnumStartLocation.HOME;
+    }
+
+    @Override
     protected void execute() {
         //STEP 1: I need to go to left menu, then check if there's 2 matches of research template
         // left menu
@@ -236,11 +241,6 @@ public class WarAcademyTask extends DelayedTask {
             reschedule(UtilTime.getGameReset());
 
         }
-    }
-
-    @Override
-    protected EnumStartLocation getRequiredStartLocation() {
-        return EnumStartLocation.HOME;
     }
 
 }

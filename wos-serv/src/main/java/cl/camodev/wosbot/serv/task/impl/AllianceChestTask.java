@@ -100,7 +100,7 @@ public class AllianceChestTask extends DelayedTask {
 		
 		if (honorChestEnabled) {
 			// Search for the honor chest
-			logInfo("Honor chest is enabled. Opening honor chest section.");
+			logInfo("Honor chest is enabled. Opening honor chest.");
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(320, 200), new DTOPoint(400, 250));
 			sleepTask(300);
 				

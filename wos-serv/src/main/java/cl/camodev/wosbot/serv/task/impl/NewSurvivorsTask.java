@@ -10,6 +10,8 @@ import cl.camodev.wosbot.serv.task.DelayedTask;
 
 import java.time.LocalDateTime;
 
+import cl.camodev.wosbot.serv.task.EnumStartLocation;
+
 public class NewSurvivorsTask extends DelayedTask {
 
 
@@ -20,13 +22,6 @@ public class NewSurvivorsTask extends DelayedTask {
     @Override
     protected void execute() {
         logInfo("Starting the New Survivors task.");
-
-        DTOImageSearchResult world = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 90);
-        if (world.isFound()) {
-            logInfo("Navigating from the world view to the city view.");
-            emuManager.tapAtPoint(EMULATOR_NUMBER, world.getPoint());
-            sleepTask(2000);
-        }
 
         //i need to search for New Survivors Template
         logInfo("Searching for the 'New Survivors' notification.");
@@ -76,5 +71,10 @@ public class NewSurvivorsTask extends DelayedTask {
         }
 
 
+    }
+
+    @Override
+    protected EnumStartLocation getRequiredStartLocation() {
+        return EnumStartLocation.HOME;
     }
 }

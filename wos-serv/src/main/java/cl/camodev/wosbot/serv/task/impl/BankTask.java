@@ -24,33 +24,10 @@ public class BankTask extends DelayedTask {
 
 	@Override
 	protected void execute() {
-		int attempt = 0;
 		int bankDelay = profile.getConfig(EnumConfigurationKey.INT_BANK_DELAY, Integer.class);
 
-		while (attempt < 5) {
-			// Check if we are on the home screen
-			DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(),  90);
-			DTOImageSearchResult worldResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 90);
-
-			if (homeResult.isFound() || worldResult.isFound()) {
-				if (navigateToBank()) {
-					handleBankOperations(bankDelay);
-					return;
-				}
-				return;
-			} else {
-				// If home screen is not found, log warning and go back
-				logWarning("Home screen not found. Attempting to go back...");
-				emuManager.tapBackButton(EMULATOR_NUMBER);
-				sleepTask(2000);
-			}
-			attempt++;
-		}
-
-		// If menu is not found after 5 attempts, cancel the task
-		if (attempt >= 5) {
-			logWarning("Menu not found after multiple attempts. Removing task from scheduler.");
-			this.setRecurring(false);
+		if (navigateToBank()) {
+			handleBankOperations(bankDelay);
 		}
 	}
 

@@ -21,69 +21,57 @@ public class MailRewardsTask extends DelayedTask {
 
 	@Override
 	protected void execute() {
-		DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER,
-				EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 90);
-		DTOImageSearchResult worldResult = emuManager.searchTemplate(EMULATOR_NUMBER,
-				EnumTemplates.GAME_HOME_WORLD.getTemplate(), 90);
-
-		if (homeResult.isFound() || worldResult.isFound()) {
+		sleepTask(1000);
+		logInfo("Navigating to the mail screen.");
+		emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(640, 1033),
+				new DTOPoint(686, 1064));
+		sleepTask(1000);
+		for (DTOPoint button : buttons) {
+			// Change tabs
+			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, button, button);
 			sleepTask(1000);
-			logInfo("Navigating to the mail screen.");
-			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(640, 1033),
-					new DTOPoint(686, 1064));
-			sleepTask(1000);
-			for (DTOPoint button : buttons) {
-				// Change tabs
-				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, button, button);
-				sleepTask(1000);
 
-				// Claim rewards
-				logInfo("Attempting to claim rewards in the current tab.");
-				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(420, 1227),
-						new DTOPoint(450, 1250), 2, 500);
-				sleepTask(500);
+			// Claim rewards
+			logInfo("Attempting to claim rewards in the current tab.");
+			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(420, 1227),
+					new DTOPoint(450, 1250), 2, 500);
+			sleepTask(500);
 
-				// Check if there are excess unread mail
-				int searchAttempts = 0;
-				while (true) {
-					DTOImageSearchResult unclaimedRewards = emuManager.searchTemplate(EMULATOR_NUMBER,
-							EnumTemplates.MAIL_UNCLAIMED_REWARDS.getTemplate(), 90);
-					if (unclaimedRewards.isFound()) {
+			// Check if there are excess unread mail
+			int searchAttempts = 0;
+			while (true) {
+				DTOImageSearchResult unclaimedRewards = emuManager.searchTemplate(EMULATOR_NUMBER,
+						EnumTemplates.MAIL_UNCLAIMED_REWARDS.getTemplate(), 90);
+				if (unclaimedRewards.isFound()) {
+					
+					if(searchAttempts > 0) {
+						logInfo("More unread mail found. Swiping down to reveal more and claiming again.");
 						
-						if(searchAttempts > 0) {
-							logInfo("More unread mail found. Swiping down to reveal more and claiming again.");
-							
-							// Swipe down 10 times
-							for (int i = 0; i < 10; i++) {
-								emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(40, 913), new DTOPoint(40, 400));
-								sleepTask(300);
-							}
+						// Swipe down 10 times
+						for (int i = 0; i < 10; i++) {
+							emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(40, 913), new DTOPoint(40, 400));
+							sleepTask(300);
 						}
-
-						// Claim rewards
-						emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(420, 1227),
-								new DTOPoint(450, 1250), 3, 1000);
-						sleepTask(500);
-
-						searchAttempts++;
-					} else {
-						break;
 					}
+
+					// Claim rewards
+					emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(420, 1227),
+							new DTOPoint(450, 1250), 3, 1000);
 					sleepTask(500);
+
+					searchAttempts++;
+				} else {
+					break;
 				}
+				sleepTask(500);
 			}
-			LocalDateTime nextSchedule = LocalDateTime.now()
-					.plusMinutes(profile.getConfig(EnumConfigurationKey.MAIL_REWARDS_OFFSET_INT, Integer.class));
-			this.reschedule(nextSchedule);
-			ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, nextSchedule);
-			logInfo("Mail rewards claimed. Rescheduling task for " + nextSchedule);
-			emuManager.tapBackButton(EMULATOR_NUMBER);
-
-		} else {
-			logWarning("Home screen not found. Tapping the back button.");
-			emuManager.tapBackButton(EMULATOR_NUMBER);
-
 		}
+		LocalDateTime nextSchedule = LocalDateTime.now()
+				.plusMinutes(profile.getConfig(EnumConfigurationKey.MAIL_REWARDS_OFFSET_INT, Integer.class));
+		this.reschedule(nextSchedule);
+		ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, nextSchedule);
+		logInfo("Mail rewards claimed. Rescheduling task for " + nextSchedule);
+		emuManager.tapBackButton(EMULATOR_NUMBER);
 	}
 
 }
