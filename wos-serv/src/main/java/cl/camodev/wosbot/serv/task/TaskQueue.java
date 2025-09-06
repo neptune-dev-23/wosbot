@@ -3,6 +3,8 @@ package cl.camodev.wosbot.serv.task;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -43,6 +45,7 @@ public class TaskQueue {
 	// Hilo que se encargará de evaluar y ejecutar las tareas.
 	private Thread schedulerThread;
 	private DTOProfiles profile;
+	private int helpAlliesCount = 0;
 	protected EmulatorManager emuManager = EmulatorManager.getInstance();
 
 	public TaskQueue(DTOProfiles profile) {
@@ -172,7 +175,7 @@ public class TaskQueue {
 						addTask(new InitializeTask(profile, TpDailyTaskEnum.INITIALIZE));
 					} catch (StopExecutionException e) {
 						logger.error("Execution stopped for task " + task.getTaskName() + " for profile " + profile.getName() + ": " + e.getMessage(), e);
-						stop();
+						//stop();
 					} catch (ProfileInReconnectStateException e) {
 						Long reconnectionTime = profile.getReconnectionTime();
 						if (reconnectionTime != null && reconnectionTime > 0) {
@@ -188,21 +191,38 @@ public class TaskQueue {
 									paused = false;
 									ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "RESUMING AFTER PAUSE"));
 									logger.info("TaskQueue resumed for profile {} after {} minutes pause", profile.getName(), reconnectionTime);
-									
-									// Click reconnect button if found and reinitialize the task
-									DTOImageSearchResult reconnect = emuManager.searchTemplate(profile.getEmulatorNumber(), EnumTemplates.GAME_HOME_RECONNECT, 90);
-									if (reconnect.isFound()) {
-										emuManager.tapAtPoint(profile.getEmulatorNumber(), reconnect.getPoint());
+									try {
+										// Click reconnect button if found and reinitialize the task
+										DTOImageSearchResult reconnect = emuManager.searchTemplate(profile.getEmulatorNumber(), EnumTemplates.GAME_HOME_RECONNECT, 90);
+										if (reconnect.isFound()) {
+											emuManager.tapAtPoint(profile.getEmulatorNumber(), reconnect.getPoint());
+										}
+
+										addTask(new InitializeTask(profile, TpDailyTaskEnum.INITIALIZE));
+									} catch (Exception ex) {
+									logger.error("Error during reconnection after pause for profile {}: {}", profile.getName(), ex.getMessage(), ex);
 									}
 
-									addTask(new InitializeTask(profile, TpDailyTaskEnum.INITIALIZE));
 								}
 							}).start();
-							break; // Exit the loop to wait for reconnection
+                            continue;
 						} else {
 							ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, task.getTaskName(), profile.getName(), "Profile in reconnect state, but no reconnection time set");
 							logger.error("Profile {} is in reconnect state, but no reconnection time set, resuming execution", profile.getName());
-							addTask(new InitializeTask(profile, TpDailyTaskEnum.INITIALIZE));
+                            try {
+                                // Click reconnect button if found and reinitialize the task
+                                DTOImageSearchResult reconnect = emuManager.searchTemplate(profile.getEmulatorNumber(), EnumTemplates.GAME_HOME_RECONNECT, 90);
+                                if (reconnect.isFound()) {
+                                    emuManager.tapAtPoint(profile.getEmulatorNumber(), reconnect.getPoint());
+                                }
+
+                                addTask(new InitializeTask(profile, TpDailyTaskEnum.INITIALIZE));
+                            } catch (Exception ex) {
+                                logger.error("Error during reconnection after pause for profile {}: {}", profile.getName(), ex.getMessage(), ex);
+                            }
+                            addTask(new InitializeTask(profile, TpDailyTaskEnum.INITIALIZE));
+
+
 						}
 					} catch (ADBConnectionException e) {
 						logger.error("ADB connection error executing task {} for profile {}: {}", task.getTaskName(), profile.getName(), e.getMessage(), e);
@@ -272,6 +292,32 @@ public class TaskQueue {
 					executedTask = true;
 				}
 
+				// execute this snippet ever 5 cycles to not overload the adb,
+				//maybe could move it to a Thread that runs every 10 seconds?
+				helpAlliesCount++;
+				if (helpAlliesCount % 10 == 0) {
+					helpAlliesCount = 0;
+
+					try {
+                        Thread t = new Thread(() -> {
+						// Verificar si el emulador está corriendo antes de buscar ayuda
+						if (emuManager.isRunning(profile.getEmulatorNumber())) {
+							DTOImageSearchResult helpRequest = emuManager.searchTemplate(profile.getEmulatorNumber(), EnumTemplates.GAME_HOME_SHORTCUTS_HELP_REQUEST2, 90);
+							if (helpRequest.isFound()) {
+								emuManager.tapAtPoint(profile.getEmulatorNumber(), helpRequest.getPoint());
+								ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueue", profile.getName(), "Help request found and tapped");
+							}
+						}
+                        });
+                        t.start();
+					} catch (Exception e) {
+						ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, "TaskQueue", profile.getName(), "Error checking help request: " + e.getMessage());
+						logger.error("Error checking help request for profile {}: {}", profile.getName(), e.getMessage(), e);
+					}
+				}
+
+
+
 				// Si no se ejecutó ninguna tarea, obtener el delay de la próxima tarea
 				if (!executedTask && !taskQueue.isEmpty()) {
 					DelayedTask nextTask = taskQueue.peek();
@@ -321,6 +367,7 @@ public class TaskQueue {
 			}
 		});
 		schedulerThread.start();
+        schedulerThread.setName("TaskQueue-" + profile.getName());
 	}
 
 	// Métodos auxiliares
@@ -339,7 +386,7 @@ public class TaskQueue {
         try {
             EmulatorManager.getInstance().adquireEmulatorSlot(profile, (thread, position) -> {
                 ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "Waiting for slot, position: " + position));
-            });
+			});
         } catch (InterruptedException e) {
             logger.error("Interrupted while acquiring emulator slot for profile " + profile.getName(), e);
         }
