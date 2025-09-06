@@ -50,8 +50,8 @@ public class InitializeTask extends DelayedTask {
 			boolean homeScreen = false;
 			int attempts = 0;
 			while (attempts <= MAX_ATTEMPTS) {
-				DTOImageSearchResult home = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 90);
-				DTOImageSearchResult world = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 90);
+				DTOImageSearchResult home = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE, 90);
+				DTOImageSearchResult world = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD, 90);
 
 				if (home.isFound() || world.isFound()) {
 					homeScreen = true;
@@ -59,7 +59,7 @@ public class InitializeTask extends DelayedTask {
 					break;
 				}
 
-				DTOImageSearchResult reconnect = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_RECONNECT.getTemplate(), 90);
+				DTOImageSearchResult reconnect = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_RECONNECT, 90);
 				if (reconnect.isFound()) {
 					throw new ProfileInReconnectStateException("Profile " + profile.getName() + " is in a reconnect state and cannot execute the task: " + taskName);
 				}

@@ -87,9 +87,9 @@ public abstract class DelayedTask implements Runnable, Delayed {
         logDebug("Verifying screen location. Required: " + requiredLocation);
 
         for (int attempt = 1; attempt <= 10; attempt++) {
-            DTOImageSearchResult home = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 90);
-            DTOImageSearchResult world = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 90);
-            DTOImageSearchResult reconnect = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_RECONNECT.getTemplate(), 90);
+            DTOImageSearchResult home = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE, 90);
+            DTOImageSearchResult world = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD, 90);
+            DTOImageSearchResult reconnect = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_RECONNECT, 90);
 
             if (reconnect.isFound()) {
                 throw new ProfileInReconnectStateException("Profile " + profile.getName() + " is in reconnect state, cannot execute task: " + taskName);
@@ -104,7 +104,7 @@ public abstract class DelayedTask implements Runnable, Delayed {
                     sleepTask(2000); // Wait for navigation
 
                     // Validate that we actually moved to HOME
-                    DTOImageSearchResult homeAfterNav = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 90);
+                    DTOImageSearchResult homeAfterNav = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE, 90);
                     if (!homeAfterNav.isFound()) {
                         logWarning("Failed to navigate to HOME, retrying...");
                         continue; // Try again
@@ -118,7 +118,7 @@ public abstract class DelayedTask implements Runnable, Delayed {
                     sleepTask(2000); // Wait for navigation
 
                     // Validate that we actually moved to WORLD
-                    DTOImageSearchResult worldAfterNav = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD.getTemplate(), 90);
+                    DTOImageSearchResult worldAfterNav = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD, 90);
                     if (!worldAfterNav.isFound()) {
                         logWarning("Failed to navigate to WORLD, retrying...");
                         continue; // Try again

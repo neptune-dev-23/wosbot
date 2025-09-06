@@ -63,7 +63,7 @@ public abstract class Emulator {
 		String currentDir = System.getProperty("user.dir");
 
 		// Check if we're in the wos-hmi directory or the root project directory
-		File adbFile = new File(currentDir, "adb" + File.separator + "adb.exe");
+		File adbFile = new File(currentDir, "lib" + File.separator + "adb" + File.separator + "adb.exe");
 		if (adbFile.exists()) {
 			return adbFile.getAbsolutePath();
 		}
@@ -595,7 +595,7 @@ public abstract class Emulator {
 		BufferedImage subImage = image.getSubimage(x, y, width, height);
 		Tesseract tesseract = new Tesseract();
 		tesseract.setDatapath("lib/tesseract");
-		tesseract.setLanguage("eng");
+		tesseract.setLanguage("eng+chi_sim");
 
 		return tesseract.doOCR(subImage);
 	}

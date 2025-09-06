@@ -368,6 +368,7 @@ public class TrainingTroopsTask extends DelayedTask {
             logInfo("Checking for template: " + template.name());
 
             DTOImageSearchResult troop = emuManager.searchTemplate(EMULATOR_NUMBER, template, 98);
+            DTOImageSearchResult troop = emuManager.searchTemplate(EMULATOR_NUMBER, template, 98);
 
             if (troop.isFound()) {
                 int level = extractLevelFromTemplateName(template.name());
@@ -446,6 +447,7 @@ public class TrainingTroopsTask extends DelayedTask {
     
         while(attempts < 3) {
             DTOImageSearchResult troop = emuManager.searchTemplate(EMULATOR_NUMBER, template, 98);
+            DTOImageSearchResult troop = emuManager.searchTemplate(EMULATOR_NUMBER, template, 98);
             
             if (troop.isFound()) {
                 // Tap on troop to check promotion availability
@@ -453,6 +455,7 @@ public class TrainingTroopsTask extends DelayedTask {
                 sleepTask(500);
     
                 DTOImageSearchResult promoteButton = emuManager.searchTemplate(EMULATOR_NUMBER,
+                    EnumTemplates.TRAINING_TROOP_PROMOTE, 90);
                     EnumTemplates.TRAINING_TROOP_PROMOTE, 90);
     
                 if (promoteButton.isFound()) {

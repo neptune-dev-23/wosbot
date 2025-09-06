@@ -64,7 +64,7 @@ public class TundraTruckEventTask extends DelayedTask {
 
 		// Search for the events button
 		DTOImageSearchResult eventsResult = emuManager.searchTemplate(EMULATOR_NUMBER,
-				EnumTemplates.HOME_EVENTS_BUTTON.getTemplate(), 90);
+				EnumTemplates.HOME_EVENTS_BUTTON, 90);
 		if (!eventsResult.isFound()) {
 			logWarning("The 'Events' button was not found.");
 			return false;
@@ -77,7 +77,7 @@ public class TundraTruckEventTask extends DelayedTask {
 
 		// Search for the tundra truck within events
 		DTOImageSearchResult result = emuManager.searchTemplate(EMULATOR_NUMBER,
-				EnumTemplates.TUNDRA_TRUCK_TAB.getTemplate(), 90);
+				EnumTemplates.TUNDRA_TRUCK_TAB, 90);
 
 		if (result.isFound()) {
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, result.getPoint(), result.getPoint());
@@ -102,7 +102,7 @@ public class TundraTruckEventTask extends DelayedTask {
 		int attempts = 0;
 		while (attempts < 3) {
 			result = emuManager.searchTemplate(EMULATOR_NUMBER,
-					EnumTemplates.TUNDRA_TRUCK_TAB.getTemplate(), 90);
+					EnumTemplates.TUNDRA_TRUCK_TAB, 90);
 
 			if (result.isFound()) {
 				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, result.getPoint(), result.getPoint());
@@ -129,7 +129,7 @@ public class TundraTruckEventTask extends DelayedTask {
 
 	private boolean eventHasEnded() {
 		DTOImageSearchResult endedResult = emuManager.searchTemplate(EMULATOR_NUMBER,
-				EnumTemplates.TUNDRA_TRUCK_ENDED.getTemplate(), 90);
+				EnumTemplates.TUNDRA_TRUCK_ENDED, 90);
 		if (endedResult.isFound()) {
 			logInfo("The Tundra Truck event has ended. The task will be removed.");
 			this.setRecurring(false);
@@ -201,9 +201,9 @@ public class TundraTruckEventTask extends DelayedTask {
 		sleepTask(1000);
 
 		DTOImageSearchResult popup = emuManager.searchTemplate(
-				EMULATOR_NUMBER, EnumTemplates.TUNDRA_TRUCK_REFRESH.getTemplate(), 90);
+				EMULATOR_NUMBER, EnumTemplates.TUNDRA_TRUCK_REFRESH, 90);
 		DTOImageSearchResult popupGems = emuManager.searchTemplate(
-				EMULATOR_NUMBER, EnumTemplates.TUNDRA_TRUCK_REFRESH_GEMS.getTemplate(), 98);
+				EMULATOR_NUMBER, EnumTemplates.TUNDRA_TRUCK_REFRESH_GEMS, 98);
 
 		if (popup.isFound()) {
 			logInfo("A valuable cargo refresh pop-up was detected.");
@@ -217,20 +217,20 @@ public class TundraTruckEventTask extends DelayedTask {
 
 	private boolean findSSRTruck() {
 		DTOImageSearchResult truckRaritySSR = emuManager.searchTemplate(
-				EMULATOR_NUMBER, EnumTemplates.TUNDRA_TRUCK_YELLOW.getTemplate(), 90);
+				EMULATOR_NUMBER, EnumTemplates.TUNDRA_TRUCK_YELLOW, 90);
 
 		while (!truckRaritySSR.isFound()) {
 			logInfo("SSR Truck not found. Refreshing trucks...");
 			refreshTrucks();
 			truckRaritySSR = emuManager.searchTemplate(
-					EMULATOR_NUMBER, EnumTemplates.TUNDRA_TRUCK_YELLOW.getTemplate(), 90);
+					EMULATOR_NUMBER, EnumTemplates.TUNDRA_TRUCK_YELLOW, 90);
 		}
 		return truckRaritySSR.isFound();
 	}
 
 	private boolean truckAlreadyDeparted(int side) {
 		DTOImageSearchResult departedTruck = emuManager.searchTemplate(
-				EMULATOR_NUMBER, EnumTemplates.TUNDRA_TRUCK_DEPARTED.getTemplate(), 90);
+				EMULATOR_NUMBER, EnumTemplates.TUNDRA_TRUCK_DEPARTED, 90);
 
 		if (departedTruck.isFound()) {
 			logInfo("The truck on the " + (side == 0 ? "left" : "right") + " side has already departed. Skipping send.");
@@ -251,7 +251,7 @@ public class TundraTruckEventTask extends DelayedTask {
 		}
 
 		DTOImageSearchResult sendTruckResult = emuManager.searchTemplate(
-				EMULATOR_NUMBER, EnumTemplates.TUNDRA_TRUCK_ESCORT.getTemplate(), 90);
+				EMULATOR_NUMBER, EnumTemplates.TUNDRA_TRUCK_ESCORT, 90);
 		sleepTask(500);
 
 		if (sendTruckResult.isFound()) {
@@ -310,7 +310,7 @@ public class TundraTruckEventTask extends DelayedTask {
 		int attempts = 0;
 		while (true) {
 			DTOImageSearchResult result = emuManager.searchTemplate(EMULATOR_NUMBER,
-					EnumTemplates.TUNDRA_TRUCK_ARRIVED.getTemplate(), 90);
+					EnumTemplates.TUNDRA_TRUCK_ARRIVED, 90);
 
 			logInfo("Searching for arrived trucks (Attempt " + (attempts + 1) + "/3)...");
 

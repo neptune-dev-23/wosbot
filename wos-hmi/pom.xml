@@ -54,7 +54,8 @@
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
-			<scope>runtime</scope>
+            <version>1.5.13</version>
+            <scope>runtime</scope>
 		</dependency>
 
 
@@ -131,7 +132,7 @@
 							<outputDirectory>${project.build.directory}/lib/tesseract</outputDirectory>
 							<resources>
 								<resource>
-									<directory>${project.basedir}/lib/tesseract</directory>
+									<directory>${project.parent.basedir}/lib/tesseract</directory>
 									<filtering>false</filtering>
 								</resource>
 							</resources>
@@ -144,10 +145,10 @@
 							<goal>copy-resources</goal>
 						</goals>
 						<configuration>
-							<outputDirectory>${project.build.directory}/adb</outputDirectory>
+							<outputDirectory>${project.build.directory}/lib/adb</outputDirectory>
 							<resources>
 								<resource>
-									<directory>${project.basedir}/adb</directory>
+									<directory>${project.parent.basedir}/lib/adb</directory>
 									<filtering>false</filtering>
 								</resource>
 							</resources>
@@ -156,7 +157,6 @@
 				</executions>
 			</plugin>
 
-			<!-- 4. Plugin para empaquetar todo en un 7z con el JAR renombrado -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>

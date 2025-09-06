@@ -26,7 +26,7 @@ public class AllianceHelpTask extends DelayedTask {
 		sleepTask(3000);
 
 		DTOImageSearchResult allianceChestResult = emuManager.searchTemplate(EMULATOR_NUMBER,
-				EnumTemplates.ALLIANCE_HELP_BUTTON.getTemplate(),  90);
+				EnumTemplates.ALLIANCE_HELP_BUTTON,  90);
 		if (!allianceChestResult.isFound()) {
 			logWarning("Alliance help button not found. Rescheduling.");
 			rescheduleTask();
@@ -37,7 +37,7 @@ public class AllianceHelpTask extends DelayedTask {
 		sleepTask(500);
 
 		DTOImageSearchResult allianceHelpResult = emuManager.searchTemplate(EMULATOR_NUMBER,
-				EnumTemplates.ALLIANCE_HELP_REQUESTS.getTemplate(),  90);
+				EnumTemplates.ALLIANCE_HELP_REQUESTS,  90);
 		if (allianceHelpResult.isFound()) {
 			logInfo("Helping alliance members.");
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, allianceHelpResult.getPoint(), allianceHelpResult.getPoint());

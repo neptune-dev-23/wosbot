@@ -28,7 +28,7 @@ public class DailyLabyrinthTask extends DelayedTask {
     private static final DTOPoint SIDE_MENU_AREA_END = new DTOPoint(26, 588);
     private static final DTOPoint CITY_TAB_BUTTON = new DTOPoint(110, 270);
     private static final DTOPoint SCROLL_START_POINT = new DTOPoint(400, 800);
-    private static final DTOPoint SCROLL_END_POINT = new DTOPoint(400, 400);
+    private static final DTOPoint SCROLL_END_POINT = new DTOPoint(400, 100);
     private static final DTOPoint SKIP_BUTTON = new DTOPoint(71, 827);
     private static final DTOPoint RESULT_SKIP_BUTTON = new DTOPoint(640, 175);
 
@@ -105,7 +105,7 @@ public class DailyLabyrinthTask extends DelayedTask {
         // Search for labyrinth in menu
         DTOImageSearchResult labyrinthResult = emuManager.searchTemplate(
                 EMULATOR_NUMBER,
-                EnumTemplates.LEFT_MENU_LABYRINTH_BUTTON.getTemplate(),
+                EnumTemplates.LEFT_MENU_LABYRINTH_BUTTON,
                 TEMPLATE_SEARCH_THRESHOLD
         );
 
@@ -155,7 +155,7 @@ public class DailyLabyrinthTask extends DelayedTask {
 
         DTOImageSearchResult labyrinthResult = emuManager.searchTemplate(
                 EMULATOR_NUMBER,
-                getDungeonTemplate(dungeonNumber).getTemplate(),
+                getDungeonTemplate(dungeonNumber),
                 TEMPLATE_SEARCH_THRESHOLD
         );
 
@@ -189,7 +189,7 @@ public class DailyLabyrinthTask extends DelayedTask {
         sleepTask(100);
         DTOImageSearchResult quickChallengeResult = emuManager.searchTemplate(
                 EMULATOR_NUMBER,
-                EnumTemplates.LABYRINTH_QUICK_CHALLENGE.getTemplate(),
+                EnumTemplates.LABYRINTH_QUICK_CHALLENGE,
                 TEMPLATE_SEARCH_THRESHOLD
         );
 
@@ -214,7 +214,7 @@ public class DailyLabyrinthTask extends DelayedTask {
     private boolean attemptRaidChallenge(int dungeonNumber) {
         DTOImageSearchResult raidResult = emuManager.searchTemplate(
                 EMULATOR_NUMBER,
-                EnumTemplates.LABYRINTH_RAID_CHALLENGE.getTemplate(),
+                EnumTemplates.LABYRINTH_RAID_CHALLENGE,
                 TEMPLATE_SEARCH_THRESHOLD
         );
 
@@ -223,6 +223,8 @@ public class DailyLabyrinthTask extends DelayedTask {
             tapPoint(raidResult.getPoint());
             sleepTask(400);
             tapRandomPoint(SKIP_BUTTON, SKIP_BUTTON, 10, 50);
+            tapBackButton();
+            sleepTask(400);
             tapBackButton();
             return true;
         }
@@ -235,7 +237,7 @@ public class DailyLabyrinthTask extends DelayedTask {
     private boolean attemptNormalChallenge(int dungeonNumber) {
         DTOImageSearchResult normalChallengeResult = emuManager.searchTemplate(
                 EMULATOR_NUMBER,
-                EnumTemplates.LABYRINTH_NORMAL_CHALLENGE.getTemplate(),
+                EnumTemplates.LABYRINTH_NORMAL_CHALLENGE,
                 TEMPLATE_SEARCH_THRESHOLD
         );
 
@@ -250,7 +252,7 @@ public class DailyLabyrinthTask extends DelayedTask {
         // Try quick deploy first
         DTOImageSearchResult quickDeployResult = emuManager.searchTemplate(
                 EMULATOR_NUMBER,
-                EnumTemplates.LABYRINTH_QUICK_DEPLOY.getTemplate(),
+                EnumTemplates.LABYRINTH_QUICK_DEPLOY,
                 TEMPLATE_SEARCH_THRESHOLD
         );
 
@@ -263,7 +265,7 @@ public class DailyLabyrinthTask extends DelayedTask {
         // Deploy troops
         DTOImageSearchResult deployResult = emuManager.searchTemplate(
                 EMULATOR_NUMBER,
-                EnumTemplates.LABYRINTH_DEPLOY.getTemplate(),
+                EnumTemplates.LABYRINTH_DEPLOY,
                 TEMPLATE_SEARCH_THRESHOLD
         );
 
