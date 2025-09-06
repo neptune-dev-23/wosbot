@@ -21,6 +21,9 @@ public enum TpDailyTaskEnum {
 	    DAILY_MISSIONS(31, "Daily Missions",           	EnumConfigurationKey.DAILY_MISSION_BOOL),
 	    STOREHOUSE_CHEST(32, "Storehouse Chest",       	EnumConfigurationKey.STOREHOUSE_CHEST_BOOL),
 	    INTEL(33, "Intel",                             	EnumConfigurationKey.INTEL_BOOL),
+		EXPERT_AGNES_INTEL(34, "Expert Agnes Intel", 	EnumConfigurationKey.EXPERT_AGNES_INTEL_BOOL),
+		EXPERT_ROMULUS_TAG(35, "Expert Romulus Tag", 	EnumConfigurationKey.EXPERT_ROMULUS_TAG_BOOL),
+		EXPERT_ROMULUS_TROOPS(36, "Expert Romulus Troops", EnumConfigurationKey.EXPERT_ROMULUS_TROOPS_BOOL),
 
 	    ALLIANCE_AUTOJOIN(40, "Alliance Autojoin",     	EnumConfigurationKey.ALLIANCE_AUTOJOIN_BOOL),
 	    ALLIANCE_HELP(41, "Alliance Help",             	EnumConfigurationKey.ALLIANCE_HELP_REQUESTS_BOOL),

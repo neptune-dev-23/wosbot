@@ -103,6 +103,11 @@ public enum EnumConfigurationKey {
 	HERO_MISSION_EVENT_BOOL("false",Boolean.class),
 
 	TUNDRA_TREK_SUPPLIES_BOOL("false",Boolean.class),
+
+	EXPERT_AGNES_INTEL_BOOL("false", Boolean.class),
+	EXPERT_ROMULUS_TAG_BOOL("false", Boolean.class),
+	EXPERT_ROMULUS_TROOPS_BOOL("false", Boolean.class),
+	EXPERT_ROMULUS_TROOPS_TYPE_STRING("Infantry", String.class),
 	;
 	//@formatter:on
     private final String defaultValue;

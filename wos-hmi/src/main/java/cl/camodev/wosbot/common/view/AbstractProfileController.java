@@ -19,7 +19,7 @@ public abstract class AbstractProfileController implements IProfileLoadListener,
 	protected final Map<CheckBox, EnumConfigurationKey> checkBoxMappings = new HashMap<>();
 	protected final Map<TextField, EnumConfigurationKey> textFieldMappings = new HashMap<>();
 	protected final Map<RadioButton, EnumConfigurationKey> radioButtonMappings = new HashMap<>();
-	protected final Map<ComboBox<Integer>, EnumConfigurationKey> comboBoxMappings = new HashMap<>();
+	protected final Map<ComboBox<?>, EnumConfigurationKey> comboBoxMappings = new HashMap<>();
 	protected IProfileChangeObserver profileObserver;
 	protected boolean isLoadingProfile = false;
 
@@ -71,7 +71,7 @@ public abstract class AbstractProfileController implements IProfileLoadListener,
 		});
 	}
 
-	protected void setupComboBoxListener(ComboBox<Integer> comboBox, EnumConfigurationKey configKey) {
+	protected void setupComboBoxListener(ComboBox<?> comboBox, EnumConfigurationKey configKey) {
 		comboBox.valueProperty().addListener((obs, oldVal, newVal) -> {
 			if (!isLoadingProfile && newVal != null) {
 				profileObserver.notifyProfileChange(configKey, newVal);
@@ -105,22 +105,29 @@ public abstract class AbstractProfileController implements IProfileLoadListener,
 		isLoadingProfile = true;
 		try {
 			checkBoxMappings.forEach((checkBox, key) -> {
-				Boolean value = profile.getConfig(key, Boolean.class);
-				checkBox.setSelected(value != null && value);
+				Boolean value = profile.getConfiguration(key);
+				checkBox.setSelected(value);
 			});
 
 			textFieldMappings.forEach((textField, key) -> {
-				Integer value = profile.getConfig(key, Integer.class);
-				textField.setText(value != null ? String.valueOf(value) : key.getDefaultValue());
+				Integer value = profile.getConfiguration(key);
+				textField.setText(String.valueOf(value));
 			});
 
 			radioButtonMappings.forEach((radioButton, key) -> {
-				Boolean value = profile.getConfig(key, Boolean.class);
-				radioButton.setSelected(value != null && value);
-			});			comboBoxMappings.forEach((comboBox, key) -> {
-				Integer value = profile.getConfig(key, Integer.class);
-				comboBox.setValue(value != null ? value : Integer.valueOf(key.getDefaultValue()));
+				Boolean value = profile.getConfiguration(key);
+				radioButton.setSelected(value);
 			});
+
+			comboBoxMappings.forEach((comboBox, key) -> {
+				Object value = profile.getConfiguration(key);
+				if (value != null) {
+					@SuppressWarnings("unchecked")
+					ComboBox<Object> uncheckedComboBox = (ComboBox<Object>) comboBox;
+					uncheckedComboBox.setValue(value);
+				}
+			});
+
 		} finally {
 			isLoadingProfile = false;
 		}
