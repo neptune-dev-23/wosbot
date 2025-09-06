@@ -50,7 +50,7 @@ public class WarAcademyTask extends DelayedTask {
             swipe(new DTOPoint(255, 477), new DTOPoint(255, 425));
             sleepTask(500);
 
-            researchResults = emuManager.searchTemplates(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_SHORTCUTS_RESEARCH_CENTER.getTemplate(), 90, 2);
+            researchResults = emuManager.searchTemplates(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_SHORTCUTS_RESEARCH_CENTER, 90, 2);
 
             if (researchResults.size() >= 2) {
                 logInfo("Found " + researchResults.size() + " research centers on attempt " + attempt + ".");
@@ -84,7 +84,7 @@ public class WarAcademyTask extends DelayedTask {
             logInfo("Searching for the research button");
             logDebug("Searching for the research button (Attempt " + buttonAttempt + "/" + MAX_RETRY_ATTEMPTS + ")...");
 
-            researchButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.BUILDING_BUTTON_RESEARCH.getTemplate(), 90);
+            researchButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.BUILDING_BUTTON_RESEARCH, 90);
 
             if (researchButton.isFound()) {
                 logInfo("The research button was found on attempt " + buttonAttempt + ".");
@@ -114,7 +114,7 @@ public class WarAcademyTask extends DelayedTask {
             logInfo("Searching for the War Academy UI");
             logDebug("Searching for the War Academy UI (Attempt " + uiAttempt + "/" + MAX_RETRY_ATTEMPTS + ")...");
 
-            warAcademyUi = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.VALIDATION_WAR_ACADEMY_UI.getTemplate(), 90);
+            warAcademyUi = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.VALIDATION_WAR_ACADEMY_UI, 90);
 
             if (warAcademyUi.isFound()) {
                 logInfo("The War Academy UI was found on attempt " + uiAttempt + ".");

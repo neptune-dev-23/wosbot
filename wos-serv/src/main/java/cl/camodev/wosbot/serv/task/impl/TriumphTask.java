@@ -31,6 +31,7 @@ public class TriumphTask extends DelayedTask {
 
 		DTOImageSearchResult result = emuManager.searchTemplate(EMULATOR_NUMBER,
 				EnumTemplates.ALLIANCE_TRIUMPH_BUTTON,  90);
+				EnumTemplates.ALLIANCE_TRIUMPH_BUTTON,  90);
 		if (result.isFound()) {
 			logInfo("Alliance Triumph button found. Tapping to open the menu.");
 			emuManager.tapAtPoint(EMULATOR_NUMBER, result.getPoint());
@@ -39,6 +40,7 @@ public class TriumphTask extends DelayedTask {
 			logInfo("Verifying if Triumph rewards have already been claimed.");
 			// verify if its already claimed daily
 			result = emuManager.searchTemplate(EMULATOR_NUMBER,
+					EnumTemplates.ALLIANCE_TRIUMPH_DAILY_CLAIMED,  90);
 					EnumTemplates.ALLIANCE_TRIUMPH_DAILY_CLAIMED,  90);
 
 			if (result.isFound()) {
@@ -65,6 +67,7 @@ public class TriumphTask extends DelayedTask {
 
 			// verify if can claim weekly
 
+//			result = emulatorManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.ALLIANCE_TRIUMPH_WEEKLY,  90);
 //			result = emulatorManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.ALLIANCE_TRIUMPH_WEEKLY,  90);
 //
 //			if (result.isFound()) {

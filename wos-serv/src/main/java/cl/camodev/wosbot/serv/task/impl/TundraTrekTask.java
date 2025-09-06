@@ -32,15 +32,15 @@ public class TundraTrekTask extends DelayedTask {
         if (navigateToTrekSupplies()) {
             // Search for claim button
             DTOImageSearchResult trekClaimButton = emuManager.searchTemplate(EMULATOR_NUMBER,
-                    EnumTemplates.TUNDRA_TREK_CLAIM_BUTTON.getTemplate(), 90);
+                    EnumTemplates.TUNDRA_TREK_CLAIM_BUTTON, 90);
             if (trekClaimButton.isFound()) {
                 logInfo("Trek Supplies are available. Claiming now...");
                 emuManager.tapAtPoint(EMULATOR_NUMBER, trekClaimButton.getPoint());
-                sleepTask(1000);
+                sleepTask(2000);
             } else {
                 logInfo("Trek Supplies have already been claimed or are not yet available.");
             }
-            sleepTask(1000);
+            sleepTask(3000);
 
             // Do OCR to find next reward time and reschedule
             try {
@@ -76,7 +76,7 @@ public class TundraTrekTask extends DelayedTask {
         // Now in the event list, search for the supplies by swiping
         for (int i = 0; i < 5; i++) { // Try up to 5 times (swipes)
             DTOImageSearchResult trekSupplies = emuManager.searchTemplate(EMULATOR_NUMBER,
-                    EnumTemplates.TUNDRA_TREK_SUPPLIES.getTemplate(), 90);
+                    EnumTemplates.TUNDRA_TREK_SUPPLIES, 90);
 
             if (trekSupplies.isFound()) {
                 logInfo("Found the Tundra Trek Supplies button.");
@@ -84,7 +84,7 @@ public class TundraTrekTask extends DelayedTask {
                 sleepTask(500);
                 // This tap seems necessary to open the final claim screen
                 emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(344, 29), new DTOPoint(413, 49));
-                sleepTask(500);
+                sleepTask(3000);
                 return true;
             } else {
                 logInfo("Tundra Trek Supplies not visible. Swiping down to search... (Attempt " + (i + 1) + "/5)");
@@ -99,7 +99,7 @@ public class TundraTrekTask extends DelayedTask {
         logInfo("Returning to the main city screen...");
         for (int i = 0; i < 5; i++) { // Try up to 5 times to get back
             DTOImageSearchResult homeResult = emuManager.searchTemplate(EMULATOR_NUMBER,
-                    EnumTemplates.GAME_HOME_FURNACE.getTemplate(), 90);
+                    EnumTemplates.GAME_HOME_FURNACE, 90);
             if (homeResult.isFound()) {
                 logInfo("Successfully returned to the main screen.");
                 return;

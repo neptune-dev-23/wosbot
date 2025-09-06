@@ -325,7 +325,7 @@ public class GatherTask extends DelayedTask {
             return template;
 		}
 
-		public String getTile() {
+		public EnumTemplates getTile() {
             return tile;
 		}
 

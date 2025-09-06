@@ -27,7 +27,7 @@ public class AllianceAutojoinTask extends DelayedTask {
 		sleepTask(3000);
 
 		DTOImageSearchResult menuResult = emuManager.searchTemplate(EMULATOR_NUMBER,
-				EnumTemplates.ALLIANCE_WAR_BUTTON.getTemplate(),  90);
+				EnumTemplates.ALLIANCE_WAR_BUTTON,  90);
 		if (!menuResult.isFound()) {
 			logError("Alliance war button not found, rescheduling task");
 			this.reschedule(LocalDateTime.now().plusHours(1));
