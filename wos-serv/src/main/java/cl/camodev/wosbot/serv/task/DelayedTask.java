@@ -147,7 +147,7 @@ public abstract class DelayedTask implements Runnable, Delayed {
 
         for (int i = 0; i < 5; i++) {
             DTOImageSearchResult intelScreenResult = emuManager.searchTemplate(EMULATOR_NUMBER,
-                    EnumTemplates.INTEL_SCREEN.getTemplate(), 90);
+                    EnumTemplates.INTEL_SCREEN, 90);
             if (intelScreenResult.isFound()) {
                 logInfo("Already on the intel screen.");
                 return;
@@ -159,7 +159,7 @@ public abstract class DelayedTask implements Runnable, Delayed {
 
         for (int i = 0; i < 5; i++) {
             DTOImageSearchResult intelButton = emuManager.searchTemplate(EMULATOR_NUMBER,
-                    EnumTemplates.GAME_HOME_INTEL.getTemplate(), 90);
+                    EnumTemplates.GAME_HOME_INTEL, 90);
             if (intelButton.isFound()) {
                 logInfo("Intel button found. Tapping to open the intel screen.");
                 emuManager.tapAtPoint(EMULATOR_NUMBER, intelButton.getPoint());

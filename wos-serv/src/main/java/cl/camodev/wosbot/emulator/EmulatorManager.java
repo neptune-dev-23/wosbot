@@ -16,12 +16,10 @@ import cl.camodev.wosbot.console.enumerable.GameVersion;
 import cl.camodev.wosbot.emulator.impl.LDPlayerEmulator;
 import cl.camodev.wosbot.emulator.impl.MEmuEmulator;
 import cl.camodev.wosbot.emulator.impl.MuMuEmulator;
-import cl.camodev.wosbot.emulator.impl.MuMuManagerLocal;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.serv.impl.ServConfig;
-import cl.camodev.wosbot.serv.task.TaskQueue;
 import cl.camodev.wosbot.serv.task.WaitingThread;
 import net.sourceforge.tess4j.TesseractException;
 import org.slf4j.Logger;
@@ -104,14 +102,14 @@ public class EmulatorManager {
         }
     }
 
-    /**
-     * Verifica si el emulador ha sido configurado antes de ejecutar cualquier acción.
-     */
-    private void checkEmulatorInitialized() {
-        if (emulator == null) {
-            throw new IllegalStateException();
-        }
-    }
+	/**
+	 * Verifica si el emulador ha sido configurado antes de ejecutar cualquier acción.
+	 */
+	private void checkEmulatorInitialized() {
+		if (emulator == null) {
+			throw new IllegalStateException();
+		}
+	}
 
     /**
      * Captura una pantalla del emulador.

@@ -47,7 +47,6 @@ public class NewSurvivorsTask extends DelayedTask {
 
                 DTOImageSearchResult plusButton=null;
                 while((plusButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_NEW_SURVIVORS_PLUS_BUTTON,  90)).isFound()){
-                while((plusButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_NEW_SURVIVORS_PLUS_BUTTON,  90)).isFound()){
                     emuManager.tapAtPoint(EMULATOR_NUMBER,plusButton.getPoint());
                     sleepTask(50);
                 }
@@ -55,7 +54,6 @@ public class NewSurvivorsTask extends DelayedTask {
                 //scroll down a little bit an do the same
                 emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(340, 900),new DTOPoint(340, 610));
                 sleepTask(200);
-                while((plusButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_NEW_SURVIVORS_PLUS_BUTTON,  90)).isFound()){
                 while((plusButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_NEW_SURVIVORS_PLUS_BUTTON,  90)).isFound()){
                     emuManager.tapAtPoint(EMULATOR_NUMBER,plusButton.getPoint());
                     sleepTask(50);
