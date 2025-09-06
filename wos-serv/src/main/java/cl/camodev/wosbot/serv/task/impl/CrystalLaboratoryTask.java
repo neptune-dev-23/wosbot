@@ -54,7 +54,7 @@ public class CrystalLaboratoryTask extends DelayedTask {
 		emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(530, 860), new DTOPoint(600, 1000));
 		sleepTask(3000);
 
-		DTOImageSearchResult claim = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.CRYSTAL_LAB_FC_BUTTON.getTemplate(),  90);
+		DTOImageSearchResult claim = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.CRYSTAL_LAB_FC_BUTTON,  90);
 		if (!claim.isFound()) {
 			logInfo("No crystals available to claim.");
 		}
@@ -62,7 +62,7 @@ public class CrystalLaboratoryTask extends DelayedTask {
 			logInfo("Claiming crystal...");
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, claim.getPoint(), claim.getPoint());
 			sleepTask(100);
-			claim = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.CRYSTAL_LAB_FC_BUTTON.getTemplate(), 90);
+			claim = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.CRYSTAL_LAB_FC_BUTTON, 90);
 		}
 
 		reschedule(UtilTime.getGameReset());

@@ -24,7 +24,7 @@ public class ExpertsAgnesIntelTask extends DelayedTask {
         boolean claimed = false;
         for (int i = 0; i < 10; i++) {
             logDebug("Searching for Agnes icon (Attempt " + (i + 1) + "/10).");
-            DTOImageSearchResult agnes = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_AGNES.getTemplate(), 90);
+            DTOImageSearchResult agnes = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_AGNES, 90);
             if (agnes.isFound()) {
                 logInfo("Agnes icon found. Claiming intel.");
                 emuManager.tapAtPoint(EMULATOR_NUMBER, agnes.getPoint());

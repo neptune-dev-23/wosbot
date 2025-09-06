@@ -23,7 +23,7 @@ public class ExplorationTask extends DelayedTask {
 		emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(40, 1190), new DTOPoint(100, 1250));
 		sleepTask(500);
 		DTOImageSearchResult claimResult = emuManager.searchTemplate(EMULATOR_NUMBER,
-				EnumTemplates.EXPLORATION_CLAIM.getTemplate(), 95);
+				EnumTemplates.EXPLORATION_CLAIM, 95);
 		if (claimResult.isFound()) {
 			logInfo("Claiming exploration rewards...");
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(560, 900), new DTOPoint(670, 940));

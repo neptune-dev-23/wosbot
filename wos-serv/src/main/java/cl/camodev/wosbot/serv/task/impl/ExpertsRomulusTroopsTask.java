@@ -47,7 +47,7 @@ public class ExpertsRomulusTroopsTask extends DelayedTask {
             }
 
             logInfo("Searching for '" + troopType + "' button.");
-            DTOImageSearchResult troopChoice = emuManager.searchTemplate(EMULATOR_NUMBER, troopTemplate.getTemplate(),
+            DTOImageSearchResult troopChoice = emuManager.searchTemplate(EMULATOR_NUMBER, troopTemplate,
                     90);
             if (troopChoice.isFound()) {
                 emuManager.tapAtPoint(EMULATOR_NUMBER, troopChoice.getPoint());
@@ -59,7 +59,7 @@ public class ExpertsRomulusTroopsTask extends DelayedTask {
                 for (int i = 0; i < 10; i++) {
                     logDebug("Searching for claim button (Attempt " + (i + 1) + "/10).");
                     DTOImageSearchResult claimButton = emuManager.searchTemplate(EMULATOR_NUMBER,
-                            EnumTemplates.ROMULUS_CLAIM_TROOPS_BUTTON.getTemplate(), new DTOPoint(180, 351), new DTOPoint(443, 600), 85);
+                            EnumTemplates.ROMULUS_CLAIM_TROOPS_BUTTON, new DTOPoint(180, 351), new DTOPoint(443, 600), 85);
                     if (claimButton.isFound()) {
                         logInfo("Claiming " + troopType + " from Romulus. Rescheduling for next reset.");
                         emuManager.tapAtPoint(EMULATOR_NUMBER, claimButton.getPoint());

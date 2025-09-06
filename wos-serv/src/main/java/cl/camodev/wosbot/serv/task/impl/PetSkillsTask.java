@@ -38,7 +38,7 @@ public class PetSkillsTask extends DelayedTask {
 
 		logInfo("Starting Pet Skills task for " + petSkill.name() + ".");
 
-		DTOImageSearchResult petsResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_PETS.getTemplate(),  90);
+		DTOImageSearchResult petsResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_PETS,  90);
 		if (petsResult.isFound()) {
 			logInfo("Pets button found. Tapping to open.");
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, petsResult.getPoint(), petsResult.getPoint());
@@ -47,7 +47,7 @@ public class PetSkillsTask extends DelayedTask {
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, petSkill.getPoint1(), petSkill.getPoint2());
 			sleepTask(300);
 
-			DTOImageSearchResult infoSkill = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_INFO_SKILLS.getTemplate(),  90);
+			DTOImageSearchResult infoSkill = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_INFO_SKILLS,  90);
 
 			if (!infoSkill.isFound()) {
 				logInfo("Skill " + petSkill.name() + " is not learned yet. Task will not recur.");
@@ -56,7 +56,7 @@ public class PetSkillsTask extends DelayedTask {
 				return;
 			}
 
-			DTOImageSearchResult unlockText = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_UNLOCK_TEXT.getTemplate(),  90);
+			DTOImageSearchResult unlockText = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_UNLOCK_TEXT,  90);
 
 			if (unlockText.isFound()) {
 				logInfo("Skill " + petSkill.name() + " is locked. Task will not recur.");
@@ -65,7 +65,7 @@ public class PetSkillsTask extends DelayedTask {
 				return;
 			}
 
-			DTOImageSearchResult skillButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_SKILL_USE.getTemplate(),  90);
+			DTOImageSearchResult skillButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_SKILL_USE,  90);
 			if (skillButton.isFound()) {
 				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, skillButton.getPoint(), skillButton.getPoint(), 10, 100);
 				sleepTask(500);
