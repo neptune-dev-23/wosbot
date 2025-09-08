@@ -48,8 +48,8 @@ public class IntelligenceTask extends DelayedTask {
 					EnumTemplates.INTEL_COMPLETED, 90);
 			if (completed.isFound()) {
 				emuManager.tapAtPoint(EMULATOR_NUMBER, completed.getPoint());
-				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(700, 1270), new DTOPoint(710, 1280), 10,
-						100);
+				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(700, 1270), new DTOPoint(710, 1280), 5,
+						250);
 			} else {
 				break; // No more completed missions found
 			}

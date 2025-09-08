@@ -88,7 +88,7 @@ public class StorehouseChest extends DelayedTask {
 							emuManager.tapAtRandomPoint(EMULATOR_NUMBER, stamina.getPoint(), stamina.getPoint());
 							sleepTask(500);
 							emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(250, 930), new DTOPoint(450, 950));
-							sleepTask(3000);
+							sleepTask(4000);
 							break;
 						} else {
 							logDebug("Stamina reward not found on this attempt.");
@@ -115,7 +115,7 @@ public class StorehouseChest extends DelayedTask {
 					
 				} else {
 					logDebug("Storehouse chest not found on this attempt.");
-					sleepTask(300);
+					sleepTask(500);
 				}
 			}
 			logWarning("Storehouse chest not found after multiple attempts. Rescheduling for 5 minutes.");

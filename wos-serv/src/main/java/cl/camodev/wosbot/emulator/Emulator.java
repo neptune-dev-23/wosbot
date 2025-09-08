@@ -15,6 +15,8 @@ import java.util.function.Function;
 
 import javax.imageio.ImageIO;
 
+import cl.camodev.utiles.UtilOCR;
+import cl.camodev.wosbot.console.enumerable.GameVersion;
 import cl.camodev.wosbot.ex.ADBConnectionException;
 import com.android.ddmlib.*;
 
@@ -390,7 +392,7 @@ public abstract class Emulator {
 				try {
 					device.executeShellCommand("input tap " + x + " " + y, new NullOutputReceiver());
                     logger.info("Tap {}/{} sent to ({},{}) on emulator {}", i, tapCount, x, y,emulatorNumber);
-					if (i < tapCount) Thread.sleep(delayMs);
+					Thread.sleep(delayMs);
 				} catch (Exception ex) {
 					throw new RuntimeException(ex);
 				}
@@ -587,17 +589,8 @@ public abstract class Emulator {
 		if (image == null)
 			throw new IOException("Could not capture image.");
 
-		int x = Math.min(p1.getX(), p2.getX());
-		int y = Math.min(p1.getY(), p2.getY());
-		int width = Math.abs(p1.getX() - p2.getX());
-		int height = Math.abs(p1.getY() - p2.getY());
-
-		BufferedImage subImage = image.getSubimage(x, y, width, height);
-		Tesseract tesseract = new Tesseract();
-		tesseract.setDatapath("lib/tesseract");
-		tesseract.setLanguage("eng+chi_sim");
-
-		return tesseract.doOCR(subImage);
+        String language = (EmulatorManager.GAME == GameVersion.CHINA) ? "eng+chi_sim" : "eng";
+		return UtilOCR.ocrFromRegion(image, p1, p2, language);
 	}
 
 	/**

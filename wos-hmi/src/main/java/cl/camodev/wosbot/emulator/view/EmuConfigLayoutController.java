@@ -56,12 +56,11 @@ public class EmuConfigLayoutController {
 	private final ObservableList<EmulatorAux> emulatorList = FXCollections.observableArrayList();
 
 	public void initialize() {
-		// Se obtiene la configuración global
+
 		HashMap<String, String> globalConfig = ServConfig.getServices().getGlobalConfig();
-		// Se recupera el emulador activo en la configuración
+
 		String currentEmulator = globalConfig.get(EnumConfigurationKey.CURRENT_EMULATOR_STRING.name());
 
-		// Se llena la lista recorriendo los valores del enum
 		for (EmulatorType type : EmulatorType.values()) {
 			String defaultPath = globalConfig.getOrDefault(type.getConfigKey(), "");
 			EmulatorAux emulator = new EmulatorAux(type, defaultPath);
