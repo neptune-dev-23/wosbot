@@ -5,6 +5,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
 
+import cl.camodev.utiles.UtilTime;
 import cl.camodev.wosbot.almac.entity.DailyTask;
 import cl.camodev.wosbot.almac.repo.DailyTaskRepository;
 import cl.camodev.wosbot.almac.repo.IDailyTaskRepository;
@@ -34,33 +35,6 @@ public class GatherTask extends DelayedTask {
     public GatherTask(DTOProfiles profile, TpDailyTaskEnum tpTask, GatherType gatherType) {
         super(profile, tpTask);
         this.gatherType = gatherType;
-    }
-
-    public static LocalDateTime parseRemaining(String timeStr) {
-        if (timeStr == null) {
-            return LocalDateTime.now();
-        }
-        // Removes line breaks and extra spaces
-        timeStr = timeStr.replaceAll("\\r?\\n", "").trim();
-
-        // The hh:mm:ss format is expected
-        String[] parts = timeStr.split(":");
-        if (parts.length != 3) {
-            return LocalDateTime.now();
-        }
-
-        try {
-            int hours = Integer.parseInt(parts[0].trim());
-            int minutes = Integer.parseInt(parts[1].trim());
-            int seconds = Integer.parseInt(parts[2].trim());
-
-            LocalDateTime now = LocalDateTime.now();
-            // The parsed time is added to the current time
-            return now.plusHours(hours).plusMinutes(minutes).plusSeconds(seconds);
-        } catch (NumberFormatException e) {
-            // If an error occurs during parsing, LocalDateTime.now() is returned with an addition of 3 minutes
-            return LocalDateTime.now().plusMinutes(3);
-        }
     }
 
     @Override
@@ -96,7 +70,7 @@ public class GatherTask extends DelayedTask {
                 try {
                     String time = emuManager.ocrRegionText(EMULATOR_NUMBER, queues[index][2],
                             new DTOPoint(queues[index][2].getX() + 140, queues[index][2].getY() + 19));
-                    LocalDateTime nextSchedule = parseRemaining(time).plusMinutes(2);
+                    LocalDateTime nextSchedule = UtilTime.parseTime(time).plusMinutes(2);
                     logInfo("Gathering is in progress. Rescheduling for: " + nextSchedule);
                     this.reschedule(nextSchedule);
                 } catch (Exception e) {

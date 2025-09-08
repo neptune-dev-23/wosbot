@@ -1,10 +1,10 @@
 package cl.camodev.utiles;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class UtilTime {
 
@@ -75,6 +75,44 @@ public class UtilTime {
 			return days + "d ago";
 		}
 	}
+
+    public static LocalDateTime parseTime(String input) {
+        Pattern pattern = Pattern.compile("(?i).*?(\\d+)[^\\d:]*?(\\d{1,2}:\\d{2}:\\d{2}).*", Pattern.DOTALL);
+        Matcher matcher = pattern.matcher(input.trim());
+
+        if (!matcher.matches()) {
+            Pattern timeOnlyPattern = Pattern.compile("(?i).*?(\\d{1,2}:\\d{2}:\\d{2}).*", Pattern.DOTALL);
+            Matcher timeOnlyMatcher = timeOnlyPattern.matcher(input.trim());
+
+            if (timeOnlyMatcher.matches()) {
+                String timeStr = timeOnlyMatcher.group(1);
+                DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("H:mm:ss");
+                LocalTime timePart = LocalTime.parse(timeStr, timeFormatter);
+
+                return LocalDateTime.now()
+                        .plusHours(timePart.getHour())
+                        .plusMinutes(timePart.getMinute())
+                        .plusSeconds(timePart.getSecond());
+            }
+
+            throw new IllegalArgumentException("Input does not match expected format. Input: " + input);
+        }
+
+        String daysStr = matcher.group(1);   // número antes del tiempo
+        String timeStr = matcher.group(2);   // tiempo HH:mm:ss
+
+        int daysToAdd = Integer.parseInt(daysStr);
+
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("H:mm:ss");
+        LocalTime timePart = LocalTime.parse(timeStr, timeFormatter);
+
+
+        return LocalDateTime.now()
+                .plusDays(daysToAdd)
+                .plusHours(timePart.getHour())
+                .plusMinutes(timePart.getMinute())
+                .plusSeconds(timePart.getSecond());
+    }
 
 
 }

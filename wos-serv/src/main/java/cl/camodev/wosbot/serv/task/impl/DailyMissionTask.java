@@ -40,7 +40,7 @@ public class DailyMissionTask extends DelayedTask {
 		if (result.isFound()) {
 			logInfo("'Claim All' button found. Claiming daily mission rewards.");
 			emuManager.tapAtPoint(EMULATOR_NUMBER, result.getPoint());
-			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(10, 100), new DTOPoint(600, 120), 20, 50);
+			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(10, 100), new DTOPoint(600, 120), 20, 150);
 		} else {
 			logWarning("'Claim All' button not found. Attempting to claim missions individually.");
 			while ((result = emuManager.searchTemplate(EMULATOR_NUMBER,
@@ -49,7 +49,7 @@ public class DailyMissionTask extends DelayedTask {
 				logInfo("Claim button found. Claiming reward.");
 
 				emuManager.tapAtPoint(EMULATOR_NUMBER, result.getPoint());
-				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(10, 100), new DTOPoint(600, 120), 10, 50);
+				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(10, 100), new DTOPoint(600, 120), 10, 150);
 				sleepTask(500);
 			}
 			logInfo("No more claim buttons found. All available missions claimed.");

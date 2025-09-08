@@ -41,7 +41,7 @@ public class InitializeTask extends DelayedTask {
 		} else {
 
 			logInfo("Whiteout Survival is installed. Launching the game...");
-			emuManager.launchApp(EMULATOR_NUMBER, EmulatorManager.WHITEOUT_PACKAGE);
+			emuManager.launchApp(EMULATOR_NUMBER, EmulatorManager. GAME.getPackageName());
 			sleepTask(10000);
 
 			final int MAX_ATTEMPTS = 10;

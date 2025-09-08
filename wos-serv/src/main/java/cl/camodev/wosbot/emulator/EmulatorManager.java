@@ -29,7 +29,7 @@ public class EmulatorManager {
 
     private static final Logger logger = LoggerFactory.getLogger(EmulatorManager.class);
 
-    public static String WHITEOUT_PACKAGE = "com.gof.global";
+    public static GameVersion GAME = GameVersion.GLOBAL;
     private static EmulatorManager instance;
     private final ReentrantLock lock = new ReentrantLock();
     private final Condition permitsAvailable = lock.newCondition();
@@ -58,12 +58,11 @@ public class EmulatorManager {
 
         String gameVersionName = globalConfig.getOrDefault(EnumConfigurationKey.GAME_VERSION_STRING.name(), GameVersion.GLOBAL.name());
         try {
-            GameVersion gameVersion = GameVersion.valueOf(gameVersionName);
-            WHITEOUT_PACKAGE = gameVersion.getPackageName();
-            logger.info("Game version set to: {} with package: {}", gameVersion.getDisplayName(), WHITEOUT_PACKAGE);
+            GAME = GameVersion.valueOf(gameVersionName);
+            logger.info("Game version set to {}", GAME.name());
         } catch (IllegalArgumentException e) {
             logger.warn("Invalid game version '{}' found in configuration, using default GLOBAL", gameVersionName);
-            WHITEOUT_PACKAGE = GameVersion.GLOBAL.getPackageName();
+            GAME = GameVersion.GLOBAL;
         }
 
 
@@ -157,7 +156,7 @@ public class EmulatorManager {
      */
     public boolean isWhiteoutSurvivalInstalled(String emulatorNumber) {
         checkEmulatorInitialized();
-        return emulator.isAppInstalled(emulatorNumber, WHITEOUT_PACKAGE);
+        return emulator.isAppInstalled(emulatorNumber, GAME.getPackageName());
     }
 
     /**
@@ -183,13 +182,11 @@ public class EmulatorManager {
         try {
             String regionSuffix = "";
 
-            if ("com.gof.china".equals(WHITEOUT_PACKAGE)) {
+            if (GAME == GameVersion.CHINA) {
                 regionSuffix = "_CH";
             }
-            // Para com.gof.global no agregamos sufijo (versión base)
-
             if (regionSuffix.isEmpty()) {
-                return originalPath; // Retornar path original para versión global
+                return originalPath;
             }
 
             // Insertar el sufijo antes de la extensión

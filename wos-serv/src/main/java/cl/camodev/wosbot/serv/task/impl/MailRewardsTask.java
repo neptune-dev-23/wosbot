@@ -34,7 +34,7 @@ public class MailRewardsTask extends DelayedTask {
 			// Claim rewards
 			logInfo("Attempting to claim rewards in the current tab.");
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(420, 1227),
-					new DTOPoint(450, 1250), 2, 500);
+					new DTOPoint(450, 1250), 4, 500);
 			sleepTask(500);
 
 			// Check if there are excess unread mail

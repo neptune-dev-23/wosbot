@@ -47,11 +47,13 @@ public class AllianceAutojoinTask extends DelayedTask {
 		int attempts = profile.getConfig(EnumConfigurationKey.ALLIANCE_AUTOJOIN_QUEUES_INT, Integer.class);
 
 		emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(460, 590), new DTOPoint(497, 610), (attempts - 1),
-				200);
+				400);
 
+        sleepTask(200);
 		emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(380, 1070), new DTOPoint(640, 1120));
+        sleepTask(300);
 
-		LocalDateTime nextSchedule = LocalDateTime.now().plusHours(7);
+		LocalDateTime nextSchedule = LocalDateTime.now().plusHours(7).plusMinutes(50);
 		this.reschedule(nextSchedule);
 		logInfo("Alliance autojoin task completed. Next execution in 7 hours.");
 
