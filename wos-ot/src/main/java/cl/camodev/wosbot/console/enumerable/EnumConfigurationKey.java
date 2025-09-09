@@ -96,6 +96,7 @@ public enum EnumConfigurationKey {
 	BOOL_BANK("false",Boolean.class),
 	INT_BANK_DELAY("1",Integer.class),
 	BOOL_MYSTERY_SHOP("false",Boolean.class),
+    BOOL_MYSTERY_SHOP_50D_GEAR("false",Boolean.class),
 
 	TUNDRA_TRUCK_EVENT_BOOL("false",Boolean.class),
 	TUNDRA_TRUCK_USE_GEMS_BOOL("false",Boolean.class),

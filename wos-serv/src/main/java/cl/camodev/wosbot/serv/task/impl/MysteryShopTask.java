@@ -2,6 +2,7 @@ package cl.camodev.wosbot.serv.task.impl;
 
 import java.time.LocalDateTime;
 import cl.camodev.utiles.UtilTime;
+import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
@@ -86,33 +87,41 @@ public class MysteryShopTask extends DelayedTask {
 	}
 
 	/**
-	 * Handles all mystery shop operations: scroll, claim free rewards, use daily refresh
+	 * Handles all mystery shop operations: scroll, claim free rewards, make configured purchases, use daily refresh
 	 */
 	private void handleMysteryShopOperations() {
-        logInfo("Starting Mystery Shop operations: claiming free items and using daily refresh.");
+        logInfo("Starting Mystery Shop operations: claiming free items, making configured purchases and using daily refresh.");
 		// STEP 3: Scroll down in specific area to reveal all items
 		DTOPoint scrollStart = new DTOPoint(350, 1100);
 		DTOPoint scrollEnd = new DTOPoint(350, 650);
 		emuManager.executeSwipe(EMULATOR_NUMBER, scrollStart, scrollEnd);
 		sleepTask(500);
 
-		// STEP 4: Process free rewards and daily refresh in a loop
+		// STEP 4: Process free rewards, configured buys and daily refresh in a loop
 		boolean foundFreeRewards = true;
+		boolean foundConfiguredPurchases = true;
 		int dailyRefreshUsedCount = 0;
 		final int maxDailyRefreshes = 10; // configurable limit to avoid abusing refresh
 		int maxIterations = 15; // Prevent infinite loops
 		int iteration = 0;
 		boolean totalClaimedAny = false;
+		boolean totalPurchasedAny = false;
 
-		while ((foundFreeRewards || dailyRefreshUsedCount < maxDailyRefreshes) && iteration < maxIterations) {
+
+
+		while ((foundFreeRewards || foundConfiguredPurchases || dailyRefreshUsedCount < maxDailyRefreshes) && iteration < maxIterations) {
 			iteration++;
 
 			// First, try to claim all free rewards
 			foundFreeRewards = claimAllFreeRewards();
 			totalClaimedAny = totalClaimedAny || foundFreeRewards;
 
-			// If no free rewards found, try to use daily refresh one or more times (up to remaining limit)
-			if (!foundFreeRewards && dailyRefreshUsedCount < maxDailyRefreshes) {
+			// Second, try to make configured purchases
+			foundConfiguredPurchases = makeConfiguredPurchases();
+			totalPurchasedAny = totalPurchasedAny || foundConfiguredPurchases;
+
+			// If no free rewards or purchases found, try to use daily refresh one or more times (up to remaining limit)
+			if (!foundFreeRewards && !foundConfiguredPurchases && dailyRefreshUsedCount < maxDailyRefreshes) {
 				// Try using daily refresh repeatedly until no more refresh is available or we reach the limit
 				while (dailyRefreshUsedCount < maxDailyRefreshes) {
 					boolean used = tryUseDailyRefresh();
@@ -124,12 +133,15 @@ public class MysteryShopTask extends DelayedTask {
 					emuManager.executeSwipe(EMULATOR_NUMBER, scrollStart, scrollEnd);
 					sleepTask(1000);
 
-					// After refresh, attempt to claim rewards again
+					// After refresh, attempt to claim rewards and make purchases again
 					foundFreeRewards = claimAllFreeRewards();
 					totalClaimedAny = totalClaimedAny || foundFreeRewards;
 
-					// If we found rewards after this refresh, break inner refresh loop and continue outer loop
-					if (foundFreeRewards) break;
+					foundConfiguredPurchases = makeConfiguredPurchases();
+					totalPurchasedAny = totalPurchasedAny || foundConfiguredPurchases;
+
+					// If we found rewards or purchases after this refresh, break inner refresh loop and continue outer loop
+					if (foundFreeRewards || foundConfiguredPurchases) break;
 					// otherwise continue trying another refresh (if any left)
 				}
 			}
@@ -141,15 +153,20 @@ public class MysteryShopTask extends DelayedTask {
 		emuManager.tapBackButton(EMULATOR_NUMBER);
 
 		// If no more actions possible, reschedule to game reset time
-		if (!foundFreeRewards) {
+		if (!foundFreeRewards && !foundConfiguredPurchases) {
 			LocalDateTime nextReset = UtilTime.getGameReset();
 			this.reschedule(nextReset);
 			if (totalClaimedAny) {
 				logInfo("Free rewards claimed");
-			} else if (dailyRefreshUsedCount > 0) {
-				logInfo("Daily refresh used but no rewards found");
-			} else {
-				logInfo("No free rewards or daily refresh available");
+			}
+			if (totalPurchasedAny) {
+				logInfo("Configured purchases made");
+			}
+			if (dailyRefreshUsedCount > 0 && !totalClaimedAny && !totalPurchasedAny) {
+				logInfo("Daily refresh used but no rewards or purchases found");
+			}
+			if (!totalClaimedAny && !totalPurchasedAny && dailyRefreshUsedCount == 0) {
+				logInfo("No free rewards, purchases or daily refresh available");
 			}
 		}
 	}
@@ -223,4 +240,73 @@ public class MysteryShopTask extends DelayedTask {
 		return false;
 	}
 
+	/**
+	 * Makes all configured purchases based on profile settings
+	 *
+	 *
+	 * @return true if at least one purchase was made, false otherwise
+	 */
+	private boolean makeConfiguredPurchases() {
+		boolean foundAnyPurchase = false;
+
+		// Handle 50D Hero Gear purchases
+		if (profile.getConfig(EnumConfigurationKey.BOOL_MYSTERY_SHOP_50D_GEAR, Boolean.class)) {
+			foundAnyPurchase = buyItems(EnumTemplates.MYSTERY_SHOP_50D_GEAR_BUTTON, "50D Hero Gear") || foundAnyPurchase;
+		}
+
+		// Add more purchase types here as needed
+		// Example:
+		// if (buyOtherItem) {
+		//     foundAnyPurchase = buyItems(EnumTemplates.MYSTERY_SHOP_OTHER_ITEM_BUTTON, "Other Item") || foundAnyPurchase;
+		// }
+
+		return foundAnyPurchase;
+	}
+
+	/**
+	 * Attempts to buy specific items from the mystery shop
+	 *
+	 * @param template the template to search for the buy button
+	 * @param itemName the name of the item for logging purposes
+	 * @return true if at least one item was purchased, false otherwise
+	 */
+	private boolean buyItems(EnumTemplates template, String itemName) {
+		boolean foundAnyItem = false;
+		boolean foundItemInThisIteration = true;
+		int maxPurchaseAttempts = 5;
+		int purchaseAttempt = 0;
+
+		// Keep looking for items to buy until none are found
+		while (foundItemInThisIteration && purchaseAttempt < maxPurchaseAttempts) {
+			purchaseAttempt++;
+			foundItemInThisIteration = false;
+
+			// Search for the buy button on screen (one at a time)
+			DTOImageSearchResult buyButtonResult = emuManager.searchTemplate(
+				EMULATOR_NUMBER,
+				template,
+				95
+			);
+
+			// If found, purchase the item
+			if (buyButtonResult.isFound()) {
+				// Tap on the buy button
+				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, buyButtonResult.getPoint(), buyButtonResult.getPoint());
+				sleepTask(600);
+
+				// Confirm the purchase (tap on confirm button or area)
+				emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(360, 830));
+				sleepTask(600);
+
+				logInfo(itemName + " has been purchased.");
+				foundAnyItem = true;
+				foundItemInThisIteration = true;
+
+				// Wait a bit before searching for the next item
+				sleepTask(2000);
+			}
+		}
+
+		return foundAnyItem;
+	}
 }

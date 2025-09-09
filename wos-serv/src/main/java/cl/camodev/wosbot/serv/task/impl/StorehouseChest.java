@@ -83,6 +83,7 @@ public class StorehouseChest extends DelayedTask {
 					emuManager.tapAtRandomPoint(EMULATOR_NUMBER, chest.getPoint(), chest.getPoint());
 					sleepTask(500);
 					emuManager.tapBackButton(EMULATOR_NUMBER);
+                    break;
 
 				} else {
 					logDebug("Storehouse chest not found on this attempt.");

@@ -207,6 +207,7 @@ public enum EnumTemplates {
 	SHOP_MYSTERY_BUTTON("/templates/shop/mysteryShopButton.png"),
 	MYSTERY_SHOP_FREE_REWARD("/templates/shop/mysteryshop/freeReward.png"),
 	MYSTERY_SHOP_DAILY_REFRESH("/templates/shop/mysteryshop/dailyRefresh.png"),
+	MYSTERY_SHOP_50D_GEAR_BUTTON("/templates/shop/mysteryshop/50dGearButton.png"),
 
 	//Troop training templates
 
