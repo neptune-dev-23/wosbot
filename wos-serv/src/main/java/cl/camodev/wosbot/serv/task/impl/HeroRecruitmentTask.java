@@ -1,5 +1,6 @@
 package cl.camodev.wosbot.serv.task.impl;
 
+import cl.camodev.utiles.UtilTime;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
@@ -64,7 +65,7 @@ public class HeroRecruitmentTask extends DelayedTask {
             logError("An error occurred during OCR for advanced recruitment: " + e.getMessage());
         }
         logInfo("Advanced recruitment OCR text: '" + text + "'. Rescheduling task.");
-        nextAdvanced = parseNextFree(text);
+        nextAdvanced = UtilTime.parseTime(text);
         logInfo("Evaluating epic recruitment...");
         DTOImageSearchResult claimResultEpic = emuManager.searchTemplate(EMULATOR_NUMBER,
                 EnumTemplates.HERO_RECRUIT_CLAIM, new DTOPoint(40, 1160), new DTOPoint(340, 1255), 95);
@@ -96,7 +97,7 @@ public class HeroRecruitmentTask extends DelayedTask {
         } catch (IOException | TesseractException e) {
             logError("An error occurred during OCR for epic recruitment: " + e.getMessage());
         }
-        nextEpic = parseNextFree(text);
+        nextEpic = UtilTime.parseTime(text);
 
         LocalDateTime nextExecution = getEarliest(nextAdvanced, nextEpic);
         logInfo("Next hero recruitment check is scheduled for: " + nextExecution);
