@@ -50,10 +50,46 @@ public class IntelligenceTask extends DelayedTask {
 				emuManager.tapAtPoint(EMULATOR_NUMBER, completed.getPoint());
 				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(700, 1270), new DTOPoint(710, 1280), 5,
 						250);
-			} else {
-				break; // No more completed missions found
 			}
 		}
+
+        // check is stamina enough to process any intel
+        try {
+            Integer staminaValue = null;
+            for (int attempt = 0; attempt < 5 && staminaValue == null; attempt++) {
+                try {
+                    String ocr = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(582, 23), new DTOPoint(672, 55));
+                    if (ocr != null && !ocr.trim().isEmpty()) {
+                        Matcher m = Pattern.compile("\\d+").matcher(ocr);
+                        if (m.find()) {
+                            staminaValue = Integer.valueOf(m.group());
+                        }
+                    }
+                } catch (IOException | TesseractException ex) {
+                    logDebug("OCR attempt " + (attempt + 1) + " failed: " + ex.getMessage());
+                }
+                if (staminaValue == null) {
+                    sleepTask(100);
+                }
+            }
+
+            if (staminaValue == null) {
+                logWarning("No stamina value found after OCR attempts.");
+                this.reschedule(LocalDateTime.now().plusMinutes(5));
+                return;
+            }
+
+            int minStaminaRequired = 30; // Minimum stamina required to process intel, make it configurable if needed?
+            if (staminaValue < minStaminaRequired) {
+                logWarning("Not enough stamina to process intel. Current stamina: " + staminaValue + ". Required: " + minStaminaRequired + ".");
+                long minutesToRegen = (long) (minStaminaRequired - staminaValue) * 5L; // 1 stamina every 5 minutes
+                LocalDateTime rescheduleTime = LocalDateTime.now().plusMinutes(minutesToRegen);
+                this.reschedule(rescheduleTime);
+                return;
+            }
+        } catch (Exception e) {
+            logError("Unexpected error reading stamina: " + e.getMessage(), e);
+        }
 
 		if (profile.getConfig(EnumConfigurationKey.INTEL_BEASTS_BOOL, Boolean.class)) {
 			if (marchQueueLimitReached) {
