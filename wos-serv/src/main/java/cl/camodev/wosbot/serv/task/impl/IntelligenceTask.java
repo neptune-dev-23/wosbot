@@ -56,13 +56,21 @@ public class IntelligenceTask extends DelayedTask {
         // check is stamina enough to process any intel
         try {
             Integer staminaValue = null;
+            Pattern staminaPattern = Pattern.compile("(\\d{1,3}(?:[.,]\\d{3})*|\\d+)");
             for (int attempt = 0; attempt < 5 && staminaValue == null; attempt++) {
                 try {
                     String ocr = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(582, 23), new DTOPoint(672, 55));
                     if (ocr != null && !ocr.trim().isEmpty()) {
-                        Matcher m = Pattern.compile("\\d+").matcher(ocr);
+                        Matcher m = staminaPattern.matcher(ocr);
                         if (m.find()) {
-                            staminaValue = Integer.valueOf(m.group());
+                            String raw = m.group(1);
+                            // Remove separators (commas or dots)
+                            String normalized = raw.replaceAll("[.,]", "");
+                            try {
+                                staminaValue = Integer.valueOf(normalized);
+                            } catch (NumberFormatException nfe) {
+                                logDebug("Parsed stamina not a valid integer: '" + raw + "'");
+                            }
                         }
                     }
                 } catch (IOException | TesseractException ex) {
