@@ -7,7 +7,7 @@ import javafx.scene.control.CheckBox;
 
 public class EventsLayoutController extends AbstractProfileController {
     @FXML
-    private CheckBox checkBoxTundraEvent, checkBoxTundraUseGems, checkBoxTundraSSR, checkBoxHeroMission;
+    private CheckBox checkBoxTundraEvent, checkBoxTundraUseGems, checkBoxTundraSSR, checkBoxHeroMission, checkBoxMercenaryEvent;
 
     @FXML
     private void initialize() {
@@ -15,6 +15,7 @@ public class EventsLayoutController extends AbstractProfileController {
         checkBoxMappings.put(checkBoxTundraUseGems, EnumConfigurationKey.TUNDRA_TRUCK_USE_GEMS_BOOL);
         checkBoxMappings.put(checkBoxTundraSSR, EnumConfigurationKey.TUNDRA_TRUCK_SSR_BOOL);
         checkBoxMappings.put(checkBoxHeroMission, EnumConfigurationKey.HERO_MISSION_EVENT_BOOL);
+        checkBoxMappings.put(checkBoxMercenaryEvent, EnumConfigurationKey.MERCENARY_EVENT_BOOL);
 
         // Hide tundra event options initially
         checkBoxTundraUseGems.setVisible(checkBoxTundraEvent.isSelected());

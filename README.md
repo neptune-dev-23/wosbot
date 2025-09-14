@@ -21,16 +21,17 @@ A bot for automating tasks in **Whiteout Survival**. This project is a work in p
 - ✅ Claims **Daily VIP Points**
 - ✅ Contributes to **Alliance Tech**
 - ✅ Collects **Alliance Chests**
-- ✅ Auto **Trains and Promotes Troops**
-- ✅ Auto activates **Pet Skills** (Food, Treasure and Stamina)
-- ✅ Claims **Online Rewards**
-- ✅ Claims **Pet Adventure** chests
-- ✅ Auto-collect rewards from mail
-- ✅ **Alliance Auto Join** for rallies
-- ✅ Automatically **Gathers** resources
-- ✅ Automate **Intel** completion
-- ✅ Claims **Tundra Trek Supplies**
-- ✅ Automates **Tundra Truck Event** "My Trucks" section
+- ✅ Automatically **trains and promotes troops**
+- ✅ Automatically activates **Pet Skills** (Food, Treasure, and Stamina)
+- ✅ Automatically claims **Online Rewards**
+- ✅ Automatically claims **Pet Adventure** chests
+- ✅ Automatically collects rewards from **Mail**
+- ✅ Automatically joins **Alliance Rallies**
+- ✅ Automatically **gathers** resources
+- ✅ Automates **Intel** completion
+- ✅ Automatically claims **Tundra Trek Supplies**
+- ✅ Automates the **"My Trucks"** section of the **Tundra Truck Event**
+- ✅ Automatically claims rewards from **Experts**
 
 ---
 ## 🎬 Video Showcase
@@ -61,6 +62,8 @@ The bot is designed to run on **MuMu Player** with the following settings:
 - **CPU:** 2 Cores  
 - **RAM:** 2GB 
 - **Language:** English
+
+> **Note:** For best performance and reliability, it is recommended to disable the **Snowfall** and **Day/Night Cycle** options in the in-game settings.
 
 ---
 

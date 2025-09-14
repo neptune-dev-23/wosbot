@@ -16,12 +16,8 @@ import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 import cl.camodev.wosbot.serv.task.EnumStartLocation;
 import net.sourceforge.tess4j.TesseractException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class StorehouseChest extends DelayedTask {
-
-    private static final Logger log = LoggerFactory.getLogger(StorehouseChest.class);
 
     public StorehouseChest(DTOProfiles profile, TpDailyTaskEnum tpDailyTask) {
 		super(profile, tpDailyTask);
@@ -72,11 +68,11 @@ public class StorehouseChest extends DelayedTask {
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(30, 430), new DTOPoint(50, 470));
 			sleepTask(700);
 
-			DTOImageSearchResult chest = null;
 			logInfo("Searching for the storehouse chest.");
-			for (int i = 0; i < 10; i++) {
-				chest = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.STOREHOUSE_CHEST,  90);
+			for (int i = 0; i < 5; i++) {
+				DTOImageSearchResult chest = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.STOREHOUSE_CHEST,  90);
 
+				logDebug("Searching for storehouse chest (Attempt " + (i + 1) + "/5).");
 				if (chest.isFound()) {
 					// Claim reward, check for stamina and reschedule
 					logInfo("Storehouse chest found. Tapping to claim.");
@@ -84,30 +80,24 @@ public class StorehouseChest extends DelayedTask {
 					sleepTask(500);
 					emuManager.tapBackButton(EMULATOR_NUMBER);
                     break;
-
-				} else {
-					logDebug("Storehouse chest not found on this attempt.");
-                    tapBackButton();
-					sleepTask(500);
 				}
+				sleepTask(300);
 			}
 
             logInfo("Searching for stamina rewards.");
-            for (int j = 0; j < 10; j++) {
+            for (int j = 0; j < 5; j++) {
                 DTOImageSearchResult stamina = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.STOREHOUSE_STAMINA, 90);
 
+				logDebug("Searching for stamina reward (Attempt " + (j + 1) + "/5).");
                 if (stamina.isFound()) {
                     logInfo("Stamina reward found. Claiming it.");
                     emuManager.tapAtRandomPoint(EMULATOR_NUMBER, stamina.getPoint(), stamina.getPoint());
                     sleepTask(500);
                     emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(250, 930), new DTOPoint(450, 950));
-                    sleepTask(4000);
+                    sleepTask(1000);
                     break;
-                } else {
-                    logDebug("Stamina reward not found on this attempt.");
-                    tapBackButton();
-                    sleepTask(300);
                 }
+				sleepTask(300);
             }
 
             // Reschedule based on OCR
@@ -119,7 +109,7 @@ public class StorehouseChest extends DelayedTask {
                 LocalDateTime scheduledTime;
                 if (!nextReward.isBefore(nextReset)) {
                     scheduledTime = nextReset;
-                    logInfo("Next reward time exceeds next reset, scheduling at reset to avoid missing stamina");
+                    logInfo("Next reward time exceeds next reset, scheduling at reset to avoid missing stamina.");
                 } else {
                     scheduledTime = nextReward.minusSeconds(3);
                 }
