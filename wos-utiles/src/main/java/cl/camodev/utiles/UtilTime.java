@@ -77,26 +77,25 @@ public class UtilTime {
 	}
 
     public static LocalDateTime parseTime(String input) {
-        Pattern pattern = Pattern.compile("(?i).*?(\\d+)[^\\d:]*?(\\d{1,2}:\\d{2}:\\d{2}).*", Pattern.DOTALL);
-        Matcher matcher = pattern.matcher(input.trim());
 
-        if (!matcher.matches()) {
-            Pattern timeOnlyPattern = Pattern.compile("(?i).*?(\\d{1,2}:\\d{2}:\\d{2}).*", Pattern.DOTALL);
-            Matcher timeOnlyMatcher = timeOnlyPattern.matcher(input.trim());
+        Pattern withDays = Pattern.compile("(?i).*?\\b(\\d+)\\b[^\\d:]+(\\d{1,2}:\\d{2}:\\d{2}).*", Pattern.DOTALL);
+        Matcher m = withDays.matcher(input.trim());
 
-            if (timeOnlyMatcher.matches()) {
-                String timeStr = timeOnlyMatcher.group(1);
-                DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("H:mm:ss");
-                LocalTime timePart = LocalTime.parse(timeStr, timeFormatter);
-
-                return LocalDateTime.now()
-                        .plusHours(timePart.getHour())
-                        .plusMinutes(timePart.getMinute())
-                        .plusSeconds(timePart.getSecond());
-            }
-
-            throw new IllegalArgumentException("Input does not match expected format. Input: " + input);
+        if (m.matches()) {
+            int days = Integer.parseInt(m.group(1));
+            LocalTime t = LocalTime.parse(m.group(2), DateTimeFormatter.ofPattern("H:mm:ss"));
+            return LocalDateTime.now().plusDays(days).plusHours(t.getHour()).plusMinutes(t.getMinute()).plusSeconds(t.getSecond());
         }
+
+        Pattern timeOnly = Pattern.compile("(?i).*?\\b(\\d{1,2}:\\d{2}:\\d{2})\\b.*", Pattern.DOTALL);
+        Matcher mt = timeOnly.matcher(input.trim());
+        if (mt.matches()) {
+            LocalTime t = LocalTime.parse(mt.group(1), DateTimeFormatter.ofPattern("H:mm:ss"));
+            return LocalDateTime.now().plusHours(t.getHour()).plusMinutes(t.getMinute()).plusSeconds(t.getSecond());
+        }
+
+        throw new IllegalArgumentException("Input does not match expected format. Input: " + input);
+    }
 
         String daysStr = matcher.group(1);   // number before the time
         String timeStr = matcher.group(2);   // time HH:mm:ss
