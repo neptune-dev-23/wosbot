@@ -98,8 +98,8 @@ public class UtilTime {
             throw new IllegalArgumentException("Input does not match expected format. Input: " + input);
         }
 
-        String daysStr = matcher.group(1);   // número antes del tiempo
-        String timeStr = matcher.group(2);   // tiempo HH:mm:ss
+        String daysStr = matcher.group(1);   // number before the time
+        String timeStr = matcher.group(2);   // time HH:mm:ss
 
         int daysToAdd = Integer.parseInt(daysStr);
 
