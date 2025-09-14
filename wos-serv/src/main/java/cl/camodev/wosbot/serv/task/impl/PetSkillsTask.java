@@ -91,7 +91,7 @@ public class PetSkillsTask extends DelayedTask {
 
 	public LocalDateTime parseCooldown(String input) {
 		if (input == null || !input.toLowerCase().contains("on cooldown:")) {
-			throw new IllegalArgumentException("Formato inválido: " + input);
+			throw new IllegalArgumentException("Invalid format: " + input);
 		}
 
 		try {
@@ -104,22 +104,22 @@ public class PetSkillsTask extends DelayedTask {
 
 			if (timePart.contains("d")) {
 				String[] daySplit = timePart.split("d", 2);
-				days = parseNumber(daySplit[0]); // Extrae los días
-				timePart = daySplit[1]; // Resto del string sin los días
+				days = parseNumber(daySplit[0]); // Extract days
+				timePart = daySplit[1]; // Rest of the string without days
 			}
 
 			String[] parts = timePart.split(":");
-			if (parts.length == 3) { // Caso estándar hh:mm:ss
+			if (parts.length == 3) { // Standard case hh:mm:ss
 				hours = parseNumber(parts[0]);
 				minutes = parseNumber(parts[1]);
 				seconds = parseNumber(parts[2]);
 			} else {
-				throw new IllegalArgumentException("Formato de tiempo incorrecto: " + timePart);
+				throw new IllegalArgumentException("Incorrect time format: " + timePart);
 			}
 
 			return LocalDateTime.now().plusDays(days).plusHours(hours).plusMinutes(minutes).plusSeconds(seconds);
 		} catch (Exception e) {
-			throw new RuntimeException("Error al procesar el cooldown: " + input, e);
+			throw new RuntimeException("Error processing cooldown: " + input, e);
 		}
 	}
 
