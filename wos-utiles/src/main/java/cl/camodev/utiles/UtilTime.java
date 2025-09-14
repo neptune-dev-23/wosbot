@@ -97,21 +97,4 @@ public class UtilTime {
         throw new IllegalArgumentException("Input does not match expected format. Input: " + input);
     }
 
-        String daysStr = matcher.group(1);   // number before the time
-        String timeStr = matcher.group(2);   // time HH:mm:ss
-
-        int daysToAdd = Integer.parseInt(daysStr);
-
-        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("H:mm:ss");
-        LocalTime timePart = LocalTime.parse(timeStr, timeFormatter);
-
-
-        return LocalDateTime.now()
-                .plusDays(daysToAdd)
-                .plusHours(timePart.getHour())
-                .plusMinutes(timePart.getMinute())
-                .plusSeconds(timePart.getSecond());
-    }
-
-
 }
