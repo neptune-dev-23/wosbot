@@ -85,11 +85,11 @@ public class TrainingTroopsTask extends DelayedTask {
 
         // Tap on troops menu
         emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(3, 513), new DTOPoint(26, 588));
-        sleepTask(1000);
+        sleepTask(500);
 
         // Tap on training tab
         emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(110, 270));
-        sleepTask(500);
+        sleepTask(100);
 
         // Search for the specific troop type
         DTOImageSearchResult troopsResult = emuManager.searchTemplate(EMULATOR_NUMBER, troopType.getTemplate(), 90);
@@ -109,9 +109,9 @@ public class TrainingTroopsTask extends DelayedTask {
      */
     private void handleTroopStatusCheck(DTOImageSearchResult troopsResult) {
         // Attempt multiple times to read troop status (OCR can be unreliable)
-        for (int attempt = 1; attempt <= 5; attempt++) {
+        for (int attempt = 1; attempt < 3; attempt++) {
             try {
-                logDebug("Reading troop status (Attempt " + attempt + "/5)...");
+                logDebug("Reading troop status (Attempt " + attempt + "/3)...");
 
                 DTOPoint[] points = getTroopsPoints(troopType);
                 String rawText = emuManager.ocrRegionText(EMULATOR_NUMBER, points[0], points[1]);
@@ -132,7 +132,7 @@ public class TrainingTroopsTask extends DelayedTask {
                 // Tap on the troop first
                 emuManager.tapAtRandomPoint(EMULATOR_NUMBER,
                     troopsResult.getPoint(), troopsResult.getPoint());
-                sleepTask(2000);
+                sleepTask(1000);
 
                 // Navigate back to home/training camp area
                 tapRandomPoint(new DTOPoint(310, 650), new DTOPoint(450, 730), 10, 100);
@@ -143,7 +143,7 @@ public class TrainingTroopsTask extends DelayedTask {
 
             } catch (Exception e) {
                 logError("Error during training check attempt " + attempt, e);
-                if (attempt == 5) {
+                if (attempt == 2) {
                     logInfo("All attempts failed. Rescheduling check in 1 hour.");
                     reschedule(LocalDateTime.now().plusHours(1));
                 }
@@ -160,11 +160,11 @@ public class TrainingTroopsTask extends DelayedTask {
 
         // Tap on troops menu
         emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(3, 513), new DTOPoint(26, 588));
-        sleepTask(1000);
+        sleepTask(500);
 
         // Tap on training tab
         emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(110, 270));
-        sleepTask(500);
+        sleepTask(100);
 
         logInfo("Troops interface reopened successfully.");
     }
@@ -192,11 +192,11 @@ public class TrainingTroopsTask extends DelayedTask {
             // Tap on troop to enter training interface
            emuManager.tapAtRandomPoint(EMULATOR_NUMBER,
                 troopsResult.getPoint(), troopsResult.getPoint());
-            sleepTask(2000);
+            sleepTask(1000);
 
             // Execute the training process
             processTraining();
-            sleepTask(1000);
+            sleepTask(100);
 
             // Extract and schedule next training time
             scheduleNextTraining();
@@ -450,7 +450,7 @@ public class TrainingTroopsTask extends DelayedTask {
             if (troop.isFound()) {
                 // Tap on troop to check promotion availability
                 tapPoint(troop.getPoint());
-                sleepTask(500);
+                sleepTask(200);
     
                 DTOImageSearchResult promoteButton = emuManager.searchTemplate(EMULATOR_NUMBER,
                     EnumTemplates.TRAINING_TROOP_PROMOTE, 90);
@@ -465,7 +465,7 @@ public class TrainingTroopsTask extends DelayedTask {
             }
 
             attempts++;
-            sleepTask(300);
+            sleepTask(100);
         }
         logWarning("Failed to find template " + template.name() + " after 3 attempts. Moving to the next troop level.");
         navigateToNextTroop();
@@ -483,11 +483,11 @@ public class TrainingTroopsTask extends DelayedTask {
 
         // Tap promote button
         emuManager.tapAtRandomPoint(EMULATOR_NUMBER, promoteButton.getPoint(), promoteButton.getPoint());
-        sleepTask(500);
+        sleepTask(300);
 
         // Confirm promotion
         tapPoint(new DTOPoint(523, 900));
-        sleepTask(500);
+        sleepTask(300);
 
         logInfo("Promotion confirmed for: " + template.name());
         return true;
@@ -502,7 +502,7 @@ public class TrainingTroopsTask extends DelayedTask {
      */
     private void navigateToNextTroop() {
         swipe(new DTOPoint(530, 773), new DTOPoint(490, 773));
-        sleepTask(300);
+        sleepTask(150);
     }
 
     /**
