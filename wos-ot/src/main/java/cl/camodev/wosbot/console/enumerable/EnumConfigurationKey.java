@@ -43,6 +43,7 @@ public enum EnumConfigurationKey {
 	ALLIANCE_TECH_OFFSET_INT("60",Integer.class),
 	ALLIANCE_AUTOJOIN_BOOL("false",Boolean.class),
 	ALLIANCE_AUTOJOIN_QUEUES_INT("1",Integer.class),
+	ALLIANCE_AUTOJOIN_USE_ALL_TROOPS_BOOL("true",Boolean.class),
 	ALLIANCE_PET_TREASURE_BOOL("false",Boolean.class),
 	ALLIANCE_HELP_BOOL("false",Boolean.class),
 	ALLIANCE_TRIUMPH_BOOL("false",Boolean.class),
