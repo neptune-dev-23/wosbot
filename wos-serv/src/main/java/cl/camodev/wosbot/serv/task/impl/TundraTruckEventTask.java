@@ -127,7 +127,7 @@ public class TundraTruckEventTask extends DelayedTask {
 
 		if (result.isFound()) {
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, result.getPoint(), result.getPoint());
-			sleepTask(1000);
+			sleepTask(500);
 			logInfo("Successfully navigated to the Tundra Truck event.");
 
 			// Check if the event is in countdown
@@ -163,7 +163,7 @@ public class TundraTruckEventTask extends DelayedTask {
 
 			if (result.isFound()) {
 				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, result.getPoint(), result.getPoint());
-				sleepTask(1000);
+				sleepTask(500);
 				logInfo("Successfully navigated to the Tundra Truck event.");
 
 				// Check if the event is in countdown
@@ -471,7 +471,7 @@ public class TundraTruckEventTask extends DelayedTask {
 
 	private void clickMyTrucksTab() {
 		emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(120, 250), new DTOPoint(280, 270));
-		sleepTask(1000);
+		sleepTask(500);
 	}
 
 	/**

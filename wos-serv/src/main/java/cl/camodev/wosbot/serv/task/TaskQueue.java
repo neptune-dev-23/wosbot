@@ -42,6 +42,7 @@ public class TaskQueue {
 	private Thread schedulerThread;
 	private DTOProfiles profile;
 	private int helpAlliesCount = 0;
+    private boolean isIdle = true;
 
 	public TaskQueue(DTOProfiles profile) {
 		this.profile = profile;
@@ -53,6 +54,10 @@ public class TaskQueue {
 	public void addTask(DelayedTask task) {
 		taskQueue.offer(task);
 	}
+
+    public boolean isIdle() {
+        return isIdle;
+    }
 
 	/**
 	 * Removes a specific task from the queue based on task type
@@ -122,6 +127,7 @@ public class TaskQueue {
 				// Check if paused and skip execution if so
 				if (paused) {
 					try {
+                        isIdle = true;
 						ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "PAUSED"));
 						logger.info("Profile {} is paused.", profile.getName());
 						Thread.sleep(1000); // Wait 1 second while paused
@@ -143,7 +149,7 @@ public class TaskQueue {
 				if ((task = taskQueue.peek()) != null && task.getDelay(TimeUnit.SECONDS) <= 0) {
 					DTOTaskState taskState = null;
 					minDelay = task.getDelay(TimeUnit.SECONDS);
-
+                    isIdle = false;
 
 					// Remove the task from the queue
 					taskQueue.poll();
@@ -177,6 +183,7 @@ public class TaskQueue {
 							ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), "Profile in reconnect state before executing task, pausing queue for " + reconnectionTime + " minutes");
 							logger.info("Profile {} is in reconnect state, pausing TaskQueue for {} minutes", profile.getName(), reconnectionTime);
 							paused = true;
+                            isIdle = true;
 							new Thread(() -> {
 								try {
 									Thread.sleep(TimeUnit.MINUTES.toMillis(reconnectionTime));
@@ -184,6 +191,7 @@ public class TaskQueue {
 
 								if (paused) {
 									paused = false;
+                                    isIdle = false;
 									ServProfiles.getServices().notifyProfileStatusChange(new DTOProfileStatus(profile.getId(), "RESUMING AFTER PAUSE"));
 									logger.info("TaskQueue resumed for profile {} after {} minutes pause", profile.getName(), reconnectionTime);
 									try {
@@ -336,16 +344,15 @@ public class TaskQueue {
 
 				// Check conditions based on the minimum delay of the task queue
 				if (minDelay != Long.MAX_VALUE) { // Ensure there are tasks in the queue
-					long maxIdle = 0;
-					maxIdle = Optional.ofNullable(profile.getGlobalsettings().get(EnumConfigurationKey.MAX_IDLE_TIME_INT.name())).map(Integer::parseInt).orElse(Integer.parseInt(EnumConfigurationKey.MAX_IDLE_TIME_INT.getDefaultValue()));
-
-					if (!idlingTimeExceded && minDelay > TimeUnit.MINUTES.toSeconds(maxIdle)) {
+					if (!idlingTimeExceded && minDelay > TimeUnit.MINUTES.toSeconds(emuManager.MAX_IDLE_TIME)) {
 						idlingTimeExceded = true;
+                        isIdle = true;
 						idlingEmulator(minDelay);
 					}
 
 					// If the delay drops to less than 1 minute, try to get the emulator slot and queue an initialization task
 					if (idlingTimeExceded && minDelay < TimeUnit.MINUTES.toSeconds(1)) {
+                        isIdle = false;
 						enqueueNewTask();
 						idlingTimeExceded = false; // Reset the condition for future evaluations
 					}
