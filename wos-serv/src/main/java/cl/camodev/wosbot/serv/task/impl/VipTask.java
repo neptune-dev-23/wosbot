@@ -27,7 +27,7 @@ public class VipTask extends DelayedTask {
 
 		logInfo("Navigating to the VIP menu.");
 		emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(430, 48), new DTOPoint(530, 85));
-		sleepTask(3000);
+		sleepTask(1000);
 
 		if (profile.getConfig(EnumConfigurationKey.VIP_BUY_MONTHLY, Boolean.class)) {
 			logInfo("Verifying VIP status.");

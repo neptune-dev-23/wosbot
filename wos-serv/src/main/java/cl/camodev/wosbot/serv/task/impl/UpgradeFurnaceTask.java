@@ -72,29 +72,29 @@ public class UpgradeFurnaceTask extends DelayedTask {
 				// going to check current furnace requirements
 				// survivor status
 				emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(320, 30));
-				sleepTask(500);
+				sleepTask(300);
 
 				// search for cookhouse
 				DTOImageSearchResult result = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_CITY_STATUS_COOKHOUSE,  90);
 				if (result.isFound()) {
 					// click on cookhouse
 					emuManager.tapAtRandomPoint(EMULATOR_NUMBER, result.getPoint(), result.getPoint());
-					sleepTask(500);
+					sleepTask(300);
 
 					// search go button
 					DTOImageSearchResult goButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_CITY_STATUS_GO_BUTTON,  90);
 					if (goButton.isFound()) {
 						// click on go button
 						emuManager.tapAtRandomPoint(EMULATOR_NUMBER, goButton.getPoint(), goButton.getPoint());
-						sleepTask(3000);
+						sleepTask(1000);
 
 						// click on furnace
 						emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(320, 600));
-						sleepTask(500);
+						sleepTask(300);
 
 						// click on details
 						emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(320, 880));
-						sleepTask(500);
+						sleepTask(300);
 
 						// click on upgrade
 						DTOImageSearchResult upgradeButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.BUILDING_BUTTON_UPGRADE,  90);
@@ -113,13 +113,13 @@ public class UpgradeFurnaceTask extends DelayedTask {
 								// check for missing requirements
 								// go back
 								emuManager.tapBackButton(EMULATOR_NUMBER);
-								sleepTask(500);
+								sleepTask(200);
 								emuManager.tapBackButton(EMULATOR_NUMBER);
-								sleepTask(500);
+								sleepTask(200);
 								emuManager.tapBackButton(EMULATOR_NUMBER);
-								sleepTask(500);
+								sleepTask(200);
 								emuManager.tapBackButton(EMULATOR_NUMBER);
-								sleepTask(500);
+								sleepTask(200);
 								reschedule(LocalDateTime.now().plusHours(1));
 							}
 						} else {
