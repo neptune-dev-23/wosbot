@@ -47,12 +47,12 @@ public class StorehouseChest extends DelayedTask {
 
 		if (researchCenter.isFound()) {
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, researchCenter.getPoint(), researchCenter.getPoint());
-			sleepTask(1000);
+			sleepTask(500);
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(30, 430), new DTOPoint(50, 470));
-			sleepTask(1000);
+			sleepTask(500);
             emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(1,636), new DTOPoint(2,636),2,300);
 			logInfo("Searching for the storehouse chest.");
-			for (int i = 0; i < 5; i++) {
+			for (int i = 0; i < 2; i++) {
 				DTOImageSearchResult chest = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.STOREHOUSE_CHEST,  90);
 
 				logDebug("Searching for storehouse chest (Attempt " + (i + 1) + "/5).");
@@ -67,13 +67,13 @@ public class StorehouseChest extends DelayedTask {
                     logDebug("Storehouse chest not found (Attempt " + (i + 1) + "/5).");
                     emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(1,636), new DTOPoint(2,636),2,300);
                 }
-				sleepTask(300);
+				sleepTask(100);
 			}
 
             // Only search for stamina if current time is >= nextStaminaClaim
             if (!LocalDateTime.now().isBefore(nextStaminaClaim)) {
                 logInfo("Searching for stamina rewards.");
-                for (int j = 0; j < 10; j++) {
+                for (int j = 0; j < 2; j++) {
                     DTOImageSearchResult stamina = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.STOREHOUSE_STAMINA, 90);
 
                     if (stamina.isFound()) {
@@ -104,7 +104,7 @@ public class StorehouseChest extends DelayedTask {
             // Reschedule based on OCR
 
             try {
-                for (int attempt = 0; attempt < 5 ; attempt++) {
+                for (int attempt = 0; attempt < 3 ; attempt++) {
                     String nextRewardTime = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(285, 642), new DTOPoint(430, 666));
                     LocalDateTime nextReward = UtilTime.parseTime(nextRewardTime);
                     LocalDateTime nextReset = UtilTime.getNextReset();

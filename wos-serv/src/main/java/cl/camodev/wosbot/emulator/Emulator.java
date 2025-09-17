@@ -1,6 +1,7 @@
 package cl.camodev.wosbot.emulator;
 
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferInt;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -596,7 +597,7 @@ public abstract class Emulator {
 	/**
 	 * Captures a screenshot from the emulator.
 	 * @param emulatorNumber Emulator identifier
-	 * @return PNG image bytes
+	 * @return BufferedImage
 	 */
 	public byte[] captureScreenshot(String emulatorNumber) {
 		return captureScreenshotWithDdmlib(emulatorNumber);
