@@ -1,10 +1,6 @@
 package cl.camodev.wosbot.serv.task.impl;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 
 import cl.camodev.utiles.UtilTime;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
@@ -15,7 +11,6 @@ import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 import cl.camodev.wosbot.serv.task.EnumStartLocation;
-import net.sourceforge.tess4j.TesseractException;
 
 public class StorehouseChest extends DelayedTask {
 
@@ -102,7 +97,6 @@ public class StorehouseChest extends DelayedTask {
             }
 
             // Reschedule based on OCR
-
             try {
                 for (int attempt = 0; attempt < 5 ; attempt++) {
                     String nextRewardTime = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(285, 642), new DTOPoint(430, 666));
