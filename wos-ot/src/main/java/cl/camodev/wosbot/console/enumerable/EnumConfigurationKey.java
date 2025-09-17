@@ -49,6 +49,7 @@ public enum EnumConfigurationKey {
 	ALLIANCE_TRIUMPH_OFFSET_INT("60",Integer.class),
 	
 	GATHER_SPEED_BOOL("false",Boolean.class),
+	GATHER_SPEED_BOOST_TYPE_STRING("8h (250 gems)",String.class),
 	GATHER_COAL_BOOL("false",Boolean.class),
 	GATHER_WOOD_BOOL("false",Boolean.class),
 	GATHER_MEAT_BOOL("false",Boolean.class),
