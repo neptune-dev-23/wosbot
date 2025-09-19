@@ -553,38 +553,36 @@ public class TaskManagerLayoutController implements IProfileDataChangeListener {
 
     public void updateTabOrder () {
         profileTabsMap.forEach((profileId, tab) -> {
-            TaskQueue queue = ServScheduler.getServices().getQueueManager().getQueue(profileId);
-            ImageView iv = new ImageView();
-            if (queue == null) {
-                iv.setImage(iconFalse);
-            } else if (queue.isIdle()) {
-                iv.setImage(iconWaiting);
-                queue.getProfile().setStatus("waiting");
-            } else {
+            if (ServScheduler.getServices().getQueueManager().getQueue(profileId) != null) {
+                DTOProfiles profile = ServScheduler.getServices().getQueueManager().getQueue(profileId).getProfile();
+                ImageView iv = new ImageView();
+                if (profile.getQueuePosition() == 0) {
                     iv.setImage(iconTrue);
-                    queue.getProfile().setStatus("running");
+                } else if (profile.getQueuePosition() == Integer.MAX_VALUE && profile.getEnabled()) {
+                    iv.setImage(iconFalse);
+                } else {
+                    iv.setImage(iconWaiting);
+                }
+                iv.setFitWidth(16);
+                iv.setFitHeight(16);
+                profileTabsMap.get(profileId).graphicProperty().set(iv);
             }
-            iv.setFitWidth(16);
-            iv.setFitHeight(16);
-            profileTabsMap.get(profileId).graphicProperty().set(iv);
         });
 
         List<Tab> sortedTabs = profileTabsMap.entrySet().stream()
                 .sorted((e1, e2) -> {
                     if (Objects.equals(e1.getKey(), e2.getKey())) return 0;
-                    boolean b1 = ServScheduler.getServices().getQueueManager().getQueue(e1.getKey()) != null;
-                    boolean b2 = ServScheduler.getServices().getQueueManager().getQueue(e2.getKey()) != null;
+                    TaskQueue q1 = ServScheduler.getServices().getQueueManager().getQueue(e1.getKey());
+                    TaskQueue q2 = ServScheduler.getServices().getQueueManager().getQueue(e2.getKey());
+                    boolean b1 = q1 != null;
+                    boolean b2 = q2 != null;
                     if (b1 && b2) {
-                        DTOProfiles p1 = ServScheduler.getServices().getQueueManager().getQueue(e1.getKey()).getProfile();
-                        DTOProfiles p2 = ServScheduler.getServices().getQueueManager().getQueue(e2.getKey()).getProfile();
-                        boolean b1w = (p1.getStatus() != null && p1.getStatus().equals("waiting"));
-                        boolean b2w = (p2.getStatus() != null && p2.getStatus().equals("waiting"));
-                        if (b1w && b2w) return e1.getKey() > e2.getKey() ? 1 : -1;
-                        return b1w ? 1 : -1;
-                    } else {
-                        if (b1 == b2) return e1.getKey() > e2.getKey() ? 1 : -1;
-                        return b1 ? -1 : 1; // true first
+                        int queuePos1 = q1.getProfile().getQueuePosition();
+                        int queuePos2 = q2.getProfile().getQueuePosition();
+                        if (queuePos1 == queuePos2) return q1.getProfile().getPriority() > q2.getProfile().getPriority() ? -1 : 1;
+                        return queuePos1 > queuePos2 ? 1 : -1;
                     }
+                    return b1 ? -1 : 1; // true first
                 })
                 .map(Map.Entry::getValue)
                 .collect(Collectors.toList());
@@ -611,32 +609,6 @@ public class TaskManagerLayoutController implements IProfileDataChangeListener {
             if (!optionalTask.isPresent())
                 return;
 
-            Tab t = profileTabsMap.get(profileId);
-            boolean hasQueue = ServScheduler
-                    .getServices()
-                    .getQueueManager()
-                    .getQueue(profileId) != null;
-            TaskQueue queue = ServScheduler.getServices().getQueueManager().getQueue(profileId);
-            boolean waiting = queue.isIdle();
-            DTOProfiles profile = queue.getProfile();
-            ImageView iv = new ImageView();
-            if (waiting) {
-                iv.setImage(iconWaiting);
-                profile.setStatus("waiting");
-            } else {
-                if (hasQueue) {
-                    iv.setImage(iconTrue);
-                    profile.setStatus("running");
-                } else {
-                    iv.setImage(iconFalse);
-                    profile.setStatus("stopped");
-                }
-            }
-
-            iv.setFitWidth(16);
-            iv.setFitHeight(16);
-
-            t.setGraphic(iv);
             TaskManagerAux taskAux = optionalTask.get();
             taskAux.setLastExecution(taskState.getLastExecutionTime());
             taskAux.setNextExecution(taskState.getNextExecutionTime());
