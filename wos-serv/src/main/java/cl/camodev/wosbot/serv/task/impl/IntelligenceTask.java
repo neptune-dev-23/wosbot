@@ -37,15 +37,21 @@ public class IntelligenceTask extends DelayedTask {
 		logInfo("Starting Intel task.");
 		fcEra = profile.getConfig(EnumConfigurationKey.INTEL_FC_ERA_BOOL, Boolean.class);
 
+        MarchesAvailable marchesAvailable;
+        boolean useSmartProcessing = profile.getConfig(EnumConfigurationKey.INTEL_SMART_PROCESSING_BOOL, Boolean.class);
 		boolean intelFound = false;
 		boolean nonBeastIntelFound = false;
 		marchQueueLimitReached = false;
 		beastMarchSent = false;
 
-        // Check how many marches are available
-        MarchesAvailable marchesAvailable = checkMarchesAvailable();
-        if (!marchesAvailable.available()) {
-            marchQueueLimitReached = true;
+        if (useSmartProcessing) {
+            // Check how many marches are available
+            marchesAvailable = checkMarchesAvailable();
+            if (!marchesAvailable.available()) {
+                marchQueueLimitReached = true;
+            }
+        } else {
+           marchesAvailable = new MarchesAvailable(true, LocalDateTime.now());
         }
 
 		ensureOnIntelScreen();
@@ -108,32 +114,36 @@ public class IntelligenceTask extends DelayedTask {
         }
 
 		if (profile.getConfig(EnumConfigurationKey.INTEL_BEASTS_BOOL, Boolean.class)) {
-            ensureOnIntelScreen();
+            if (useSmartProcessing || !marchQueueLimitReached) {
+                ensureOnIntelScreen();
 
-            List<EnumTemplates> beastPriorities;
-            if (fcEra) {
-                beastPriorities = Arrays.asList(
-                        EnumTemplates.INTEL_FIRE_BEAST,
-                        EnumTemplates.INTEL_BEAST_YELLOW,
-                        EnumTemplates.INTEL_BEAST_PURPLE,
-                        EnumTemplates.INTEL_BEAST_BLUE);
-                logInfo("Searching for beasts (FC era).");
-            } else {
-                beastPriorities = Arrays.asList(
-                        EnumTemplates.INTEL_FIRE_BEAST,
-                        EnumTemplates.INTEL_PREFC_BEAST_YELLOW,
-                        EnumTemplates.INTEL_PREFC_BEAST_PURPLE,
-                        EnumTemplates.INTEL_PREFC_BEAST_BLUE,
-                        EnumTemplates.INTEL_PREFC_BEAST_GREEN,
-                        EnumTemplates.INTEL_PREFC_BEAST_GREY);
-                logInfo("Searching for beasts (pre-FC era).");
-            }
-
-            for (EnumTemplates beast : beastPriorities) {
-                if (searchAndProcess(beast, 5, 90, this::processBeast)) {
-                    intelFound = true;
-                    break;
+                List<EnumTemplates> beastPriorities;
+                if (fcEra) {
+                    beastPriorities = Arrays.asList(
+                            EnumTemplates.INTEL_FIRE_BEAST,
+                            EnumTemplates.INTEL_BEAST_YELLOW,
+                            EnumTemplates.INTEL_BEAST_PURPLE,
+                            EnumTemplates.INTEL_BEAST_BLUE);
+                    logInfo("Searching for beasts (FC era).");
+                } else {
+                    beastPriorities = Arrays.asList(
+                            EnumTemplates.INTEL_FIRE_BEAST,
+                            EnumTemplates.INTEL_PREFC_BEAST_YELLOW,
+                            EnumTemplates.INTEL_PREFC_BEAST_PURPLE,
+                            EnumTemplates.INTEL_PREFC_BEAST_BLUE,
+                            EnumTemplates.INTEL_PREFC_BEAST_GREEN,
+                            EnumTemplates.INTEL_PREFC_BEAST_GREY);
+                    logInfo("Searching for beasts (pre-FC era).");
                 }
+
+                for (EnumTemplates beast : beastPriorities) {
+                    if (searchAndProcess(beast, 5, 90, this::processBeast)) {
+                        intelFound = true;
+                        break;
+                    }
+                }
+            } else {
+                logInfo("No marches available, will not run beast search");
             }
 		}
 
@@ -217,10 +227,17 @@ public class IntelligenceTask extends DelayedTask {
 				logError("Error reading intel cooldown timer: " + e.getMessage(), e);
 			}
 		} else if (marchQueueLimitReached && !nonBeastIntelFound && !beastMarchSent) {
-			this.reschedule(marchesAvailable.rescheduleTo());
-			ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, marchesAvailable.rescheduleTo());
-			logInfo("March queue is full, and only beasts remain. Rescheduling for when marches will be available at " + marchesAvailable.rescheduleTo());
-		} else if (!beastMarchSent) {
+            if (useSmartProcessing) {
+                this.reschedule(marchesAvailable.rescheduleTo());
+                ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, marchesAvailable.rescheduleTo());
+                logInfo("March queue is full, and only beasts remain. Rescheduling for when marches will be available at " + marchesAvailable.rescheduleTo());
+            } else {
+                LocalDateTime rescheduleTime = LocalDateTime.now().plusMinutes(5);
+                this.reschedule(rescheduleTime);
+                ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, rescheduleTime);
+                logInfo("March queue is full, and only beasts remain. Rescheduling for 5 minutes at " + rescheduleTime);
+            }
+        } else if (!beastMarchSent) {
 			this.reschedule(LocalDateTime.now());
 			logInfo("Intel tasks processed. Rescheduling immediately to check for more.");
 		}

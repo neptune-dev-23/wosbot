@@ -40,12 +40,15 @@ public class GatherTask extends DelayedTask {
 
     @Override
     protected void execute() {
-        // Make sure intel isn't about to run
-        DailyTask intel = iDailyTaskRepository.findByProfileIdAndTaskName(profile.getId(), TpDailyTaskEnum.INTEL);
-        if ( ChronoUnit.MINUTES.between(LocalDateTime.now(), intel.getNextSchedule()) < 15 ) {
-            reschedule(LocalDateTime.now().plusMinutes(16)); // Reschedule in 16 minutes, after intel has run
-            ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, LocalDateTime.now().plusMinutes(2));
-            return;
+
+        if (profile.getConfig(EnumConfigurationKey.INTEL_SMART_PROCESSING_BOOL, Boolean.class)) {
+            // Make sure intel isn't about to run
+            DailyTask intel = iDailyTaskRepository.findByProfileIdAndTaskName(profile.getId(), TpDailyTaskEnum.INTEL);
+            if (ChronoUnit.MINUTES.between(LocalDateTime.now(), intel.getNextSchedule()) < 15) {
+                reschedule(LocalDateTime.now().plusMinutes(16)); // Reschedule in 16 minutes, after intel has run
+                ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, LocalDateTime.now().plusMinutes(2));
+                return;
+            }
         }
 
         // Check if GatherSpeedTask is not processed yet
