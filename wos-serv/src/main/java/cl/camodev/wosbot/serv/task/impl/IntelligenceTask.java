@@ -117,24 +117,24 @@ public class IntelligenceTask extends DelayedTask {
             if (useSmartProcessing || !marchQueueLimitReached) {
                 ensureOnIntelScreen();
 
-                List<EnumTemplates> beastPriorities;
-                if (fcEra) {
-                    beastPriorities = Arrays.asList(
-                            EnumTemplates.INTEL_FIRE_BEAST,
-                            EnumTemplates.INTEL_BEAST_YELLOW,
-                            EnumTemplates.INTEL_BEAST_PURPLE,
-                            EnumTemplates.INTEL_BEAST_BLUE);
-                    logInfo("Searching for beasts (FC era).");
-                } else {
-                    beastPriorities = Arrays.asList(
-                            EnumTemplates.INTEL_FIRE_BEAST,
-                            EnumTemplates.INTEL_PREFC_BEAST_YELLOW,
-                            EnumTemplates.INTEL_PREFC_BEAST_PURPLE,
-                            EnumTemplates.INTEL_PREFC_BEAST_BLUE,
-                            EnumTemplates.INTEL_PREFC_BEAST_GREEN,
-                            EnumTemplates.INTEL_PREFC_BEAST_GREY);
-                    logInfo("Searching for beasts (pre-FC era).");
-                }
+				List<EnumTemplates> beastPriorities;
+				if (fcEra) {
+					beastPriorities = Arrays.asList(
+							EnumTemplates.INTEL_FIRE_BEAST,
+							EnumTemplates.INTEL_BEAST_YELLOW,
+							EnumTemplates.INTEL_BEAST_PURPLE,
+							EnumTemplates.INTEL_BEAST_BLUE);
+					logInfo("Searching for beasts (FC era).");
+				} else {
+					beastPriorities = Arrays.asList(
+							EnumTemplates.INTEL_FIRE_BEAST,
+							EnumTemplates.INTEL_PREFC_BEAST_YELLOW,
+							EnumTemplates.INTEL_PREFC_BEAST_PURPLE,
+							EnumTemplates.INTEL_PREFC_BEAST_BLUE,
+							EnumTemplates.INTEL_PREFC_BEAST_GREEN,
+							EnumTemplates.INTEL_PREFC_BEAST_GREY);
+					logInfo("Searching for beasts (pre-FC era).");
+				}
 
                 for (EnumTemplates beast : beastPriorities) {
                     if (searchAndProcess(beast, 5, 90, this::processBeast)) {
@@ -171,7 +171,7 @@ public class IntelligenceTask extends DelayedTask {
 			// @formatter:on
 			for (EnumTemplates beast : priorities) {
 				if (searchAndProcess(beast, 5, 90, this::processSurvivor)) {
-                    intelFound = true;
+					intelFound = true;
 					nonBeastIntelFound = true;
 					break;
 				}
@@ -204,7 +204,7 @@ public class IntelligenceTask extends DelayedTask {
 			// @formatter:on
 			for (EnumTemplates beast : priorities) {
 				if (searchAndProcess(beast, 5, 90, this::processJourney)) {
-                    intelFound = true;
+					intelFound = true;
 					nonBeastIntelFound = true;
 					break;
 				}
