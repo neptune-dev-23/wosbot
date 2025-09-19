@@ -6,7 +6,6 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.RadioButton?>
 <?import javafx.scene.control.TextField?>
-<?import javafx.scene.control.ToggleGroup?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
@@ -87,12 +86,8 @@
         </rowConstraints>
          <children>
             <CheckBox fx:id="checkBoxAutojoin" mnemonicParsing="false" text="Enable Autojoin" GridPane.rowIndex="1" />
-            <RadioButton fx:id="radioAllTroops" mnemonicParsing="false" text="All Troops" GridPane.columnIndex="1">
-               <toggleGroup>
-                  <ToggleGroup fx:id="Autojoin" />
-               </toggleGroup>
-            </RadioButton>
-            <RadioButton fx:id="radioUseFormation" mnemonicParsing="false" text="Use Formation" toggleGroup="$Autojoin" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+            <RadioButton fx:id="radioAllTroops" mnemonicParsing="false" text="All Troops" GridPane.columnIndex="1" />
+            <RadioButton fx:id="radioUseFormation" mnemonicParsing="false" text="Use Formation" GridPane.columnIndex="1" GridPane.rowIndex="2" />
          </children>
       </GridPane>
    </children>

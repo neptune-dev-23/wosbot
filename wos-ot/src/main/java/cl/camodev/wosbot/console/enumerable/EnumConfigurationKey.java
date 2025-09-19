@@ -108,6 +108,7 @@ public enum EnumConfigurationKey {
 	TUNDRA_TRUCK_EVENT_BOOL("false",Boolean.class),
 	TUNDRA_TRUCK_USE_GEMS_BOOL("false",Boolean.class),
 	TUNDRA_TRUCK_SSR_BOOL("false",Boolean.class),
+	TUNDRA_TRUCK_ACTIVATION_HOUR_INT("0", Integer.class),
 	MERCENARY_EVENT_BOOL("false",Boolean.class),
 	HERO_MISSION_EVENT_BOOL("false",Boolean.class),
 
