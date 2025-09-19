@@ -4,10 +4,14 @@ import cl.camodev.wosbot.common.view.AbstractProfileController;
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.TextField;
 
 public class EventsLayoutController extends AbstractProfileController {
     @FXML
     private CheckBox checkBoxTundraEvent, checkBoxTundraUseGems, checkBoxTundraSSR, checkBoxHeroMission, checkBoxMercenaryEvent;
+    
+    @FXML
+    private TextField textfieldTundraActivationHour;
 
     @FXML
     private void initialize() {
@@ -17,14 +21,23 @@ public class EventsLayoutController extends AbstractProfileController {
         checkBoxMappings.put(checkBoxHeroMission, EnumConfigurationKey.HERO_MISSION_EVENT_BOOL);
         checkBoxMappings.put(checkBoxMercenaryEvent, EnumConfigurationKey.MERCENARY_EVENT_BOOL);
 
+        // Map the activation hour text field
+        textFieldMappings.put(textfieldTundraActivationHour, EnumConfigurationKey.TUNDRA_TRUCK_ACTIVATION_HOUR_INT);
+        
+        // Set default value (0-23)
+        textfieldTundraActivationHour.setText("0");
+
         // Hide tundra event options initially
-        checkBoxTundraUseGems.setVisible(checkBoxTundraEvent.isSelected());
-        checkBoxTundraSSR.setVisible(checkBoxTundraEvent.isSelected());
+        boolean tundraTruckEnabled = checkBoxTundraEvent.isSelected();
+        checkBoxTundraUseGems.setVisible(tundraTruckEnabled);
+        checkBoxTundraSSR.setVisible(tundraTruckEnabled);
+        textfieldTundraActivationHour.setVisible(tundraTruckEnabled);
 
         // Show/hide tundra event options based on main checkbox
         checkBoxTundraEvent.selectedProperty().addListener((obs, oldVal, newVal) -> {
             checkBoxTundraUseGems.setVisible(newVal);
             checkBoxTundraSSR.setVisible(newVal);
+            textfieldTundraActivationHour.setVisible(newVal);
         });
 
         initializeChangeEvents();
