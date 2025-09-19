@@ -55,10 +55,9 @@ public class TaskQueue {
 		taskQueue.offer(task);
 	}
 
-    public boolean isIdle() {
-        return isIdle;
+    public int getQueueSize() {
+        return taskQueue.size();
     }
-
 	/**
 	 * Removes a specific task from the queue based on task type
 	 * @param taskEnum The type of task to remove
