@@ -187,8 +187,8 @@ public class GatherTask extends DelayedTask {
                                 EnumTemplates.TROOPS_ALREADY_MARCHING, 90);
                         if (march.isFound()) {
                             logWarning("The tile is already being gathered by another player. Rescheduling task.");
-                            emuManager.tapBackButton(EMULATOR_NUMBER);
-                            emuManager.tapBackButton(EMULATOR_NUMBER);
+                            tapBackButton();
+                            tapBackButton();
                             reschedule(LocalDateTime.now().plusMinutes(1)); // Try again soon for a new tile
                         } else {
                             logInfo("March started successfully. Rescheduling the next check in 5 minutes.");
@@ -196,18 +196,18 @@ public class GatherTask extends DelayedTask {
                         }
                     } else {
                          logError("The 'March' button was not found. Aborting and rescheduling in 5 minutes.");
-                         emuManager.tapBackButton(EMULATOR_NUMBER);
+                         tapBackButton();
                          reschedule(LocalDateTime.now().plusMinutes(5));
                     }
 
                 } else {
                     logWarning("The 'Gather' button on the map was not found. The tile might be occupied. Rescheduling in 5 minutes.");
-                    emuManager.tapBackButton(EMULATOR_NUMBER);
+                    tapBackButton();
                     reschedule(LocalDateTime.now().plusMinutes(5));
                 }
             } else {
                 logError("The resource tile was not found after multiple swipes. Aborting and rescheduling in 15 minutes.");
-                emuManager.tapBackButton(EMULATOR_NUMBER);
+                tapBackButton();
                 reschedule(LocalDateTime.now().plusMinutes(15)); // Wait longer if tiles can't be found
             }
         }
