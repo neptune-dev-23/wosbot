@@ -219,7 +219,7 @@ public class IntelligenceTask extends DelayedTask {
 				String rescheduleTimeStr = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(120, 110), new DTOPoint(600, 146));
 				LocalDateTime rescheduleTime = parseAndAddTime(rescheduleTimeStr);
 				this.reschedule(rescheduleTime);
-				emuManager.tapBackButton(EMULATOR_NUMBER);
+				tapBackButton();
 				ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, rescheduleTime);
 				logInfo("No new intel found. Rescheduling task to run at: " + rescheduleTime);
 			} catch (IOException | TesseractException e) {
@@ -273,10 +273,10 @@ public class IntelligenceTask extends DelayedTask {
 				sleepTask(500);
 				emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(520, 1200));
 				sleepTask(1000);
-				emuManager.tapBackButton(EMULATOR_NUMBER);
+				tapBackButton();
 			} else {
 				logWarning("Could not find the 'Explore' button for the journey. Going back.");
-				emuManager.tapBackButton(EMULATOR_NUMBER); // Back from journey screen
+				tapBackButton(); // Back from journey screen
 				return;
 			}
 		}
@@ -295,7 +295,7 @@ public class IntelligenceTask extends DelayedTask {
 				emuManager.tapAtPoint(EMULATOR_NUMBER, rescue.getPoint());
 			} else {
 				logWarning("Could not find the 'Rescue' button for the survivor. Going back.");
-				emuManager.tapBackButton(EMULATOR_NUMBER); // Back from survivor screen
+				tapBackButton(); // Back from survivor screen
 				return;
 			}
 		}
@@ -312,7 +312,7 @@ public class IntelligenceTask extends DelayedTask {
 		DTOImageSearchResult view = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_VIEW,  90);
 		if (!view.isFound()) {
 			logWarning("Could not find the 'View' button for the beast. Going back.");
-			emuManager.tapBackButton(EMULATOR_NUMBER);
+			tapBackButton();
 			return;
 		}
 		emuManager.tapAtPoint(EMULATOR_NUMBER, view.getPoint());
@@ -321,7 +321,7 @@ public class IntelligenceTask extends DelayedTask {
 		DTOImageSearchResult attack = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_ATTACK,  90);
 		if (!attack.isFound()) {
 			logWarning("Could not find the 'Attack' button for the beast. Going back.");
-			emuManager.tapBackButton(EMULATOR_NUMBER);
+			tapBackButton();
 			return;
 		}
 		emuManager.tapAtPoint(EMULATOR_NUMBER, attack.getPoint());
@@ -369,15 +369,15 @@ public class IntelligenceTask extends DelayedTask {
 				beastMarchSent = true;
 			} else {
 				logError("Failed to parse march time. Aborting attack.");
-				emuManager.tapBackButton(EMULATOR_NUMBER); // Go back from march screen
+				tapBackButton(); // Go back from march screen
 				sleepTask(500);
-				emuManager.tapBackButton(EMULATOR_NUMBER); // Go back from beast screen
+				tapBackButton(); // Go back from beast screen
 			}
 		} catch (IOException | TesseractException e) {
 			logError("Failed to read march time using OCR. Aborting attack. Error: " + e.getMessage(), e);
-			emuManager.tapBackButton(EMULATOR_NUMBER); // Go back from march screen
+			tapBackButton(); // Go back from march screen
 			sleepTask(500);
-			emuManager.tapBackButton(EMULATOR_NUMBER); // Go back from beast screen
+			tapBackButton(); // Go back from beast screen
 		}
 	}
 	
