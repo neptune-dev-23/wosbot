@@ -82,8 +82,8 @@ public class HeroRecruitmentTask extends DelayedTask {
         LocalDateTime nextExecution = getEarliest(effectiveNextAdvanced, nextEpic);
         logInfo("Next hero recruitment check is scheduled for: " + nextExecution);
         this.reschedule(nextExecution);
-        emuManager.tapBackButton(EMULATOR_NUMBER);
-        emuManager.tapBackButton(EMULATOR_NUMBER);
+        tapBackButton();
+        tapBackButton();
     }
 
     public LocalDateTime getEarliest(LocalDateTime dt1, LocalDateTime dt2) {
