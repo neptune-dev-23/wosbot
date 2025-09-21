@@ -506,7 +506,9 @@ public class TaskQueue {
             .filter(task -> task.getTpTask() != TpDailyTaskEnum.INITIALIZE) // Exclude Initialize tasks
             .anyMatch(task -> {
                 long taskDelay = task.getDelay(TimeUnit.SECONDS);
-                return taskDelay >= 0 && taskDelay < maxIdleSeconds;
+//                return taskDelay >= 0 && taskDelay < maxIdleSeconds;
+                return taskDelay < maxIdleSeconds;
+
             });
     }
 
