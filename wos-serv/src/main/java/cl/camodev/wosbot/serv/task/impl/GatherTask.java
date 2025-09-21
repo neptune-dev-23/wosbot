@@ -40,12 +40,15 @@ public class GatherTask extends DelayedTask {
 
     @Override
     protected void execute() {
-        // Make sure intel isn't about to run
-        DailyTask intel = iDailyTaskRepository.findByProfileIdAndTaskName(profile.getId(), TpDailyTaskEnum.INTEL);
-        if ( ChronoUnit.MINUTES.between(LocalDateTime.now(), intel.getNextSchedule()) < 15 ) {
-            reschedule(LocalDateTime.now().plusMinutes(16)); // Reschedule in 16 minutes, after intel has run
-            ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, LocalDateTime.now().plusMinutes(2));
-            return;
+
+        if (profile.getConfig(EnumConfigurationKey.INTEL_SMART_PROCESSING_BOOL, Boolean.class)) {
+            // Make sure intel isn't about to run
+            DailyTask intel = iDailyTaskRepository.findByProfileIdAndTaskName(profile.getId(), TpDailyTaskEnum.INTEL);
+            if (ChronoUnit.MINUTES.between(LocalDateTime.now(), intel.getNextSchedule()) < 15) {
+                reschedule(LocalDateTime.now().plusMinutes(16)); // Reschedule in 16 minutes, after intel has run
+                ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, LocalDateTime.now().plusMinutes(2));
+                return;
+            }
         }
 
         // Check if GatherSpeedTask is not processed yet
@@ -184,8 +187,8 @@ public class GatherTask extends DelayedTask {
                                 EnumTemplates.TROOPS_ALREADY_MARCHING, 90);
                         if (march.isFound()) {
                             logWarning("The tile is already being gathered by another player. Rescheduling task.");
-                            emuManager.tapBackButton(EMULATOR_NUMBER);
-                            emuManager.tapBackButton(EMULATOR_NUMBER);
+                            tapBackButton();
+                            tapBackButton();
                             reschedule(LocalDateTime.now().plusMinutes(1)); // Try again soon for a new tile
                         } else {
                             logInfo("March started successfully. Rescheduling the next check in 5 minutes.");
@@ -193,18 +196,18 @@ public class GatherTask extends DelayedTask {
                         }
                     } else {
                          logError("The 'March' button was not found. Aborting and rescheduling in 5 minutes.");
-                         emuManager.tapBackButton(EMULATOR_NUMBER);
+                         tapBackButton();
                          reschedule(LocalDateTime.now().plusMinutes(5));
                     }
 
                 } else {
                     logWarning("The 'Gather' button on the map was not found. The tile might be occupied. Rescheduling in 5 minutes.");
-                    emuManager.tapBackButton(EMULATOR_NUMBER);
+                    tapBackButton();
                     reschedule(LocalDateTime.now().plusMinutes(5));
                 }
             } else {
                 logError("The resource tile was not found after multiple swipes. Aborting and rescheduling in 15 minutes.");
-                emuManager.tapBackButton(EMULATOR_NUMBER);
+                tapBackButton();
                 reschedule(LocalDateTime.now().plusMinutes(15)); // Wait longer if tiles can't be found
             }
         }
