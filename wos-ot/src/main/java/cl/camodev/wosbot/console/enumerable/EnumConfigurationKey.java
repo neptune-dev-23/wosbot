@@ -76,7 +76,8 @@ public enum EnumConfigurationKey {
 	
 	MERCENARY_USE_FLAG_BOOL("false", Boolean.class),
 	MERCENARY_FLAG_INT("1", Integer.class),
-	
+    INTEL_SMART_PROCESSING_BOOL("true",Boolean.class),
+
 	LIFE_ESSENCE_BOOL("false",Boolean.class),
 	LIFE_ESSENCE_OFFSET_INT("60",Integer.class),
 	ALLIANCE_LIFE_ESSENCE_BOOL("false",Boolean.class),
