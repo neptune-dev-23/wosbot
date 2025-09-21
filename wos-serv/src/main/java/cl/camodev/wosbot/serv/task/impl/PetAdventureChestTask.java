@@ -36,15 +36,15 @@ public class PetAdventureChestTask extends DelayedTask {
 		if (petsResult.isFound()) {
 			logInfo("Pets button found. Tapping to open.");
 			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, petsResult.getPoint(), petsResult.getPoint());
-			sleepTask(1000);
+			sleepTask(3000);
 
 			DTOImageSearchResult beastCageResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_BEAST_CAGE, 90);
 			if (beastCageResult.isFound()) {
 				emuManager.tapAtPoint(EMULATOR_NUMBER, beastCageResult.getPoint());
-				sleepTask(300);
+				sleepTask(500);
 				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(547, 1150), new DTOPoint(650, 1210));
 
-				for (int i = 0; i < 5; i++) {
+				for (int i = 0; i < 10; i++) {
 					logDebug("Searching for completed chests to claim.");
 					DTOImageSearchResult doneChest = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.PETS_CHEST_COMPLETED, 90);
 					if (doneChest.isFound()) {
@@ -56,10 +56,10 @@ public class PetAdventureChestTask extends DelayedTask {
 						if (share.isFound()) {
 							logInfo("Sharing the completed chest with the alliance.");
 							emuManager.tapAtRandomPoint(EMULATOR_NUMBER, share.getPoint(), share.getPoint());
-							sleepTask(200);
+							sleepTask(500);
 						}
-						emuManager.tapBackButton(EMULATOR_NUMBER);
-						sleepTask(250);
+						tapBackButton();
+						sleepTask(500);
 					}
 				}
 
@@ -71,7 +71,7 @@ public class PetAdventureChestTask extends DelayedTask {
 					foundAnyChest = false; // Reset on each iteration
 
 					for (EnumTemplates enumTemplates : chests) {
-						for (int attempt = 0; attempt < 3; attempt++) {
+						for (int attempt = 0; attempt < 5; attempt++) {
 							logDebug("Searching for " + enumTemplates + ", attempt " + (attempt + 1) + ".");
 
 							DTOImageSearchResult result = emuManager.searchTemplate(EMULATOR_NUMBER, enumTemplates,  90);
@@ -95,7 +95,7 @@ public class PetAdventureChestTask extends DelayedTask {
 										emuManager.tapAtPoint(EMULATOR_NUMBER, chestStart.getPoint());
 										sleepTask(500);
 
-										emuManager.tapBackButton(EMULATOR_NUMBER);
+										tapBackButton();
 										sleepTask(500);
 										break; // Exits the attempt, but not the main loop
 									} else {
@@ -104,10 +104,10 @@ public class PetAdventureChestTask extends DelayedTask {
 											logInfo("No more adventure attempts available. Rescheduling for the next game reset.");
 											this.reschedule(UtilTime.getGameReset());
 											ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, UtilTime.getGameReset());
-											emuManager.tapBackButton(EMULATOR_NUMBER);
-											emuManager.tapBackButton(EMULATOR_NUMBER);
-											emuManager.tapBackButton(EMULATOR_NUMBER);
-											emuManager.tapBackButton(EMULATOR_NUMBER);
+											tapBackButton();
+											tapBackButton();
+											tapBackButton();
+											tapBackButton();
 											return;
 										}
 									}
@@ -118,22 +118,22 @@ public class PetAdventureChestTask extends DelayedTask {
 
 					if (foundAnyChest) {
 						logInfo("At least one chest was found and started. Restarting search for more chests.");
-						sleepTask(2000); // Wait 5 seconds before repeating
+						sleepTask(5000); // Wait 5 seconds before repeating
 					}
 
 				} while (foundAnyChest); // The loop repeats until no more chests are found
 
-				logInfo("No more available chests found to start. Rescheduling for 4 hours.");
-				ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, LocalDateTime.now().plusHours(4));
-				this.reschedule(LocalDateTime.now().plusHours(4));
-				emuManager.tapBackButton(EMULATOR_NUMBER);
-				emuManager.tapBackButton(EMULATOR_NUMBER);
+				logInfo("No more available chests found to start. Rescheduling for 2 hours.");
+				ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, LocalDateTime.now().plusHours(2));
+				this.reschedule(LocalDateTime.now().plusHours(2));
+				tapBackButton();
+				tapBackButton();
 
 			}
 
 		} else {
-			logWarning("Could not find the pets button on the home screen. Retrying in 30 minutes.");
-			reschedule(LocalDateTime.now().plusMinutes(30));
+			logWarning("Could not find the pets button on the home screen. Retrying in 15 minutes.");
+			reschedule(LocalDateTime.now().plusMinutes(15));
 			attempts++;
 		}
 	}
