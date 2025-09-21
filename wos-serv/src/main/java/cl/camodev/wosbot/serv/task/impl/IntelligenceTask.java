@@ -37,15 +37,21 @@ public class IntelligenceTask extends DelayedTask {
 		logInfo("Starting Intel task.");
 		fcEra = profile.getConfig(EnumConfigurationKey.INTEL_FC_ERA_BOOL, Boolean.class);
 
+        MarchesAvailable marchesAvailable;
+        boolean useSmartProcessing = profile.getConfig(EnumConfigurationKey.INTEL_SMART_PROCESSING_BOOL, Boolean.class);
 		boolean intelFound = false;
 		boolean nonBeastIntelFound = false;
 		marchQueueLimitReached = false;
 		beastMarchSent = false;
 
-        // Check how many marches are available
-        MarchesAvailable marchesAvailable = checkMarchesAvailable();
-        if (!marchesAvailable.available()) {
-            marchQueueLimitReached = true;
+        if (useSmartProcessing) {
+            // Check how many marches are available
+            marchesAvailable = checkMarchesAvailable();
+            if (!marchesAvailable.available()) {
+                marchQueueLimitReached = true;
+            }
+        } else {
+           marchesAvailable = new MarchesAvailable(true, LocalDateTime.now());
         }
 
 		ensureOnIntelScreen();
@@ -108,32 +114,36 @@ public class IntelligenceTask extends DelayedTask {
         }
 
 		if (profile.getConfig(EnumConfigurationKey.INTEL_BEASTS_BOOL, Boolean.class)) {
-            ensureOnIntelScreen();
+            if (useSmartProcessing || !marchQueueLimitReached) {
+                ensureOnIntelScreen();
 
-            List<EnumTemplates> beastPriorities;
-            if (fcEra) {
-                beastPriorities = Arrays.asList(
-                        EnumTemplates.INTEL_FIRE_BEAST,
-                        EnumTemplates.INTEL_BEAST_YELLOW,
-                        EnumTemplates.INTEL_BEAST_PURPLE,
-                        EnumTemplates.INTEL_BEAST_BLUE);
-                logInfo("Searching for beasts (FC era).");
-            } else {
-                beastPriorities = Arrays.asList(
-                        EnumTemplates.INTEL_FIRE_BEAST,
-                        EnumTemplates.INTEL_PREFC_BEAST_YELLOW,
-                        EnumTemplates.INTEL_PREFC_BEAST_PURPLE,
-                        EnumTemplates.INTEL_PREFC_BEAST_BLUE,
-                        EnumTemplates.INTEL_PREFC_BEAST_GREEN,
-                        EnumTemplates.INTEL_PREFC_BEAST_GREY);
-                logInfo("Searching for beasts (pre-FC era).");
-            }
+				List<EnumTemplates> beastPriorities;
+				if (fcEra) {
+					beastPriorities = Arrays.asList(
+							EnumTemplates.INTEL_FIRE_BEAST,
+							EnumTemplates.INTEL_BEAST_YELLOW,
+							EnumTemplates.INTEL_BEAST_PURPLE,
+							EnumTemplates.INTEL_BEAST_BLUE);
+					logInfo("Searching for beasts (FC era).");
+				} else {
+					beastPriorities = Arrays.asList(
+							EnumTemplates.INTEL_FIRE_BEAST,
+							EnumTemplates.INTEL_PREFC_BEAST_YELLOW,
+							EnumTemplates.INTEL_PREFC_BEAST_PURPLE,
+							EnumTemplates.INTEL_PREFC_BEAST_BLUE,
+							EnumTemplates.INTEL_PREFC_BEAST_GREEN,
+							EnumTemplates.INTEL_PREFC_BEAST_GREY);
+					logInfo("Searching for beasts (pre-FC era).");
+				}
 
-            for (EnumTemplates beast : beastPriorities) {
-                if (searchAndProcess(beast, 5, 90, this::processBeast)) {
-                    intelFound = true;
-                    break;
+                for (EnumTemplates beast : beastPriorities) {
+                    if (searchAndProcess(beast, 5, 90, this::processBeast)) {
+                        intelFound = true;
+                        break;
+                    }
                 }
+            } else {
+                logInfo("No marches available, will not run beast search");
             }
 		}
 
@@ -161,7 +171,7 @@ public class IntelligenceTask extends DelayedTask {
 			// @formatter:on
 			for (EnumTemplates beast : priorities) {
 				if (searchAndProcess(beast, 5, 90, this::processSurvivor)) {
-                    intelFound = true;
+					intelFound = true;
 					nonBeastIntelFound = true;
 					break;
 				}
@@ -194,7 +204,7 @@ public class IntelligenceTask extends DelayedTask {
 			// @formatter:on
 			for (EnumTemplates beast : priorities) {
 				if (searchAndProcess(beast, 5, 90, this::processJourney)) {
-                    intelFound = true;
+					intelFound = true;
 					nonBeastIntelFound = true;
 					break;
 				}
@@ -209,7 +219,7 @@ public class IntelligenceTask extends DelayedTask {
 				String rescheduleTimeStr = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(120, 110), new DTOPoint(600, 146));
 				LocalDateTime rescheduleTime = parseAndAddTime(rescheduleTimeStr);
 				this.reschedule(rescheduleTime);
-				emuManager.tapBackButton(EMULATOR_NUMBER);
+				tapBackButton();
 				ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, rescheduleTime);
 				logInfo("No new intel found. Rescheduling task to run at: " + rescheduleTime);
 			} catch (IOException | TesseractException e) {
@@ -217,10 +227,17 @@ public class IntelligenceTask extends DelayedTask {
 				logError("Error reading intel cooldown timer: " + e.getMessage(), e);
 			}
 		} else if (marchQueueLimitReached && !nonBeastIntelFound && !beastMarchSent) {
-			this.reschedule(marchesAvailable.rescheduleTo());
-			ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, marchesAvailable.rescheduleTo());
-			logInfo("March queue is full, and only beasts remain. Rescheduling for when marches will be available at " + marchesAvailable.rescheduleTo());
-		} else if (!beastMarchSent) {
+            if (useSmartProcessing) {
+                this.reschedule(marchesAvailable.rescheduleTo());
+                ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, marchesAvailable.rescheduleTo());
+                logInfo("March queue is full, and only beasts remain. Rescheduling for when marches will be available at " + marchesAvailable.rescheduleTo());
+            } else {
+                LocalDateTime rescheduleTime = LocalDateTime.now().plusMinutes(5);
+                this.reschedule(rescheduleTime);
+                ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, rescheduleTime);
+                logInfo("March queue is full, and only beasts remain. Rescheduling for 5 minutes at " + rescheduleTime);
+            }
+        } else if (!beastMarchSent) {
 			this.reschedule(LocalDateTime.now());
 			logInfo("Intel tasks processed. Rescheduling immediately to check for more.");
 		}
@@ -256,10 +273,10 @@ public class IntelligenceTask extends DelayedTask {
 				sleepTask(500);
 				emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(520, 1200));
 				sleepTask(1000);
-				emuManager.tapBackButton(EMULATOR_NUMBER);
+				tapBackButton();
 			} else {
 				logWarning("Could not find the 'Explore' button for the journey. Going back.");
-				emuManager.tapBackButton(EMULATOR_NUMBER); // Back from journey screen
+				tapBackButton(); // Back from journey screen
 				return;
 			}
 		}
@@ -278,7 +295,7 @@ public class IntelligenceTask extends DelayedTask {
 				emuManager.tapAtPoint(EMULATOR_NUMBER, rescue.getPoint());
 			} else {
 				logWarning("Could not find the 'Rescue' button for the survivor. Going back.");
-				emuManager.tapBackButton(EMULATOR_NUMBER); // Back from survivor screen
+				tapBackButton(); // Back from survivor screen
 				return;
 			}
 		}
@@ -295,7 +312,7 @@ public class IntelligenceTask extends DelayedTask {
 		DTOImageSearchResult view = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_VIEW,  90);
 		if (!view.isFound()) {
 			logWarning("Could not find the 'View' button for the beast. Going back.");
-			emuManager.tapBackButton(EMULATOR_NUMBER);
+			tapBackButton();
 			return;
 		}
 		emuManager.tapAtPoint(EMULATOR_NUMBER, view.getPoint());
@@ -304,7 +321,7 @@ public class IntelligenceTask extends DelayedTask {
 		DTOImageSearchResult attack = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_ATTACK,  90);
 		if (!attack.isFound()) {
 			logWarning("Could not find the 'Attack' button for the beast. Going back.");
-			emuManager.tapBackButton(EMULATOR_NUMBER);
+			tapBackButton();
 			return;
 		}
 		emuManager.tapAtPoint(EMULATOR_NUMBER, attack.getPoint());
@@ -352,15 +369,15 @@ public class IntelligenceTask extends DelayedTask {
 				beastMarchSent = true;
 			} else {
 				logError("Failed to parse march time. Aborting attack.");
-				emuManager.tapBackButton(EMULATOR_NUMBER); // Go back from march screen
+				tapBackButton(); // Go back from march screen
 				sleepTask(500);
-				emuManager.tapBackButton(EMULATOR_NUMBER); // Go back from beast screen
+				tapBackButton(); // Go back from beast screen
 			}
 		} catch (IOException | TesseractException e) {
 			logError("Failed to read march time using OCR. Aborting attack. Error: " + e.getMessage(), e);
-			emuManager.tapBackButton(EMULATOR_NUMBER); // Go back from march screen
+			tapBackButton(); // Go back from march screen
 			sleepTask(500);
-			emuManager.tapBackButton(EMULATOR_NUMBER); // Go back from beast screen
+			tapBackButton(); // Go back from beast screen
 		}
 	}
 	
