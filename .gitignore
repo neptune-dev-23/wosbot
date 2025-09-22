@@ -26,3 +26,4 @@ wos-hmi/.project
 database.db
 log/bot.log
 .vscode/settings.json
+/log
