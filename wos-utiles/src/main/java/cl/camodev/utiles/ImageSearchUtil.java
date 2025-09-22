@@ -445,6 +445,6 @@ public class ImageSearchUtil {
 
 		// Load the library using the absolute path of the destination file
 		System.load(destLib.getAbsolutePath());
-		logger.info("Native library loaded from: {}", destLib.getAbsolutePath());
+		logger.info("Native library loaded from: {}", destLib.getPath()); // print a relative path for privacy when sharing logs
 	}
 }
