@@ -38,14 +38,14 @@ public class TaskQueue {
 
     private static final Logger logger = LoggerFactory.getLogger(TaskQueue.class);
     private static final long IDLE_WAIT_TIME = 999; // milliseconds to wait between task checking cycles
-
+    
     private final PriorityBlockingQueue<DelayedTask> taskQueue = new PriorityBlockingQueue<>();
     protected EmulatorManager emuManager = EmulatorManager.getInstance();
-
+    
     // State flags
     private volatile boolean running = false;
     private volatile boolean paused = false;
-
+    
     // Thread that will evaluate and execute tasks
     private Thread schedulerThread;
     private DTOProfiles profile;
@@ -133,7 +133,7 @@ public class TaskQueue {
 
             // Process tasks that are ready to run
             DelayedTask task = taskQueue.peek();
-
+            
             if (task != null && task.getDelay(TimeUnit.SECONDS) <= 0) {
                 taskQueue.poll(); // Remove the task from the queue
                 executedTask = executeTask(task);
@@ -141,20 +141,20 @@ public class TaskQueue {
             } else if (task != null) {
                 minDelay = task.getDelay(TimeUnit.SECONDS);
             }
-
+            
             // Handle background help actions
             checkAndHelpAllies();
-
+            
             // Handle idle time logic
             idlingTimeExceeded = handleIdleTime(minDelay, idlingTimeExceeded);
-
+            
             // If no task was executed, wait before checking again
             if (!executedTask) {
                 waitForNextTask(minDelay);
             }
         }
     }
-
+    
     /**
      * Executes a task and handles any exceptions
      * @param task The task to execute
@@ -174,10 +174,10 @@ public class TaskQueue {
         try {
             logInfoWithTask(task, "Starting task execution: " + task.getTaskName());
             updateProfileStatus("Executing " + task.getTaskName());
-
+            
             task.setLastExecutionTime(LocalDateTime.now());
             task.run();
-
+            
             executionSuccessful = true;
 
             // Check if daily missions should be scheduled
@@ -242,8 +242,7 @@ public class TaskQueue {
 
         // Prevent infinite loop by ensuring the scheduled time has changed
         if (scheduledBefore.equals(scheduledAfter)) {
-            logger.info("Task {} for profile {} executed without rescheduling, changing scheduled time to now to avoid infinite loop",
-                task.getTaskName(), profile.getName());
+            logInfoWithTask(task, "Task " + task.getTaskName() + " executed without rescheduling, changing scheduled time to now to avoid infinite loop");
             task.reschedule(LocalDateTime.now());
         }
 
@@ -295,8 +294,8 @@ public class TaskQueue {
     private void resumeAfterReconnectionDelay(Long reconnectionTime) {
         paused = false;
         updateProfileStatus("RESUMING AFTER PAUSE");
-        logger.info("TaskQueue resumed for profile {} after {} minutes pause", profile.getName(), reconnectionTime);
-
+        logInfo("TaskQueue resumed after " + reconnectionTime + " minutes pause");
+        
         attemptReconnectAndInitialize();
     }
 
@@ -310,7 +309,7 @@ public class TaskQueue {
 
             addTask(new InitializeTask(profile, TpDailyTaskEnum.INITIALIZE));
         } catch (Exception ex) {
-            logger.error("Error during reconnection: {}", ex.getMessage(), ex);
+            logError("Error during reconnection: " + ex.getMessage());
         }
     }
 
@@ -383,7 +382,7 @@ public class TaskQueue {
                 updateProfileStatus("Waiting for slot, position: " + position);
             });
         } catch (InterruptedException e) {
-            logger.error("Interrupted while acquiring emulator slot for profile " + profile.getName(), e);
+            logError("Interrupted while acquiring emulator slot: " + e.getMessage());
             Thread.currentThread().interrupt();
         }
     }
@@ -394,7 +393,7 @@ public class TaskQueue {
     private void handlePausedState() {
         try {
             updateProfileStatus("PAUSED");
-            logger.info("Profile {} is paused.", profile.getName());
+            logInfo("Profile is paused");
             Thread.sleep(1000); // Wait while paused
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -516,32 +515,38 @@ public class TaskQueue {
 
     // Logging helper methods
     private void logInfo(String message) {
-        logger.info(message);
+        String prefixedMessage = profile.getName() + " - " + message;
+        logger.info(prefixedMessage);
         ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueue", profile.getName(), message);
     }
 
     private void logInfoWithTask(DelayedTask task, String message) {
-        logger.info(message);
+        String prefixedMessage = profile.getName() + " - " + message;
+        logger.info(prefixedMessage);
         ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, task.getTaskName(), profile.getName(), message);
     }
 
     private void logWarning(String message) {
-        logger.warn(message);
+        String prefixedMessage = profile.getName() + " - " + message;
+        logger.warn(prefixedMessage);
         ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, "TaskQueue", profile.getName(), message);
     }
 
     private void logWarningWithTask(DelayedTask task, String message) {
-        logger.warn(message);
+        String prefixedMessage = profile.getName() + " - " + message;
+        logger.warn(prefixedMessage);
         ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, task.getTaskName(), profile.getName(), message);
     }
 
     private void logError(String message) {
-        logger.error(message);
+        String prefixedMessage = profile.getName() + " - " + message;
+        logger.error(prefixedMessage);
         ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, "TaskQueue", profile.getName(), message);
     }
 
     private void logErrorWithTask(DelayedTask task, String message) {
-        logger.error(message);
+        String prefixedMessage = profile.getName() + " - " + message;
+        logger.error(prefixedMessage);
         ServLogs.getServices().appendLog(EnumTpMessageSeverity.ERROR, task.getTaskName(), profile.getName(), message);
     }
 
@@ -561,7 +566,7 @@ public class TaskQueue {
             try {
                 schedulerThread.join(1000); // Wait up to 1 second for the thread to finish
             } catch (InterruptedException e) {
-                logger.error("Interrupted while stopping TaskQueue for profile " + profile.getName(), e);
+                logError("Interrupted while stopping TaskQueue: " + e.getMessage());
                 Thread.currentThread().interrupt();
             }
         }
@@ -569,7 +574,7 @@ public class TaskQueue {
         // Remove all pending tasks from the queue
         taskQueue.clear();
         updateProfileStatus("NOT RUNNING");
-        logger.info("TaskQueue stopped immediately for profile " + profile.getName());
+        logInfo("TaskQueue stopped immediately");
     }
 
     /**
@@ -578,7 +583,7 @@ public class TaskQueue {
     public void pause() {
         paused = true;
         updateProfileStatus("PAUSE REQUESTED");
-        logger.info("TaskQueue paused for profile " + profile.getName());
+        logInfo("TaskQueue paused");
     }
 
     /**
@@ -587,7 +592,7 @@ public class TaskQueue {
     public void resume() {
         paused = false;
         updateProfileStatus("RESUMING");
-        logger.info("TaskQueue resumed for profile " + profile.getName());
+        logInfo("TaskQueue resumed");
     }
 
     /**
