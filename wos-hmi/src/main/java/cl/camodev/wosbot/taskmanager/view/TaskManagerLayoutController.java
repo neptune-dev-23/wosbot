@@ -60,6 +60,7 @@ public class TaskManagerLayoutController implements IProfileDataChangeListener {
 	private final Image iconTrue = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/icons/indicators/green.png")));
     private final Image iconFalse = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/icons/indicators/red.png")));
     private final Image iconWaiting = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/icons/indicators/yellow.png")));
+    private final Image iconIdle = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/icons/indicators/grey.png")));
 	private final ObjectProperty<LocalDateTime> globalClock = new SimpleObjectProperty<>(LocalDateTime.now());
 	private final Map<Long, Tab> profileTabsMap = new HashMap<>();
 	private final Map<Long, ObservableList<TaskManagerAux>> tasks = new HashMap<>();
@@ -559,8 +560,10 @@ public class TaskManagerLayoutController implements IProfileDataChangeListener {
                 if (profile.getQueuePosition() == 0) {
                     iv.setImage(iconTrue);
                 } else if (profile.getQueuePosition() == Integer.MAX_VALUE && profile.getEnabled()) {
+                    iv.setImage(iconIdle);
+                } else if (!profile.getEnabled()) {
                     iv.setImage(iconFalse);
-                } else {
+                } else if (profile.getQueuePosition() != 0 && profile.getQueuePosition() != Integer.MAX_VALUE){
                     iv.setImage(iconWaiting);
                 }
                 iv.setFitWidth(16);
@@ -579,7 +582,7 @@ public class TaskManagerLayoutController implements IProfileDataChangeListener {
                     if (b1 && b2) {
                         int queuePos1 = q1.getProfile().getQueuePosition();
                         int queuePos2 = q2.getProfile().getQueuePosition();
-                        if (queuePos1 == queuePos2) return q1.getProfile().getPriority() > q2.getProfile().getPriority() ? -1 : 1;
+                        if (queuePos1 == Integer.MAX_VALUE && queuePos2 == Integer.MAX_VALUE) return q1.getDelay() > q2.getDelay() ? 1 : -1;
                         return queuePos1 > queuePos2 ? 1 : -1;
                     }
                     return b1 ? -1 : 1; // true first
@@ -594,8 +597,13 @@ public class TaskManagerLayoutController implements IProfileDataChangeListener {
         boolean waiting = !task.isExecuting() && !task.hasReadyTask() && task.isScheduled() && ChronoUnit.SECONDS.between(LocalDateTime.now(), task.getNextExecution()) >= 60;
         if (waiting) {
             iv.setImage(iconWaiting);
+        } else if (flag) {
+            iv.setImage(iconTrue);
         } else {
-            iv.setImage(flag ? iconTrue : iconFalse);
+            if (Objects.equals(task.getTaskName(), "Initialize")) {
+                iv.setImage(iconWaiting);
+            }
+            iv.setImage(iconIdle);
         }
         return iv;
     }
