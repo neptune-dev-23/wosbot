@@ -50,6 +50,7 @@ public class TaskQueue {
     private Thread schedulerThread;
     private DTOProfiles profile;
     private int helpAlliesCount = 0;
+    private boolean isIdle = true;
 
     public TaskQueue(DTOProfiles profile) {
         this.profile = profile;
