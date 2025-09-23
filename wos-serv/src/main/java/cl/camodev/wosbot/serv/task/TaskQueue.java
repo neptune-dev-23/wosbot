@@ -38,14 +38,14 @@ public class TaskQueue {
 
     private static final Logger logger = LoggerFactory.getLogger(TaskQueue.class);
     private static final long IDLE_WAIT_TIME = 999; // milliseconds to wait between task checking cycles
-    
+
     private final PriorityBlockingQueue<DelayedTask> taskQueue = new PriorityBlockingQueue<>();
     protected EmulatorManager emuManager = EmulatorManager.getInstance();
-    
+
     // State flags
     private volatile boolean running = false;
     private volatile boolean paused = false;
-    
+
     // Thread that will evaluate and execute tasks
     private Thread schedulerThread;
     private DTOProfiles profile;
@@ -136,7 +136,7 @@ public class TaskQueue {
 
             // Process tasks that are ready to run
             DelayedTask task = taskQueue.peek();
-            
+
             if (task != null && task.getDelay(TimeUnit.SECONDS) <= 0) {
                 taskQueue.poll(); // Remove the task from the queue
                 executedTask = executeTask(task);
@@ -144,20 +144,20 @@ public class TaskQueue {
             } else if (task != null) {
                 minDelay = task.getDelay(TimeUnit.SECONDS);
             }
-            
+
             // Handle background help actions
             checkAndHelpAllies();
-            
+
             // Handle idle time logic
             idlingTimeExceeded = handleIdleTime(minDelay, idlingTimeExceeded);
-            
+
             // If no task was executed, wait before checking again
             if (!executedTask) {
                 waitForNextTask(minDelay);
             }
         }
     }
-    
+
     /**
      * Executes a task and handles any exceptions
      * @param task The task to execute
@@ -177,10 +177,10 @@ public class TaskQueue {
         try {
             logInfoWithTask(task, "Starting task execution: " + task.getTaskName());
             updateProfileStatus("Executing " + task.getTaskName());
-            
+
             task.setLastExecutionTime(LocalDateTime.now());
             task.run();
-            
+
             executionSuccessful = true;
 
             // Check if daily missions should be scheduled
@@ -298,7 +298,7 @@ public class TaskQueue {
         paused = false;
         updateProfileStatus("RESUMING AFTER PAUSE");
         logInfo("TaskQueue resumed after " + reconnectionTime + " minutes pause");
-        
+
         attemptReconnectAndInitialize();
     }
 
