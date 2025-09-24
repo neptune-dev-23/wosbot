@@ -54,8 +54,8 @@ public class JourneyofLightTask extends DelayedTask {
             this.recurring = false;
             return;
         }
-
         DTOImageSearchResult result = result1.isFound() ? result1 : result2;
+
         // open JOL menu
         emuManager.tapAtRandomPoint(EMULATOR_NUMBER, result.getPoint(), result.getPoint());
         sleepTask(500);
