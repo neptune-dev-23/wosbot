@@ -37,7 +37,6 @@ public class EmulatorManager {
     private final PriorityQueue<WaitingThread> waitingQueue = new PriorityQueue<>();
     private Emulator emulator;
     private int MAX_RUNNING_EMULATORS = 3;
-    public int MAX_IDLE_TIME = 10;
 
     private EmulatorManager() {
 
@@ -73,7 +72,6 @@ public class EmulatorManager {
             throw new IllegalStateException("No active emulator set. Ensure an emulator is selected.");
         }
         MAX_RUNNING_EMULATORS = Optional.ofNullable(globalConfig.get(EnumConfigurationKey.MAX_RUNNING_EMULATORS_INT.name())).map(Integer::parseInt).orElse(Integer.parseInt(EnumConfigurationKey.MAX_RUNNING_EMULATORS_INT.getDefaultValue()));
-        MAX_IDLE_TIME = Optional.ofNullable(globalConfig.get(EnumConfigurationKey.MAX_IDLE_TIME_INT.name())).map(Integer::parseInt).orElse(Integer.parseInt(EnumConfigurationKey.MAX_IDLE_TIME_INT.getDefaultValue()));
         try {
             EmulatorType emulatorType = EmulatorType.valueOf(savedActiveEmulator);
             String consolePath = globalConfig.get(emulatorType.getConfigKey());
