@@ -50,7 +50,7 @@ public class TaskQueue {
     private Thread schedulerThread;
     private DTOProfiles profile;
     private int helpAlliesCount = 0;
-    private boolean isIdle = true;
+    private long minDelay = Long.MAX_VALUE;
 
     public TaskQueue(DTOProfiles profile) {
         this.profile = profile;
@@ -88,6 +88,9 @@ public class TaskQueue {
         return removed;
     }
 
+    public long getDelay() {
+        return minDelay;
+    }
     /**
      * Checks if a specific task type is currently scheduled in the queue
      * @param taskEnum The type of task to check
@@ -129,7 +132,7 @@ public class TaskQueue {
             }
 
             boolean executedTask = false;
-            long minDelay = Long.MAX_VALUE;
+            minDelay = Long.MAX_VALUE;
 
             // Process tasks that are ready to run
             DelayedTask task = taskQueue.peek();
