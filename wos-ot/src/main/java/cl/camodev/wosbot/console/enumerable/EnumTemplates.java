@@ -295,8 +295,8 @@ public enum EnumTemplates {
     // ========================================================================
     // TUNDRA TRUCK AND TREK EVENTS
     // ========================================================================
-    JOURNEY_OF_LIGHT_TAB("/templates/events/journeyoflight/journeyOfLightTab.png"),
-    JOURNEY_OF_LIGHT_UNSELECTED_TAB("/templates/events/journeyoflight/journeyOfLightUnselected.png"),
+  JOURNEY_OF_LIGHT_TAB("/templates/events/journeyoflight/journeyOfLightTab.png"),
+  JOURNEY_OF_LIGHT_UNSELECTED_TAB("/templates/events/journeyoflight/journeyOfLightUnselected.png"),
 
     // ========================================================================
     // EXPERTS AND MERCENARY EVENT

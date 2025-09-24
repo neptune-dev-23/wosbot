@@ -604,6 +604,7 @@ public class TaskQueue {
     public void executeTaskNow(TpDailyTaskEnum taskEnum, boolean recurring) {
         // Obtain the task prototype from the registry
         DelayedTask prototype = DelayedTaskRegistry.create(taskEnum, profile);
+        resume();
         if (prototype == null) {
             logWarning("Task not found: " + taskEnum);
             return;
