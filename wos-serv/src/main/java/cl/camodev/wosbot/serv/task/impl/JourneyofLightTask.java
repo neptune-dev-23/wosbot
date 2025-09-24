@@ -44,14 +44,17 @@ public class JourneyofLightTask extends DelayedTask {
         sleepTask(500);
 
         // Search for the journey of light menu within deals
-        DTOImageSearchResult result = emuManager.searchTemplate(EMULATOR_NUMBER,
+        DTOImageSearchResult result1 = emuManager.searchTemplate(EMULATOR_NUMBER,
                 EnumTemplates.JOURNEY_OF_LIGHT_TAB, 90);
+        DTOImageSearchResult result2 = emuManager.searchTemplate(EMULATOR_NUMBER,
+                EnumTemplates.JOURNEY_OF_LIGHT_UNSELECTED_TAB, 90);
 
-        if (!result.isFound()) {
+        if (!result1.isFound() && !result2.isFound()) {
             logWarning("Journey of Light event not found, removing from schedule.");
             this.recurring = false;
             return;
         }
+        DTOImageSearchResult result = result1.isFound() ? result1 : result2;
 
         // open JOL menu
         emuManager.tapAtRandomPoint(EMULATOR_NUMBER, result.getPoint(), result.getPoint());
@@ -102,7 +105,6 @@ public class JourneyofLightTask extends DelayedTask {
         // set for when the next one is ready
         logInfo("Next schedule: " + UtilTime.localDateTimeToDDHHMMSS(nextScheduleTime));
         this.reschedule(nextScheduleTime);
-        ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, nextScheduleTime);
 	}
 
     private boolean eventHasEnded() {
