@@ -102,7 +102,6 @@ public class JourneyofLightTask extends DelayedTask {
         // set for when the next one is ready
         logInfo("Next schedule: " + UtilTime.localDateTimeToDDHHMMSS(nextScheduleTime));
         this.reschedule(nextScheduleTime);
-        ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, nextScheduleTime);
 	}
 
     private boolean eventHasEnded() {
