@@ -243,7 +243,7 @@ public enum EnumTemplates {
 	EVENTS_DEALS_BANK_INDEPOSIT("/templates/events/deals/bankInDeposit.png"),
 	EVENTS_DEALS_BANK_DEPOSIT("/templates/events/deals/bankDeposit.png"),
 	EVENTS_DEALS_BANK_WITHDRAW("/templates/events/deals/bankWithdraw.png"),
-	
+
 	EXPLORATION_CLAIM("/templates/exploration/claim.png"),
 	HERO_RECRUIT_CLAIM("/templates/herorecruitment/freebutton.png"),
 
@@ -287,6 +287,11 @@ public enum EnumTemplates {
 
 	TUNDRA_TREK_SUPPLIES("/templates/tundratrek/trekSupplies.png"),
 	TUNDRA_TREK_CLAIM_BUTTON("/templates/tundratrek/trekClaimButton.png"),
+
+    // ========================================================================
+    // TUNDRA TRUCK AND TREK EVENTS
+    // ========================================================================
+    JOURNEY_OF_LIGHT_TAB("/templates/events/journeyoflight/journeyOfLightTab.png"),
 
     // ========================================================================
     // EXPERTS AND MERCENARY EVENT
