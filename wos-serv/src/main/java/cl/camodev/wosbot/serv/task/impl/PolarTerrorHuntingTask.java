@@ -27,7 +27,7 @@ public class PolarTerrorHuntingTask extends DelayedTask {
         String flagString = profile.getConfig(EnumConfigurationKey.POLAR_TERROR_FLAG_STRING, String.class);
         int flagNumber = 0;
         int polarTerrorLevel = profile.getConfig(EnumConfigurationKey.POLAR_TERROR_LEVEL_INT, Integer.class);
-        boolean limitedHunting = profile.getConfig(EnumConfigurationKey.POLAR_TERROR_MODE_STRING, String.class).equals("Limited");
+        boolean limitedHunting = profile.getConfig(EnumConfigurationKey.POLAR_TERROR_MODE_STRING, String.class).equals("Limited (10)");
         boolean useFlag = false;
         if (flagString != null) {
             try {
