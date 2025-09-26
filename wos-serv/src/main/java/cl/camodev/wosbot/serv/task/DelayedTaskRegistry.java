@@ -24,6 +24,7 @@ public class DelayedTaskRegistry {
         registry.put(TpDailyTaskEnum.LIFE_ESSENCE_CARING, profile -> new LifeEssenceCaringTask(profile, TpDailyTaskEnum.LIFE_ESSENCE_CARING));
         registry.put(TpDailyTaskEnum.LABYRINTH, profile -> new DailyLabyrinthTask(profile, TpDailyTaskEnum.LABYRINTH));
         registry.put(TpDailyTaskEnum.TREK_SUPPLIES, profile -> new TundraTrekTask(profile, TpDailyTaskEnum.TREK_SUPPLIES));
+        registry.put(TpDailyTaskEnum.TREK_AUTOMATION, profile -> new TundraTrekAutoTask(profile, TpDailyTaskEnum.TREK_AUTOMATION));
 
         // Gathering tasks
         registry.put(TpDailyTaskEnum.GATHER_MEAT, profile -> new GatherTask(profile, TpDailyTaskEnum.GATHER_MEAT, GatherType.MEAT));
@@ -78,6 +79,8 @@ public class DelayedTaskRegistry {
         registry.put(TpDailyTaskEnum.EVENT_TUNDRA_TRUCK, profile -> new TundraTruckEventTask(profile, TpDailyTaskEnum.EVENT_TUNDRA_TRUCK));
         registry.put(TpDailyTaskEnum.EVENT_HERO_MISSION, profile -> new HeroMissionEventTask(profile, TpDailyTaskEnum.EVENT_HERO_MISSION));
         registry.put(TpDailyTaskEnum.MERCENARY_EVENT, profile -> new MercenaryEventTask(profile, TpDailyTaskEnum.MERCENARY_EVENT));
+        registry.put(TpDailyTaskEnum.EVENT_JOURNEY_OF_LIGHT, profile -> new JourneyofLightTask(profile, TpDailyTaskEnum.EVENT_JOURNEY_OF_LIGHT));
+        registry.put(TpDailyTaskEnum.EVENT_POLAR_TERROR, profile -> new PolarTerrorHuntingTask(profile, TpDailyTaskEnum.EVENT_POLAR_TERROR));
 
         // Initialize
         registry.put(TpDailyTaskEnum.INITIALIZE, profile -> new InitializeTask(profile, TpDailyTaskEnum.INITIALIZE));

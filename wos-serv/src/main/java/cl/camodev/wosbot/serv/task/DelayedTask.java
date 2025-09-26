@@ -22,10 +22,10 @@ import java.time.ZoneOffset;
 import java.util.Objects;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public abstract class DelayedTask implements Runnable, Delayed {
-
-    private ProfileLogger logger; // Will be initialized in constructor
 
     protected volatile boolean recurring = true;
     protected LocalDateTime lastExecutionTime;
@@ -34,10 +34,10 @@ public abstract class DelayedTask implements Runnable, Delayed {
     protected DTOProfiles profile;
     protected String EMULATOR_NUMBER;
     protected TpDailyTaskEnum tpTask;
-
     protected EmulatorManager emuManager = EmulatorManager.getInstance();
     protected ServScheduler servScheduler = ServScheduler.getServices();
     protected ServLogs servLogs = ServLogs.getServices();
+    private ProfileLogger logger; // Will be initialized in constructor
 
     public DelayedTask(DTOProfiles profile, TpDailyTaskEnum tpTask) {
         this.profile = profile;
@@ -75,6 +75,7 @@ public abstract class DelayedTask implements Runnable, Delayed {
 
         ensureCorrectScreenLocation(getRequiredStartLocation());
         execute();
+        ensureCorrectScreenLocation(getRequiredStartLocation());
     }
 
 
@@ -177,16 +178,16 @@ public abstract class DelayedTask implements Runnable, Delayed {
                 sleepTask(300);
             }
         }
-        
+
         logError("Failed to find the intel button after 3 attempts.");
         throw new HomeNotFoundException("Failed to navigate to intel screen.");
     }
-    
+
     /**
      * Helper method to check if we're currently on the intel screen.
      * Uses both image recognition and OCR for verification.
      * Makes two attempts before determining the screen state.
-     * 
+     *
      * @return true if we're on the intel screen, false otherwise
      */
     private boolean isIntelScreenActive() {
@@ -195,12 +196,12 @@ public abstract class DelayedTask implements Runnable, Delayed {
             // Try image recognition first (faster)
             DTOImageSearchResult intelScreen1 = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_SCREEN_1, 90);
             DTOImageSearchResult intelScreen2 = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_SCREEN_2, 90);
-            
+
             if (intelScreen1.isFound() || intelScreen2.isFound()) {
                 logDebug("Intel screen confirmed via image template (attempt " + (attempt + 1) + ")");
                 return true;
             }
-            
+
             // Fallback to OCR check
             try {
                 String intelText = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(85, 15), new DTOPoint(171, 62));
@@ -211,16 +212,45 @@ public abstract class DelayedTask implements Runnable, Delayed {
             } catch (IOException | TesseractException e) {
                 logWarning("Could not perform OCR to check for intel screen. Error: " + e.getMessage());
             }
-            
+
             // If this is the first attempt and we didn't find the intel screen, wait briefly before trying again
             if (attempt == 0) {
                 sleepTask(300);
             }
         }
-        
+
         // After two attempts, we still couldn't find the intel screen
         logDebug("Intel screen not detected after two attempts");
         return false;
+    }
+
+    protected Integer readStaminaValue(DTOPoint topLeft, DTOPoint bottomRight) {
+        Integer staminaValue = null;
+        Pattern staminaPattern = Pattern.compile("(\\d{1,3}(?:[.,]\\d{3})*|\\d+)");
+        for (int attempt = 0; attempt < 5 && staminaValue == null; attempt++) {
+            try {
+                String ocr = emuManager.ocrRegionText(EMULATOR_NUMBER, topLeft, bottomRight);
+                if (ocr != null && !ocr.trim().isEmpty()) {
+                    Matcher m = staminaPattern.matcher(ocr);
+                    if (m.find()) {
+                        String raw = m.group(1);
+                        // Remove separators (commas or dots)
+                        String normalized = raw.replaceAll("[.,]", "");
+                        try {
+                            staminaValue = Integer.valueOf(normalized);
+                        } catch (NumberFormatException nfe) {
+                            logDebug("Parsed stamina not a valid integer: '" + raw + "'");
+                        }
+                    }
+                }
+            } catch (IOException | TesseractException ex) {
+                logDebug("OCR attempt " + (attempt + 1) + " failed: " + ex.getMessage());
+            }
+            if (staminaValue == null) {
+                sleepTask(100);
+            }
+        }
+        return staminaValue;
     }
 
     public boolean isRecurring() {

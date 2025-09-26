@@ -14,6 +14,7 @@ public enum TpDailyTaskEnum {
 	LIFE_ESSENCE(9, "Life Essence",                	EnumConfigurationKey.LIFE_ESSENCE_BOOL),
 	LIFE_ESSENCE_CARING(10, "Life Essence Caring",  EnumConfigurationKey.ALLIANCE_LIFE_ESSENCE_BOOL),
 	LABYRINTH(11, "Labyrinth",                   	EnumConfigurationKey.DAILY_LABYRINTH_BOOL),
+	TREK_AUTOMATION(12, "Tundra Trek Automation",  EnumConfigurationKey.TUNDRA_TREK_AUTOMATION_BOOL),
 	BANK(14, "Bank",                              EnumConfigurationKey.BOOL_BANK),
 
 	MAIL_REWARDS(30, "Mail Rewards",               	EnumConfigurationKey.MAIL_REWARDS_BOOL),
@@ -59,9 +60,8 @@ public enum TpDailyTaskEnum {
 	EVENT_TUNDRA_TRUCK(200, "Tundra Truck Event",    EnumConfigurationKey.TUNDRA_TRUCK_EVENT_BOOL),
 	EVENT_HERO_MISSION(201, "Hero Mission Event",    EnumConfigurationKey.HERO_MISSION_EVENT_BOOL),
 	MERCENARY_EVENT(202, "Mercenary Event",    EnumConfigurationKey.MERCENARY_EVENT_BOOL),
-		
-		
-		;
+    EVENT_JOURNEY_OF_LIGHT(203, "Journey of Light Event",    EnumConfigurationKey.JOURNEY_OF_LIGHT_BOOL),
+    EVENT_POLAR_TERROR(204, "Polar Terror Hunting",    EnumConfigurationKey.POLAR_TERROR_ENABLED_BOOL);;
 
 
     private final int id;

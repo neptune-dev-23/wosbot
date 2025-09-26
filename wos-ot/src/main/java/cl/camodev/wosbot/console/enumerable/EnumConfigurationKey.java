@@ -41,7 +41,7 @@ public enum EnumConfigurationKey {
 	GATHER_MEAT_LEVEL_INT("1", Integer.class),
 	GATHER_IRON_LEVEL_INT("1", Integer.class),
 	GATHER_ACTIVE_MARCH_QUEUE_INT("6", Integer.class),
-  GATHER_REMOVE_HEROS_BOOL("false", Boolean.class),
+	GATHER_REMOVE_HEROS_BOOL("false", Boolean.class),
 	
     // ========================================================================
     // TROOP TRAINING AND MANAGEMENT
@@ -64,7 +64,7 @@ public enum EnumConfigurationKey {
 	INTEL_BEASTS_FLAG_INT("1", Integer.class),
 	INTEL_USE_FLAG_BOOL("false", Boolean.class),
 	INTEL_FC_ERA_BOOL("false", Boolean.class),
-  INTEL_SMART_PROCESSING_BOOL("true", Boolean.class),
+	INTEL_SMART_PROCESSING_BOOL("true", Boolean.class),
 	
     // ========================================================================
     // ALLIANCE FEATURES
@@ -77,7 +77,7 @@ public enum EnumConfigurationKey {
 	ALLIANCE_AUTOJOIN_BOOL("false", Boolean.class),
 	ALLIANCE_AUTOJOIN_QUEUES_INT("1", Integer.class),
 	ALLIANCE_AUTOJOIN_USE_ALL_TROOPS_BOOL("true", Boolean.class),
-  ALLIANCE_AUTOJOIN_USE_PREDEFINED_FORMATION_BOOL("false", Boolean.class),
+	ALLIANCE_AUTOJOIN_USE_PREDEFINED_FORMATION_BOOL("false", Boolean.class),
 	ALLIANCE_PET_TREASURE_BOOL("false", Boolean.class),
 	ALLIANCE_HELP_BOOL("false", Boolean.class),
 	ALLIANCE_TRIUMPH_BOOL("false", Boolean.class),
@@ -114,8 +114,8 @@ public enum EnumConfigurationKey {
 	BOOL_NOMADIC_MERCHANT_VIP_POINTS("false", Boolean.class), 
 	BOOL_WAR_ACADEMY_SHARDS("false", Boolean.class),
 	BOOL_CRYSTAL_LAB_FC("false", Boolean.class),
-  BOOL_CRYSTAL_LAB_DAILY_DISCOUNTED_RFC("false", Boolean.class),
-  INT_WEEKLY_RFC("0", Integer.class),
+	BOOL_CRYSTAL_LAB_DAILY_DISCOUNTED_RFC("false", Boolean.class),
+	INT_WEEKLY_RFC("0", Integer.class),
 	BOOL_EXPLORATION_CHEST("false", Boolean.class),
 	INT_EXPLORATION_CHEST_OFFSET("60", Integer.class),
 	BOOL_HERO_RECRUITMENT("false", Boolean.class),
@@ -149,7 +149,14 @@ public enum EnumConfigurationKey {
 	TUNDRA_TRUCK_SSR_BOOL("false", Boolean.class),
 	TUNDRA_TRUCK_ACTIVATION_HOUR_INT("0", Integer.class),
 	TUNDRA_TREK_SUPPLIES_BOOL("false", Boolean.class),
+	TUNDRA_TREK_AUTOMATION_BOOL("false", Boolean.class),
 	
+	// Polar Terror Hunting
+	POLAR_TERROR_ENABLED_BOOL("false", Boolean.class),
+	POLAR_TERROR_LEVEL_INT("1", Integer.class),
+	POLAR_TERROR_FLAG_STRING("No Flag", String.class),
+	POLAR_TERROR_MODE_STRING("Limited", String.class),
+
 	// Mercenary event
 	MERCENARY_EVENT_BOOL("false", Boolean.class),
 	MERCENARY_USE_FLAG_BOOL("false", Boolean.class),
@@ -157,7 +164,10 @@ public enum EnumConfigurationKey {
 	
 	// Hero mission event
 	HERO_MISSION_EVENT_BOOL("false", Boolean.class),
-	
+
+    // Journey of Light event
+    JOURNEY_OF_LIGHT_BOOL("false", Boolean.class),
+
     // ========================================================================
     // EXPERT SETTINGS
     // ========================================================================

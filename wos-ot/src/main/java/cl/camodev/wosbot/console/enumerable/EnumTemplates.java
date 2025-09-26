@@ -29,6 +29,7 @@ public enum EnumTemplates {
 	
 	LEFT_MENU_CITY_TAB("/templates/leftmenu/cityTab.png"),
 	LEFT_MENU_LABYRINTH_BUTTON("/templates/leftmenu/labyrinth.png"),
+	LEFT_MENU_TUNDRA_TREK_BUTTON("/templates/leftmenu/tundraTrek.png"),
 
     // ========================================================================
     // SHORTCUTS AND BUILDING ACCESS
@@ -246,7 +247,7 @@ public enum EnumTemplates {
 	EVENTS_DEALS_BANK_INDEPOSIT("/templates/events/deals/bankInDeposit.png"),
 	EVENTS_DEALS_BANK_DEPOSIT("/templates/events/deals/bankDeposit.png"),
 	EVENTS_DEALS_BANK_WITHDRAW("/templates/events/deals/bankWithdraw.png"),
-	
+
 	EXPLORATION_CLAIM("/templates/exploration/claim.png"),
 	HERO_RECRUIT_CLAIM("/templates/herorecruitment/freebutton.png"),
 
@@ -290,6 +291,18 @@ public enum EnumTemplates {
 
 	TUNDRA_TREK_SUPPLIES("/templates/tundratrek/trekSupplies.png"),
 	TUNDRA_TREK_CLAIM_BUTTON("/templates/tundratrek/trekClaimButton.png"),
+	TUNDRA_TREK_AUTO_BUTTON("/templates/tundratrek/autoTrek.png"),
+	TUNDRA_TREK_BAG_BUTTON("/templates/tundratrek/bagTrek.png"),
+	TUNDRA_TREK_SKIP_BUTTON("/templates/tundratrek/skipTrek.png"),
+	TUNDRA_TREK_BLUE_BUTTON("/templates/tundratrek/bluebuttonTrek.png"),
+	TUNDRA_TREK_CHECK_ACTIVE("/templates/tundratrek/checkactiveTrek.png"),
+	TUNDRA_TREK_CHECK_INACTIVE("/templates/tundratrek/checkinactiveTrek.png"),
+
+    // ========================================================================
+    // TUNDRA TRUCK AND TREK EVENTS
+    // ========================================================================
+  JOURNEY_OF_LIGHT_TAB("/templates/events/journeyoflight/journeyOfLightTab.png"),
+  JOURNEY_OF_LIGHT_UNSELECTED_TAB("/templates/events/journeyoflight/journeyOfLightUnselected.png"),
 
     // ========================================================================
     // EXPERTS AND MERCENARY EVENT
@@ -302,6 +315,18 @@ public enum EnumTemplates {
 	MERCENARY_CHALLENGE_BUTTON("/templates/mercenary/mercenaryEventChallenge.png"),
 	MERCENARY_ATTACK_BUTTON("/templates/mercenary/mercenaryEventAttack.png"),
 	MERCENARY_DEPLOY_BUTTON("/templates/mercenary/mercenaryEventDeploy.png"),
+
+    // ========================================================================
+    // POLAR TERROR HUNTING
+    // ========================================================================
+    POLAR_TERROR_SEARCH_ICON("/templates/polarterror/polarTerror.png"),
+    POLAR_TERROR_TAB_MAGNIFYING_GLASS_ICON("/templates/polarterror/polarTerrorTabMagnifyingGlass.png"),
+    POLAR_TERROR_TAB_SPECIAL_REWARDS("/templates/polarterror/polarTerrorTabSpecialRewards.png"),
+    POLAR_TERROR_LEVEL_SELECTOR("/templates/polarterror/polarTerrorLevelSelector.png"),
+    POLAR_TERROR_FLAG_SELECTOR("/templates/polarterror/polarTerrorFlagSelector.png"),
+    POLAR_TERROR_MODE_SELECTOR("/templates/polarterror/polarTerrorModeSelector.png"),
+    POLAR_TERROR_DEPLOY_BUTTON("/templates/polarterror/polarTerrorDeploy.png"),
+
 
     // ========================================================================
     // CHIEF ORDER
