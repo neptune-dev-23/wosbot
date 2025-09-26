@@ -210,10 +210,6 @@ public class AllianceChestTask extends DelayedTask {
 		logWarning(reason + ". Rescheduling task to run in 5 minutes.");
 		LocalDateTime nextExecutionTime = LocalDateTime.now().plusMinutes(5);
 		this.reschedule(nextExecutionTime);
-<<<<<<< Updated upstream
-=======
-
->>>>>>> Stashed changes
 	}
 	
 	/**
