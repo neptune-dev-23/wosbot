@@ -299,17 +299,13 @@ public class MysteryShopTask extends DelayedTask {
 
 				// Check if it is not mythic shards to avoid wrong purchase
 				// Search in a specific area based on heroWidgetResult position
-				logInfo("Top left: (" + (heroWidgetResult.getPoint().getX() - 51) + ", " + (heroWidgetResult.getPoint().getY() + 177) + ")");
-				logInfo("Bottom right: (" + (heroWidgetResult.getPoint().getX() + 45) + ", " + (heroWidgetResult.getPoint().getY() + 82) + ")");
-				DTOImageSearchResult mythicShardResult = emuManager.searchTemplate(
+                DTOImageSearchResult mythicShardResult = emuManager.searchTemplate(
 					EMULATOR_NUMBER,
 					EnumTemplates.MYSTERY_SHOP_MYTHIC_SHARDS_BUTTON,
-					new DTOPoint(heroWidgetResult.getPoint().getX() - 51, heroWidgetResult.getPoint().getY() + 177),
-					new DTOPoint(heroWidgetResult.getPoint().getX() + 45, heroWidgetResult.getPoint().getY() + 82),
+					new DTOPoint(heroWidgetResult.getPoint().getX() - 51, heroWidgetResult.getPoint().getY() - 177),
+					new DTOPoint(heroWidgetResult.getPoint().getX() + 45, heroWidgetResult.getPoint().getY() - 82),
 					95
 				);
-				logInfo("DTOPoint 1: " + new DTOPoint(heroWidgetResult.getPoint().getX() - 51, heroWidgetResult.getPoint().getY() + 177));
-				logInfo("DTOPoint 2: " + new DTOPoint(heroWidgetResult.getPoint().getX() + 45, heroWidgetResult.getPoint().getY() + 82));
 
 				if (mythicShardResult.isFound()) {
 					// Add this location to the blacklist
