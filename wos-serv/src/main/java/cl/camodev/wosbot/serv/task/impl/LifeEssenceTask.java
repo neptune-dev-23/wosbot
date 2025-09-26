@@ -46,11 +46,43 @@ public class LifeEssenceTask extends DelayedTask {
 		
 		// Claim available Life Essence
 		int claimedCount = claimLifeEssence();
+
+		// Buy the weekly free scroll if available
+		buyWeeklyFreeScroll();
 		
 		// Exit menu and reschedule
 		exitAndReschedule(claimedCount);
 	}
 	
+	private void buyWeeklyFreeScroll() {
+		logInfo("Attempting to buy weekly free scroll.");
+
+		// Navigate to the shop tab
+		logDebug("Navigating to the shop tab.");
+		tapPoint(new DTOPoint(670, 195));
+		sleepTask(300);
+
+		// Search for the weekly free scroll
+		DTOImageSearchResult scroll = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.ISLAND_WEEKLY_FREE_SCROLL, 90);
+		if (scroll.isFound()) {
+			logInfo("Weekly free scroll found. Attempting to purchase.");
+			tapPoint(scroll.getPoint());
+			sleepTask(300);
+
+			// Tap the buy button
+			DTOImageSearchResult buyButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.ISLAND_WEEKLY_FREE_SCROLL_BUY_BUTTON, 90);
+			if (buyButton.isFound()) {
+				tapPoint(buyButton.getPoint());
+				sleepTask(500);
+				logInfo("Weekly free scroll purchased successfully.");
+			} else {
+				logWarning("Buy button for weekly free scroll not found.");
+			}
+		} else {
+			logInfo("No weekly free scroll available to purchase.");
+		}
+	}
+
 	/**
 	 * Navigate to the Life Essence menu
 	 * @return true if navigation was successful, false otherwise
@@ -102,7 +134,7 @@ public class LifeEssenceTask extends DelayedTask {
 		logInfo("Searching for Life Essence to claim.");
 		int claimCount = 0;
 		
-		// First, go back to ensure we're at the map view (not in the menu)
+		// First, tap back twice to stop any interfering animations
 		tapBackButton();
 		sleepTask(500);
 		tapBackButton();
