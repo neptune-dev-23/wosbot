@@ -224,33 +224,35 @@ public abstract class DelayedTask implements Runnable, Delayed {
         return false;
     }
 
-    protected Integer readStaminaValue(DTOPoint topLeft, DTOPoint bottomRight) {
-        Integer staminaValue = null;
-        Pattern staminaPattern = Pattern.compile("(\\d{1,3}(?:[.,]\\d{3})*|\\d+)");
-        for (int attempt = 0; attempt < 5 && staminaValue == null; attempt++) {
+    protected Integer readNumberValue(DTOPoint topLeft, DTOPoint bottomRight) {
+        Integer numberValue = null;
+        Pattern numberPattern = Pattern.compile("(\\d{1,3}(?:[.,]\\d{3})*|\\d+)");
+        for (int attempt = 0; attempt < 5 && numberValue == null; attempt++) {
             try {
                 String ocr = emuManager.ocrRegionText(EMULATOR_NUMBER, topLeft, bottomRight);
+                logDebug(ocr != null ? "OCR Result: '" + ocr + "'" : "OCR Result: null");
                 if (ocr != null && !ocr.trim().isEmpty()) {
-                    Matcher m = staminaPattern.matcher(ocr);
+                    Matcher m = numberPattern.matcher(ocr);
                     if (m.find()) {
                         String raw = m.group(1);
                         // Remove separators (commas or dots)
                         String normalized = raw.replaceAll("[.,]", "");
                         try {
-                            staminaValue = Integer.valueOf(normalized);
+                            numberValue = Integer.valueOf(normalized);
+                            logDebug("Parsed number value: " + numberValue);
                         } catch (NumberFormatException nfe) {
-                            logDebug("Parsed stamina not a valid integer: '" + raw + "'");
+                            logDebug("Parsed number not a valid integer: '" + raw + "'");
                         }
                     }
                 }
             } catch (IOException | TesseractException ex) {
                 logDebug("OCR attempt " + (attempt + 1) + " failed: " + ex.getMessage());
             }
-            if (staminaValue == null) {
+            if (numberValue == null) {
                 sleepTask(100);
             }
         }
-        return staminaValue;
+        return numberValue;
     }
 
     public boolean isRecurring() {
