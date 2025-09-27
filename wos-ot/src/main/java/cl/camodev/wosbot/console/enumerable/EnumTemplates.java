@@ -18,6 +18,7 @@ public enum EnumTemplates {
 	GAME_HOME_RECONNECT("/templates/home/reconnectButton.png"),
 	
 	GAME_HOME_NEW_SURVIVORS("/templates/home/newSurvivors.png"),
+
 	GAME_HOME_NEW_SURVIVORS_WELCOME_IN("/templates/home/newSurvivorsWelcome.png"),
 	GAME_HOME_NEW_SURVIVORS_PLUS_BUTTON("/templates/home/newSurvivorsPlusButton.png"),
 
@@ -98,6 +99,7 @@ public enum EnumTemplates {
 	ARENA_FREE_REFRESH_BUTTON("/templates/arena/arenaFreeRefreshButton.png"),
 	ARENA_GEMS_REFRESH_BUTTON("/templates/arena/arenaGemsRefreshButton.png"),
 	ARENA_GEMS_REFRESH_CONFIRM_BUTTON("/templates/arena/arenaGemsRefreshConfirmButton.png"),
+	ARENA_GEMS_EXTRA_ATTEMPTS_BUTTON("/templates/arena/arenaGemsExtraAttemptsButton.png"),
 
     // ========================================================================
     // TRAINING CAMPS AND TROOPS
