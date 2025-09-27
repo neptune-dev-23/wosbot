@@ -214,13 +214,15 @@ public enum EnumTemplates {
 	PETS_CHEST_BLUE("/templates/pets/chestBlue.png"),
 
     // ========================================================================
-    // LIFE ESSENCE
+    // ISLAND
     // ========================================================================
-	LIFE_ESSENCE_MENU("/templates/essence/threeMenu.png"),
-	LIFE_ESSENCE_CLAIM("/templates/essence/claim.png"),
-	LIFE_ESSENCE_DAILY_CARING_AVAILABLE("/templates/essence/dailyCaringAvailable.png"),
-	LIFE_ESSENCE_DAILY_CARING_GOTO_ISLAND("/templates/essence/dailyCaringGotoIsland.png"),
-	LIFE_ESSENCE_DAILY_CARING_BUTTON("/templates/essence/dailyCaringButton.png"),
+	LIFE_ESSENCE_MENU("/templates/island/threeMenu.png"),
+	LIFE_ESSENCE_CLAIM("/templates/island/claim.png"),
+	LIFE_ESSENCE_DAILY_CARING_AVAILABLE("/templates/island/dailyCaringAvailable.png"),
+	LIFE_ESSENCE_DAILY_CARING_GOTO_ISLAND("/templates/island/dailyCaringGotoIsland.png"),
+	LIFE_ESSENCE_DAILY_CARING_BUTTON("/templates/island/dailyCaringButton.png"),
+	ISLAND_WEEKLY_FREE_SCROLL("/templates/island/weeklyFreeScroll.png"),
+	ISLAND_WEEKLY_FREE_SCROLL_BUY_BUTTON("/templates/island/weeklyFreeScrollBuyButton.png"),
 
     // ========================================================================
     // MERCHANTS AND SHOPS
@@ -235,7 +237,8 @@ public enum EnumTemplates {
 	SHOP_MYSTERY_BUTTON("/templates/shop/mysteryShopButton.png"),
 	MYSTERY_SHOP_FREE_REWARD("/templates/shop/mysteryshop/freeReward.png"),
 	MYSTERY_SHOP_DAILY_REFRESH("/templates/shop/mysteryshop/dailyRefresh.png"),
-	MYSTERY_SHOP_50D_GEAR_BUTTON("/templates/shop/mysteryshop/50dGearButton.png"),
+	MYSTERY_SHOP_250_BADGES_BUTTON("/templates/shop/mysteryshop/250BadgesButton.png"),
+	MYSTERY_SHOP_MYTHIC_SHARDS_BUTTON("/templates/shop/mysteryshop/mysteryShopMythicShard.png"),
 
     // ========================================================================
     // BANK AND EVENTS
@@ -292,6 +295,8 @@ public enum EnumTemplates {
 	TUNDRA_TREK_BAG_BUTTON("/templates/tundratrek/bagTrek.png"),
 	TUNDRA_TREK_SKIP_BUTTON("/templates/tundratrek/skipTrek.png"),
 	TUNDRA_TREK_BLUE_BUTTON("/templates/tundratrek/bluebuttonTrek.png"),
+	TUNDRA_TREK_CHECK_ACTIVE("/templates/tundratrek/checkactiveTrek.png"),
+	TUNDRA_TREK_CHECK_INACTIVE("/templates/tundratrek/checkinactiveTrek.png"),
 
     // ========================================================================
     // TUNDRA TRUCK AND TREK EVENTS
@@ -310,6 +315,18 @@ public enum EnumTemplates {
 	MERCENARY_CHALLENGE_BUTTON("/templates/mercenary/mercenaryEventChallenge.png"),
 	MERCENARY_ATTACK_BUTTON("/templates/mercenary/mercenaryEventAttack.png"),
 	MERCENARY_DEPLOY_BUTTON("/templates/mercenary/mercenaryEventDeploy.png"),
+
+    // ========================================================================
+    // POLAR TERROR HUNTING
+    // ========================================================================
+    POLAR_TERROR_SEARCH_ICON("/templates/polarterror/polarTerror.png"),
+    POLAR_TERROR_TAB_MAGNIFYING_GLASS_ICON("/templates/polarterror/polarTerrorTabMagnifyingGlass.png"),
+    POLAR_TERROR_TAB_SPECIAL_REWARDS("/templates/polarterror/polarTerrorTabSpecialRewards.png"),
+    POLAR_TERROR_LEVEL_SELECTOR("/templates/polarterror/polarTerrorLevelSelector.png"),
+    POLAR_TERROR_FLAG_SELECTOR("/templates/polarterror/polarTerrorFlagSelector.png"),
+    POLAR_TERROR_MODE_SELECTOR("/templates/polarterror/polarTerrorModeSelector.png"),
+    POLAR_TERROR_DEPLOY_BUTTON("/templates/polarterror/polarTerrorDeploy.png"),
+
 
     // ========================================================================
     // CHIEF ORDER
