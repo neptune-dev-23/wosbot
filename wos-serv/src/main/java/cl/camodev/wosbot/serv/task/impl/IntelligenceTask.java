@@ -79,7 +79,7 @@ public class IntelligenceTask extends DelayedTask {
 		}
 
         // check is stamina enough to process any intel
-        Integer staminaValue = readStaminaValue(new DTOPoint(582, 23), new DTOPoint(672, 55));
+        Integer staminaValue = readNumberValue(new DTOPoint(582, 23), new DTOPoint(672, 55));
         if (staminaValue == null) {
             logWarning("No stamina value found after OCR attempts.");
             this.reschedule(LocalDateTime.now().plusMinutes(5));

@@ -37,18 +37,30 @@ public class PolarTerrorHuntingTask extends DelayedTask {
                 useFlag = false;
             }
         }
-        logInfo("Starting Polar Terror Hunting task. Level: " + polarTerrorLevel + ", Mode: " + (limitedHunting ? "Limited" : "Unlimited") + ", Use Flag: " + (useFlag ? flagString : "No Flag"));
+        logInfo("=== Starting Polar Terror Hunting Task ===");
+        logInfo(String.format("Configuration: Level %d | %s Mode | Flag: %s", 
+            polarTerrorLevel,
+            limitedHunting ? "Limited (10 hunts)" : "Unlimited",
+            useFlag ? "#" + flagString : "None"));
 
         // verify if there's enough stamina to hunt, if not, reschedule the task
 
         ensureOnIntelScreen();
-        int currentStamina = readStaminaValue(new DTOPoint(582, 23), new DTOPoint(672, 55));
-        ensureCorrectScreenLocation(getRequiredStartLocation());
+        Integer currentStamina = readNumberValue(new DTOPoint(582, 23), new DTOPoint(672, 55));
+        tapBackButton();
+
+        if (currentStamina == null) {
+            logWarning("Failed to read current stamina value. Retrying in 5 minutes.");
+            this.reschedule(LocalDateTime.now().plusMinutes(5));
+            return;
+        }
 
         if (currentStamina < 100) {
             LocalDateTime rescheduleTime = LocalDateTime.now().plusMinutes(staminaRegenerationTime(currentStamina,120));
             reschedule(rescheduleTime);
-            logWarning("Not enough stamina to do polar (Current: " + currentStamina + "). Rescheduling task in " + rescheduleTime + "minutes.");
+            int waitMinutes = staminaRegenerationTime(currentStamina, 120);
+            logInfo(String.format("Insufficient stamina for Polar Terror (Current: %d/120). Waiting %d minutes for regeneration.",
+                currentStamina, waitMinutes));
             return;
         }
 
@@ -72,7 +84,7 @@ public class PolarTerrorHuntingTask extends DelayedTask {
                     break;
                 }
                 attempts++;
-                logDebug("Swiping to find the correct resource tile, attempt " + attempts);
+                logDebug(String.format("Searching for Polar Terror icon (attempt %d/4)", attempts));
                 emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(40, 913), new DTOPoint(678, 913));
                 sleepTask(500);
             }
@@ -83,7 +95,7 @@ public class PolarTerrorHuntingTask extends DelayedTask {
                 tapPoint(polarTerror.getPoint());
                 sleepTask(1000);
 
-                logInfo("Setting resource level to " + polarTerrorLevel + ".");
+                logDebug(String.format("Adjusting Polar Terror level to %d", polarTerrorLevel));
                 emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(435, 1052), new DTOPoint(40, 1052)); // Swipe to level 1
                 sleepTask(250);
                 if (polarTerrorLevel > 1) {
@@ -103,7 +115,7 @@ public class PolarTerrorHuntingTask extends DelayedTask {
                         break;
                     }
                     attempts++;
-                    logDebug("Magnifying glass not found on search screen, retrying, attempt " + attempts);
+                    logDebug(String.format("Searching for magnifying glass icon (attempt %d/4)", attempts));
 
                     sleepTask(500);
                 }
@@ -126,9 +138,15 @@ public class PolarTerrorHuntingTask extends DelayedTask {
 
                     if (specialRewards.isFound()) {
                         //due limited mode is enabled, and there's no special rewards found, means there's no hunts left
+<<<<<<< Updated upstream
                         logWarning("No special rewards found, meaning there's no hunts left for today. Rescheduling task for reset");
                         //lets add 10 minutes to let intel be processed
                         reschedule(UtilTime.getGameReset().plusMinutes(10));
+=======
+                        logInfo("No daily hunts remaining. Rescheduling task for after game reset (+15 minutes).");
+                        //lets add 15 minutes to let intel be processed
+                        reschedule(UtilTime.getGameReset().plusMinutes(15));
+>>>>>>> Stashed changes
                         return;
                     }
 
@@ -247,7 +265,7 @@ public class PolarTerrorHuntingTask extends DelayedTask {
                         break;
                     }
                     deployRetry++;
-                    logDebug("Deploy still present, retry " + deployRetry + " of " + maxDeployRetries);
+                    logDebug(String.format("Verifying troop deployment (attempt %d/%d)", deployRetry + 1, maxDeployRetries));
                     sleepTask(1000);
                 }
 
@@ -257,17 +275,18 @@ public class PolarTerrorHuntingTask extends DelayedTask {
                     sleepTask(1000);
                     continue;
                 } else {
-                    logInfo("March deployed successfully.");
+                    logInfo(String.format("✓ March deployed successfully to Level %d Polar Terror%s",
+                        polarTerrorLevel, useFlag ? " with Flag #" + flagString : ""));
                     anyDispatched = true;
 
                     // Deduct stamina for successful deployment
                     // TODO: adjust via OCR
                     currentStamina -= 25;
-                    logInfo("Stamina decreased by 25. Current stamina: " + currentStamina);
+                    logDebug(String.format("Stamina update: %d → %d (-25)", currentStamina + 25, currentStamina));
 
                     // If limitedHunting is true, only allow one march and return
                     if (limitedHunting) {
-                        logInfo("Limited hunting mode enabled - exiting after one successful march.");
+                        logInfo("Limited hunting mode: Daily hunt completed. Rescheduling for march return.");
                         if (travelTimeSeconds > 0) {
                             reschedule(LocalDateTime.now().plusSeconds(travelTimeSeconds).plusMinutes(2));
                         } else {
