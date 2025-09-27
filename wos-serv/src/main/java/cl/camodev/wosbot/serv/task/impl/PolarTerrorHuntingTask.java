@@ -138,15 +138,9 @@ public class PolarTerrorHuntingTask extends DelayedTask {
 
                     if (specialRewards.isFound()) {
                         //due limited mode is enabled, and there's no special rewards found, means there's no hunts left
-<<<<<<< Updated upstream
-                        logWarning("No special rewards found, meaning there's no hunts left for today. Rescheduling task for reset");
-                        //lets add 10 minutes to let intel be processed
-                        reschedule(UtilTime.getGameReset().plusMinutes(10));
-=======
                         logInfo("No daily hunts remaining. Rescheduling task for after game reset (+15 minutes).");
                         //lets add 15 minutes to let intel be processed
                         reschedule(UtilTime.getGameReset().plusMinutes(15));
->>>>>>> Stashed changes
                         return;
                     }
 
