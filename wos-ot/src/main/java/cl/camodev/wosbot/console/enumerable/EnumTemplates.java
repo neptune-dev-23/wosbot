@@ -94,6 +94,11 @@ public enum EnumTemplates {
 	
 	MAIL_UNCLAIMED_REWARDS("/templates/mail/unclaimedRewards.png"),
 
+	ARENA_CHALLENGE_BUTTON("/templates/arena/arenaChallengeButton.png"),
+	ARENA_FREE_REFRESH_BUTTON("/templates/arena/arenaFreeRefreshButton.png"),
+	ARENA_GEMS_REFRESH_BUTTON("/templates/arena/arenaGemsRefreshButton.png"),
+	ARENA_GEMS_REFRESH_CONFIRM_BUTTON("/templates/arena/arenaGemsRefreshConfirmButton.png"),
+
     // ========================================================================
     // TRAINING CAMPS AND TROOPS
     // ========================================================================
