@@ -21,8 +21,7 @@ import cl.camodev.wosbot.serv.task.EnumStartLocation;
  * Activation hour can be set to control when the task runs daily.
  */
 public class ArenaTask extends DelayedTask {
-	private static final DTOPoint MY_POWER_TOP_LEFT = new DTOPoint(368, 247);
-	private static final DTOPoint MY_POWER_BOTTOM_RIGHT = new DTOPoint(564, 284);
+	// Points used for OCR and template matching
 	private static final DTOPoint CHALLENGES_LEFT_TOP_LEFT = new DTOPoint(405, 951);
 	private static final DTOPoint CHALLENGES_LEFT_BOTTOM_RIGHT = new DTOPoint(439, 986);
 	// Activation time in "HH:mm" format (24-hour clock)
@@ -31,6 +30,9 @@ public class ArenaTask extends DelayedTask {
 	private boolean refreshWithGems = profile.getConfig(EnumConfigurationKey.ARENA_TASK_REFRESH_WITH_GEMS_BOOL, Boolean.class);
 	private int attempts = 0;
     private boolean firstRun = false;
+    private static final int MAX_GEM_REFRESHES = 5;
+    private int gemRefreshCount = 0;
+    private static final int[] ATTEMPT_PRICES = {100, 200, 400, 600, 800};
 
     public ArenaTask(DTOProfiles profile, TpDailyTaskEnum tpTask) {
         super(profile, tpTask);
@@ -132,9 +134,7 @@ public class ArenaTask extends DelayedTask {
     private boolean checkFirstRun() {
         try {
 			// Get arena score
-            String arenaScoreText = emuManager.ocrRegionText(EMULATOR_NUMBER,
-				new DTOPoint(567, 1065), new DTOPoint(649, 1099));
-            long arenaScore = extractPowerValue(arenaScoreText);
+            long arenaScore = readNumberValue(new DTOPoint(567, 1065), new DTOPoint(649, 1099));
             logInfo("Arena score: " + arenaScore);
             if(arenaScore == 1000) {
                 logInfo("First run detected based on arena score of 1000.");
@@ -161,17 +161,8 @@ public class ArenaTask extends DelayedTask {
     }
 	
     private boolean processChallenges() {
-		long myPower;
-		try {
-			// Get my power first
-            String myPowerText = emuManager.ocrRegionText(EMULATOR_NUMBER,
-				MY_POWER_TOP_LEFT, MY_POWER_BOTTOM_RIGHT);
-            myPower = extractPowerValue(myPowerText);
-            logInfo("My power: " + myPower);
-		} catch (Exception e) {
-			logError("Failed to read my power value: " + e.getMessage());
-			return false;
-		}
+		// We don't need to read myPower anymore since we're using color detection
+        // We'll use color detection instead of OCR for power comparison
 
 		while (attempts > 0) {
             try {
@@ -181,60 +172,40 @@ public class ArenaTask extends DelayedTask {
                     // Calculate Y position for each opponent (starting from top)
                     int y;
                     if(firstRun) {
-                        y = 369 + (i * 128);
+                        y = 380 + (i * 128);
                     } else {
-                        y = 343 + (i * 128);
+                        y = 354 + (i * 128);
                     }
                     
-                    // Read opponent power with multiple attempts
-                    long bestPowerRead = 0;
-                    logInfo("Reading power for opponent " + (i + 1) + " (position y=" + y + ")");
+                    // Check the color distribution in the power text area
+                    logInfo("Analyzing power text color for opponent " + (i + 1) + " (position y=" + y + ")");
                     
-                    for (int attempt = 0; attempt < 3; attempt++) {
-                        logDebug("Attempt " + (attempt + 1) + "/3");
-                        String opponentPowerText = emuManager.ocrRegionText(EMULATOR_NUMBER,
-                                new DTOPoint(178, y), new DTOPoint(282, y + 34));
-                        logDebug("Raw OCR text: '" + opponentPowerText + "'");
-                        
-                        long powerRead = extractPowerValue(opponentPowerText);
-                        logDebug("Parsed power value: " + powerRead);
-                        
-                        // Validate the read value
-                        boolean isValidPower = powerRead >= 50_000 && 
-                                             String.valueOf(powerRead).length() >= 5 && 
-                                             String.valueOf(powerRead).length() <= 9;
-                                             
-                        if (isValidPower) {
-                            logDebug("Valid power reading: " + powerRead);
-                            // If this is our first valid reading or it's higher than our previous best
-                            // (assuming higher values are more likely to be correct due to OCR missing digits)
-                            if (bestPowerRead == 0 || powerRead > bestPowerRead) {
-                                logDebug("New best power reading (previous: " + bestPowerRead + ", new: " + powerRead + ")");
-                                bestPowerRead = powerRead;
-                            }
-                        } else {
-                            logDebug("Invalid power reading: " + powerRead + 
-                                    " (must be >= 50,000 and have 5-9 digits)");
-                        }
-                        
-                        if (attempt < 2) { // Don't sleep after the last attempt
-                            sleepTask(300); // Short delay between attempts
-                        }
-                    }
-                    
-                    if (bestPowerRead == 0) {
-                        logWarning("Failed to get valid power reading for opponent " + (i + 1) + 
-                                 " after 3 attempts. Skipping this opponent.");
-                        continue; // Skip this opponent
-                    }
-                    
-                    logInfo("Final power reading for opponent " + (i + 1) + ": " + bestPowerRead + 
-                           " (compared to my power: " + myPower + ")");
+                    // Define the area to scan (power text region)
+                    DTOPoint topLeft = new DTOPoint(185, y);   // Left and top of power text
+                    DTOPoint bottomRight = new DTOPoint(215, y + 14); // Right and bottom of power text
 
-                    if (bestPowerRead < myPower) {
+                    // Analyze the region colors (returns [background, green, red] counts)
+                    int[] colorCounts = emuManager.analyzeRegionColors(EMULATOR_NUMBER, topLeft, bottomRight, 2);
+
+                    int backgroundPixels = colorCounts[0];
+                    int greenPixels = colorCounts[1];
+                    int redPixels = colorCounts[2];
+                    int totalColoredPixels = greenPixels + redPixels;
+
+                    // Log detailed color distribution
+                    int totalPixels = ((bottomRight.getX() - topLeft.getX()) * (bottomRight.getY() - topLeft.getY())) / 4; // Accounting for step size of 2
+                    logDebug(String.format("Color analysis - Background: %d, Green: %d, Red: %d (Total sampled: %d)", 
+                            backgroundPixels, greenPixels, redPixels, totalPixels));
+                    
+                    // If we have a significant number of colored pixels and green is dominant
+                    if (totalColoredPixels > 10 && greenPixels > redPixels * 1.5) {
+                        logInfo("Found predominantly green text for opponent " + (i + 1) + " - power is lower than ours");
+                        sleepTask(1000);
+
+                        // Since the text is mostly green, the opponent's power is lower than ours
 						// Click the challenge button for this opponent
                         emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(624, y));
-                        sleepTask(1000);
+                        sleepTask(2000);
                         
                         // Handle the battle and continue with remaining attempts
                         handleBattle();
@@ -244,15 +215,27 @@ public class ArenaTask extends DelayedTask {
                         }
                         foundOpponent = true;
                         firstRun = false;
+                        sleepTask(1000);
                         break;
                     }
                 }
 				
                 if (!foundOpponent) {
-					// Try to refresh the opponent list
+                    // Try to refresh the opponent list
                     if (!refreshOpponentList()) {
-						logInfo("No more refreshes available and no suitable opponents found.");
-                        return false;
+                        // If no refresh available and we still have attempts, challenge first opponent
+                        logInfo("No more refreshes available and no suitable opponents found. Challenging first opponent to use remaining attempts.");
+                        int y = firstRun ? 380 : 354;  // Y-coordinate for first opponent
+                        
+                        emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(624, y));
+                        sleepTask(2000);
+                        
+                        handleBattle();
+                        attempts--;
+                        checkResult();  // We don't care about the result here
+                        firstRun = false;
+                        sleepTask(1000);
+                        continue;  // Continue to use remaining attempts
                     }
                     sleepTask(1000);
                 }
@@ -263,65 +246,8 @@ public class ArenaTask extends DelayedTask {
             }
         }
 		
-        logInfo("All attempts used.");
+        logInfo("All attempts used. Arena task completed.");
         return true;
-    }
-	
-    private long extractPowerValue(String powerText) {
-        if (powerText == null || powerText.trim().isEmpty()) {
-            logWarning("Empty power text received");
-            return 0;
-        }
-
-        try {
-            // Remove common OCR artifacts and clean the text
-            String cleaned = powerText.toLowerCase()
-                .replace(",", "")
-                .replace(" ", "")
-                .replace("m]", "m")
-                // Common million value misreadings
-                .replace("bom", "80m")
-                .replace("bim", "81m")
-                .replace("som", "50m")
-                .replace("b7m", "87m")
-                // Common letter/number confusions
-                .replace("o", "0")  // Letter O to number 0
-                .replace("l", "1")  // Lowercase L to number 1
-                .replace("i", "1")  // Uppercase I to number 1
-                .replace("z", "2")  // Letter Z to number 2
-                .replace("s", "5")  // Letter S to number 5
-                .replace("g", "6")  // Letter G to number 6
-                .replace("b", "8")  // Letter B to number 8
-                // Remove other common artifacts
-                .replace("—", "")
-                .replace("§", "")
-                .trim();
-
-            // If after cleaning we have nothing left, return 0
-            if (cleaned.isEmpty()) {
-                logWarning("Text cleaned to empty string: " + powerText);
-                return 0;
-            }
-
-            // Handle million (M) values
-            if (cleaned.endsWith("m")) {
-                String numberPart = cleaned.substring(0, cleaned.length() - 1);
-                // Handle decimal points in million values
-                if (numberPart.contains(".")) {
-                    double value = Double.parseDouble(numberPart);
-                    return (long) (value * 1_000_000);
-                } else {
-                    long value = Long.parseLong(numberPart);
-                    return value * 1_000_000;
-                }
-            }
-
-            // Handle regular numbers
-            return Long.parseLong(cleaned);
-        } catch (NumberFormatException e) {
-            logWarning("Failed to parse power value: " + powerText);
-            return 0;
-        }
     }
 	
     private void handleBattle() {
@@ -344,13 +270,14 @@ public class ArenaTask extends DelayedTask {
             return true;
         }
 
-        // Check if refresh with gems is available and enabled
-        if (refreshWithGems) {
+        // Check if refresh with gems is available and enabled, and within limits
+        if (refreshWithGems && gemRefreshCount < MAX_GEM_REFRESHES) {
 			DTOImageSearchResult gemsRefreshResult = emuManager.searchTemplate(
                 EMULATOR_NUMBER, EnumTemplates.ARENA_GEMS_REFRESH_BUTTON, 90);
 				
             if (gemsRefreshResult.isFound()) {
-				logInfo("Using gems refresh");
+                gemRefreshCount++;
+				logInfo(String.format("Using gems refresh (%d/%d)", gemRefreshCount, MAX_GEM_REFRESHES));
                 emuManager.tapAtPoint(EMULATOR_NUMBER, gemsRefreshResult.getPoint());
                 sleepTask(500);
 				
@@ -375,11 +302,19 @@ public class ArenaTask extends DelayedTask {
             // Wait a bit longer for the result screen to stabilize
             sleepTask(1000);
             
-            String result = emuManager.ocrRegionText(EMULATOR_NUMBER,
-                new DTOPoint(165, 387), new DTOPoint(544, 495));
+            // Coordinates to find victory text
+            DTOPoint victoryTopLeft = new DTOPoint(186, 392);
+            DTOPoint victoryBottomRight = new DTOPoint(536, 494);
+            // Coordinates to find defeat text
+            DTOPoint defeatTopLeft = new DTOPoint(195, 290);
+            DTOPoint defeatBottomRight = new DTOPoint(516, 384);
+
+            // Check victory region first
+            String victoryText = emuManager.ocrRegionText(EMULATOR_NUMBER,
+                victoryTopLeft, victoryBottomRight);
             
-            // Clean up the result text
-            String cleanResult = result != null ? result.toLowerCase()
+            // Clean up the victory text
+            String cleanVictory = victoryText != null ? victoryText.toLowerCase()
                 .replace("—", "")
                 .replace("gs", "")
                 .replace("fs", "")
@@ -387,17 +322,35 @@ public class ArenaTask extends DelayedTask {
                 .replace("aa", "")
                 .trim() : "";
                 
-            if (cleanResult.contains("victory")) {
-                logInfo("Battle result: " + cleanResult);
+            if (cleanVictory.contains("victory")) {
+                logInfo("Battle result: Victory");
+                sleepTask(1000);
+                tapBackButton();
                 return true;
-            } else if (cleanResult.contains("defeat")) {
-                logInfo("Battle result: " + cleanResult);
+            }
+
+            // If no victory found, check defeat region
+            String defeatText = emuManager.ocrRegionText(EMULATOR_NUMBER,
+                defeatTopLeft, defeatBottomRight);
+            
+            // Clean up the defeat text
+            String cleanDefeat = defeatText != null ? defeatText.toLowerCase()
+                .replace("—", "")
+                .replace("gs", "")
+                .replace("fs", "")
+                .replace("es", "")
+                .replace("aa", "")
+                .trim() : "";
+
+            if (cleanDefeat.contains("defeat")) {
+                logInfo("Battle result: Defeat");
             } else {
-                // If we can't read the result, just log it and continue
-                logWarning("Unrecognized battle result: " + result);
+                // If we can't read either result, log both attempts
+                logWarning("Unrecognized battle result. Victory region: '" + victoryText + 
+                          "', Defeat region: '" + defeatText + "'");
             }
             
-            sleepTask(500); // Wait before tapping back
+            sleepTask(1000); // Wait before tapping back
             tapBackButton();
         } catch (Exception e) {
             logError("OCR error while checking battle result: " + e.getMessage());
@@ -407,10 +360,9 @@ public class ArenaTask extends DelayedTask {
 	
 	private boolean getAttempts() {
 		try {
-			String attemptsText = emuManager.ocrRegionText(EMULATOR_NUMBER,
-			CHALLENGES_LEFT_TOP_LEFT, CHALLENGES_LEFT_BOTTOM_RIGHT);
+			Integer attemptsText = readNumberValue(CHALLENGES_LEFT_TOP_LEFT, CHALLENGES_LEFT_BOTTOM_RIGHT);
 			if (attemptsText != null) {
-				attempts = Integer.parseInt(attemptsText.trim());
+				attempts = attemptsText;
 				logInfo("Initial attempts available: " + attempts);
 				return true;
 			}
@@ -423,9 +375,18 @@ public class ArenaTask extends DelayedTask {
 	}
 
 	private int buyExtraAttempts() {
+
 		// Tap the "+" attempts button
 		emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(467, 965));
 		sleepTask(1000);
+
+        // Check if the purchase confirmation popup appears
+        DTOImageSearchResult confirmResult = emuManager.searchTemplate(
+                EMULATOR_NUMBER, EnumTemplates.ARENA_GEMS_EXTRA_ATTEMPTS_BUTTON, 90);
+        if (!confirmResult.isFound()) {
+            logInfo("No more extra attempts available");
+            return 0;
+        }
 
 		// Reset the queue counter to zero first
 		logDebug("Resetting queue counter");
@@ -433,22 +394,86 @@ public class ArenaTask extends DelayedTask {
 		sleepTask(300);
 		
 		logInfo("Attempting to buy " + extraAttempts + " extra attempts");
-		// Tap (extra attempts - 1) times to set the desired number of queues
-		emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(457, 713), new DTOPoint(499, 752),
-				(extraAttempts - 1), 400);
-		sleepTask(300);
 
-        Integer attemptsBought = readNumberValue(new DTOPoint(542, 714), new DTOPoint(619, 753));
-        if(attemptsBought == null) {
-            logWarning("Failed to read number of attempts bought, assuming " + extraAttempts);
-            attemptsBought = extraAttempts;
-        } else {
-            logInfo("Confirmed attempts to be bought: " + attemptsBought);
+        // Coordinates for price location
+        DTOPoint topLeft = new DTOPoint(328, 840);
+        DTOPoint bottomRight = new DTOPoint(433, 883);
+
+        // Find where we are in the price sequence
+        Integer singleAttemptPrice = readNumberValue(topLeft, bottomRight);
+        if (singleAttemptPrice == null) {
+            logWarning("Failed to read single attempt price");
+            tapBackButton();
+            return 0;
         }
 
-		emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(360, 860)); // Tap buy button
+        // Find which attempt number we're at based on current price
+        int previousAttempts = -1;
+        for (int i = 0; i < ATTEMPT_PRICES.length; i++) {
+            if (ATTEMPT_PRICES[i] == singleAttemptPrice) {
+                previousAttempts = i;
+                break;
+            }
+        }
 
-        return attemptsBought;
+        if (previousAttempts == -1) {
+            logWarning(String.format("Unexpected single attempt price: %d gems", singleAttemptPrice));
+            tapBackButton();
+            return 0;
+        }
+
+        // If we already have more attempts than requested, no need to buy more
+        if (previousAttempts >= extraAttempts) {
+            logInfo(String.format("Already have %d attempts (wanted %d), no need to buy more", 
+                    previousAttempts, extraAttempts));
+            tapBackButton();
+            return 0;
+        }
+
+        // Calculate how many more attempts we can buy (limited by max attempts and how many we want)
+        int remainingAttempts = Math.min(
+            ATTEMPT_PRICES.length - previousAttempts,  // How many more we can buy
+            extraAttempts - previousAttempts           // How many more we want to buy
+        );
+        
+        if (remainingAttempts <= 0) {
+            logWarning("No more attempts can be purchased");
+            tapBackButton();
+            return 0;
+        }
+
+        // Calculate total price for the remaining attempts
+        int expectedPrice = 0;
+        for (int i = previousAttempts; i < previousAttempts + remainingAttempts; i++) {
+            expectedPrice += ATTEMPT_PRICES[i];
+        }
+
+        logDebug(String.format("Previous attempts: %d, Can buy %d more, Price will be: %d gems", 
+                  previousAttempts, remainingAttempts, expectedPrice));
+
+        // Reset counter and set the correct number of remaining attempts
+        emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(420, 733), new DTOPoint(40, 733));
+        sleepTask(300);
+        
+        if (remainingAttempts > 1) {
+            emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(457, 713), new DTOPoint(499, 752),
+                    remainingAttempts - 1, 400);
+            sleepTask(300);
+        }
+
+        // Verify final price matches our expectation
+        Integer finalPrice = readNumberValue(topLeft, bottomRight);
+        if (finalPrice == null || finalPrice != expectedPrice) {
+            logWarning(String.format("Final price mismatch! Expected: %d, Got: %s", 
+                      expectedPrice, finalPrice != null ? finalPrice.toString() : "null"));
+            tapBackButton();
+            return 0;
+        }
+
+        // Price matches, proceed with purchase
+        logInfo(String.format("Buying %d attempts for %d gems", remainingAttempts, expectedPrice));
+		emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(360, 860)); // Tap buy button
+        return remainingAttempts;
 	}
 
 	/**
