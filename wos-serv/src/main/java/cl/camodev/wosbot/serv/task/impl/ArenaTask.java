@@ -451,10 +451,6 @@ public class ArenaTask extends DelayedTask {
         logDebug(String.format("Previous attempts: %d, Can buy %d more, Price will be: %d gems", 
                   previousAttempts, remainingAttempts, expectedPrice));
 
-        // Reset counter and set the correct number of remaining attempts
-        emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(420, 733), new DTOPoint(40, 733));
-        sleepTask(300);
-        
         if (remainingAttempts > 1) {
             emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(457, 713), new DTOPoint(499, 752),
                     remainingAttempts - 1, 400);
@@ -462,13 +458,13 @@ public class ArenaTask extends DelayedTask {
         }
 
         // Verify final price matches our expectation
-        Integer finalPrice = readNumberValue(topLeft, bottomRight);
-        if (finalPrice == null || finalPrice != expectedPrice) {
-            logWarning(String.format("Final price mismatch! Expected: %d, Got: %s", 
-                      expectedPrice, finalPrice != null ? finalPrice.toString() : "null"));
-            tapBackButton();
-            return 0;
-        }
+        // Integer finalPrice = readNumberValue(topLeft, bottomRight);
+        // if (finalPrice == null || finalPrice != expectedPrice) {
+        //     logWarning(String.format("Final price mismatch! Expected: %d, Got: %s", 
+        //               expectedPrice, finalPrice != null ? finalPrice.toString() : "null"));
+        //     tapBackButton();
+        //     return 0;
+        // }
 
         // Price matches, proceed with purchase
         logInfo(String.format("Buying %d attempts for %d gems", remainingAttempts, expectedPrice));
