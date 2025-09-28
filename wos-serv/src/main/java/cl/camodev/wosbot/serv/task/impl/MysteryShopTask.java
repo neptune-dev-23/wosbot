@@ -102,7 +102,7 @@ public class MysteryShopTask extends DelayedTask {
 		boolean foundConfiguredPurchases = true;
 		int dailyRefreshUsedCount = 0;
 		final int maxDailyRefreshes = 10; // configurable limit to avoid abusing refresh
-		int maxIterations = 15; // Prevent infinite loops
+		int maxIterations = 5; // Prevent infinite loops
 		int iteration = 0;
 		boolean totalClaimedAny = false;
 		boolean totalPurchasedAny = false;
