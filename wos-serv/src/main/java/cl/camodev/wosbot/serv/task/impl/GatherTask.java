@@ -44,8 +44,9 @@ public class GatherTask extends DelayedTask {
         if (profile.getConfig(EnumConfigurationKey.INTEL_SMART_PROCESSING_BOOL, Boolean.class)) {
             // Make sure intel isn't about to run
             DailyTask intel = iDailyTaskRepository.findByProfileIdAndTaskName(profile.getId(), TpDailyTaskEnum.INTEL);
-            if (ChronoUnit.MINUTES.between(LocalDateTime.now(), intel.getNextSchedule()) < 15) {
-                reschedule(LocalDateTime.now().plusMinutes(16)); // Reschedule in 16 minutes, after intel has run
+            if (ChronoUnit.MINUTES.between(LocalDateTime.now(), intel.getNextSchedule()) < 5) {
+                reschedule(LocalDateTime.now().plusMinutes(35)); // Reschedule in 35 minutes, after intel has run
+                logWarning("Intel task is scheduled to run soon. Rescheduling Gather Task to run 30min after intel.");
                 ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, LocalDateTime.now().plusMinutes(2));
                 return;
             }
