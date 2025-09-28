@@ -1,22 +1,29 @@
 package cl.camodev.wosbot.serv.task.impl;
 
 import cl.camodev.utiles.UtilTime;
+import cl.camodev.wosbot.almac.entity.DailyTask;
+import cl.camodev.wosbot.almac.repo.DailyTaskRepository;
+import cl.camodev.wosbot.almac.repo.IDailyTaskRepository;
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
+import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 import cl.camodev.wosbot.serv.task.EnumStartLocation;
 import net.sourceforge.tess4j.TesseractException;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class MercenaryEventTask extends DelayedTask {
+    private final IDailyTaskRepository iDailyTaskRepository = DailyTaskRepository.getRepository();
 
     public MercenaryEventTask(DTOProfiles profile, TpDailyTaskEnum tpDailyTask) {
         super(profile, tpDailyTask);
@@ -29,6 +36,17 @@ public class MercenaryEventTask extends DelayedTask {
 
     @Override
     protected void execute() {
+        if (profile.getConfig(EnumConfigurationKey.INTEL_BOOL, Boolean.class)
+         && profile.getConfig(EnumConfigurationKey.MERCENARY_USE_FLAG_BOOL, Boolean.class)) {
+            // Make sure intel isn't about to run
+            DailyTask intel = iDailyTaskRepository.findByProfileIdAndTaskName(profile.getId(), TpDailyTaskEnum.INTEL);
+            if (ChronoUnit.MINUTES.between(LocalDateTime.now(), intel.getNextSchedule()) < 5) {
+                reschedule(LocalDateTime.now().plusMinutes(35)); // Reschedule in 35 minutes, after intel has run
+                logWarning("Intel task is scheduled to run soon. Rescheduling Mercenary Event to run 30min after intel.");
+                ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, LocalDateTime.now().plusMinutes(2));
+                return;
+            }
+        }
 
         if (!checkStamina()) {
             logInfo("Stamina check failed or insufficient. Task has been rescheduled.");
@@ -60,53 +78,36 @@ public class MercenaryEventTask extends DelayedTask {
         ensureOnIntelScreen();
         sleepTask(2000);
 
-        try {
-            Integer staminaValue = null;
-            for (int attempt = 0; attempt < 5 && staminaValue == null; attempt++) {
-                try {
-                    String ocr = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(582, 23), new DTOPoint(672, 55));
-                    if (ocr != null && !ocr.trim().isEmpty()) {
-                        Matcher m = Pattern.compile("\\d+").matcher(ocr);
-                        if (m.find()) {
-                            staminaValue = Integer.valueOf(m.group());
-                        }
-                    }
-                } catch (IOException | TesseractException ex) {
-                    logDebug("Stamina OCR attempt " + (attempt + 1) + " failed: " + ex.getMessage());
-                }
-                if (staminaValue == null) {
-                    sleepTask(100);
-                }
-            }
-
-            if (staminaValue == null) {
-                logWarning("Could not read stamina value after multiple attempts. Rescheduling for 5 minutes.");
-                this.reschedule(LocalDateTime.now().plusMinutes(5));
-                return false;
-            }
-
-            int minStaminaRequired = 30;
-            if (staminaValue < minStaminaRequired) {
-                logWarning("Not enough stamina to attack mercenary. Current: " + staminaValue + ", Required: " + minStaminaRequired);
-                long minutesToRegen = (minStaminaRequired - staminaValue) * 5L;
-                LocalDateTime rescheduleTime = LocalDateTime.now().plusMinutes(minutesToRegen);
-                this.reschedule(rescheduleTime);
-                logInfo("Rescheduling for " + rescheduleTime + " to regenerate stamina.");
-                return false;
-            }
-
-            logInfo("Stamina is sufficient (" + staminaValue + ").");
-            return true;
-
-        } catch (Exception e) {
-            logError("Unexpected error reading stamina: " + e.getMessage(), e);
-            this.reschedule(LocalDateTime.now().plusMinutes(15));
+        Integer staminaValue = readNumberValue(new DTOPoint(582, 23), new DTOPoint(672, 55));
+        if (staminaValue == null) {
+            logWarning("No stamina value found after OCR attempts.");
+            this.reschedule(LocalDateTime.now().plusMinutes(5));
             return false;
         }
+
+        int minStaminaRequired = 30;
+        if (staminaValue < minStaminaRequired) {
+            logWarning("Not enough stamina to attack mercenary. Current: " + staminaValue + ", Required: "
+                    + minStaminaRequired);
+            long minutesToRegen = (minStaminaRequired - staminaValue) * 5L;
+            LocalDateTime rescheduleTime = LocalDateTime.now().plusMinutes(minutesToRegen);
+            this.reschedule(rescheduleTime);
+            logInfo("Rescheduling for " + rescheduleTime + " to regenerate stamina.");
+            return false;
+        }
+
+        logInfo("Stamina is sufficient (" + staminaValue + ").");
+        return true;
+
     }
 
     private void handleMercenaryEvent() {
         try {
+            // Select mercenary event level if needed
+            if(!selectMercenaryEventLevel()) {
+                return; // If level selection failed, exit the task
+            }
+
             // Check for scout or challenge buttons
             DTOImageSearchResult eventButton = findMercenaryEventButton();
             
@@ -121,6 +122,83 @@ public class MercenaryEventTask extends DelayedTask {
             logError("An error occurred during the Mercenary Event task: " + e.getMessage(), e);
             this.reschedule(LocalDateTime.now().plusMinutes(30)); // Reschedule on error
         }
+    }
+
+    private boolean selectMercenaryEventLevel() {
+        // Check if level selection is needed
+        try {
+            String textEasy = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(112, 919), new DTOPoint(179, 953));
+            String textNormal = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(310, 919), new DTOPoint(410, 953));
+            String textHard = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(540, 919), new DTOPoint(609, 953));
+            logDebug("OCR Results - Easy: '" + textEasy + "', Normal: '" + textNormal + "', Hard: '" + textHard + "'");
+            if ((textEasy != null && textEasy.toLowerCase().contains("easy"))
+                    || (textNormal != null && textNormal.toLowerCase().contains("normal"))
+                    || (textHard != null && textHard.toLowerCase().contains("hard"))) {
+                logInfo("Mercenary event level selection detected.");
+            } else {
+                logInfo("Mercenary event level selection not needed.");
+            }
+        } catch (Exception e) {
+            logError("Error checking mercenary event level selection: " + e.getMessage(), e);
+        }
+
+        // First try to select a level in the Legend's Initiation tab
+        emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(512, 625)); // Tap Legend's Initiation tab
+
+        DTOPoint difficultyInsane = new DTOPoint(145, 817);
+        DTOPoint difficultyNightmare = new DTOPoint(360, 817);
+        DTOPoint difficultyHard = new DTOPoint(575, 817);
+        DTOPoint difficultyNormal = new DTOPoint(252, 1088);
+        DTOPoint difficultyEasy = new DTOPoint(467, 1088);
+        Map<String, DTOPoint> difficultyPoints = Map.of(
+            "Insane", difficultyInsane,
+            "Nightmare", difficultyNightmare,
+            "Hard", difficultyHard,
+            "Normal", difficultyNormal,
+            "Easy", difficultyEasy
+        );
+
+        for (Map.Entry<String, DTOPoint> entry : difficultyPoints.entrySet()) {
+            String difficulty = entry.getKey();
+            DTOPoint point = entry.getValue();
+            emuManager.tapAtPoint(EMULATOR_NUMBER, point);
+            sleepTask(500);
+            DTOImageSearchResult challengeCheck = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.MERCENARY_DIFFICULTY_CHALLENGE, 90);
+            if (challengeCheck.isFound()) {
+                sleepTask(1000);
+                emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(504, 788)); // Tap the confirm button
+                logInfo("Selected mercenary event difficulty: " + difficulty + " in Legend's Initiation tab.");
+                sleepTask(2000);
+                return true;
+            }
+            sleepTask(1000);
+            tapBackButton();
+        }
+
+        // If not found, try the Champion's Initiation tab
+        emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(185, 625)); // Tap Champion's Initiation tab
+
+        for (Map.Entry<String, DTOPoint> entry : difficultyPoints.entrySet()) {
+            String difficulty = entry.getKey();
+            DTOPoint point = entry.getValue();
+            emuManager.tapAtPoint(EMULATOR_NUMBER, point);
+            sleepTask(500);
+            DTOImageSearchResult challengeCheck = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.MERCENARY_DIFFICULTY_CHALLENGE, 90);
+            if (challengeCheck.isFound()) {
+                sleepTask(1000);
+                emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(504, 788)); // Tap the confirm button
+                logInfo("Selected mercenary event difficulty: " + difficulty + " in Champion's Initiation tab.");
+                sleepTask(2000);
+                return true;
+            }
+            sleepTask(1000);
+            tapBackButton();
+        }
+
+        // If no difficulty was selected, log a warning
+        logWarning("Could not select a mercenary event difficulty. Rescheduling to try later.");
+        this.reschedule(LocalDateTime.now().plusMinutes(10));
+        return false;
     }
 
     private boolean navigateToEventScreen() {
