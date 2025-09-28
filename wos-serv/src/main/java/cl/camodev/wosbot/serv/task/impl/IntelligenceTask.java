@@ -17,7 +17,6 @@ import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
-import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 import cl.camodev.wosbot.serv.task.EnumStartLocation;
 import net.sourceforge.tess4j.TesseractException;
@@ -166,7 +165,6 @@ public class IntelligenceTask extends DelayedTask {
 				LocalDateTime rescheduleTime = parseAndAddTime(rescheduleTimeStr);
 				this.reschedule(rescheduleTime);
 				tapBackButton();
-				ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, rescheduleTime);
 				logInfo("No new intel found. Rescheduling task to run at: " + rescheduleTime);
 			} catch (IOException | TesseractException e) {
 				this.reschedule(LocalDateTime.now().plusMinutes(5));
@@ -175,12 +173,10 @@ public class IntelligenceTask extends DelayedTask {
 		} else if (marchQueueLimitReached && !nonBeastIntelFound && !beastMarchSent) {
             if (useSmartProcessing) {
                 this.reschedule(marchesAvailable.rescheduleTo());
-                ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, marchesAvailable.rescheduleTo());
                 logInfo("March queue is full, and only beasts remain. Rescheduling for when marches will be available at " + marchesAvailable.rescheduleTo());
             } else {
                 LocalDateTime rescheduleTime = LocalDateTime.now().plusMinutes(5);
                 this.reschedule(rescheduleTime);
-                ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, rescheduleTime);
                 logInfo("March queue is full, and only beasts remain. Rescheduling for 5 minutes at " + rescheduleTime);
             }
         } else if (!beastMarchSent) {
@@ -331,7 +327,6 @@ public class IntelligenceTask extends DelayedTask {
 				long returnTimeSeconds = (travelTimeSeconds * 2) + 2;
 				LocalDateTime rescheduleTime = LocalDateTime.now().plusSeconds(returnTimeSeconds);
 				this.reschedule(rescheduleTime);
-				ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, rescheduleTime);
 				logInfo("Beast march sent. Task will run again at " + rescheduleTime + ".");
 				beastMarchSent = true;
 			} else {
