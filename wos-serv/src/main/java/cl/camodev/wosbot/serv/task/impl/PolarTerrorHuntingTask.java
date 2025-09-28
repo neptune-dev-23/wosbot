@@ -27,7 +27,7 @@ public class PolarTerrorHuntingTask extends DelayedTask {
         String flagString = profile.getConfig(EnumConfigurationKey.POLAR_TERROR_FLAG_STRING, String.class);
         int flagNumber = 0;
         int polarTerrorLevel = profile.getConfig(EnumConfigurationKey.POLAR_TERROR_LEVEL_INT, Integer.class);
-        boolean limitedHunting = profile.getConfig(EnumConfigurationKey.POLAR_TERROR_MODE_STRING, String.class).equals("Limited");
+        boolean limitedHunting = profile.getConfig(EnumConfigurationKey.POLAR_TERROR_MODE_STRING, String.class).equals("Limited (10)");
         boolean useFlag = false;
         if (flagString != null) {
             try {
@@ -239,7 +239,7 @@ public class PolarTerrorHuntingTask extends DelayedTask {
             long travelTimeSeconds = 0;
             try {
                 String timeStr = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(521, 1141), new DTOPoint(608, 1162));
-                travelTimeSeconds = UtilTime.parseTimeToSeconds(timeStr);
+                travelTimeSeconds = UtilTime.parseTimeToSeconds(timeStr) * 2;
             } catch (Exception e) {
                 logError("Error parsing travel time: " + e.getMessage());
             }
@@ -282,16 +282,16 @@ public class PolarTerrorHuntingTask extends DelayedTask {
                     if (limitedHunting) {
                         logInfo("Limited hunting mode: Daily hunt completed. Rescheduling for march return.");
                         if (travelTimeSeconds > 0) {
-                            reschedule(LocalDateTime.now().plusSeconds(travelTimeSeconds).plusMinutes(2));
+                            reschedule(LocalDateTime.now().plusSeconds(travelTimeSeconds).plusMinutes(5));
                         } else {
-                            reschedule(LocalDateTime.now().plusMinutes(2));
+                            reschedule(LocalDateTime.now().plusMinutes(5));
                         }
                         return;
                     }
 
                     if (useFlag) {
                         if (travelTimeSeconds > 0) {
-                            reschedule(LocalDateTime.now().plusSeconds(travelTimeSeconds).plusMinutes(2));
+                            reschedule(LocalDateTime.now().plusSeconds(travelTimeSeconds).plusMinutes(5));
                         }
                         return;
                     } else {
@@ -322,16 +322,16 @@ public class PolarTerrorHuntingTask extends DelayedTask {
                 if (limitedHunting) {
                     logInfo("Limited hunting mode enabled - exiting after one successful march.");
                     if (travelTimeSeconds > 0) {
-                        reschedule(LocalDateTime.now().plusSeconds(travelTimeSeconds).plusMinutes(2));
+                        reschedule(LocalDateTime.now().plusSeconds(travelTimeSeconds).plusMinutes(5));
                     } else {
-                        reschedule(LocalDateTime.now().plusMinutes(2));
+                        reschedule(LocalDateTime.now().plusMinutes(5));
                     }
                     return;
                 }
 
                 if (useFlag) {
                     if (travelTimeSeconds > 0) {
-                        reschedule(LocalDateTime.now().plusSeconds(travelTimeSeconds).plusMinutes(2));
+                        reschedule(LocalDateTime.now().plusSeconds(travelTimeSeconds).plusMinutes(5));
                     }
                     return;
                 } else {
