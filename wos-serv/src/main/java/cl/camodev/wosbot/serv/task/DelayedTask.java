@@ -234,7 +234,9 @@ public abstract class DelayedTask implements Runnable, Delayed {
             "(°)", 0,
             "il}", 1,
             "7400)", 400,
-            "SEM)", 800
+            "SEM)", 800,
+            "1800)", 800,
+            "2n", 211
         );
 
         for (int attempt = 0; attempt < 5 && numberValue == null; attempt++) {
