@@ -10,7 +10,6 @@ import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
-import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 import cl.camodev.wosbot.serv.task.EnumStartLocation;
 import net.sourceforge.tess4j.TesseractException;
@@ -18,7 +17,6 @@ import net.sourceforge.tess4j.TesseractException;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -43,7 +41,6 @@ public class MercenaryEventTask extends DelayedTask {
             if (ChronoUnit.MINUTES.between(LocalDateTime.now(), intel.getNextSchedule()) < 5) {
                 reschedule(LocalDateTime.now().plusMinutes(35)); // Reschedule in 35 minutes, after intel has run
                 logWarning("Intel task is scheduled to run soon. Rescheduling Mercenary Event to run 30min after intel.");
-                ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, LocalDateTime.now().plusMinutes(2));
                 return;
             }
         }
@@ -69,8 +66,8 @@ public class MercenaryEventTask extends DelayedTask {
             attempt++;
         }
 
-        logWarning("Could not find the Mercenary event tab. Assuming event is unavailable. Task will be removed.");
-        this.setRecurring(false);
+        logWarning("Could not find the Mercenary event tab. Assuming event is unavailable. Rescheduling to reset.");
+        reschedule(UtilTime.getGameReset());
     }
 
     private boolean checkStamina() {
@@ -112,8 +109,8 @@ public class MercenaryEventTask extends DelayedTask {
             DTOImageSearchResult eventButton = findMercenaryEventButton();
             
             if (eventButton == null) {
-                logInfo("No scout or challenge button found, assuming event is completed. Removing task.");
-                this.setRecurring(false);
+                logInfo("No scout or challenge button found, assuming event is completed. Rescheduling to reset.");
+                reschedule(UtilTime.getGameReset());
                 return;
             }
             
@@ -137,37 +134,38 @@ public class MercenaryEventTask extends DelayedTask {
                 logInfo("Mercenary event level selection detected.");
             } else {
                 logInfo("Mercenary event level selection not needed.");
+                return true;
             }
         } catch (Exception e) {
             logError("Error checking mercenary event level selection: " + e.getMessage(), e);
+            return false;
         }
 
         // First try to select a level in the Legend's Initiation tab
         emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(512, 625)); // Tap Legend's Initiation tab
+        sleepTask(1000);
 
-        DTOPoint difficultyInsane = new DTOPoint(145, 817);
-        DTOPoint difficultyNightmare = new DTOPoint(360, 817);
-        DTOPoint difficultyHard = new DTOPoint(575, 817);
-        DTOPoint difficultyNormal = new DTOPoint(252, 1088);
-        DTOPoint difficultyEasy = new DTOPoint(467, 1088);
-        Map<String, DTOPoint> difficultyPoints = Map.of(
-            "Insane", difficultyInsane,
-            "Nightmare", difficultyNightmare,
-            "Hard", difficultyHard,
-            "Normal", difficultyNormal,
-            "Easy", difficultyEasy
-        );
+        // Define difficulties in order from highest to lowest
+        record DifficultyLevel(String name, DTOPoint point) {}
+        DifficultyLevel[] difficultyLevels = {
+            new DifficultyLevel("Insane", new DTOPoint(467, 1088)),
+            new DifficultyLevel("Nightmare", new DTOPoint(252, 1088)),
+            new DifficultyLevel("Hard", new DTOPoint(575, 817)),
+            new DifficultyLevel("Normal", new DTOPoint(360, 817)),
+            new DifficultyLevel("Easy", new DTOPoint(145, 817))
+        };
 
-        for (Map.Entry<String, DTOPoint> entry : difficultyPoints.entrySet()) {
-            String difficulty = entry.getKey();
-            DTOPoint point = entry.getValue();
-            emuManager.tapAtPoint(EMULATOR_NUMBER, point);
-            sleepTask(500);
+        for (DifficultyLevel level : difficultyLevels) {
+            logDebug("Attempting to select difficulty: " + level.name());
+            emuManager.tapAtPoint(EMULATOR_NUMBER, level.point());
+            sleepTask(2000);
             DTOImageSearchResult challengeCheck = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.MERCENARY_DIFFICULTY_CHALLENGE, 90);
             if (challengeCheck.isFound()) {
                 sleepTask(1000);
+                tapPoint(challengeCheck.getPoint());
+                sleepTask(1000);
                 emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(504, 788)); // Tap the confirm button
-                logInfo("Selected mercenary event difficulty: " + difficulty + " in Legend's Initiation tab.");
+                logInfo("Selected mercenary event difficulty: " + level.name() + " in Legend's Initiation tab.");
                 sleepTask(2000);
                 return true;
             }
@@ -177,17 +175,19 @@ public class MercenaryEventTask extends DelayedTask {
 
         // If not found, try the Champion's Initiation tab
         emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(185, 625)); // Tap Champion's Initiation tab
+        sleepTask(1000);
 
-        for (Map.Entry<String, DTOPoint> entry : difficultyPoints.entrySet()) {
-            String difficulty = entry.getKey();
-            DTOPoint point = entry.getValue();
-            emuManager.tapAtPoint(EMULATOR_NUMBER, point);
+        for (DifficultyLevel level : difficultyLevels) {
+            logDebug("Attempting to select difficulty: " + level.name());
+            emuManager.tapAtPoint(EMULATOR_NUMBER, level.point());
             sleepTask(500);
             DTOImageSearchResult challengeCheck = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.MERCENARY_DIFFICULTY_CHALLENGE, 90);
             if (challengeCheck.isFound()) {
                 sleepTask(1000);
+                tapPoint(challengeCheck.getPoint());
+                sleepTask(1000);
                 emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(504, 788)); // Tap the confirm button
-                logInfo("Selected mercenary event difficulty: " + difficulty + " in Champion's Initiation tab.");
+                logInfo("Selected mercenary event difficulty: " + level.name() + " in Champion's Initiation tab.");
                 sleepTask(2000);
                 return true;
             }
@@ -339,8 +339,8 @@ public class MercenaryEventTask extends DelayedTask {
                 logWarning("Attack button not found after scouting/challenging.");
             }
         } else {
-            logInfo("No scout or challenge button found, assuming event is completed. Removing task.");
-            this.setRecurring(false);
+            logInfo("No scout or challenge button found, assuming event is completed. Rescheduling to reset.");
+            reschedule(UtilTime.getGameReset());
         }
     }
 
