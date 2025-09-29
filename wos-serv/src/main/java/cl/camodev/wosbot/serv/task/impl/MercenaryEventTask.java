@@ -16,6 +16,7 @@ import net.sourceforge.tess4j.TesseractException;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -23,6 +24,7 @@ import java.util.regex.Pattern;
 public class MercenaryEventTask extends DelayedTask {
     private final IDailyTaskRepository iDailyTaskRepository = DailyTaskRepository.getRepository();
     private Integer lastMercenaryLevel = null;
+    private int attackAttempts = 0;
 
     public MercenaryEventTask(DTOProfiles profile, TpDailyTaskEnum tpDailyTask) {
         super(profile, tpDailyTask);
@@ -90,7 +92,7 @@ public class MercenaryEventTask extends DelayedTask {
             long minutesToRegen = (minStaminaRequired - staminaValue) * 5L;
             LocalDateTime rescheduleTime = LocalDateTime.now().plusMinutes(minutesToRegen);
             reschedule(rescheduleTime);
-            logInfo("Rescheduling for " + rescheduleTime + " to regenerate stamina.");
+            logInfo("Rescheduling for " + DateTimeFormatter.ofPattern("HH:mm:ss").format(rescheduleTime) + " to regenerate stamina.");
             return false;
         }
 
@@ -125,8 +127,10 @@ public class MercenaryEventTask extends DelayedTask {
             }
 
             if (sameLevelAsLastTime) {
+                attackAttempts++;
                 logInfo("Mercenary level is the same as last time, indicating a possible attack loss. Skipping flag selection to use strongest march.");
             } else {
+                attackAttempts = 0;
                 logInfo("Mercenary level has changed since last time. Using flag selection if enabled.");
             }
 
@@ -320,11 +324,23 @@ public class MercenaryEventTask extends DelayedTask {
             tapPoint(eventButton.getPoint());
             sleepTask(4000); // Wait to travel to mercenary location on map
 
-            DTOImageSearchResult attackButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.MERCENARY_ATTACK_BUTTON, 90);
-            if (attackButton.isFound()) {
+            DTOImageSearchResult attackOrRallyButton = null;
+            boolean rally = false;
+            if(attackAttempts > 3) {
+                logWarning("Multiple consecutive attack attempts detected without level change. Rallying the mercenary instead of normal attack.");
+                attackOrRallyButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.RALLY_BUTTON, 90);
+                rally = true;
+            } else {
+                attackOrRallyButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.MERCENARY_ATTACK_BUTTON, 90);
+            }
+
+            if (attackOrRallyButton != null && attackOrRallyButton.isFound()) {
                 logInfo("Attacking mercenary.");
-                tapPoint(attackButton.getPoint());
-                sleepTask(2000);
+                tapPoint(attackOrRallyButton.getPoint());
+                sleepTask(1000);
+
+                if (rally) tapRandomPoint(new DTOPoint(275, 821), new DTOPoint(444, 856));
+                sleepTask(500);
 
                 // Check if the march screen is open before proceeding
                 DTOImageSearchResult deployButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.DEPLOY_BUTTON, 90);
@@ -352,9 +368,13 @@ public class MercenaryEventTask extends DelayedTask {
                         tapPoint(deployButton.getPoint());
                         sleepTask(1000); // Wait for march to start
                         long returnTimeSeconds = (travelTimeSeconds * 2) + 2;
-                        LocalDateTime rescheduleTime = LocalDateTime.now().plusSeconds(returnTimeSeconds);
+
+                        LocalDateTime rescheduleTime = rally ?
+                         LocalDateTime.now().plusSeconds(returnTimeSeconds).plusMinutes(5) :
+                         LocalDateTime.now().plusSeconds(returnTimeSeconds);
+
                         reschedule(rescheduleTime);
-                        logInfo("Mercenary march sent. Task will run again at " + rescheduleTime + ".");
+                        logInfo("Mercenary march sent. Task will run again in " + rescheduleTime.format(DateTimeFormatter.ofPattern("mm:ss")) + ".");
                     } else {
                         logError("Failed to parse march time. Aborting attack.");
                         tapBackButton(); // Go back from march screen
