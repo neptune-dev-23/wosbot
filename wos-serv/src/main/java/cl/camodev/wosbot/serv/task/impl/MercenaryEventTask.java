@@ -22,6 +22,7 @@ import java.util.regex.Pattern;
 
 public class MercenaryEventTask extends DelayedTask {
     private final IDailyTaskRepository iDailyTaskRepository = DailyTaskRepository.getRepository();
+    private Integer lastMercenaryLevel = null;
 
     public MercenaryEventTask(DTOProfiles profile, TpDailyTaskEnum tpDailyTask) {
         super(profile, tpDailyTask);
@@ -78,7 +79,7 @@ public class MercenaryEventTask extends DelayedTask {
         Integer staminaValue = readNumberValue(new DTOPoint(582, 23), new DTOPoint(672, 55));
         if (staminaValue == null) {
             logWarning("No stamina value found after OCR attempts.");
-            this.reschedule(LocalDateTime.now().plusMinutes(5));
+            reschedule(LocalDateTime.now().plusMinutes(5));
             return false;
         }
 
@@ -88,7 +89,7 @@ public class MercenaryEventTask extends DelayedTask {
                     + minStaminaRequired);
             long minutesToRegen = (minStaminaRequired - staminaValue) * 5L;
             LocalDateTime rescheduleTime = LocalDateTime.now().plusMinutes(minutesToRegen);
-            this.reschedule(rescheduleTime);
+            reschedule(rescheduleTime);
             logInfo("Rescheduling for " + rescheduleTime + " to regenerate stamina.");
             return false;
         }
@@ -113,12 +114,38 @@ public class MercenaryEventTask extends DelayedTask {
                 reschedule(UtilTime.getGameReset());
                 return;
             }
-            
-            scoutAndAttack(eventButton);
+
+            // Handle attack loss, if the attack was lost, skip flag selection to use strongest march
+            boolean sameLevelAsLastTime = false;
+            logInfo("Previous mercenary level: " + lastMercenaryLevel);
+            Integer currentLevel = checkMercenaryLevel();
+            if (currentLevel != null) {
+                sameLevelAsLastTime = (currentLevel.equals(lastMercenaryLevel));
+                lastMercenaryLevel = currentLevel;
+            }
+
+            if (sameLevelAsLastTime) {
+                logInfo("Mercenary level is the same as last time, indicating a possible attack loss. Skipping flag selection to use strongest march.");
+            } else {
+                logInfo("Mercenary level has changed since last time. Using flag selection if enabled.");
+            }
+
+            scoutAndAttack(eventButton, sameLevelAsLastTime);
         } catch (Exception e) {
             logError("An error occurred during the Mercenary Event task: " + e.getMessage(), e);
-            this.reschedule(LocalDateTime.now().plusMinutes(30)); // Reschedule on error
+            reschedule(LocalDateTime.now().plusMinutes(30)); // Reschedule on error
         }
+    }
+
+    private Integer checkMercenaryLevel() {
+        Integer level = readNumberValue(new DTOPoint(322, 867), new DTOPoint(454, 918));
+        if (level == null) {
+            logWarning("No mercenary level found after OCR attempts.");
+            return null;
+        }
+
+        logInfo("Current mercenary level: " + level);
+        return level;
     }
 
     private boolean selectMercenaryEventLevel() {
@@ -142,7 +169,7 @@ public class MercenaryEventTask extends DelayedTask {
         }
 
         // First try to select a level in the Legend's Initiation tab
-        emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(512, 625)); // Tap Legend's Initiation tab
+        tapPoint(new DTOPoint(512, 625)); // Tap Legend's Initiation tab
         sleepTask(1000);
 
         // Define difficulties in order from highest to lowest
@@ -157,14 +184,14 @@ public class MercenaryEventTask extends DelayedTask {
 
         for (DifficultyLevel level : difficultyLevels) {
             logDebug("Attempting to select difficulty: " + level.name());
-            emuManager.tapAtPoint(EMULATOR_NUMBER, level.point());
+            tapPoint(level.point());
             sleepTask(2000);
             DTOImageSearchResult challengeCheck = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.MERCENARY_DIFFICULTY_CHALLENGE, 90);
             if (challengeCheck.isFound()) {
                 sleepTask(1000);
                 tapPoint(challengeCheck.getPoint());
                 sleepTask(1000);
-                emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(504, 788)); // Tap the confirm button
+                tapPoint(new DTOPoint(504, 788)); // Tap the confirm button
                 logInfo("Selected mercenary event difficulty: " + level.name() + " in Legend's Initiation tab.");
                 sleepTask(2000);
                 return true;
@@ -174,19 +201,19 @@ public class MercenaryEventTask extends DelayedTask {
         }
 
         // If not found, try the Champion's Initiation tab
-        emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(185, 625)); // Tap Champion's Initiation tab
+        tapPoint(new DTOPoint(185, 625)); // Tap Champion's Initiation tab
         sleepTask(1000);
 
         for (DifficultyLevel level : difficultyLevels) {
             logDebug("Attempting to select difficulty: " + level.name());
-            emuManager.tapAtPoint(EMULATOR_NUMBER, level.point());
+            tapPoint(level.point());
             sleepTask(500);
             DTOImageSearchResult challengeCheck = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.MERCENARY_DIFFICULTY_CHALLENGE, 90);
             if (challengeCheck.isFound()) {
                 sleepTask(1000);
                 tapPoint(challengeCheck.getPoint());
                 sleepTask(1000);
-                emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(504, 788)); // Tap the confirm button
+                tapPoint(new DTOPoint(504, 788)); // Tap the confirm button
                 logInfo("Selected mercenary event difficulty: " + level.name() + " in Champion's Initiation tab.");
                 sleepTask(2000);
                 return true;
@@ -197,7 +224,7 @@ public class MercenaryEventTask extends DelayedTask {
 
         // If no difficulty was selected, log a warning
         logWarning("Could not select a mercenary event difficulty. Rescheduling to try later.");
-        this.reschedule(LocalDateTime.now().plusMinutes(10));
+        reschedule(LocalDateTime.now().plusMinutes(10));
         return false;
     }
 
@@ -213,17 +240,18 @@ public class MercenaryEventTask extends DelayedTask {
 			return false;
 		}
 
-		emuManager.tapAtRandomPoint(EMULATOR_NUMBER, eventsResult.getPoint(), eventsResult.getPoint());
+		tapPoint(eventsResult.getPoint());
 		sleepTask(2000);
+
 		// Close any windows that may be open
-		emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(529, 27), new DTOPoint(635, 63), 5, 300);
+		tapRandomPoint(new DTOPoint(529, 27), new DTOPoint(635, 63), 5, 300);
 
 		// Search for the mercenary within events
 		DTOImageSearchResult result = emuManager.searchTemplate(EMULATOR_NUMBER,
 				EnumTemplates.MERCENARY_EVENT_TAB, 90);
 
 		if (result.isFound()) {
-			emuManager.tapAtRandomPoint(EMULATOR_NUMBER, result.getPoint(), result.getPoint());
+			tapPoint(result.getPoint());
 			sleepTask(1000);
 			logInfo("Successfully navigated to the Mercenary event.");
 			return true;
@@ -242,7 +270,7 @@ public class MercenaryEventTask extends DelayedTask {
 					EnumTemplates.MERCENARY_EVENT_TAB, 90);
 
 			if (result.isFound()) {
-				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, result.getPoint(), result.getPoint());
+				tapPoint(result.getPoint());
 				sleepTask(1000);
 				logInfo("Successfully navigated to the Mercenary event.");
     				return true;
@@ -284,31 +312,31 @@ public class MercenaryEventTask extends DelayedTask {
         return null;
     }
 
-    private void scoutAndAttack(DTOImageSearchResult eventButton) throws IOException, TesseractException {
+    private void scoutAndAttack(DTOImageSearchResult eventButton, boolean sameLevelAsLastTime) throws IOException, TesseractException {
         logInfo("Starting scout/attack process for mercenary event.");
         
         if (eventButton != null) {
             // Click on the button (whether it's scout or challenge)
-            emuManager.tapAtPoint(EMULATOR_NUMBER, eventButton.getPoint());
+            tapPoint(eventButton.getPoint());
             sleepTask(4000); // Wait to travel to mercenary location on map
 
             DTOImageSearchResult attackButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.MERCENARY_ATTACK_BUTTON, 90);
             if (attackButton.isFound()) {
                 logInfo("Attacking mercenary.");
-                emuManager.tapAtPoint(EMULATOR_NUMBER, attackButton.getPoint());
+                tapPoint(attackButton.getPoint());
                 sleepTask(2000);
 
                 // Check if the march screen is open before proceeding
                 DTOImageSearchResult deployButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.DEPLOY_BUTTON, 90);
                 if (!deployButton.isFound()) {
                     logError("March queue is full or another issue occurred. Cannot start a new march.");
-                    this.reschedule(LocalDateTime.now().plusMinutes(10));
+                    reschedule(LocalDateTime.now().plusMinutes(10));
                     return;
                 }
 
                 // Check if we should use a specific flag
                 boolean useFlag = profile.getConfig(EnumConfigurationKey.MERCENARY_USE_FLAG_BOOL, Boolean.class);
-                if (useFlag) {
+                if (useFlag && !sameLevelAsLastTime) {
                     // Select the specified flag
                     int flagToSelect = profile.getConfig(EnumConfigurationKey.MERCENARY_FLAG_INT, Integer.class);
                     selectMarchFlag(flagToSelect);
@@ -321,11 +349,11 @@ public class MercenaryEventTask extends DelayedTask {
 
                     if (travelTimeSeconds > 0) {
                         // Proceed to deploy troops
-                        emuManager.tapAtPoint(EMULATOR_NUMBER, deployButton.getPoint());
+                        tapPoint(deployButton.getPoint());
                         sleepTask(1000); // Wait for march to start
                         long returnTimeSeconds = (travelTimeSeconds * 2) + 2;
                         LocalDateTime rescheduleTime = LocalDateTime.now().plusSeconds(returnTimeSeconds);
-                        this.reschedule(rescheduleTime);
+                        reschedule(rescheduleTime);
                         logInfo("Mercenary march sent. Task will run again at " + rescheduleTime + ".");
                     } else {
                         logError("Failed to parse march time. Aborting attack.");
@@ -385,7 +413,7 @@ public class MercenaryEventTask extends DelayedTask {
                 flagPoint = new DTOPoint(70, 120);
                 break;
         }
-        emuManager.tapAtPoint(EMULATOR_NUMBER, flagPoint);
+        tapPoint(flagPoint);
     }
 
 }
