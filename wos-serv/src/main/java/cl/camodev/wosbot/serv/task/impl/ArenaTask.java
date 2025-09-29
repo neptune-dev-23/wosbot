@@ -39,8 +39,22 @@ public class ArenaTask extends DelayedTask {
 
 		// Only schedule if the task is enabled and activation hour is valid
 		boolean isTaskEnabled = profile.getConfig(EnumConfigurationKey.ARENA_TASK_BOOL, Boolean.class);
-		if (isTaskEnabled && isValidTimeFormat(activationHour)) {
-			scheduleActivationTime();
+		if (!isTaskEnabled) {
+			logInfo("Arena task is disabled in configuration.");
+			this.setRecurring(false);  // Prevent task from recurring
+			return;
+		}
+		
+		if (!isValidTimeFormat(activationHour)) {
+			logWarning("Invalid activation hour format: " + activationHour + ". Task will use game reset time.");
+			reschedule(UtilTime.getGameReset().minusMinutes(10));
+			return;
+		}
+		
+		// Try to schedule with activation time, fallback to game reset if it fails
+		if (!scheduleActivationTime()) {
+			logWarning("Failed to schedule with activation time. Using game reset time instead.");
+			reschedule(UtilTime.getGameReset().minusMinutes(10));
 		}
     }
 
@@ -66,6 +80,54 @@ public class ArenaTask extends DelayedTask {
 
     @Override
     protected void execute() {
+        // If activation hour is set, verify it's actually time to run
+        if (isValidTimeFormat(activationHour)) {
+            ZonedDateTime nowUtc = ZonedDateTime.now(ZoneId.of("UTC"));
+            String[] timeParts = activationHour.split(":");
+            int hour = Integer.parseInt(timeParts[0]);
+            int minute = Integer.parseInt(timeParts[1]);
+            
+            // Calculate today's scheduled time
+            ZonedDateTime scheduledTimeUtc = nowUtc.toLocalDate().atTime(hour, minute).atZone(ZoneId.of("UTC"));
+            
+            // Add a small buffer (±5 minutes) around the scheduled time
+            ZonedDateTime earliestAllowedTime = scheduledTimeUtc.minusMinutes(5);
+            ZonedDateTime latestAllowedTime = scheduledTimeUtc.plusMinutes(5);
+            
+            // Only run if we're within the allowed time window
+            if (nowUtc.isBefore(earliestAllowedTime) || nowUtc.isAfter(latestAllowedTime)) {
+                // We're outside the allowed execution window
+                if (nowUtc.isBefore(scheduledTimeUtc)) {
+                    // Too early - reschedule for today's time
+                    logInfo("Task triggered too early (current: " + nowUtc.format(DateTimeFormatter.ofPattern("HH:mm")) + 
+                        " UTC, scheduled: " + activationHour + " UTC). Rescheduling for scheduled time.");
+                    rescheduleForToday();
+                    return;
+                } else {
+                    // Too late - we missed today's window, schedule for tomorrow
+                    logInfo("Task triggered too late (current: " + nowUtc.format(DateTimeFormatter.ofPattern("HH:mm")) + 
+                        " UTC, scheduled: " + activationHour + " UTC). Scheduling for tomorrow.");
+                    rescheduleWithActivationHour();
+                    return;
+                }
+            }
+            
+            // We're within the allowed time window - check if we already ran today
+            if (getLastExecutionTime() != null) {
+                ZonedDateTime lastExecUtc = getLastExecutionTime().atZone(ZoneId.systemDefault()).withZoneSameInstant(ZoneId.of("UTC"));
+                
+                // Check if the last execution was today (same date) and within the allowed window
+                if (lastExecUtc.toLocalDate().equals(nowUtc.toLocalDate()) && 
+                    lastExecUtc.isAfter(earliestAllowedTime) && lastExecUtc.isBefore(latestAllowedTime.plusMinutes(1))) {
+                    logInfo("Task has already run today within the scheduled window. Scheduling for tomorrow.");
+                    rescheduleWithActivationHour();
+                    return;
+                }
+            }
+            
+            logInfo("Task is running at scheduled time: " + activationHour + " UTC");
+        }
+
         logInfo("Starting arena task.");
         
         // Navigate to marksman camp
@@ -400,6 +462,9 @@ public class ArenaTask extends DelayedTask {
         DTOPoint bottomRight = new DTOPoint(433, 883);
 
         // Find where we are in the price sequence
+        // for(int i = 0; i < 10; i++) {
+        //     Integer price = readNumberValue(topLeft, bottomRight);
+        // }
         Integer singleAttemptPrice = readNumberValue(topLeft, bottomRight);
         if (singleAttemptPrice == null) {
             logWarning("Failed to read single attempt price");
@@ -475,7 +540,7 @@ public class ArenaTask extends DelayedTask {
 	/**
 	 * Schedules the task based on the configured activation time in UTC
 	 */
-	private void scheduleActivationTime() {
+	private boolean scheduleActivationTime() {
 		try {
 			// Parse the activation time
 			String[] timeParts = activationHour.split(":");
@@ -500,8 +565,10 @@ public class ArenaTask extends DelayedTask {
 			logInfo("Scheduling Arena task for activation at " + activationHour + " UTC (" + 
 					localActivationTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + " local time)");
 			reschedule(localActivationTime.toLocalDateTime());
+			return true;
 		} catch (Exception e) {
 			logError("Failed to schedule activation time: " + e.getMessage());
+			return false;
 		}
 	}
 
@@ -533,6 +600,40 @@ public class ArenaTask extends DelayedTask {
 				return;
 			} catch (Exception e) {
 				logError("Failed to reschedule with activation time: " + e.getMessage());
+			}
+		}
+		
+		// Use standard game reset time if activation time is invalid or an error occurred
+		logInfo("Rescheduling Arena task for game reset time");
+		reschedule(UtilTime.getGameReset());
+	}
+
+    /**
+	 * Reschedules the task for today's activation time (used when task is triggered too early)
+	 */
+	private void rescheduleForToday() {
+		// If activation hour is configured and valid
+		if (isValidTimeFormat(activationHour)) {
+			try {
+				// Parse the activation time
+				String[] timeParts = activationHour.split(":");
+				int hour = Integer.parseInt(timeParts[0]);
+				int minute = Integer.parseInt(timeParts[1]);
+				
+				// Schedule based on the configured activation time for today
+				ZonedDateTime nowUtc = ZonedDateTime.now(ZoneId.of("UTC"));
+				ZonedDateTime todayActivationUtc = nowUtc.toLocalDate()
+					.atTime(hour, minute).atZone(ZoneId.of("UTC"));
+				ZonedDateTime localActivationTime = todayActivationUtc.withZoneSameInstant(ZoneId.systemDefault());
+				
+				logInfo("Rescheduling Arena task for activation at " + activationHour + 
+					" UTC today (" + localActivationTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + 
+					" local time)");
+				
+				reschedule(localActivationTime.toLocalDateTime());
+				return;
+			} catch (Exception e) {
+				logError("Failed to reschedule for today's activation time: " + e.getMessage());
 			}
 		}
 		
