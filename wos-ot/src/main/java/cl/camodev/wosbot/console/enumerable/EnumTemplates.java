@@ -327,7 +327,11 @@ public enum EnumTemplates {
     POLAR_TERROR_MODE_SELECTOR("/templates/polarterror/polarTerrorModeSelector.png"),
     POLAR_TERROR_DEPLOY_BUTTON("/templates/polarterror/polarTerrorDeploy.png"),
 
+    // ========================================================================
+    // BEAR HUNT EVENT
+    // ========================================================================
 
+    BEAR_HUNT_IS_RUNNING("/templates/events/bearhunt/bearIsRunning.png"),
     // ========================================================================
     // CHIEF ORDER
     // ========================================================================
