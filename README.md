@@ -10,7 +10,6 @@ A bot for automating tasks in **Whiteout Survival**. This project is a work in p
 ## 📌 Current Features
 
 - ✅ Multi-profile support (run multiple accounts simultaneously)
-
 - ✅ **Arena** battles
 - ✅ **Polar Terror** hunting
 - ✅ **Trains and promotes troops**
