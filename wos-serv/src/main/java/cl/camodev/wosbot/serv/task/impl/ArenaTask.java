@@ -90,44 +90,28 @@ public class ArenaTask extends DelayedTask {
             // Calculate today's scheduled time
             ZonedDateTime scheduledTimeUtc = nowUtc.toLocalDate().atTime(hour, minute).atZone(ZoneId.of("UTC"));
             
-            // Add a small buffer (±5 minutes) around the scheduled time
-            ZonedDateTime earliestAllowedTime = scheduledTimeUtc.minusMinutes(5);
-            ZonedDateTime latestAllowedTime = scheduledTimeUtc.plusMinutes(5);
+            // Define the cutoff time (23:55 UTC today)
+            ZonedDateTime cutoffTimeUtc = nowUtc.toLocalDate().atTime(23, 55).atZone(ZoneId.of("UTC"));
             
-            // Only run if we're within the allowed time window
-            if (nowUtc.isBefore(earliestAllowedTime) || nowUtc.isAfter(latestAllowedTime)) {
-                // We're outside the allowed execution window
-                if (nowUtc.isBefore(scheduledTimeUtc)) {
-                    // Too early - reschedule for today's time
-                    logInfo("Task triggered too early (current: " + nowUtc.format(DateTimeFormatter.ofPattern("HH:mm")) + 
-                        " UTC, scheduled: " + activationHour + " UTC). Rescheduling for scheduled time.");
-                    rescheduleForToday();
-                    return;
-                } else {
-                    // Too late - we missed today's window, schedule for tomorrow
-                    logInfo("Task triggered too late (current: " + nowUtc.format(DateTimeFormatter.ofPattern("HH:mm")) + 
-                        " UTC, scheduled: " + activationHour + " UTC). Scheduling for tomorrow.");
-                    rescheduleWithActivationHour();
-                    return;
-                }
+            // Check if we're before the scheduled time (too early)
+            if (nowUtc.isBefore(scheduledTimeUtc)) {
+                logDebug("Task triggered too early (current: " + nowUtc.format(DateTimeFormatter.ofPattern("HH:mm")) +
+                    " UTC, scheduled: " + activationHour + " UTC). Rescheduling for scheduled time.");
+                rescheduleForToday();
+                return;
             }
             
-            // We're within the allowed time window - check if we already ran today
-            if (getLastExecutionTime() != null) {
-                ZonedDateTime lastExecUtc = getLastExecutionTime().atZone(ZoneId.systemDefault()).withZoneSameInstant(ZoneId.of("UTC"));
-                
-                // Check if the last execution was today (same date) and within the allowed window
-                if (lastExecUtc.toLocalDate().equals(nowUtc.toLocalDate()) && 
-                    lastExecUtc.isAfter(earliestAllowedTime) && lastExecUtc.isBefore(latestAllowedTime.plusMinutes(1))) {
-                    logInfo("Task has already run today within the scheduled window. Scheduling for tomorrow.");
-                    rescheduleWithActivationHour();
-                    return;
-                }
+            // Check if we're after the cutoff time (too late for today)
+            if (nowUtc.isAfter(cutoffTimeUtc)) {
+                logDebug("Task triggered too late (current: " + nowUtc.format(DateTimeFormatter.ofPattern("HH:mm")) +
+                    " UTC, cutoff: 23:55 UTC). Scheduling for tomorrow.");
+                rescheduleWithActivationHour();
+                return;
             }
             
-            logInfo("Task is running at scheduled time: " + activationHour + " UTC");
+            logDebug("Task is running (current: " + nowUtc.format(DateTimeFormatter.ofPattern("HH:mm")) + " UTC, window: " + activationHour + " - 23:55 UTC)");
         }
-
+    
         logInfo("Starting arena task.");
         
         // Navigate to marksman camp
