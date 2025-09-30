@@ -424,34 +424,6 @@ public class PolarTerrorHuntingTask extends DelayedTask {
         return true;
     }
 
-    private boolean checkMarchesAvailable() {
-        // Open active marches panel
-        emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(2, 550));
-        sleepTask(500);
-        emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(340, 265));
-        sleepTask(500);
-        // OCR Search for an empty march
-        try {
-            for (int i = 0; i < 5; i++) {
-                String ocrSearchResult = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(10, 342),
-                        new DTOPoint(435, 772));
-                Pattern idleMarchesPattern = Pattern.compile("idle");
-                Matcher m = idleMarchesPattern.matcher(ocrSearchResult.toLowerCase());
-                if (m.find()) {
-                    logInfo("Idle marches detected");
-                    return true;
-                } else {
-                    logInfo("No idle marches detected, trying again (Attempt " + (i + 1) + "/5).");
-                }
-                sleepTask(100);
-            }
-        } catch (IOException | TesseractException e) {
-            logDebug("OCR attempt failed: " + e.getMessage());
-        }
-        logInfo("No idle marches detected. ");
-        return false;
-    }
-
     @Override
     protected EnumStartLocation getRequiredStartLocation() {
         return EnumStartLocation.WORLD;
