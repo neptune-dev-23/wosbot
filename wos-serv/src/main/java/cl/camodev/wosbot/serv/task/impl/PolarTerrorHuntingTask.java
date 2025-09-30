@@ -29,6 +29,7 @@ public class PolarTerrorHuntingTask extends DelayedTask {
 
     @Override
     protected void execute() {
+
         if (isBearRunning()) {
             LocalDateTime rescheduleTo = LocalDateTime.now().plusMinutes(30);
             logInfo("Bear Hunt is running, rescheduling for " + rescheduleTo);
@@ -36,13 +37,6 @@ public class PolarTerrorHuntingTask extends DelayedTask {
             return;
         }
         logDebug("Bear Hunt is not running, coninuing with Polar Terror Hunting Task");
-
-        if (!checkMarchesAvailable()) {
-            LocalDateTime rescheduleTo = LocalDateTime.now().plusMinutes(5);
-            logInfo("No available marches, rescheduling for " + rescheduleTo);
-            reschedule(rescheduleTo);
-            return;
-        }
 
         String flagString = profile.getConfig(EnumConfigurationKey.POLAR_TERROR_FLAG_STRING, String.class);
         int flagNumber = 0;
@@ -86,14 +80,15 @@ public class PolarTerrorHuntingTask extends DelayedTask {
         boolean success = launchPolarRally(polarTerrorLevel, useFlag, flagNumber);
 
         // if we exit loop without successful managed dispatch when a flag was required, log and return
-        if (!success && useFlag) {
-            logError("Failed to deploy march.");
-            reschedule(UtilTime.getGameReset().plusMinutes(15));
+        if (!success && useFlag) { // reason unknown. Maybe throw some errors so it can be clearer. Let's just try again later.
+            logError("Failed to deploy march. Trying again in 5 minutes.");
+            reschedule(LocalDateTime.now().plusMinutes(5));;
             return;
         }
+
         // if at least one march was sent without a flag, reschedule to run again immediately
         if (!useFlag && success) {
-            reschedule(LocalDateTime.now().plusMinutes(2));
+            reschedule(LocalDateTime.now());
         }
 
     }
@@ -156,7 +151,7 @@ public class PolarTerrorHuntingTask extends DelayedTask {
             if (openRallyMenu()) {break;}
         }
 
-        tapRandomPoint(new DTOPoint(275, 821), new DTOPoint(444, 856), 1, 400); // TODO: What is this clicking on?
+        tapRandomPoint(new DTOPoint(275, 821), new DTOPoint(444, 856), 1, 400); // confirms rally time
         if (useFlag) {
             tapRandomPoint(UtilRally.getMarchFlagPoint(flagNumber), UtilRally.getMarchFlagPoint(flagNumber), 1, 200);
         }
@@ -170,13 +165,14 @@ public class PolarTerrorHuntingTask extends DelayedTask {
 
         // Try to deploy and verify it disappears; retry a few times if needed
         boolean deployed = clickDeployButton(maxRetries);
-
-        int currentStamina = getStaminaValueFromIntelScreen();
+        if (!deployed) {
+            return false;
+        }
         // No deploy button found after confirm: assume march sent
         logInfo("March deployed successfully.");
 
         // Deduct stamina for successful deployment
-        // TODO: adjust via OCR
+        int currentStamina = getStaminaValueFromIntelScreen();
         logInfo("Stamina decreased by 25. Current stamina: " + currentStamina);
 
         // If limitedHunting is true, only allow one march and return
