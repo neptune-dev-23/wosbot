@@ -16,6 +16,7 @@ public enum TpDailyTaskEnum {
 	LABYRINTH(11, "Labyrinth",                   	EnumConfigurationKey.DAILY_LABYRINTH_BOOL),
 	TREK_AUTOMATION(12, "Tundra Trek Automation",  EnumConfigurationKey.TUNDRA_TREK_AUTOMATION_BOOL),
 	BANK(14, "Bank",                              EnumConfigurationKey.BOOL_BANK),
+	ARENA(15, "Arena",                             EnumConfigurationKey.ARENA_TASK_BOOL),
 
 	MAIL_REWARDS(30, "Mail Rewards",               	EnumConfigurationKey.MAIL_REWARDS_BOOL),
 	DAILY_MISSIONS(31, "Daily Missions",           	EnumConfigurationKey.DAILY_MISSION_BOOL),
