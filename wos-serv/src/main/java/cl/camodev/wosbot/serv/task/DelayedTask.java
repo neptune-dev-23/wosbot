@@ -327,7 +327,7 @@ public abstract class DelayedTask implements Runnable, Delayed {
             result = emuManager.searchTemplate(EMULATOR_NUMBER, template, threshold);
             sleepTask(200);
         }
-        logDebug(result != null ? "Template " + template + " found." : "Template " + template + " not found.");
+        logDebug(result.isFound() ? "Template " + template + " found." : "Template " + template + " not found.");
         return result;
     }
 
@@ -360,6 +360,59 @@ public abstract class DelayedTask implements Runnable, Delayed {
             sleepTask(200);
         }
         return result;
+    }
+
+    protected boolean checkMarchesAvailable() {
+        // Open active marches panel
+        emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(2, 550));
+        sleepTask(500);
+        emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(340, 265));
+        sleepTask(500);
+
+        // Define march slot coordinates
+        DTOPoint[] marchTopLeft = {
+                new DTOPoint(189, 375), // March 1
+                new DTOPoint(189, 448), // March 2
+                new DTOPoint(189, 521), // March 3
+                new DTOPoint(189, 594), // March 4
+                new DTOPoint(189, 667), // March 5
+                new DTOPoint(189, 740), // March 6
+        };
+        DTOPoint[] marchBottomRight = {
+                new DTOPoint(258, 403), // March 1
+                new DTOPoint(258, 476), // March 2
+                new DTOPoint(258, 549), // March 3
+                new DTOPoint(258, 622), // March 4
+                new DTOPoint(258, 695), // March 5
+                new DTOPoint(258, 768), // March 6
+        };
+
+        // Check each march slot for "idle" status
+        try {
+            for (int marchSlot = 0; marchSlot < 6; marchSlot++) {
+                for (int attempt = 0; attempt < 3; attempt++) {
+                    String ocrResult = emuManager.ocrRegionText(EMULATOR_NUMBER,
+                            marchTopLeft[marchSlot],
+                            marchBottomRight[marchSlot]);
+
+                    if (ocrResult.toLowerCase().contains("idle")) {
+                        logInfo("Idle march detected in slot " + (marchSlot + 1));
+                        return true;
+                    }
+
+                    if (attempt < 2) {
+                        sleepTask(100);
+                    }
+                }
+                logDebug("March slot " + (marchSlot + 1) + " is not idle");
+            }
+        } catch (IOException | TesseractException e) {
+            logError("OCR attempt failed while checking marches: " + e.getMessage());
+            return false;
+        }
+
+        logInfo("No idle marches detected in any of the 6 slots.");
+        return false;
     }
 
     public boolean isRecurring() {
