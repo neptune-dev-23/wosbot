@@ -336,6 +336,11 @@ public enum EnumTemplates {
     POLAR_TERROR_FLAG_SELECTOR("/templates/polarterror/polarTerrorFlagSelector.png"),
     POLAR_TERROR_MODE_SELECTOR("/templates/polarterror/polarTerrorModeSelector.png"),
     POLAR_TERROR_DEPLOY_BUTTON("/templates/polarterror/polarTerrorDeploy.png"),
+
+    // ========================================================================
+    // MYRIAD BAZAAR
+    // ========================================================================
+    EVENTS_MYRIAD_BAZAAR_ICON("/templates/myriadbazaar/myriadBazaarIcon.png"),
 	
 	
     // ========================================================================
