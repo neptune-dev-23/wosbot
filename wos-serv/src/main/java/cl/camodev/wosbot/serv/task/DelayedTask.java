@@ -224,6 +224,22 @@ public abstract class DelayedTask implements Runnable, Delayed {
         return false;
     }
 
+    protected int staminaRegenerationTime(int currentStamina, int targetStamina) {
+        if (currentStamina >= targetStamina) {
+            return 0;
+        }
+        int staminaNeeded = targetStamina - currentStamina;
+        return staminaNeeded * 5; // 1 stamina every 5 minutes
+    }
+
+    protected int getStaminaValueFromIntelScreen() {
+        ensureOnIntelScreen();
+        int currentStamina = readStaminaValue(new DTOPoint(582, 23), new DTOPoint(672, 55));
+        ensureCorrectScreenLocation(getRequiredStartLocation());
+        logInfo("Current stamina: " + currentStamina);
+        return currentStamina;
+    }
+
     protected Integer readStaminaValue(DTOPoint topLeft, DTOPoint bottomRight) {
         Integer staminaValue = null;
         Pattern staminaPattern = Pattern.compile("(\\d{1,3}(?:[.,]\\d{3})*|\\d+)");
@@ -269,7 +285,7 @@ public abstract class DelayedTask implements Runnable, Delayed {
         return result;
     }
     protected String OCRWithRetries(String searchString, DTOPoint p1, DTOPoint p2, int maxRetries) {
-        String result = null;
+        String result;
         for (int attempt = 0; attempt <= maxRetries; attempt++) {
             result = OCRWithRetries(p1, p2, maxRetries);
             if (result != null && result.contains(searchString)) return result;
