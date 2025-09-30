@@ -433,7 +433,7 @@ public class PolarTerrorHuntingTask extends DelayedTask {
         sleepTask(500);
         // OCR Search for an empty march
         try {
-            for (int i = 0; i < 5; i++) { // search 10x for the OCR text
+            for (int i = 0; i < 5; i++) {
                 String ocrSearchResult = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(10, 342),
                         new DTOPoint(435, 772));
                 Pattern idleMarchesPattern = Pattern.compile("idle");

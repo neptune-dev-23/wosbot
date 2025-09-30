@@ -333,13 +333,20 @@ public abstract class DelayedTask implements Runnable, Delayed {
 
     protected String OCRWithRetries(String searchString, DTOPoint p1, DTOPoint p2, int maxRetries) {
         String result = null;
-        for (int attempt = 0; attempt < maxRetries && (result == null || !result.contains(searchString)); attempt++) {
+        for (int attempt = 0; attempt < maxRetries; attempt++) {
             logDebug(
                     "Performing OCR to find '" + searchString + "' (attempt " + (attempt + 1) + "/" + maxRetries + ")");
-            result = OCRWithRetries(p1, p2, maxRetries);
+            try {
+                result = emuManager.ocrRegionText(EMULATOR_NUMBER, p1, p2);
+                if (result != null && result.toLowerCase().contains(searchString.toLowerCase())) {
+                    return result;
+                }
+            } catch (IOException | TesseractException e) {
+                logWarning("OCR attempt " + (attempt + 1) + " threw an exception: " + e.getMessage());
+            }
             sleepTask(200);
         }
-        return result;
+        return null;
     }
 
     protected String OCRWithRetries(DTOPoint p1, DTOPoint p2, int maxRetries) {
