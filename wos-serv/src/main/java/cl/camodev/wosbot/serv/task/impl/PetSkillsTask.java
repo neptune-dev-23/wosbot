@@ -7,7 +7,6 @@ import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
-import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 import cl.camodev.wosbot.serv.task.EnumStartLocation;
 
@@ -76,7 +75,6 @@ public class PetSkillsTask extends DelayedTask {
 				String nextSchedulteText = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(210, 1080), new DTOPoint(520, 1105));
 				LocalDateTime nextSchedule = parseCooldown(nextSchedulteText);
 				this.reschedule(parseCooldown(nextSchedulteText));
-				ServScheduler.getServices().updateDailyTaskStatus(profile, tpTask, nextSchedule);
                 logInfo("Rescheduled " + petSkill.name() + " task for " + nextSchedule);
 			} catch (Exception e) {
 				logError("Error parsing cooldown for " + petSkill.name() + ". Rescheduling for 5 minutes.", e);

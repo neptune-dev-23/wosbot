@@ -3,8 +3,6 @@
 [![](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://buymeacoffee.com/cearivera1z)
 [![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/Wk6YSr6mUp)
 
-> **⚠️ Project Status: Paused** - The development of this project is currently on hold due to personal matters.
-
 A bot for automating tasks in **Whiteout Survival**. This project is a work in progress and is developed in my free time. If you have any requests or suggestions, feel free to ask. I will try to respond as soon as possible.
 
 ---
@@ -12,26 +10,29 @@ A bot for automating tasks in **Whiteout Survival**. This project is a work in p
 ## 📌 Current Features
 
 - ✅ Multi-profile support (run multiple accounts simultaneously)
-- ✅ Automates daily **Nomadic Merchant** interactions
-- ✅ Automatically buys **VIP points** from the merchant
-- ✅ **Hero Recruitment** automation
-- ✅ Collects **Daily Shards** from the **War Academy**
-- ✅ Collects **Fire Crystals** from the **Crystal Laboratory**
-- ✅ Opens **Exploration Chests**
-- ✅ Claims **Daily VIP Points**
-- ✅ Contributes to **Alliance Tech**
-- ✅ Collects **Alliance Chests**
-- ✅ Automatically **trains and promotes troops**
-- ✅ Automatically activates **Pet Skills** (Food, Treasure, and Stamina)
-- ✅ Automatically claims **Online Rewards**
-- ✅ Automatically claims **Pet Adventure** chests
-- ✅ Automatically collects rewards from **Mail**
-- ✅ Automatically joins **Alliance Rallies**
-- ✅ Automatically **gathers** resources
-- ✅ Automates **Intel** completion
-- ✅ Automatically claims **Tundra Trek Supplies**
-- ✅ Automates the **"My Trucks"** section of the **Tundra Truck Event**
-- ✅ Automatically claims rewards from **Experts**
+- ✅ **Arena** battles
+- ✅ **Polar Terror** hunting
+- ✅ **Trains and promotes troops**
+- ✅ **Intel**
+- ✅ **"My Trucks"** section of the **Tundra Truck Event**
+- ✅ **Experts**
+- ✅ **Tundra Trek** (random options)
+- ✅ **Tundra Trek Supplies**
+- ✅ **Journey of Light**
+- ✅ **Pet Adventure**
+- ✅ **Pet Skills** (Food, Treasure, and Stamina)
+- ✅ **Gathers** resources
+- ✅ **Daily Shards** from the **War Academy**
+- ✅ **Fire Crystals** from the **Crystal Laboratory**
+- ✅ **Nomadic Merchant**
+- ✅ **Online Rewards**
+- ✅ **Hero Recruitment**
+- ✅ **Exploration Chests**
+- ✅ **Daily VIP Points**
+- ✅ **Mail**
+- ✅ **Alliance Tech**
+- ✅ **Alliance Chests**
+- ✅ **Alliance Rallies**
 
 ---
 ## 🎬 Video Showcase
@@ -69,20 +70,63 @@ The bot is designed to run on **MuMu Player** with the following settings:
 
 ## 🛠️ How to Compile & Run
 
-### To Compile:
+### 1️⃣ Install Requirements
+
+* **Java (JDK 17 or newer)**
+  👉 Download from [Adoptium Temurin](https://adoptium.net/)
+
+* **Apache Maven** (for building the project)
+  👉 Download from [Maven official site](https://maven.apache.org/install.html)
+
+### 2️⃣ Add to PATH (Windows Users)
+
+After installing, you need to add **Java** and **Maven** to your environment variables:
+
+1. Press **Win + R**, type `sysdm.cpl`, and press **Enter**.
+2. Go to **Advanced → Environment Variables**.
+3. Under **System variables**, find `Path`, select it, and click **Edit**.
+4. Add the following entries (adjust if installed in a different folder):
+
+   ```
+   C:\Program Files\Eclipse Adoptium\jdk-17\bin
+   C:\apache-maven-3.9.9\bin
+   ```
+5. Click **OK** and restart your terminal (or reboot if needed).
+
+✅ Verify installation:
+
+```sh
+java -version
+mvn -version
+```
+
+### 3️⃣ Compile the Project
+
+In the project’s root folder, run:
 
 ```sh
 mvn clean install package
 ```
-This will generate a `.jar` file in the `wos-hmi/target` directory.
 
-### To Run:
+This will generate a `.jar` file inside the **`wos-hmi/target`** directory.
+Example:
 
-#### From the Command Line (Recommended)
-Running from the command line allows you to see real-time logs, which is helpful for debugging.
+```
+wos-hmi/target/wos-bot-1.5.4.jar
+```
+
+### 4️⃣ Run the Bot
+
+#### ✅ Recommended: Run from Command Line
+
+This way you can see real-time logs (useful for debugging).
+
 ```sh
-# Navigate to the target directory and run the bot
-java -jar wos-bot-x.x.x.jar
+# Navigate to the target directory
+cd wos-hmi/target
+
+# Run the bot (replace X.X.X with the version you built)
+java -jar wos-bot-X.X.X.jar
 ```
 
 #### With a Double-Click
@@ -91,11 +135,7 @@ You can also run the bot by double-clicking the `wos-bot-x.x.x.jar` file. Note t
 ---
 
 ### 🚀 Future Features (Planned)
-- 🔹 **Arena Battles** – Manage arena battles automatically.
-- 🔹 **Beast Hunt** – Implement automatic beast hunting.
-- 🔹 **Polar Terror Hunt** – Implement automatic polar terror hunting.
+- 🔹 **Beast Hunt**
+- 🔹 **Alliance Mobilization**
+- 🔹 **Fishing Event**
 - 🔹 **And more...** 🔥
-
-
-
-

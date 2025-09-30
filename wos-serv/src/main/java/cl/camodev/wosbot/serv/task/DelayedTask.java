@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
@@ -224,33 +225,83 @@ public abstract class DelayedTask implements Runnable, Delayed {
         return false;
     }
 
-    protected Integer readStaminaValue(DTOPoint topLeft, DTOPoint bottomRight) {
-        Integer staminaValue = null;
-        Pattern staminaPattern = Pattern.compile("(\\d{1,3}(?:[.,]\\d{3})*|\\d+)");
-        for (int attempt = 0; attempt < 5 && staminaValue == null; attempt++) {
+    protected int staminaRegenerationTime(int currentStamina, int targetStamina) {
+        if (currentStamina >= targetStamina) {
+            return 0;
+        }
+        int staminaNeeded = targetStamina - currentStamina;
+        return staminaNeeded * 5; // 1 stamina every 5 minutes
+    }
+
+    protected int getStaminaValueFromIntelScreen() {
+        ensureOnIntelScreen();
+        int currentStamina = readNumberValue(new DTOPoint(582, 23), new DTOPoint(672, 55));
+        ensureCorrectScreenLocation(getRequiredStartLocation());
+        logInfo("Current stamina: " + currentStamina);
+        return currentStamina;
+    }
+
+    protected Integer readNumberValue(DTOPoint topLeft, DTOPoint bottomRight) {
+        Integer numberValue = null;
+        Pattern numberPattern = Pattern.compile("(\\d{1,3}(?:[.,]\\d{3})*|\\d+)");
+
+        // Map for truly special OCR quirks (not fixable by normalization)
+        Map<String, Integer> specialCases = Map.of(
+            "(°)", 0,
+            "il}", 1,
+            "7400)", 400,
+            "SEM)", 800,
+            "1800)", 800,
+            "2n", 211,
+            "1/300", 1300,
+            "Ti", 111,
+            "|", 121
+        );
+
+        for (int attempt = 0; attempt < 5 && numberValue == null; attempt++) {
             try {
                 String ocr = emuManager.ocrRegionText(EMULATOR_NUMBER, topLeft, bottomRight);
+                logDebug(ocr != null ? "OCR Result: '" + ocr + "'" : "OCR Result: null");
+
                 if (ocr != null && !ocr.trim().isEmpty()) {
-                    Matcher m = staminaPattern.matcher(ocr);
-                    if (m.find()) {
-                        String raw = m.group(1);
-                        // Remove separators (commas or dots)
-                        String normalized = raw.replaceAll("[.,]", "");
-                        try {
-                            staminaValue = Integer.valueOf(normalized);
-                        } catch (NumberFormatException nfe) {
-                            logDebug("Parsed stamina not a valid integer: '" + raw + "'");
+                    // 1) Handle hard-coded weird cases
+                    for (Map.Entry<String, Integer> entry : specialCases.entrySet()) {
+                        if (ocr.contains(entry.getKey())) {
+                            numberValue = entry.getValue();
+                            logDebug("Detected special pattern '" + entry.getKey() + "', setting value to " + numberValue);
+                            break;
+                        }
+                    }
+
+                    // 2) If not matched, normalize OCR text
+                    if (numberValue == null) {
+                        String cleaned = ocr
+                            .replace(';', ',')              // interpret ; as comma
+                            .replaceAll("[){}\\s]", "")     // remove junk like ) or }
+                            .trim();
+
+                        Matcher m = numberPattern.matcher(cleaned);
+                        if (m.find()) {
+                            String raw = m.group(1);
+                            // Remove valid separators before parsing
+                            String normalized = raw.replaceAll("[.,]", "");
+                            try {
+                                numberValue = Integer.valueOf(normalized);
+                                logDebug("Parsed number value: " + numberValue);
+                            } catch (NumberFormatException nfe) {
+                                logDebug("Parsed number not a valid integer: '" + raw + "'");
+                            }
                         }
                     }
                 }
             } catch (IOException | TesseractException ex) {
                 logDebug("OCR attempt " + (attempt + 1) + " failed: " + ex.getMessage());
             }
-            if (staminaValue == null) {
+            if (numberValue == null) {
                 sleepTask(100);
             }
         }
-        return staminaValue;
+        return numberValue;
     }
 
     protected DTOImageSearchResult searchTemplateWithRetries(EnumTemplates template) {
@@ -269,7 +320,7 @@ public abstract class DelayedTask implements Runnable, Delayed {
         return result;
     }
     protected String OCRWithRetries(String searchString, DTOPoint p1, DTOPoint p2, int maxRetries) {
-        String result = null;
+        String result;
         for (int attempt = 0; attempt <= maxRetries; attempt++) {
             result = OCRWithRetries(p1, p2, maxRetries);
             if (result != null && result.contains(searchString)) return result;
