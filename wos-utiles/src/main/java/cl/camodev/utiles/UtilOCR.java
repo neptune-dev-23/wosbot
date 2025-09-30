@@ -46,16 +46,16 @@ public class UtilOCR {
         g2d.dispose();
 
         // Optional: dump debug images to /tmp
-        try {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ImageIO.write(resizedImage, "png", baos);
-            java.nio.file.Files.write(
-                java.nio.file.Files.createTempFile("img_cut_resized-", ".png"),
-                baos.toByteArray()
-            );
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        // try {
+        //     ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        //     ImageIO.write(resizedImage, "png", baos);
+        //     java.nio.file.Files.write(
+        //         java.nio.file.Files.createTempFile("img_cut_resized-", ".png"),
+        //         baos.toByteArray()
+        //     );
+        // } catch (IOException e) {
+        //     e.printStackTrace();
+        // }
 
         Tesseract tesseract = new Tesseract();
         tesseract.setDatapath("lib/tesseract");
