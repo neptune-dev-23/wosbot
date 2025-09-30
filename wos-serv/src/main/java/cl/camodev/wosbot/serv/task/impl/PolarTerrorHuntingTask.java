@@ -2,6 +2,9 @@ package cl.camodev.wosbot.serv.task.impl;
 
 import cl.camodev.utiles.UtilRally;
 import cl.camodev.utiles.UtilTime;
+import cl.camodev.wosbot.almac.entity.DailyTask;
+import cl.camodev.wosbot.almac.repo.DailyTaskRepository;
+import cl.camodev.wosbot.almac.repo.IDailyTaskRepository;
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
@@ -12,10 +15,12 @@ import cl.camodev.wosbot.serv.task.DelayedTask;
 import cl.camodev.wosbot.serv.task.EnumStartLocation;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 import static cl.camodev.wosbot.console.enumerable.EnumTemplates.RALLY_BUTTON;
 
 public class PolarTerrorHuntingTask extends DelayedTask {
+    private final IDailyTaskRepository iDailyTaskRepository = DailyTaskRepository.getRepository();
 
     public PolarTerrorHuntingTask(DTOProfiles profile, TpDailyTaskEnum tpTask) {
         super(profile, tpTask);
@@ -23,7 +28,8 @@ public class PolarTerrorHuntingTask extends DelayedTask {
 
     @Override
     protected void execute() {
-
+        logInfo("=== Starting Polar Terror Hunting Task ===");
+        
         String flagString = profile.getConfig(EnumConfigurationKey.POLAR_TERROR_FLAG_STRING, String.class);
         int flagNumber = 0;
         int polarTerrorLevel = profile.getConfig(EnumConfigurationKey.POLAR_TERROR_LEVEL_INT, Integer.class);
@@ -37,18 +43,41 @@ public class PolarTerrorHuntingTask extends DelayedTask {
                 useFlag = false;
             }
         }
-        logInfo("Starting Polar Terror Hunting task. Level: " + polarTerrorLevel + ", Mode: " + (limitedHunting ? "Limited" : "Unlimited") + ", Use Flag: " + (useFlag ? flagString : "No Flag"));
+
+        if (profile.getConfig(EnumConfigurationKey.INTEL_BOOL, Boolean.class)
+         && useFlag) {
+            // Make sure intel isn't about to run
+            DailyTask intel = iDailyTaskRepository.findByProfileIdAndTaskName(profile.getId(), TpDailyTaskEnum.INTEL);
+            if (ChronoUnit.MINUTES.between(LocalDateTime.now(), intel.getNextSchedule()) < 5) {
+                reschedule(LocalDateTime.now().plusMinutes(35)); // Reschedule in 35 minutes, after intel has run
+                logWarning("Intel task is scheduled to run soon. Rescheduling Polar Hunt to run 30min after intel.");
+                return;
+            }
+        }
+
+        logInfo(String.format("Configuration: Level %d | %s Mode | Flag: %s", 
+            polarTerrorLevel,
+            limitedHunting ? "Limited (10 hunts)" : "Unlimited",
+            useFlag ? "#" + flagString : "None"));
 
         // verify if there's enough stamina to hunt, if not, reschedule the task
 
         ensureOnIntelScreen();
-        int currentStamina = readStaminaValue(new DTOPoint(582, 23), new DTOPoint(672, 55));
-        ensureCorrectScreenLocation(getRequiredStartLocation());
+        Integer currentStamina = readNumberValue(new DTOPoint(582, 23), new DTOPoint(672, 55));
+        tapBackButton();
+
+        if (currentStamina == null) {
+            logWarning("Failed to read current stamina value. Retrying in 5 minutes.");
+            this.reschedule(LocalDateTime.now().plusMinutes(5));
+            return;
+        }
 
         if (currentStamina < 100) {
             LocalDateTime rescheduleTime = LocalDateTime.now().plusMinutes(staminaRegenerationTime(currentStamina,120));
             reschedule(rescheduleTime);
-            logWarning("Not enough stamina to do polar (Current: " + currentStamina + "). Rescheduling task in " + rescheduleTime + "minutes.");
+            int waitMinutes = staminaRegenerationTime(currentStamina, 120);
+            logInfo(String.format("Insufficient stamina for Polar Terror (Current: %d/120). Waiting %d minutes for regeneration.",
+                currentStamina, waitMinutes));
             return;
         }
 
@@ -56,11 +85,11 @@ public class PolarTerrorHuntingTask extends DelayedTask {
             //need to verify if there's enought daily hunts left
             //navigate to a polar terror
             // Open search (magnifying glass)
-            emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(25, 850), new DTOPoint(67, 898));
+            tapRandomPoint(new DTOPoint(25, 850), new DTOPoint(67, 898));
             sleepTask(2000);
 
             // Swipe left to find polar terror icon
-            emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(40, 913), new DTOPoint(678, 913));
+            swipe(new DTOPoint(40, 913), new DTOPoint(678, 913));
             sleepTask(500);
 
             // search the polar terror icon
@@ -72,8 +101,8 @@ public class PolarTerrorHuntingTask extends DelayedTask {
                     break;
                 }
                 attempts++;
-                logDebug("Swiping to find the correct resource tile, attempt " + attempts);
-                emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(40, 913), new DTOPoint(678, 913));
+                logDebug(String.format("Searching for Polar Terror icon (attempt %d/4)", attempts));
+                swipe(new DTOPoint(40, 913), new DTOPoint(678, 913));
                 sleepTask(500);
             }
 
@@ -83,15 +112,15 @@ public class PolarTerrorHuntingTask extends DelayedTask {
                 tapPoint(polarTerror.getPoint());
                 sleepTask(1000);
 
-                logInfo("Setting resource level to " + polarTerrorLevel + ".");
-                emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(435, 1052), new DTOPoint(40, 1052)); // Swipe to level 1
+                logDebug(String.format("Adjusting Polar Terror level to %d", polarTerrorLevel));
+                swipe(new DTOPoint(435, 1052), new DTOPoint(40, 1052)); // Swipe to level 1
                 sleepTask(250);
                 if (polarTerrorLevel > 1) {
-                    emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(487, 1055), new DTOPoint(487, 1055),
+                    tapRandomPoint(new DTOPoint(487, 1055), new DTOPoint(487, 1055),
                             (polarTerrorLevel - 1), 150);
                 }
 
-                emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(301, 1200), new DTOPoint(412, 1229));
+                tapRandomPoint(new DTOPoint(301, 1200), new DTOPoint(412, 1229));
                 sleepTask(4000);
 
                 //need to search fot the magnifying glass icon to be sure we're on the search screen
@@ -103,7 +132,7 @@ public class PolarTerrorHuntingTask extends DelayedTask {
                         break;
                     }
                     attempts++;
-                    logDebug("Magnifying glass not found on search screen, retrying, attempt " + attempts);
+                    logDebug(String.format("Searching for magnifying glass icon (attempt %d/4)", attempts));
 
                     sleepTask(500);
                 }
@@ -126,7 +155,7 @@ public class PolarTerrorHuntingTask extends DelayedTask {
 
                     if (specialRewards.isFound()) {
                         //due limited mode is enabled, and there's no special rewards found, means there's no hunts left
-                        logWarning("No special rewards found, meaning there's no hunts left for today. Rescheduling task for reset");
+                        logInfo("No daily hunts remaining. Rescheduling task for after game reset (+15 minutes).");
                         //lets add 15 minutes to let intel be processed
                         reschedule(UtilTime.getGameReset().plusMinutes(15));
                         return;
@@ -155,11 +184,11 @@ public class PolarTerrorHuntingTask extends DelayedTask {
             ensureCorrectScreenLocation(getRequiredStartLocation());
 
             // Open search (magnifying glass)
-            emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(25, 850), new DTOPoint(67, 898));
+            tapRandomPoint(new DTOPoint(25, 850), new DTOPoint(67, 898));
             sleepTask(2000);
 
             // Swipe left to find polar terror icon
-            emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(40, 913), new DTOPoint(678, 913));
+            swipe(new DTOPoint(40, 913), new DTOPoint(678, 913));
             sleepTask(500);
 
             // search the polar terror icon
@@ -172,7 +201,7 @@ public class PolarTerrorHuntingTask extends DelayedTask {
                 }
                 findAttempts++;
                 logDebug("Swiping to find the correct tile, attempt " + findAttempts);
-                emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(40, 913), new DTOPoint(678, 913));
+                swipe(new DTOPoint(40, 913), new DTOPoint(678, 913));
                 sleepTask(500);
             }
 
@@ -187,15 +216,15 @@ public class PolarTerrorHuntingTask extends DelayedTask {
             sleepTask(300);
 
             logInfo("Setting polar terror level to " + polarTerrorLevel + ".");
-            emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(435, 1052), new DTOPoint(40, 1052)); // Swipe to level 1
+            swipe(new DTOPoint(435, 1052), new DTOPoint(40, 1052)); // Swipe to level 1
             sleepTask(250);
             if (polarTerrorLevel > 1) {
-                emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(487, 1055), new DTOPoint(487, 1055),
+                tapRandomPoint(new DTOPoint(487, 1055), new DTOPoint(487, 1055),
                         (polarTerrorLevel - 1), 150);
             }
 
             // tap on search button
-            emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(301, 1200), new DTOPoint(412, 1229));
+            tapRandomPoint(new DTOPoint(301, 1200), new DTOPoint(412, 1229));
             sleepTask(4000);
 
             // need to search for rally button
@@ -222,7 +251,7 @@ public class PolarTerrorHuntingTask extends DelayedTask {
             sleepTask(1000);
             tapRandomPoint(new DTOPoint(275, 821), new DTOPoint(444, 856), 1, 400);
             if (useFlag) {
-                tapRandomPoint(UtilRally.getMarchFlagPoint(flagNumber), UtilRally.getMarchFlagPoint(flagNumber), 1, 200);
+                tapPoint(UtilRally.getMarchFlagPoint(flagNumber));
             }
             long travelTimeSeconds = 0;
             try {
@@ -247,7 +276,7 @@ public class PolarTerrorHuntingTask extends DelayedTask {
                         break;
                     }
                     deployRetry++;
-                    logDebug("Deploy still present, retry " + deployRetry + " of " + maxDeployRetries);
+                    logDebug(String.format("Verifying troop deployment (attempt %d/%d)", deployRetry + 1, maxDeployRetries));
                     sleepTask(1000);
                 }
 
@@ -257,17 +286,18 @@ public class PolarTerrorHuntingTask extends DelayedTask {
                     sleepTask(1000);
                     continue;
                 } else {
-                    logInfo("March deployed successfully.");
+                    logInfo(String.format("✓ March deployed successfully to Level %d Polar Terror%s",
+                        polarTerrorLevel, useFlag ? " with Flag #" + flagString : ""));
                     anyDispatched = true;
 
                     // Deduct stamina for successful deployment
                     // TODO: adjust via OCR
                     currentStamina -= 25;
-                    logInfo("Stamina decreased by 25. Current stamina: " + currentStamina);
+                    logDebug(String.format("Stamina update: %d → %d (-25)", currentStamina + 25, currentStamina));
 
                     // If limitedHunting is true, only allow one march and return
                     if (limitedHunting) {
-                        logInfo("Limited hunting mode enabled - exiting after one successful march.");
+                        logInfo("Limited hunting mode: Daily hunt completed. Rescheduling for march return.");
                         if (travelTimeSeconds > 0) {
                             reschedule(LocalDateTime.now().plusSeconds(travelTimeSeconds).plusMinutes(5));
                         } else {
