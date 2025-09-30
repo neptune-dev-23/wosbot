@@ -322,7 +322,7 @@ public abstract class DelayedTask implements Runnable, Delayed {
 
     protected DTOImageSearchResult searchTemplateWithRetries(EnumTemplates template, int threshold, int maxRetries) {
         DTOImageSearchResult result = null;
-        for (int i = 0; i < maxRetries && !result.isFound(); i++) {
+        for (int i = 0; i < maxRetries && (result == null || !result.isFound()); i++) {
             logDebug("Searching template " + template + ", (attempt " + (i + 1) + "/" + maxRetries + ")");
             result = emuManager.searchTemplate(EMULATOR_NUMBER, template, threshold);
             sleepTask(200);
