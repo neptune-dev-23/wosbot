@@ -46,7 +46,7 @@ public class IntelligenceTask extends DelayedTask {
 
         if (useSmartProcessing) {
             // Check how many marches are available
-            marchesAvailable = checkMarchesAvailable();
+            marchesAvailable = getMarchesAvailable();
             if (!marchesAvailable.available()) {
                 marchQueueLimitReached = true;
             }
@@ -390,7 +390,7 @@ public class IntelligenceTask extends DelayedTask {
         return LocalDateTime.now().plusMinutes(1); // Default to 1 minute if parsing fails
 	}
 
-    private MarchesAvailable checkMarchesAvailable() {
+    private MarchesAvailable getMarchesAvailable() {
         // open active marches panel
         emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(2, 550));
         sleepTask(500);
