@@ -55,13 +55,17 @@ public class PolarTerrorHuntingTask extends DelayedTask {
         logInfo("Starting Polar Terror Hunting task. Level: " + polarTerrorLevel + ", Mode: " + (limitedHunting ? "Limited" : "Unlimited") + ", Use Flag: " + (useFlag ? flagString : "No Flag"));
 
         // verify if there's enough stamina to hunt, if not, reschedule the task
-
-        int currentStamina = getStaminaValue();
+        int currentStamina = getStaminaValueFromIntelScreen();
 
         if (currentStamina < minStaminaLevel) {
             LocalDateTime rescheduleTime = LocalDateTime.now().plusMinutes(staminaRegenerationTime(currentStamina,refreshStaminaLevel));
             reschedule(rescheduleTime);
             logWarning("Not enough stamina to do polar (Current: " + currentStamina + "). Rescheduling task in " + rescheduleTime + "minutes.");
+            return;
+        }
+        if (!checkMarchesAvailable()) {
+            logWarning("No marches available, rescheduling for in 5 minutes.");
+            reschedule(LocalDateTime.now().plusMinutes(5));
             return;
         }
 
@@ -161,7 +165,7 @@ public class PolarTerrorHuntingTask extends DelayedTask {
         // Try to deploy and verify it disappears; retry a few times if needed
         boolean deployed = clickDeployButton(maxRetries);
 
-        int currentStamina = getStaminaValue();
+        int currentStamina = getStaminaValueFromIntelScreen();
         // No deploy button found after confirm: assume march sent
         logInfo("March deployed successfully.");
 
@@ -199,9 +203,7 @@ public class PolarTerrorHuntingTask extends DelayedTask {
         }
         return true;
     }
-
     private boolean isBearRunning() {
-        ensureCorrectScreenLocation(getRequiredStartLocation());
         DTOImageSearchResult result = searchTemplateWithRetries(EnumTemplates.BEAR_HUNT_IS_RUNNING);
         return result.isFound();
     }
@@ -298,14 +300,6 @@ public class PolarTerrorHuntingTask extends DelayedTask {
         return true;
     }
 
-    private int getStaminaValue() {
-        ensureOnIntelScreen();
-        int currentStamina = readStaminaValue(new DTOPoint(582, 23), new DTOPoint(672, 55));
-        ensureCorrectScreenLocation(getRequiredStartLocation());
-        logInfo("Current stamina: " + currentStamina);
-        return currentStamina;
-    }
-
     private boolean checkMarchesAvailable() {
         // open active marches panel
         emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(2, 550));
@@ -338,11 +332,4 @@ public class PolarTerrorHuntingTask extends DelayedTask {
         return EnumStartLocation.WORLD;
     }
 
-    private int staminaRegenerationTime(int currentStamina, int targetStamina) {
-        if (currentStamina >= targetStamina) {
-            return 0;
-        }
-        int staminaNeeded = targetStamina - currentStamina;
-        return staminaNeeded * 5; // 1 stamina every 5 minutes
-    }
 }
