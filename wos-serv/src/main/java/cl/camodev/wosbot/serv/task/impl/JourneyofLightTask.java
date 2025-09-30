@@ -7,9 +7,7 @@ import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.serv.task.DelayedTask;
-import net.sourceforge.tess4j.TesseractException;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 
 public class JourneyofLightTask extends DelayedTask {
@@ -139,6 +137,7 @@ public class JourneyofLightTask extends DelayedTask {
             logInfo("No free watches found, skipping claim.");
             return;
         }
+
         tapPoint(result.getPoint());
         sleepTask(500);
 
@@ -149,31 +148,7 @@ public class JourneyofLightTask extends DelayedTask {
             logInfo("No free watches found, skipping claim.");
             return;
         }
+
         tapPoint(freeWatch.getPoint());
-    }
-
-    private String OCRWithRetries(String searchString, DTOPoint p1, DTOPoint p2, int maxRetries) {
-        String result = null;
-        for (int attempt = 0; attempt <= maxRetries; attempt++) {
-            result = OCRWithRetries(p1, p2, maxRetries);
-            if (result != null && result.contains(searchString)) return result;
-            sleepTask(200);
-        }
-        return null;
-    }
-
-    private String OCRWithRetries(DTOPoint p1, DTOPoint p2, int maxRetries) {
-        String result = null;
-        for (int attempt = 0; attempt <= maxRetries; attempt++) {
-            try {
-                result = emuManager.ocrRegionText(EMULATOR_NUMBER, p1, p2);
-            } catch (IOException | TesseractException e) {
-                logWarning("OCR attempt " + attempt + " threw an exception: " + e.getMessage());
-                if (attempt >= maxRetries) return null;
-            }
-            if (result != null && !result.isEmpty()) return result;
-            sleepTask(200);
-        }
-        return result;
     }
 }

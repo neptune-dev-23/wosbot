@@ -221,44 +221,36 @@ public abstract class Emulator {
 	 * @return Result of the action
 	 */
 	protected <T> T withRetries(String emulatorNumber, Function<IDevice, T> action, String actionName) {
-		if (!isRunning(emulatorNumber)){
+		if (!isRunning(emulatorNumber)) {
 			logger.error("Emulator {} is not running, cannot perform action {}", emulatorNumber, actionName);
-			throw new ADBConnectionException("Emulator " + emulatorNumber + " is not running, cannot perform action " + actionName);
+			throw new ADBConnectionException(
+					"Emulator " + emulatorNumber + " is not running, cannot perform action " + actionName);
 		}
 
+		// --- Phase 1: Initial attempts with ADB restarts ---
 		for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
 			try {
-				// Use optimized findDevice that includes automatic connection
 				IDevice device = findDevice(emulatorNumber);
 				if (device == null) {
 					logger.error("Device not found for {}: {}", actionName, emulatorNumber);
-
-					// Only restart ADB as last resort after several attempts
 					if (attempt >= MAX_RETRIES / 2) {
 						logger.info("Attempting ADB restart as last resort (attempt {})", attempt);
 						restartAdb();
 					}
-
-					Thread.sleep(RETRY_DELAY_MS / 2); // Reduced wait
+					Thread.sleep(RETRY_DELAY_MS / 2);
 					continue;
 				}
 
-				// Check that the device is online before executing the action
 				if (!device.isOnline()) {
-                    logger.warn("Device found but not online, waiting... (attempt {})", attempt);
+					logger.warn("Device found but not online, waiting... (attempt {})", attempt);
 					Thread.sleep(2000);
 					continue;
 				}
-
-				// Execute the action
 				return action.apply(device);
-
 			} catch (Exception e) {
-                logger.warn("Attempt {} of {} failed: {}", attempt, actionName, e.getMessage());
-
-				// Only restart ADB in extreme cases and after several failures
+				logger.warn("Attempt {} of {} failed: {}", attempt, actionName, e.getMessage());
 				if (attempt >= MAX_RETRIES - 2) {
-                    logger.warn("Multiple failures, attempting ADB restart (attempt {})", attempt);
+					logger.warn("Multiple failures, attempting ADB restart (attempt {})", attempt);
 					try {
 						restartAdb();
 						Thread.sleep(RETRY_DELAY_MS);
@@ -266,7 +258,6 @@ public abstract class Emulator {
 						Thread.currentThread().interrupt();
 					}
 				} else {
-					// Shorter wait between normal retries
 					try {
 						Thread.sleep(RETRY_DELAY_MS / 2);
 					} catch (InterruptedException ie) {
@@ -276,26 +267,68 @@ public abstract class Emulator {
 			}
 		}
 
-		// Last resort: restart ADB and try one final time after all retries are exhausted
-		logger.warn("All {} attempts failed for {} on {}. Attempting final ADB restart and retry...",
-					MAX_RETRIES, actionName, emulatorNumber);
+		// --- Phase 2: If Phase 1 failed, restart emulator and try again ---
+		logger.warn(
+				"All {} initial attempts failed for {} on {}. Attempting emulator restart and new set of retries...",
+				MAX_RETRIES, actionName, emulatorNumber);
 		try {
-			restartAdb();
-			Thread.sleep(RETRY_DELAY_MS);
-
-			// Final attempt after ADB restart
-			IDevice device = findDevice(emulatorNumber);
-			if (device != null && device.isOnline()) {
-				logger.info("Final attempt after ADB restart for {} on {}", actionName, emulatorNumber);
-				return action.apply(device);
-			}
+			logger.info("Attempting to restart the emulator for {} on {}", actionName, emulatorNumber);
+			closeEmulator(emulatorNumber);
+			Thread.sleep(5000); // Wait for emulator to close
+			launchEmulator(emulatorNumber);
+			Thread.sleep(15000); // Wait for emulator to launch and stabilize
 		} catch (Exception e) {
-			logger.error("Final attempt after ADB restart also failed for {} on {}: {}",
-						actionName, emulatorNumber, e.getMessage());
+			logger.error("Failed to restart emulator for {} on {}: {}", actionName, emulatorNumber, e.getMessage());
+			throw new ADBConnectionException("Emulator restart failed for " + actionName + " on " + emulatorNumber, e);
 		}
 
-        logger.error("All attempts including final ADB restart failed for {} on {}", actionName, emulatorNumber);
-		throw new ADBConnectionException("All attempts including final ADB restart failed for " + actionName + " on " + emulatorNumber);
+		// --- Phase 3: Second set of attempts after emulator restart ---
+		for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+			try {
+				IDevice device = findDevice(emulatorNumber);
+				if (device == null) {
+					logger.error("Device not found after emulator restart for {}: {}", actionName, emulatorNumber);
+					if (attempt >= MAX_RETRIES / 2) {
+						logger.info("Attempting ADB restart as last resort after emulator restart (attempt {})",
+								attempt);
+						restartAdb();
+					}
+					Thread.sleep(RETRY_DELAY_MS / 2);
+					continue;
+				}
+
+				if (!device.isOnline()) {
+					logger.warn("Device found but not online after emulator restart, waiting... (attempt {})", attempt);
+					Thread.sleep(2000);
+					continue;
+				}
+				return action.apply(device);
+			} catch (Exception e) {
+				logger.warn("Attempt {} of {} failed after emulator restart: {}", attempt, actionName, e.getMessage());
+				if (attempt >= MAX_RETRIES - 2) {
+					logger.warn("Multiple failures after emulator restart, attempting ADB restart (attempt {})",
+							attempt);
+					try {
+						restartAdb();
+						Thread.sleep(RETRY_DELAY_MS);
+					} catch (InterruptedException ie) {
+						Thread.currentThread().interrupt();
+					}
+				} else {
+					try {
+						Thread.sleep(RETRY_DELAY_MS / 2);
+					} catch (InterruptedException ie) {
+						Thread.currentThread().interrupt();
+					}
+				}
+			}
+		}
+
+		// --- Phase 4: Final failure ---
+		logger.error("All attempts including emulator restart and final ADB restart failed for {} on {}", actionName,
+				emulatorNumber);
+		throw new ADBConnectionException("All attempts including ADB restart and device restart failed for "
+				+ actionName + " on " + emulatorNumber);
 	}
 
 	/**
