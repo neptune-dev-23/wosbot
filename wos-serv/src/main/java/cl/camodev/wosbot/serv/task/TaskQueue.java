@@ -45,7 +45,7 @@ public class TaskQueue {
 
     // State flags
     private volatile boolean running = false;
-    private volatile LocalDateTime paused = LocalDateTime.now();
+    private volatile LocalDateTime paused = LocalDateTime.MIN;
     private volatile boolean needsReconnect = false;
 
     // Thread that will evaluate and execute tasks
@@ -128,9 +128,12 @@ public class TaskQueue {
         acquireEmulatorSlot();
 
         while (running) {
-            if (paused != LocalDateTime.MIN) {
+            if (paused != LocalDateTime.MIN && paused != LocalDateTime.MAX) {
                 handlePausedState();
                 continue;
+            } else if (paused == LocalDateTime.MAX && !emuManager.isRunning(profile.getEmulatorNumber())) {
+                logInfo("Emulator is not running, acquiring emulator slot now");
+                acquireEmulatorSlot();
             }
 
             boolean executedTask = false;
@@ -142,7 +145,7 @@ public class TaskQueue {
             if (task != null && task.getDelay(TimeUnit.SECONDS) <= 0) {
                 taskQueue.poll(); // Remove the task from the queue
                 executedTask = executeTask(task);
-                if (paused == LocalDateTime.MIN) delayUntil = LocalDateTime.now();
+                if (paused == LocalDateTime.MIN) delayUntil = LocalDateTime.MIN;
             } else if (task != null) {
                 delayUntil = LocalDateTime.now().plusSeconds(task.getDelay(TimeUnit.SECONDS));
             }
@@ -292,9 +295,13 @@ public class TaskQueue {
     private void resumeAfterReconnectionDelay() {
         needsReconnect = false;
         updateProfileStatus("RESUMING AFTER PAUSE");
-        logInfo("TaskQueue resumed after " + Duration.between(paused, LocalDateTime.now()).toMinutes() + " minutes pause");
+        logInfo("TaskQueue resuming after " + Duration.between(paused, LocalDateTime.now()).toMinutes() + " minutes pause");
         paused = LocalDateTime.MIN;
 
+        if (!emuManager.isRunning(profile.getEmulatorNumber())) {
+            logInfo("While resuming, found instance closed. Acquiring a slot now.");
+            acquireEmulatorSlot();
+        }
         attemptReconnectAndInitialize();
     }
 
@@ -356,7 +363,7 @@ public class TaskQueue {
     // Idle time management methods
     private void idlingEmulator(LocalDateTime delayUntil) {
         emuManager.closeEmulator(profile.getEmulatorNumber());
-        logInfo("Closing game due to large inactivity");
+        logInfo("Closing game due to large inactivity. Next task: " + delayUntil);
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         updateProfileStatus("Idling till " + formatter.format(delayUntil));
@@ -389,8 +396,8 @@ public class TaskQueue {
      * Handles the paused state of the task queue
      */
     private void handlePausedState() {
-        if (delayUntil.isAfter(LocalDateTime.now())) {
-            resume();
+        if (delayUntil.isBefore(LocalDateTime.now()) && needsReconnect) {
+            resumeAfterReconnectionDelay();
             return;
         }
         try {
@@ -421,7 +428,7 @@ public class TaskQueue {
      * @return updated idling state
      */
     private boolean handleIdleTime(LocalDateTime delayUntil, boolean idlingTimeExceeded) {
-        if (delayUntil == LocalDateTime.MAX) {
+        if (delayUntil == LocalDateTime.MAX || delayUntil.isBefore(LocalDateTime.now())) {
             return idlingTimeExceeded; // No change if no tasks in queue
         }
 
@@ -474,10 +481,8 @@ public class TaskQueue {
 
         try {
             boolean finalRunHelpAllies = runHelpAllies; // Idk, my editor told me to do this. What's the point?
-            new Thread(() -> {
                 isBearRunning();
                 if (finalRunHelpAllies) checkHelpAllies();
-            }).start();
         } catch (Exception e) {
             logError("Error running background tasks: " + e.getMessage());
         }
@@ -595,9 +600,6 @@ public class TaskQueue {
      * Resumes queue processing.
      */
     public void resume() {
-        if (needsReconnect) {
-            resumeAfterReconnectionDelay();
-        }
         paused = LocalDateTime.MIN;
         updateProfileStatus("RESUMING");
         logInfo("TaskQueue resumed");
@@ -609,7 +611,7 @@ public class TaskQueue {
     public void executeTaskNow(TpDailyTaskEnum taskEnum, boolean recurring) {
         // Obtain the task prototype from the registry
         DelayedTask prototype = DelayedTaskRegistry.create(taskEnum, profile);
-        resume();
+        paused = LocalDateTime.MAX;
         if (prototype == null) {
             logWarning("Task not found: " + taskEnum);
             return;
