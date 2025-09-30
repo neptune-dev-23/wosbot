@@ -81,6 +81,7 @@ public class DelayedTaskRegistry {
         registry.put(TpDailyTaskEnum.MERCENARY_EVENT, profile -> new MercenaryEventTask(profile, TpDailyTaskEnum.MERCENARY_EVENT));
         registry.put(TpDailyTaskEnum.EVENT_JOURNEY_OF_LIGHT, profile -> new JourneyofLightTask(profile, TpDailyTaskEnum.EVENT_JOURNEY_OF_LIGHT));
         registry.put(TpDailyTaskEnum.EVENT_POLAR_TERROR, profile -> new PolarTerrorHuntingTask(profile, TpDailyTaskEnum.EVENT_POLAR_TERROR));
+        registry.put(TpDailyTaskEnum.EVENT_MYRIAD_BAZAAR, profile -> new MyriadBazaarEventTask(profile, TpDailyTaskEnum.EVENT_MYRIAD_BAZAAR));
 
         // Initialize
         registry.put(TpDailyTaskEnum.INITIALIZE, profile -> new InitializeTask(profile, TpDailyTaskEnum.INITIALIZE));

@@ -15,15 +15,19 @@ public class UtilOCR {
 
     /**
      * Performs OCR on a specified region of a BufferedImage using Tesseract.
+     * 
      * @param image    Buffered image to process.
      * @param p1       Top-left point that defines the region.
      * @param p2       Bottom-right point that defines the region.
-     * @param language Language code for Tesseract (e.g., "eng" for English, "spa" for Spanish).
+     * @param language Language code for Tesseract (e.g., "eng" for English, "spa"
+     *                 for Spanish).
      * @return Extracted text from the specified region.
      * @throws TesseractException       If an error occurs during OCR processing.
-     * @throws IllegalArgumentException If the image is null or the specified region is invalid.
+     * @throws IllegalArgumentException If the image is null or the specified region
+     *                                  is invalid.
      */
-    public static String ocrFromRegion(BufferedImage image, DTOPoint p1, DTOPoint p2, String language) throws TesseractException {
+    public static String ocrFromRegion(BufferedImage image, DTOPoint p1, DTOPoint p2, String language)
+            throws TesseractException {
         if (image == null) {
             throw new IllegalArgumentException("Image cannot be null.");
         }
@@ -47,14 +51,14 @@ public class UtilOCR {
 
         // Optional: dump debug images to /tmp
         // try {
-        //     ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        //     ImageIO.write(resizedImage, "png", baos);
-        //     java.nio.file.Files.write(
-        //         java.nio.file.Files.createTempFile("img_cut_resized-", ".png"),
-        //         baos.toByteArray()
-        //     );
+        // ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        // ImageIO.write(resizedImage, "png", baos);
+        // java.nio.file.Files.write(
+        // java.nio.file.Files.createTempFile("img_cut_resized-", ".png"),
+        // baos.toByteArray()
+        // );
         // } catch (IOException e) {
-        //     e.printStackTrace();
+        // e.printStackTrace();
         // }
 
         Tesseract tesseract = new Tesseract();
