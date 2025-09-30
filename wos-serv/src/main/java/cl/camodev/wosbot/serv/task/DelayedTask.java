@@ -327,7 +327,7 @@ public abstract class DelayedTask implements Runnable, Delayed {
             result = emuManager.searchTemplate(EMULATOR_NUMBER, template, threshold);
             sleepTask(200);
         }
-        logDebug("Template " + template + " found.");
+        logDebug(result != null ? "Template " + template + " found." : "Template " + template + " not found.");
         return result;
     }
 
