@@ -369,6 +369,7 @@ public abstract class Emulator {
 				convertRawImageToBufferedImage(rawImage, image);
 				ByteArrayOutputStream baos = new ByteArrayOutputStream();
 				ImageIO.write(image, "png", baos);
+				// java.nio.file.Files.write(java.nio.file.Files.createTempFile("img_full-", ".png"), baos.toByteArray());
 				return baos.toByteArray();
 			} catch (Exception e) {
 				throw new RuntimeException("Error capturing screenshot", e);

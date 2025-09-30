@@ -106,6 +106,10 @@ public enum EnumConfigurationKey {
 	DAILY_MISSION_AUTO_SCHEDULE_BOOL("false", Boolean.class),
 	STOREHOUSE_CHEST_BOOL("false", Boolean.class),
 	DAILY_LABYRINTH_BOOL("false", Boolean.class),
+	ARENA_TASK_ACTIVATION_HOUR_STRING("0", String.class),
+	ARENA_TASK_BOOL("false", Boolean.class),
+	ARENA_TASK_EXTRA_ATTEMPTS_INT("0", Integer.class),
+	ARENA_TASK_REFRESH_WITH_GEMS_BOOL("false", Boolean.class),
 	
     // ========================================================================
     // SHOPS AND MERCHANTS
