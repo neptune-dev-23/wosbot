@@ -420,7 +420,7 @@ public class TaskQueue {
         try {
             String nextTaskName = taskQueue.isEmpty() ? "None" : taskQueue.peek().getTaskName();
 
-            updateProfileStatus("Idling till " + delayUntil + "\nNext task: " + nextTaskName);
+            updateProfileStatus("Idling for " + DateTimeFormatter.ofPattern("HH:mm:ss").format(delayUntil) + "\nNext task: " + nextTaskName);
             Thread.sleep(IDLE_WAIT_TIME);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
