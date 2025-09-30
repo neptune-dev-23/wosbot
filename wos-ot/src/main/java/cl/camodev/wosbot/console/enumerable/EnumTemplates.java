@@ -18,6 +18,7 @@ public enum EnumTemplates {
 	GAME_HOME_RECONNECT("/templates/home/reconnectButton.png"),
 	
 	GAME_HOME_NEW_SURVIVORS("/templates/home/newSurvivors.png"),
+
 	GAME_HOME_NEW_SURVIVORS_WELCOME_IN("/templates/home/newSurvivorsWelcome.png"),
 	GAME_HOME_NEW_SURVIVORS_PLUS_BUTTON("/templates/home/newSurvivorsPlusButton.png"),
 
@@ -93,6 +94,12 @@ public enum EnumTemplates {
 	STOREHOUSE_STAMINA("/templates/storehouse/stamina.png"),
 	
 	MAIL_UNCLAIMED_REWARDS("/templates/mail/unclaimedRewards.png"),
+
+	ARENA_CHALLENGE_BUTTON("/templates/arena/arenaChallengeButton.png"),
+	ARENA_FREE_REFRESH_BUTTON("/templates/arena/arenaFreeRefreshButton.png"),
+	ARENA_GEMS_REFRESH_BUTTON("/templates/arena/arenaGemsRefreshButton.png"),
+	ARENA_GEMS_REFRESH_CONFIRM_BUTTON("/templates/arena/arenaGemsRefreshConfirmButton.png"),
+	ARENA_GEMS_EXTRA_ATTEMPTS_BUTTON("/templates/arena/arenaGemsExtraAttemptsButton.png"),
 
     // ========================================================================
     // TRAINING CAMPS AND TROOPS
@@ -181,10 +188,9 @@ public enum EnumTemplates {
 	INTEL_FIRE_BEAST("/templates/intel/beastFire.png"),
 	INTEL_SCREEN_1("/templates/intel/intelScreen1.png"),
 	INTEL_SCREEN_2("/templates/intel/intelScreen2.png"),
-	INTEL_AGNES("/templates/experts/intelAgnes.png"),
 	
 	DEPLOY_BUTTON("/templates/intel/deploy.png"),
-
+	
 	// Grayscale templates for B&W matching
 	INTEL_BEAST_GRAYSCALE("/templates/intel/beastGrayscale.png"),
 	INTEL_BEAST_GRAYSCALE_FC("/templates/intel/beastGrayscaleFC.png"),
@@ -194,7 +200,7 @@ public enum EnumTemplates {
 	INTEL_JOURNEY_GRAYSCALE_FC("/templates/intel/journeyGrayscaleFC.png"),
 	
 	INTEL_MASTER_BOUNTY("/templates/intel/masterBounty.png"),
-
+	
     // ========================================================================
     // PETS AND BEAST CAGES
     // ========================================================================
@@ -212,7 +218,7 @@ public enum EnumTemplates {
 	PETS_CHEST_RED("/templates/pets/chestRed.png"),
 	PETS_CHEST_PURPLE("/templates/pets/chestPurple.png"),
 	PETS_CHEST_BLUE("/templates/pets/chestBlue.png"),
-
+	
     // ========================================================================
     // ISLAND
     // ========================================================================
@@ -223,7 +229,7 @@ public enum EnumTemplates {
 	LIFE_ESSENCE_DAILY_CARING_BUTTON("/templates/island/dailyCaringButton.png"),
 	ISLAND_WEEKLY_FREE_SCROLL("/templates/island/weeklyFreeScroll.png"),
 	ISLAND_WEEKLY_FREE_SCROLL_BUY_BUTTON("/templates/island/weeklyFreeScrollBuyButton.png"),
-
+	
     // ========================================================================
     // MERCHANTS AND SHOPS
     // ========================================================================
@@ -239,7 +245,7 @@ public enum EnumTemplates {
 	MYSTERY_SHOP_DAILY_REFRESH("/templates/shop/mysteryshop/dailyRefresh.png"),
 	MYSTERY_SHOP_250_BADGES_BUTTON("/templates/shop/mysteryshop/250BadgesButton.png"),
 	MYSTERY_SHOP_MYTHIC_SHARDS_BUTTON("/templates/shop/mysteryshop/mysteryShopMythicShard.png"),
-
+	
     // ========================================================================
     // BANK AND EVENTS
     // ========================================================================
@@ -250,7 +256,7 @@ public enum EnumTemplates {
 
 	EXPLORATION_CLAIM("/templates/exploration/claim.png"),
 	HERO_RECRUIT_CLAIM("/templates/herorecruitment/freebutton.png"),
-
+	
     // ========================================================================
     // LABYRINTH
     // ========================================================================
@@ -266,13 +272,13 @@ public enum EnumTemplates {
 	LABYRINTH_RAID_CHALLENGE("/templates/labyrinth/raidChallenge.png"),
 	LABYRINTH_QUICK_DEPLOY("/templates/labyrinth/quickDeploy.png"),
 	LABYRINTH_DEPLOY("/templates/labyrinth/deploy.png"),
-
+	
     // ========================================================================
     // VALIDATION TEMPLATES
     // ========================================================================
 	VALIDATION_WAR_ACADEMY_UI("/templates/validation/warAcademy.png"),
     VALIDATION_CRYSTAL_LAB_UI("/templates/validation/crystalLab.png"),
-
+	
     // ========================================================================
     // TUNDRA TRUCK AND TREK EVENTS
     // ========================================================================
@@ -288,7 +294,7 @@ public enum EnumTemplates {
 	TUNDRA_TRUCK_ESCORT("/templates/tundratruck/tundraTruckEscort.png"),
 	TUNDRA_TRUCK_DEPARTED("/templates/tundratruck/tundraTruckDeparted.png"),
 	TUNDRA_TRUCK_ENDED("/templates/tundratruck/tundraTruckEnded.png"),
-
+	
 	TUNDRA_TREK_SUPPLIES("/templates/tundratrek/trekSupplies.png"),
 	TUNDRA_TREK_CLAIM_BUTTON("/templates/tundratrek/trekClaimButton.png"),
 	TUNDRA_TREK_AUTO_BUTTON("/templates/tundratrek/autoTrek.png"),
@@ -297,7 +303,7 @@ public enum EnumTemplates {
 	TUNDRA_TREK_BLUE_BUTTON("/templates/tundratrek/bluebuttonTrek.png"),
 	TUNDRA_TREK_CHECK_ACTIVE("/templates/tundratrek/checkactiveTrek.png"),
 	TUNDRA_TREK_CHECK_INACTIVE("/templates/tundratrek/checkinactiveTrek.png"),
-
+	
     // ========================================================================
     // TUNDRA TRUCK AND TREK EVENTS
     // ========================================================================
@@ -311,13 +317,15 @@ public enum EnumTemplates {
     // ========================================================================
 	ROMULUS_CLAIM_TROOPS_BUTTON("/templates/experts/romulusClaimTroopsButton.png"),
 	ROMULUS_CLAIM_TAG_BUTTON("/templates/experts/romulusClaimTagButton.png"),
-
+	AGNES_CLAIM_INTEL("/templates/experts/intelAgnes.png"),
+	
 	MERCENARY_EVENT_TAB("/templates/mercenary/mercenaryEventTab.png"),
 	MERCENARY_SCOUT_BUTTON("/templates/mercenary/mercenaryEventScout.png"),
 	MERCENARY_CHALLENGE_BUTTON("/templates/mercenary/mercenaryEventChallenge.png"),
 	MERCENARY_ATTACK_BUTTON("/templates/mercenary/mercenaryEventAttack.png"),
 	MERCENARY_DEPLOY_BUTTON("/templates/mercenary/mercenaryEventDeploy.png"),
-
+	MERCENARY_DIFFICULTY_CHALLENGE("/templates/mercenary/mercenaryEventDifficultyChallenge.png"),
+	
     // ========================================================================
     // POLAR TERROR HUNTING
     // ========================================================================
@@ -334,6 +342,7 @@ public enum EnumTemplates {
     // ========================================================================
 
     BEAR_HUNT_IS_RUNNING("/templates/events/bearhunt/bearIsRunning.png"),
+	
     // ========================================================================
     // CHIEF ORDER
     // ========================================================================
