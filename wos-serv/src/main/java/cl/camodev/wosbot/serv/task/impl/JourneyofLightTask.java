@@ -131,7 +131,8 @@ public class JourneyofLightTask extends DelayedTask {
             logInfo("No free watches found, skipping claim.");
             return;
         }
-        emuManager.tapAtRandomPoint(EMULATOR_NUMBER, result.getPoint(), result.getPoint());
+
+        tapPoint(result.getPoint());
         sleepTask(500);
 
         DTOImageSearchResult freeWatch = emuManager.searchTemplate(EMULATOR_NUMBER,
@@ -141,6 +142,7 @@ public class JourneyofLightTask extends DelayedTask {
             logInfo("No free watches found, skipping claim.");
             return;
         }
-        emuManager.tapAtRandomPoint(EMULATOR_NUMBER, freeWatch.getPoint(), freeWatch.getPoint());
+
+        tapPoint(freeWatch.getPoint());
     }
 }
