@@ -62,7 +62,8 @@ public enum TpDailyTaskEnum {
 	EVENT_HERO_MISSION(201, "Hero Mission Event",    EnumConfigurationKey.HERO_MISSION_EVENT_BOOL),
 	MERCENARY_EVENT(202, "Mercenary Event",    EnumConfigurationKey.MERCENARY_EVENT_BOOL),
     EVENT_JOURNEY_OF_LIGHT(203, "Journey of Light Event",    EnumConfigurationKey.JOURNEY_OF_LIGHT_BOOL),
-    EVENT_POLAR_TERROR(204, "Polar Terror Hunting",    EnumConfigurationKey.POLAR_TERROR_ENABLED_BOOL);;
+    EVENT_POLAR_TERROR(204, "Polar Terror Hunting",    EnumConfigurationKey.POLAR_TERROR_ENABLED_BOOL),
+    EVENT_MYRIAD_BAZAAR(205, "Myriad Bazaar Event",    EnumConfigurationKey.MYRIAD_BAZAAR_EVENT_BOOL);;
 
 
     private final int id;
