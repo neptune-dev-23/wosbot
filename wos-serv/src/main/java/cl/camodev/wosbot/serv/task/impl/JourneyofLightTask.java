@@ -140,6 +140,7 @@ public class JourneyofLightTask extends DelayedTask {
             logInfo("No free watches found, skipping claim.");
             return;
         }
+
         tapPoint(result.getPoint());
         sleepTask(500);
 
@@ -150,6 +151,7 @@ public class JourneyofLightTask extends DelayedTask {
             logInfo("No free watches found, skipping claim.");
             return;
         }
+
         tapPoint(freeWatch.getPoint());
     }
 }

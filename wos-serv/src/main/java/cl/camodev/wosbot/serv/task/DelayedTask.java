@@ -235,39 +235,10 @@ public abstract class DelayedTask implements Runnable, Delayed {
 
     protected int getStaminaValueFromIntelScreen() {
         ensureOnIntelScreen();
-        int currentStamina = readStaminaValue(new DTOPoint(582, 23), new DTOPoint(672, 55));
+        int currentStamina = readNumberValue(new DTOPoint(582, 23), new DTOPoint(672, 55));
         ensureCorrectScreenLocation(getRequiredStartLocation());
         logInfo("Current stamina: " + currentStamina);
         return currentStamina;
-    }
-
-    protected Integer readStaminaValue(DTOPoint topLeft, DTOPoint bottomRight) {
-        Integer staminaValue = null;
-        Pattern staminaPattern = Pattern.compile("(\\d{1,3}(?:[.,]\\d{3})*|\\d+)");
-        for (int attempt = 0; attempt < 5 && staminaValue == null; attempt++) {
-            try {
-                String ocr = emuManager.ocrRegionText(EMULATOR_NUMBER, topLeft, bottomRight);
-                if (ocr != null && !ocr.trim().isEmpty()) {
-                    Matcher m = staminaPattern.matcher(ocr);
-                    if (m.find()) {
-                        String raw = m.group(1);
-                        // Remove separators (commas or dots)
-                        String normalized = raw.replaceAll("[.,]", "");
-                        try {
-                            staminaValue = Integer.valueOf(normalized);
-                        } catch (NumberFormatException nfe) {
-                            logDebug("Parsed stamina not a valid integer: '" + raw + "'");
-                        }
-                    }
-                }
-            } catch (IOException | TesseractException ex) {
-                logDebug("OCR attempt " + (attempt + 1) + " failed: " + ex.getMessage());
-            }
-            if (staminaValue == null) {
-                sleepTask(100);
-            }
-        }
-        return staminaValue;
     }
 
     protected Integer readNumberValue(DTOPoint topLeft, DTOPoint bottomRight) {
@@ -276,15 +247,15 @@ public abstract class DelayedTask implements Runnable, Delayed {
 
         // Map for truly special OCR quirks (not fixable by normalization)
         Map<String, Integer> specialCases = Map.of(
-                "(°)", 0,
-                "il}", 1,
-                "7400)", 400,
-                "SEM)", 800,
-                "1800)", 800,
-                "2n", 211,
-                "1/300", 1300,
-                "Ti", 111,
-                "|", 121
+            "(°)", 0,
+            "il}", 1,
+            "7400)", 400,
+            "SEM)", 800,
+            "1800)", 800,
+            "2n", 211,
+            "1/300", 1300,
+            "Ti", 111,
+            "|", 121
         );
 
         for (int attempt = 0; attempt < 5 && numberValue == null; attempt++) {
@@ -305,9 +276,9 @@ public abstract class DelayedTask implements Runnable, Delayed {
                     // 2) If not matched, normalize OCR text
                     if (numberValue == null) {
                         String cleaned = ocr
-                                .replace(';', ',')              // interpret ; as comma
-                                .replaceAll("[){}\\s]", "")     // remove junk like ) or }
-                                .trim();
+                            .replace(';', ',')              // interpret ; as comma
+                            .replaceAll("[){}\\s]", "")     // remove junk like ) or }
+                            .trim();
 
                         Matcher m = numberPattern.matcher(cleaned);
                         if (m.find()) {
@@ -332,6 +303,7 @@ public abstract class DelayedTask implements Runnable, Delayed {
         }
         return numberValue;
     }
+
     protected DTOImageSearchResult searchTemplateWithRetries(EnumTemplates template) {
         return searchTemplateWithRetries(template, 90, 5);
     }
@@ -474,7 +446,6 @@ public abstract class DelayedTask implements Runnable, Delayed {
             return Objects.hash(getClass(), tpTask, profile.getId());
         }
     }
-
 
     public boolean provideDailyMissionProgress() {
         return false;
