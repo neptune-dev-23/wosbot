@@ -85,6 +85,7 @@ public class JourneyofLightTask extends DelayedTask {
             if (nextQueueDateTime.isBefore(nextScheduleTime)) {
                 nextScheduleTime = nextQueueDateTime;
             }
+            logInfo("Next queue time for queue " + profile.getName() + ": " + nextQueueTime.toLowerCase());
         }
         // set for when the next one is ready
         logInfo("Next schedule: " + UtilTime.localDateTimeToDDHHMMSS(nextScheduleTime));

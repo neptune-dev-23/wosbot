@@ -225,21 +225,50 @@ public abstract class DelayedTask implements Runnable, Delayed {
         return false;
     }
 
+    protected Integer readStaminaValue(DTOPoint topLeft, DTOPoint bottomRight) {
+        Integer staminaValue = null;
+        Pattern staminaPattern = Pattern.compile("(\\d{1,3}(?:[.,]\\d{3})*|\\d+)");
+        for (int attempt = 0; attempt < 5 && staminaValue == null; attempt++) {
+            try {
+                String ocr = emuManager.ocrRegionText(EMULATOR_NUMBER, topLeft, bottomRight);
+                if (ocr != null && !ocr.trim().isEmpty()) {
+                    Matcher m = staminaPattern.matcher(ocr);
+                    if (m.find()) {
+                        String raw = m.group(1);
+                        // Remove separators (commas or dots)
+                        String normalized = raw.replaceAll("[.,]", "");
+                        try {
+                            staminaValue = Integer.valueOf(normalized);
+                        } catch (NumberFormatException nfe) {
+                            logDebug("Parsed stamina not a valid integer: '" + raw + "'");
+                        }
+                    }
+                }
+            } catch (IOException | TesseractException ex) {
+                logDebug("OCR attempt " + (attempt + 1) + " failed: " + ex.getMessage());
+            }
+            if (staminaValue == null) {
+                sleepTask(100);
+            }
+        }
+        return staminaValue;
+    }
+
     protected Integer readNumberValue(DTOPoint topLeft, DTOPoint bottomRight) {
         Integer numberValue = null;
         Pattern numberPattern = Pattern.compile("(\\d{1,3}(?:[.,]\\d{3})*|\\d+)");
 
         // Map for truly special OCR quirks (not fixable by normalization)
         Map<String, Integer> specialCases = Map.of(
-            "(°)", 0,
-            "il}", 1,
-            "7400)", 400,
-            "SEM)", 800,
-            "1800)", 800,
-            "2n", 211,
-            "1/300", 1300,
-            "Ti", 111,
-            "|", 121
+                "(°)", 0,
+                "il}", 1,
+                "7400)", 400,
+                "SEM)", 800,
+                "1800)", 800,
+                "2n", 211,
+                "1/300", 1300,
+                "Ti", 111,
+                "|", 121
         );
 
         for (int attempt = 0; attempt < 5 && numberValue == null; attempt++) {
@@ -260,9 +289,9 @@ public abstract class DelayedTask implements Runnable, Delayed {
                     // 2) If not matched, normalize OCR text
                     if (numberValue == null) {
                         String cleaned = ocr
-                            .replace(';', ',')              // interpret ; as comma
-                            .replaceAll("[){}\\s]", "")     // remove junk like ) or }
-                            .trim();
+                                .replace(';', ',')              // interpret ; as comma
+                                .replaceAll("[){}\\s]", "")     // remove junk like ) or }
+                                .trim();
 
                         Matcher m = numberPattern.matcher(cleaned);
                         if (m.find()) {
@@ -287,7 +316,45 @@ public abstract class DelayedTask implements Runnable, Delayed {
         }
         return numberValue;
     }
+    protected DTOImageSearchResult searchTemplateWithRetries(EnumTemplates template) {
+        return searchTemplateWithRetries(template, 90, 5);
+    }
 
+    protected DTOImageSearchResult searchTemplateWithRetries(EnumTemplates template, int threshold, int maxRetries) {
+        DTOImageSearchResult result = null;
+        for (int i = 0; i < maxRetries; i++) {
+            result = emuManager.searchTemplate(EMULATOR_NUMBER, template, threshold);
+            if (result != null) {
+                break;
+            }
+            logInfo("Searching template " + template + ", (attempt " + (i + 1) + "/" +  maxRetries + ")");
+        }
+        return result;
+    }
+    protected String OCRWithRetries(String searchString, DTOPoint p1, DTOPoint p2, int maxRetries) {
+        String result = null;
+        for (int attempt = 0; attempt <= maxRetries; attempt++) {
+            result = OCRWithRetries(p1, p2, maxRetries);
+            if (result != null && result.contains(searchString)) return result;
+            sleepTask(200);
+        }
+        return null;
+    }
+
+    protected String OCRWithRetries(DTOPoint p1, DTOPoint p2, int maxRetries) {
+        String result = null;
+        for (int attempt = 0; attempt <= maxRetries; attempt++) {
+            try {
+                result = emuManager.ocrRegionText(EMULATOR_NUMBER, p1, p2);
+            } catch (IOException | TesseractException e) {
+                logWarning("OCR attempt " + attempt + " threw an exception: " + e.getMessage());
+                if (attempt >= maxRetries) return null;
+            }
+            if (result != null && !result.isEmpty()) return result;
+            sleepTask(200);
+        }
+        return result;
+    }
 
     public boolean isRecurring() {
         return recurring;
