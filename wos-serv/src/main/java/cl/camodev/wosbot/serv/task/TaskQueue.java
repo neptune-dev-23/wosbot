@@ -5,8 +5,8 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
-import java.util.concurrent.PriorityBlockingQueue;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 import cl.camodev.utiles.UtilTime;
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
@@ -42,6 +42,10 @@ public class TaskQueue {
 
     private final PriorityBlockingQueue<DelayedTask> taskQueue = new PriorityBlockingQueue<>();
     protected EmulatorManager emuManager = EmulatorManager.getInstance();
+
+    // Virtual-thread worker pool and running task registry
+    private final ExecutorService workers = Executors.newVirtualThreadPerTaskExecutor();
+    private final AtomicReference<Future<?>> currentRunningTask = new AtomicReference<>();
 
     // State flags
     private volatile boolean running = false;
@@ -115,7 +119,7 @@ public class TaskQueue {
         }
         running = true;
 
-        schedulerThread = new Thread(this::processTaskQueue);
+        schedulerThread = Thread.ofVirtual().unstarted(this::processTaskQueue);
         schedulerThread.setName("TaskQueue-" + profile.getName());
         schedulerThread.start();
     }
@@ -127,7 +131,7 @@ public class TaskQueue {
         boolean idlingTimeExceeded = false;
         acquireEmulatorSlot();
 
-        while (running) {
+        while (running && !Thread.currentThread().isInterrupted()) {
             if (paused != LocalDateTime.MIN && paused != LocalDateTime.MAX) {
                 handlePausedState();
                 continue;
@@ -144,6 +148,7 @@ public class TaskQueue {
 
             if (task != null && task.getDelay(TimeUnit.SECONDS) <= 0) {
                 taskQueue.poll(); // Remove the task from the queue
+                Future<?> f = workers.submit(task);
                 executedTask = executeTask(task);
                 if (paused == LocalDateTime.MIN) delayUntil = LocalDateTime.MIN;
             } else if (task != null) {
@@ -406,7 +411,7 @@ public class TaskQueue {
         }
         try {
             updateProfileStatus("PAUSED");
-            logInfo("Profile is paused");
+            if (LocalDateTime.now().getSecond() % 10 == 0) logInfo("Profile is paused");
             Thread.sleep(1000); // Wait while paused
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -472,6 +477,7 @@ public class TaskQueue {
 
     private void runBackgroundChecks() {
         if (!emuManager.isRunning(profile.getEmulatorNumber()) || paused != LocalDateTime.MIN) {
+            logInfo("Emulator not running or queue is paused, not running background checks. ");
             return; // emulator isn't running or the queue should be paused, just leave.
         }
         // help allies checks
@@ -484,9 +490,8 @@ public class TaskQueue {
         }
 
         try {
-            boolean finalRunHelpAllies = runHelpAllies; // Idk, my editor told me to do this. What's the point?
                 isBearRunning();
-                if (finalRunHelpAllies) checkHelpAllies();
+                if (runHelpAllies) checkHelpAllies();
         } catch (Exception e) {
             logError("Error running background tasks: " + e.getMessage());
         }
