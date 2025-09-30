@@ -180,9 +180,9 @@ public class ArenaTask extends DelayedTask {
     private boolean checkFirstRun() {
         try {
 			// Get arena score
-            long arenaScore = readNumberValue(new DTOPoint(567, 1065), new DTOPoint(649, 1099));
+            Integer arenaScore = readNumberValue(new DTOPoint(567, 1065), new DTOPoint(649, 1099));
             logInfo("Arena score: " + arenaScore);
-            if(arenaScore == 1000) {
+            if(arenaScore != null && arenaScore == 1000) {
                 logInfo("First run detected based on arena score of 1000.");
                 return true;
             } else {
