@@ -24,24 +24,25 @@ import net.sourceforge.tess4j.TesseractException;
 public class IntelligenceTask extends DelayedTask {
 
     private final IDailyTaskRepository iDailyTaskRepository = DailyTaskRepository.getRepository();
+	private final boolean fcEra;
+	private final boolean useSmartProcessing;
+	
 	private boolean marchQueueLimitReached = false;
 	private boolean beastMarchSent = false;
-	private boolean fcEra = false;
+
 	public IntelligenceTask(DTOProfiles profile, TpDailyTaskEnum tpTask) {
 		super(profile, tpTask);
+		this.fcEra = profile.getConfig(EnumConfigurationKey.INTEL_FC_ERA_BOOL, Boolean.class);
+    	this.useSmartProcessing = profile.getConfig(EnumConfigurationKey.INTEL_SMART_PROCESSING_BOOL, Boolean.class);
 	}
 
 	@Override
 	protected void execute() {
 		logInfo("Starting Intel task.");
-		fcEra = profile.getConfig(EnumConfigurationKey.INTEL_FC_ERA_BOOL, Boolean.class);
 
         MarchesAvailable marchesAvailable;
-        boolean useSmartProcessing = profile.getConfig(EnumConfigurationKey.INTEL_SMART_PROCESSING_BOOL, Boolean.class);
 		boolean intelFound = false;
 		boolean nonBeastIntelFound = false;
-		marchQueueLimitReached = false;
-		beastMarchSent = false;
 
         if (useSmartProcessing) {
             // Check how many marches are available
@@ -408,6 +409,11 @@ public class IntelligenceTask extends DelayedTask {
             logDebug("OCR attempt failed: " + e.getMessage());
         }
         logInfo("No idle marches detected. Checking for used march queues...");
+
+		if (checkMarchesAvailable()) {
+			return new MarchesAvailable(true, null);
+		}
+
         // Collect active march queue counts
         int totalMarchesAvailable = profile.getConfig(EnumConfigurationKey.GATHER_ACTIVE_MARCH_QUEUE_INT, Integer.class);
         int activeMarchQueues = 0;
@@ -440,7 +446,7 @@ public class IntelligenceTask extends DelayedTask {
             logInfo("All march queues used. Earliest available march: " + earliestAvailableMarch);
             return new MarchesAvailable(false, earliestAvailableMarch);
         }
-        // there MAY be some returning marches, resscheduling for the near future to check later
+        // there MAY be some returning marches, rescheduling for the near future to check later
         logInfo("No idle marches detected. Not all marches are used. Suspected auto-rally marches. Setting 5 minute delay for any marches to return. ");
         return new MarchesAvailable(false, LocalDateTime.now().plusMinutes(5));
     }
