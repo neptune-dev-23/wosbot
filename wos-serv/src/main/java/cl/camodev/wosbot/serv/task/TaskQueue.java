@@ -396,8 +396,12 @@ public class TaskQueue {
      * Handles the paused state of the task queue
      */
     private void handlePausedState() {
-        if (delayUntil.isBefore(LocalDateTime.now()) && needsReconnect) {
-            resumeAfterReconnectionDelay();
+        if (delayUntil.isBefore(LocalDateTime.now())) {
+            if (needsReconnect) {resumeAfterReconnectionDelay();}
+            else {
+                paused = LocalDateTime.MIN;
+                updateProfileStatus("RESUMING");
+            }
             return;
         }
         try {
