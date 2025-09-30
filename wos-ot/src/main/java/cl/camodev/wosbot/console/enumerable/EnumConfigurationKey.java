@@ -168,6 +168,9 @@ public enum EnumConfigurationKey {
     // Journey of Light event
     JOURNEY_OF_LIGHT_BOOL("false", Boolean.class),
 
+    // Myriad Bazaar event
+    MYRIAD_BAZAAR_EVENT_BOOL("false", Boolean.class),
+
     // ========================================================================
     // EXPERT SETTINGS
     // ========================================================================
