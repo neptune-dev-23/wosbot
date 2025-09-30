@@ -7,9 +7,7 @@ import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.serv.task.DelayedTask;
-import net.sourceforge.tess4j.TesseractException;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 
 public class JourneyofLightTask extends DelayedTask {
