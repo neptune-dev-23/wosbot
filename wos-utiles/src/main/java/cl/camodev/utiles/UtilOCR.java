@@ -2,10 +2,6 @@ package cl.camodev.utiles;
 
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-
-import javax.imageio.ImageIO;
 
 import cl.camodev.wosbot.ot.DTOPoint;
 import net.sourceforge.tess4j.Tesseract;
@@ -32,10 +28,10 @@ public class UtilOCR {
             throw new IllegalArgumentException("Image cannot be null.");
         }
 
-        int x = (int) Math.min(p1.getX(), p2.getX());
-        int y = (int) Math.min(p1.getY(), p2.getY());
-        int width = (int) Math.abs(p1.getX() - p2.getX());
-        int height = (int) Math.abs(p1.getY() - p2.getY());
+        int x = Math.min(p1.getX(), p2.getX());
+        int y = Math.min(p1.getY(), p2.getY());
+        int width = Math.abs(p1.getX() - p2.getX());
+        int height = Math.abs(p1.getY() - p2.getY());
 
         if (x + width > image.getWidth() || y + height > image.getHeight()) {
             throw new IllegalArgumentException("Specified region exceeds image bounds.");
