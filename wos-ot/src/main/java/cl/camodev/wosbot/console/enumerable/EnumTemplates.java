@@ -166,13 +166,12 @@ public enum EnumTemplates {
 	ALLIANCE_WAR_BUTTON("/templates/alliance/warButton.png"),
 	ALLIANCE_HELP_BUTTON("/templates/alliance/helpButton.png"),
 	ALLIANCE_HELP_REQUESTS("/templates/alliance/helpRequests.png"),
-    MOBILIZATION_EXCLUSIVE_BUTTON("/templates/events/mobilization/exclusive_button.png"),
     ALLIANCE_MOBILIZATION_TAB("/templates/events/mobilization/allianzMobilizationTab.png"),
     ALLIANCE_MOBILIZATION_UNSELECTED_TAB("/templates/events/mobilization/allianzMobilizationUnselected.png"),
 
     AM_120_PERCENT("/templates/events/mobilization/AM_120%.png"),
     AM_200_PERCENT("/templates/events/mobilization/AM_200%.png"),
-    AM_BAR("/templates/events/mobilization/AM_Bar.png"),
+    AM_BAR_X("/templates/events/mobilization/AM_Bar_X.png"),
     AM_COMPLETED("/templates/events/mobilization/AM_Completed.png"),
 
     // Task type icons
@@ -190,10 +189,6 @@ public enum EnumTemplates {
     AM_TRAINING_SPEEDUPS("/templates/events/mobilization/AM_Training_Speedups.png"),
     AM_USE_GEMS("/templates/events/mobilization/AM_Use_Gems.png"),
     AM_USE_SPEEDUPS("/templates/events/mobilization/AM_Use_Speedups.png"),
-
-    // Task selection screen buttons
-    AM_ACCEPT_BUTTON("/templates/events/mobilization/AM_Accept_Button.png"),
-    AM_REFRESH_MISSION_BUTTON("/templates/events/mobilization/AM_Refresh_Mission_Button.png"),
 
     // ========================================================================
     // CRYSTAL LAB AND UPGRADES
