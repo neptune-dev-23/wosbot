@@ -10,6 +10,7 @@ import cl.camodev.wosbot.serv.task.DelayedTask;
 import cl.camodev.wosbot.serv.task.EnumStartLocation;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Task responsible for Alliance Mobilization.
@@ -161,53 +162,77 @@ public class AllianceMobilizationTask extends DelayedTask {
     }
 
     private void searchAndProcessTasksByBonus(String rewardsPercentage, int minimumPoints) {
+        // First, check for completed tasks to collect rewards
+        checkAndCollectCompletedTasks();
+
         logInfo("=== Searching for tasks by bonus percentage ===");
 
         // Determine which templates to search for based on user selection
         boolean search200 = rewardsPercentage.equals("200%") || rewardsPercentage.equals("Both") || rewardsPercentage.equals("Any");
         boolean search120 = rewardsPercentage.equals("120%") || rewardsPercentage.equals("Both") || rewardsPercentage.equals("Any");
 
+        // Search for 200% bonus (only 1 can exist)
         if (search200) {
-            logDebug("Searching for 200% bonus tasks...");
+            logDebug("Searching for 200% bonus task...");
             DTOImageSearchResult result200 = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.AM_200_PERCENT, 85);
             debugTemplateSearch("AM_200_PERCENT", result200, 85);
+
             if (result200.isFound()) {
                 captureDebugScreenshot("found_200_percent");
 
-                // Check task type near the bonus indicator
-                EnumTemplates taskType = detectTaskTypeNearBonus(result200.getPoint());
-                if (taskType != null) {
-                    logInfo("Task type detected: " + taskType.name());
-                    boolean isEnabled = isTaskTypeEnabled(taskType);
-
-                    // Always process the task (click it) regardless of overview points
-                    // The decision to Accept/Refresh will be made on the selection screen
-                    processTask(result200.getPoint(), taskType, isEnabled, minimumPoints);
+                // Check if task is already running (orange bar with timer below bonus)
+                if (isTaskAlreadyRunning(result200.getPoint())) {
+                    logInfo("Task at 200% is already running (timer bar detected) - skipping");
                 } else {
-                    logInfo("Task type not detected");
+                    // Check task type near the bonus indicator
+                    EnumTemplates taskType = detectTaskTypeNearBonus(result200.getPoint());
+                    if (taskType != null) {
+                        logInfo("Task type detected: " + taskType.name());
+                        boolean isEnabled = isTaskTypeEnabled(taskType);
+
+                        // Process the task and exit
+                        processTask(result200.getPoint(), taskType, isEnabled, minimumPoints);
+                        return; // Exit after processing one task
+                    } else {
+                        logInfo("Task type not detected");
+                    }
                 }
             }
         }
 
+        // Search for 120% bonus tasks (up to 2 can exist)
         if (search120) {
-            logDebug("Searching for 120% bonus tasks...");
-            DTOImageSearchResult result120 = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.AM_120_PERCENT, 85);
-            debugTemplateSearch("AM_120_PERCENT", result120, 85);
-            if (result120.isFound()) {
-                captureDebugScreenshot("found_120_percent");
+            logDebug("Searching for 120% bonus tasks (max 2 positions)...");
+            List<DTOImageSearchResult> results120 = emuManager.searchTemplates(EMULATOR_NUMBER, EnumTemplates.AM_120_PERCENT, 85, 2);
 
-                // Check task type near the bonus indicator
-                EnumTemplates taskType = detectTaskTypeNearBonus(result120.getPoint());
-                if (taskType != null) {
-                    logInfo("Task type detected: " + taskType.name());
-                    boolean isEnabled = isTaskTypeEnabled(taskType);
+            if (results120 != null && !results120.isEmpty()) {
+                logInfo("Found " + results120.size() + " x 120% bonus task(s)");
 
-                    // Always process the task (click it) regardless of overview points
-                    // The decision to Accept/Refresh will be made on the selection screen
-                    processTask(result120.getPoint(), taskType, isEnabled, minimumPoints);
-                } else {
-                    logInfo("Task type not detected");
+                for (DTOImageSearchResult result120 : results120) {
+                    debugTemplateSearch("AM_120_PERCENT", result120, 85);
+                    captureDebugScreenshot("found_120_percent");
+
+                    // Check if task is already running (orange bar with timer below bonus)
+                    if (isTaskAlreadyRunning(result120.getPoint())) {
+                        logInfo("Task at 120% (" + result120.getPoint() + ") is already running - skipping");
+                        continue; // Check next position
+                    }
+
+                    // Check task type near the bonus indicator
+                    EnumTemplates taskType = detectTaskTypeNearBonus(result120.getPoint());
+                    if (taskType != null) {
+                        logInfo("Task type detected: " + taskType.name());
+                        boolean isEnabled = isTaskTypeEnabled(taskType);
+
+                        // Process the task and exit
+                        processTask(result120.getPoint(), taskType, isEnabled, minimumPoints);
+                        return; // Exit after processing one task
+                    } else {
+                        logInfo("Task type not detected at " + result120.getPoint());
+                    }
                 }
+            } else {
+                logDebug("No 120% bonus tasks found");
             }
         }
     }
@@ -257,6 +282,31 @@ public class AllianceMobilizationTask extends DelayedTask {
 
         logWarning("No task type detected near bonus location");
         return null;
+    }
+
+    private boolean isTaskAlreadyRunning(DTOPoint bonusLocation) {
+        logDebug("Checking if task is already running near: " + bonusLocation);
+
+        // Search for AM_Bar.png (orange timer bar) below the bonus indicator
+        // The bar appears approximately 150-200px below the bonus icon
+        DTOPoint searchTopLeft = new DTOPoint(bonusLocation.getX() - 50, bonusLocation.getY() + 100);
+        DTOPoint searchBottomRight = new DTOPoint(bonusLocation.getX() + 250, bonusLocation.getY() + 250);
+
+        DTOImageSearchResult barResult = emuManager.searchTemplate(
+            EMULATOR_NUMBER,
+            EnumTemplates.AM_BAR,
+            searchTopLeft,
+            searchBottomRight,
+            85
+        );
+
+        if (barResult.isFound()) {
+            logInfo("✅ Timer bar detected at " + barResult.getPoint() + " - task is already running");
+            return true;
+        }
+
+        logDebug("No timer bar detected - task is available");
+        return false;
     }
 
     private boolean isTaskTypeEnabled(EnumTemplates taskType) {
@@ -581,7 +631,9 @@ public class AllianceMobilizationTask extends DelayedTask {
 
                 if (ocrResult != null && !ocrResult.trim().isEmpty()) {
                     // Extract numeric value from OCR result
-                    String numericValue = ocrResult.replaceAll("[^0-9]", "");
+                    // Look for pattern "+XXX" to avoid capturing other numbers like "2) +860"
+                    String numericValue = ocrResult.replaceAll(".*\\+\\s*", ""); // Remove everything before "+"
+                    numericValue = numericValue.replaceAll("[^0-9]", ""); // Keep only digits
 
                     if (!numericValue.isEmpty()) {
                         int points = Integer.parseInt(numericValue);
@@ -767,6 +819,27 @@ public class AllianceMobilizationTask extends DelayedTask {
             }
         } catch (Exception e) {
             logDebug("OCR failed at " + centerPoint + ": " + e.getMessage());
+        }
+    }
+
+    private void checkAndCollectCompletedTasks() {
+        logDebug("Checking for completed tasks to collect rewards...");
+
+        // Search for AM_Completed.png indicator
+        DTOImageSearchResult completedResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.AM_COMPLETED, 85);
+
+        if (completedResult.isFound()) {
+            logInfo("✅ Completed task found at " + completedResult.getPoint() + " - collecting rewards");
+            captureDebugScreenshot("completed_task_found");
+
+            // Click on the completed task
+            emuManager.tapAtPoint(EMULATOR_NUMBER, completedResult.getPoint());
+            sleepTask(1500);
+            captureDebugScreenshot("after_completed_task_click");
+
+            logInfo("Rewards collected from completed task");
+        } else {
+            logDebug("No completed tasks found");
         }
     }
 
