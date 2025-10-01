@@ -365,11 +365,11 @@ public class TaskQueue {
     private void idlingEmulator(LocalDateTime delayUntil) {
         boolean sendToBackground = Boolean.parseBoolean(
             profile.getGlobalsettings().getOrDefault(
-                EnumConfigurationKey.IDLE_BEHAVIOR_SEND_TO_BACKGROUND_BOOL.name(), 
+                EnumConfigurationKey.IDLE_BEHAVIOR_SEND_TO_BACKGROUND_BOOL.name(),
                 EnumConfigurationKey.IDLE_BEHAVIOR_SEND_TO_BACKGROUND_BOOL.getDefaultValue()
             )
         );
-        
+
         if (sendToBackground) {
             // Send game to background (home screen), keep emulator and game running
             emuManager.sendGameToBackground(profile.getEmulatorNumber());
@@ -387,13 +387,13 @@ public class TaskQueue {
 
     private void enqueueNewTask() {
         logInfo("Scheduled task will start soon");
-        
+
         // Only acquire a new emulator slot if the emulator is not running
         // (i.e., if we closed the entire emulator rather than just the game)
         if (!emuManager.isRunning(profile.getEmulatorNumber())) {
             acquireEmulatorSlot();
         }
-        
+
         addTask(new InitializeTask(profile, TpDailyTaskEnum.INITIALIZE));
     }
 
@@ -506,6 +506,10 @@ public class TaskQueue {
     }
 
     private void runBackgroundChecks() {
+        if (!emuManager.isRunning(profile.getEmulatorNumber()) || paused != LocalDateTime.MIN) {
+            logInfo("Emulator not running or queue is paused, not running background checks.");
+            return; // emulator isn't running or the queue should be paused, just leave.
+        }
         // help allies checks
         boolean runHelpAllies = true;
         helpAlliesCount++;
