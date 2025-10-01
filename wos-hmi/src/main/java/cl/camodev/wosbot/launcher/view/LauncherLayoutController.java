@@ -92,9 +92,7 @@ public class LauncherLayoutController implements IProfileLoadListener {
         initializeProfileComboBox();
         initializeModules();
         initializeExternalLibraries();
-        initializeEmulatorManager();
         showVersion();
-
     }
 
     private void showVersion() {
