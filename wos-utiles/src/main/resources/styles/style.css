@@ -364,7 +364,7 @@
 	-fx-translate-x: 25px;
 }
 
-.thumb {
+.toggle-button .thumb {
 	-fx-background-color: white;
 	-fx-background-radius: 50%;
 	-fx-min-width: 20px;
@@ -496,12 +496,21 @@
 
 .scroll-pane .scroll-bar .thumb {
     -fx-background-color: #ffa500; /* Orange thumb to match theme */
-    -fx-background-insets: 0;
-    -fx-background-radius: 5;
+    -fx-background-insets: 1; /* Make thumb visually slimmer to reveal track */
+    -fx-background-radius: 4;
 }
 
 .scroll-pane .increment-button,
 .scroll-pane .decrement-button {
     -fx-background-color: transparent;
-    -fx-padding: 0.25em;
+    -fx-padding: 0; /* Make buttons compact for thinner bar */
+}
+
+/* Make ScrollPane scroll bars thinner */
+.scroll-pane .scroll-bar:vertical {
+    -fx-pref-width: 8px;
+}
+
+.scroll-pane .scroll-bar:horizontal {
+    -fx-pref-height: 8px;
 }
