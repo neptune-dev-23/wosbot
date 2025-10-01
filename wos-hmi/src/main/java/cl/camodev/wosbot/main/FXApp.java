@@ -52,7 +52,8 @@ public class FXApp extends Application {
 		stage.setScene(scene);
 		stage.getIcons().add(appIcon);
 		stage.setTitle("Launcher");
-
+        stage.setMinHeight(750);
+        stage.setMinWidth(1050);
 		// Mostrar la ventana primero para que JavaFX calcule los tamaños correctamente
 		stage.show();
 
