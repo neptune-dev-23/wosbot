@@ -155,7 +155,7 @@ public enum EnumConfigurationKey {
 	POLAR_TERROR_ENABLED_BOOL("false", Boolean.class),
 	POLAR_TERROR_LEVEL_INT("1", Integer.class),
 	POLAR_TERROR_FLAG_STRING("No Flag", String.class),
-	POLAR_TERROR_MODE_STRING("Limited", String.class),
+	POLAR_TERROR_MODE_STRING("Limited (10)", String.class),
 
 	// Mercenary event
 	MERCENARY_EVENT_BOOL("false", Boolean.class),
