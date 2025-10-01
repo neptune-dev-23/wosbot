@@ -13,6 +13,7 @@ import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.serv.impl.ServLogs;
 import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.task.impl.InitializeTask;
+import cl.camodev.wosbot.almac.repo.ProfileRepository;
 import net.sourceforge.tess4j.TesseractException;
 
 import java.io.IOException;
@@ -38,7 +39,7 @@ public abstract class DelayedTask implements Runnable, Delayed {
     protected EmulatorManager emuManager = EmulatorManager.getInstance();
     protected ServScheduler servScheduler = ServScheduler.getServices();
     protected ServLogs servLogs = ServLogs.getServices();
-    private ProfileLogger logger; // Will be initialized in constructor
+    private ProfileLogger logger; // Will be initialized in the constructor
 
     public DelayedTask(DTOProfiles profile, TpDailyTaskEnum tpTask) {
         this.profile = profile;
@@ -54,9 +55,9 @@ public abstract class DelayedTask implements Runnable, Delayed {
     }
 
     /**
-     * Override this method to specify where the task should start execution.
+     * Override this method to indicate from which screen the task should start.
      *
-     * @return EnumStartLocation indicating the required starting location
+     * @return EnumStartLocation that indicates the required initial location
      */
     protected EnumStartLocation getRequiredStartLocation() {
         return EnumStartLocation.ANY;
@@ -64,6 +65,18 @@ public abstract class DelayedTask implements Runnable, Delayed {
 
     @Override
     public void run() {
+        // Before executing, refresh the profile from the database to ensure current configurations
+        try {
+            if (profile != null && profile.getId() != null) {
+                DTOProfiles updated = ProfileRepository.getRepository().getProfileWithConfigsById(profile.getId());
+                if (updated != null) {
+                    this.profile = updated;
+                }
+            }
+        } catch (Exception e) {
+            // If profile refresh fails, continue with the existing instance
+            logWarning("Could not refresh profile before execution: " + e.getMessage());
+        }
 
         if (this instanceof InitializeTask) {
             execute();
@@ -76,18 +89,16 @@ public abstract class DelayedTask implements Runnable, Delayed {
 
         ensureCorrectScreenLocation(getRequiredStartLocation());
         execute();
-        ensureCorrectScreenLocation(getRequiredStartLocation());
+        ensureCorrectScreenLocation(EnumStartLocation.ANY);
     }
 
     protected abstract void execute();
 
     /**
-     * Ensures the emulator is on the correct screen (Home or World) before
-     * proceeding.
-     * It will attempt to navigate if it's on the wrong screen or press back if
-     * lost.
+     * Ensures the emulator is on the correct screen (Home or World) before continuing.
+     * It will attempt to navigate if it's on the wrong screen or press back if it's lost.
      * 
-     * @param requiredLocation The desired screen location (HOME, WORLD, or ANY).
+     * @param requiredLocation The desired screen (HOME, WORLD or ANY).
      */
     protected void ensureCorrectScreenLocation(EnumStartLocation requiredLocation) {
         logDebug("Verifying screen location. Required: " + requiredLocation);
@@ -104,11 +115,10 @@ public abstract class DelayedTask implements Runnable, Delayed {
             }
 
             if (home.isFound() || world.isFound()) {
-                // Found either home or world, now check if we need to navigate to the correct
-                // location
+                // Found Home or World; check if we need to navigate to the correct location
                 if (requiredLocation == EnumStartLocation.HOME && !home.isFound()) {
-                    // We need HOME but we're in WORLD, navigate to HOME
-                    logInfo("Navigating from WORLD to HOME screen...");
+                    // We need HOME but we are in WORLD, navigate to HOME
+                    logInfo("Navigating from WORLD to HOME...");
                     emuManager.tapAtPoint(EMULATOR_NUMBER, world.getPoint());
                     sleepTask(2000); // Wait for navigation
 
@@ -119,11 +129,11 @@ public abstract class DelayedTask implements Runnable, Delayed {
                         logWarning("Failed to navigate to HOME, retrying...");
                         continue; // Try again
                     }
-                    logInfo("Successfully navigated to HOME screen.");
+                    logInfo("Successfully navigated to HOME.");
 
                 } else if (requiredLocation == EnumStartLocation.WORLD && !world.isFound()) {
-                    // We need WORLD but we're in HOME, navigate to WORLD
-                    logInfo("Navigating from HOME to WORLD screen...");
+                    // We need WORLD but we are in HOME, navigate to WORLD
+                    logInfo("Navigating from HOME to WORLD...");
                     emuManager.tapAtPoint(EMULATOR_NUMBER, home.getPoint());
                     sleepTask(2000); // Wait for navigation
 
@@ -134,7 +144,7 @@ public abstract class DelayedTask implements Runnable, Delayed {
                         logWarning("Failed to navigate to WORLD, retrying...");
                         continue; // Try again
                     }
-                    logInfo("Successfully navigated to WORLD screen.");
+                    logInfo("Successfully navigated to WORLD.");
                 }
                 // If requiredLocation is ANY, we can execute from either location
                 return; // Success, correct screen is found
