@@ -2,7 +2,6 @@ package cl.camodev.wosbot.serv.task;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import java.util.concurrent.PriorityBlockingQueue;
@@ -405,7 +404,8 @@ public class TaskQueue {
             return;
         }
         try {
-            updateProfileStatus("PAUSED");
+            String timeFormatted = formatTimeUntil(delayUntil);
+            updateProfileStatus("Paused for " + timeFormatted);
             logInfo("Profile is paused");
             Thread.sleep(1000); // Wait while paused
         } catch (InterruptedException e) {
@@ -419,12 +419,24 @@ public class TaskQueue {
     private void waitForNextTask(LocalDateTime delayUntil) {
         try {
             String nextTaskName = taskQueue.isEmpty() ? "None" : taskQueue.peek().getTaskName();
-
-            updateProfileStatus("Idling for " + DateTimeFormatter.ofPattern("HH:mm:ss").format(delayUntil) + "\nNext task: " + nextTaskName);
+            String timeFormatted = formatTimeUntil(delayUntil);
+            updateProfileStatus("Idling for " + timeFormatted + "\nNext task: " + nextTaskName);
             Thread.sleep(IDLE_WAIT_TIME);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+    }
+
+    /**
+     * Formats the duration until the target time as HH:mm:ss
+     */
+    private String formatTimeUntil(LocalDateTime targetTime) {
+        Duration timeUntilNext = Duration.between(LocalDateTime.now(), targetTime);
+
+        long hours = timeUntilNext.toHours();
+        long minutes = timeUntilNext.toMinutesPart();
+        long seconds = timeUntilNext.toSecondsPart();
+        return String.format("%02d:%02d:%02d", hours, minutes, seconds);
     }
 
     /**
