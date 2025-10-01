@@ -166,15 +166,17 @@ public enum EnumTemplates {
 	ALLIANCE_WAR_BUTTON("/templates/alliance/warButton.png"),
 	ALLIANCE_HELP_BUTTON("/templates/alliance/helpButton.png"),
 	ALLIANCE_HELP_REQUESTS("/templates/alliance/helpRequests.png"),
+
+    // ========================================================================
+    // ALLIANCE MOBILIZATION
+    // ========================================================================
     ALLIANCE_MOBILIZATION_TAB("/templates/events/mobilization/allianzMobilizationTab.png"),
     ALLIANCE_MOBILIZATION_UNSELECTED_TAB("/templates/events/mobilization/allianzMobilizationUnselected.png"),
-
     AM_120_PERCENT("/templates/events/mobilization/AM_120%.png"),
     AM_200_PERCENT("/templates/events/mobilization/AM_200%.png"),
     AM_BAR_X("/templates/events/mobilization/AM_Bar_X.png"),
     AM_COMPLETED("/templates/events/mobilization/AM_Completed.png"),
-
-    // Task type icons
+    AM_PLUS_1_FREE_MISSION("/templates/events/mobilization/AM_+_1_Free_Mission.png"),
     AM_BUILD_SPEEDUPS("/templates/events/mobilization/AM_Build_Speedups.png"),
     AM_BUY_PACKAGE("/templates/events/mobilization/AM_Buy_Package.png"),
     AM_CHIEF_GEAR_CHARM("/templates/events/mobilization/AM_Chief_Gear_Charm.png"),
