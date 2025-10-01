@@ -166,6 +166,32 @@ public enum EnumTemplates {
 	ALLIANCE_WAR_BUTTON("/templates/alliance/warButton.png"),
 	ALLIANCE_HELP_BUTTON("/templates/alliance/helpButton.png"),
 	ALLIANCE_HELP_REQUESTS("/templates/alliance/helpRequests.png"),
+    MOBILIZATION_EXCLUSIVE_BUTTON("/templates/events/mobilization/exclusive_button.png"),
+    ALLIANCE_MOBILIZATION_TAB("/templates/events/mobilization/allianzMobilizationTab.png"),
+    ALLIANCE_MOBILIZATION_UNSELECTED_TAB("/templates/events/mobilization/allianzMobilizationUnselected.png"),
+
+    AM_120_PERCENT("/templates/events/mobilization/AM_120%.png"),
+    AM_200_PERCENT("/templates/events/mobilization/AM_200%.png"),
+
+    // Task type icons
+    AM_BUILD_SPEEDUPS("/templates/events/mobilization/AM_Build_Speedups.png"),
+    AM_BUY_PACKAGE("/templates/events/mobilization/AM_Buy_Package.png"),
+    AM_CHIEF_GEAR_CHARM("/templates/events/mobilization/AM_Chief_Gear_Charm.png"),
+    AM_CHIEF_GEAR_SCORE("/templates/events/mobilization/AM_Chief_Gear_Score.png"),
+    AM_DEFEAT_BEASTS("/templates/events/mobilization/AM_Defeat_Beasts.png"),
+    AM_FIRE_CRYSTAL("/templates/events/mobilization/AM_Fire_Crystal.png"),
+    AM_GATHER_RESOURCES("/templates/events/mobilization/AM_Gather_Resources.png"),
+    AM_HERO_GEAR_STONE("/templates/events/mobilization/AM_Hero_Gear_Stone.png"),
+    AM_MYTHIC_SHARD("/templates/events/mobilization/AM_Mythic_Shard.png"),
+    AM_RALLY("/templates/events/mobilization/AM_Rally.png"),
+    AM_TRAIN_TROOPS("/templates/events/mobilization/AM_Train_Troops.png"),
+    AM_TRAINING_SPEEDUPS("/templates/events/mobilization/AM_Training_Speedups.png"),
+    AM_USE_GEMS("/templates/events/mobilization/AM_Use_Gems.png"),
+    AM_USE_SPEEDUPS("/templates/events/mobilization/AM_Use_Speedups.png"),
+
+    // Task selection screen buttons
+    AM_ACCEPT_BUTTON("/templates/events/mobilization/AM_Accept_Button.png"),
+    AM_REFRESH_MISSION_BUTTON("/templates/events/mobilization/AM_Refresh_Mission_Button.png"),
 
     // ========================================================================
     // CRYSTAL LAB AND UPGRADES
@@ -188,6 +214,7 @@ public enum EnumTemplates {
 	INTEL_FIRE_BEAST("/templates/intel/beastFire.png"),
 	INTEL_SCREEN_1("/templates/intel/intelScreen1.png"),
 	INTEL_SCREEN_2("/templates/intel/intelScreen2.png"),
+	INTEL_AGNES("/templates/experts/intelAgnes.png"),
 	
 	DEPLOY_BUTTON("/templates/intel/deploy.png"),
 	
