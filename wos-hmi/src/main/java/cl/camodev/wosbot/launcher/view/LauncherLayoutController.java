@@ -436,11 +436,15 @@ public class LauncherLayoutController implements IProfileLoadListener {
 
     @FXML
     public void handleButtonStartStop(ActionEvent event) {
-        if (!estado) {
-            actionController.startBot();
-        } else {
-            actionController.stopBot();
-        }
+        new Thread(() -> {
+            if (!estado) {
+                Platform.runLater(() -> {buttonStartStop.setText("Starting..."); buttonStartStop.setDisable(true);});
+                actionController.startBot();
+            } else {
+                Platform.runLater(() -> {buttonStartStop.setText("Stopping..."); buttonStartStop.setDisable(true); buttonPauseResume.setDisable(true);});
+                actionController.stopBot();
+            }
+        }, "Start-Stop-Thread").start();
     }
 
     @FXML
