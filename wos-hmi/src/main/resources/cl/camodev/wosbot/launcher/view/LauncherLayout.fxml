@@ -20,13 +20,13 @@
 
         <HBox>
             <children>
-            <ScrollPane hbarPolicy="NEVER">
+            <ScrollPane hbarPolicy="NEVER" fitToWidth="true" fitToHeight="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308">
                <HBox.margin>
                   <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
                </HBox.margin>
                <content>
       
-                      <VBox fx:id="buttonsContainer" prefHeight="325.0" prefWidth="140.0" style="-fx-border-color: black;" />
+                      <VBox fx:id="buttonsContainer" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="325.0" prefWidth="140.0" style="-fx-border-color: black;" />
                </content>
             </ScrollPane>
 
