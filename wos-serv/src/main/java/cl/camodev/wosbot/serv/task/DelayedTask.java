@@ -330,6 +330,22 @@ public abstract class DelayedTask implements Runnable, Delayed {
         return searchTemplateWithRetries(template, 90, 5);
     }
 
+    protected DTOImageSearchResult searchTemplateWithRetries(EnumTemplates template, DTOPoint p1, DTOPoint p2) {
+        return searchTemplateWithRetries(template, p1, p2, 90, 5);
+    }
+
+    protected DTOImageSearchResult searchTemplateWithRetries(EnumTemplates template, DTOPoint p1, DTOPoint p2, int threshold, int maxRetries) {
+        DTOImageSearchResult result = null;
+        for (int i = 0; i < maxRetries && (result == null || !result.isFound()); i++) {
+            logDebug("Searching template " + template + ", (attempt " + (i + 1) + "/" + maxRetries + ")");
+            result = emuManager.searchTemplate(EMULATOR_NUMBER, template, p1, p2, threshold);
+            sleepTask(200);
+        }
+        assert result != null;
+        logDebug(result.isFound() ? "Template " + template + " found." : "Template " + template + " not found.");
+        return result;
+    }
+
     protected DTOImageSearchResult searchTemplateWithRetries(EnumTemplates template, int threshold, int maxRetries) {
         DTOImageSearchResult result = null;
         for (int i = 0; i < maxRetries && (result == null || !result.isFound()); i++) {
@@ -337,18 +353,22 @@ public abstract class DelayedTask implements Runnable, Delayed {
             result = emuManager.searchTemplate(EMULATOR_NUMBER, template, threshold);
             sleepTask(200);
         }
-        logDebug(result.isFound() ? "Template " + template + " found." : "Template " + template + " not found.");
+            assert result != null;
+            logDebug(result.isFound() ? "Template " + template + " found." : "Template " + template + " not found.");
         return result;
     }
+    protected String OCRWithRetries(String searchStringLower, DTOPoint p1, DTOPoint p2) {
+        return OCRWithRetries(searchStringLower, p1, p2, 5);
+    }
 
-    protected String OCRWithRetries(String searchString, DTOPoint p1, DTOPoint p2, int maxRetries) {
+    protected String OCRWithRetries(String searchStringLower, DTOPoint p1, DTOPoint p2, int maxRetries) {
         String result = null;
         for (int attempt = 0; attempt < maxRetries; attempt++) {
             logDebug(
-                    "Performing OCR to find '" + searchString + "' (attempt " + (attempt + 1) + "/" + maxRetries + ")");
+                    "Performing OCR to find '" + searchStringLower + "' (attempt " + (attempt + 1) + "/" + maxRetries + ")");
             try {
                 result = emuManager.ocrRegionText(EMULATOR_NUMBER, p1, p2);
-                if (result != null && result.toLowerCase().contains(searchString.toLowerCase())) {
+                if (result != null && result.toLowerCase().contains(searchStringLower.toLowerCase())) {
                     return result;
                 }
             } catch (IOException | TesseractException e) {
@@ -357,6 +377,10 @@ public abstract class DelayedTask implements Runnable, Delayed {
             sleepTask(200);
         }
         return null;
+    }
+
+    protected String OCRWithRetries(DTOPoint p1, DTOPoint p2) {
+        return OCRWithRetries(p1, p2, 5);
     }
 
     protected String OCRWithRetries(DTOPoint p1, DTOPoint p2, int maxRetries) {
@@ -398,29 +422,15 @@ public abstract class DelayedTask implements Runnable, Delayed {
         };
 
         // Check each march slot for "idle" status
-        try {
+            String ocrResult;
             for (int marchSlot = 0; marchSlot < 6; marchSlot++) {
-                for (int attempt = 0; attempt < 3; attempt++) {
-                    String ocrResult = emuManager.ocrRegionText(EMULATOR_NUMBER,
-                            marchTopLeft[marchSlot],
-                            marchBottomRight[marchSlot]);
-
-                    if (ocrResult.toLowerCase().contains("idle")) {
-                        logInfo("Idle march detected in slot " + (marchSlot + 1));
-                        return true;
-                    }
-
-                    if (attempt < 2) {
-                        sleepTask(100);
-                    }
+                ocrResult = OCRWithRetries("idle", marchTopLeft[marchSlot], marchBottomRight[marchSlot], 3);
+                if (ocrResult != null) {
+                    logInfo("Idle march detected in slot " + (marchSlot + 1));
+                    return true;
                 }
                 logDebug("March slot " + (marchSlot + 1) + " is not idle");
             }
-        } catch (IOException | TesseractException e) {
-            logError("OCR attempt failed while checking marches: " + e.getMessage());
-            return false;
-        }
-
         logInfo("No idle marches detected in any of the 6 slots.");
         return false;
     }

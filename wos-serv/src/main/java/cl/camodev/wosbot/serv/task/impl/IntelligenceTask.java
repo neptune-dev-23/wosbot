@@ -2,7 +2,6 @@ package cl.camodev.wosbot.serv.task.impl;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
@@ -80,7 +79,7 @@ public class IntelligenceTask extends DelayedTask {
 		}
 
 		// check is stamina enough to process any intel
-		Integer staminaValue = readNumberValue(new DTOPoint(582, 23), new DTOPoint(672, 55));
+        Integer staminaValue = getStaminaValueFromIntelScreen();
 		if (staminaValue == null) {
 			logWarning("No stamina value found after OCR attempts.");
 			this.reschedule(LocalDateTime.now().plusMinutes(5));
@@ -98,7 +97,7 @@ public class IntelligenceTask extends DelayedTask {
 		}
 
 		if (profile.getConfig(EnumConfigurationKey.INTEL_BEASTS_BOOL, Boolean.class)) {
-			if ((useSmartProcessing && !marchQueueLimitReached) || (!useSmartProcessing)) {
+			if (!useSmartProcessing || !marchQueueLimitReached) {
 				ensureOnIntelScreen();
 
 				boolean fireBeastsEnabled = profile.getConfig(EnumConfigurationKey.INTEL_FIRE_BEAST_BOOL,
@@ -167,7 +166,7 @@ public class IntelligenceTask extends DelayedTask {
 		}
 
 		sleepTask(500);
-		if (intelFound == false) {
+		if (!intelFound) {
 			logInfo("No intel items found. Attempting to read the cooldown timer.");
 			try {
 				String rescheduleTimeStr = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(120, 110),
@@ -256,7 +255,6 @@ public class IntelligenceTask extends DelayedTask {
 			} else {
 				logWarning("Could not find the 'Explore' button for the journey. Going back.");
 				tapBackButton(); // Back from journey screen
-				return;
 			}
 		}
 	}
@@ -275,7 +273,6 @@ public class IntelligenceTask extends DelayedTask {
 			} else {
 				logWarning("Could not find the 'Rescue' button for the survivor. Going back.");
 				tapBackButton(); // Back from survivor screen
-				return;
 			}
 		}
 	}
@@ -391,8 +388,7 @@ public class IntelligenceTask extends DelayedTask {
 				int minutes = Integer.parseInt(matcher.group(2));
 				int seconds = Integer.parseInt(matcher.group(3));
 
-				return LocalDateTime.now().plus(hours, ChronoUnit.HOURS).plus(minutes, ChronoUnit.MINUTES).plus(seconds,
-						ChronoUnit.SECONDS);
+				return LocalDateTime.now().plusHours(hours).plusMinutes(minutes).plusSeconds(seconds);
 			} catch (NumberFormatException e) {
 				logError("Error parsing time from OCR text: '" + ocrText + "'", e);
 			}
@@ -402,29 +398,6 @@ public class IntelligenceTask extends DelayedTask {
 	}
 
 	private MarchesAvailable getMarchesAvailable() {
-		// open active marches panel
-		emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(2, 550));
-		sleepTask(500);
-		emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(340, 265));
-		sleepTask(500);
-		// OCR Search for an empty march
-		try {
-			for (int i = 0; i < 10; i++) { // search 10x for the OCR text
-				String ocrSearchResult = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(10, 342),
-						new DTOPoint(435, 772));
-				Pattern idleMarchesPattern = Pattern.compile("idle");
-				Matcher m = idleMarchesPattern.matcher(ocrSearchResult.toLowerCase());
-				if (m.find()) {
-					logInfo("Idle marches detected, continuing with intel");
-					return new MarchesAvailable(true, null);
-				} else {
-					logInfo("No idle marches detected, trying again (Attempt " + (i + 1) + "/10).");
-				}
-			}
-		} catch (IOException | TesseractException e) {
-			logDebug("OCR attempt failed: " + e.getMessage());
-		}
-		logInfo("No idle marches detected. Checking for used march queues...");
 
 		if (checkMarchesAvailable()) {
 			return new MarchesAvailable(true, null);
@@ -434,38 +407,28 @@ public class IntelligenceTask extends DelayedTask {
 		int totalMarchesAvailable = profile.getConfig(EnumConfigurationKey.GATHER_ACTIVE_MARCH_QUEUE_INT,
 				Integer.class);
 		int activeMarchQueues = 0;
-		boolean resourceFound = false;
 		LocalDateTime earliestAvailableMarch = LocalDateTime.now().plusHours(14); // Set to earliest available march to
 																					// a very long time (impossible for
 																					// gatherer to take so long)
 		for (GatherType gatherType : GatherType.values()) { // iterate over all the gather types
-			resourceFound = false;
-			for (int i = 0; i < 5; i++) {
-				DTOImageSearchResult resource = emuManager.searchTemplate(EMULATOR_NUMBER,
-						gatherType.getTemplate(), new DTOPoint(10, 342), new DTOPoint(435, 772), 90);
-				if (!resource.isFound()) {
-					logInfo("March queue for " + gatherType.getName() + " not found (Attempt " + i + 1 + "/5) (Used: "
-							+ activeMarchQueues + "/" + totalMarchesAvailable + ")");
-					continue;
-				}
-				resourceFound = true;
-				activeMarchQueues++;
-				logInfo("March queue for " + gatherType.getName()
-						+ " is used. Checking for remaining available march queues... (Used: " + activeMarchQueues + "/"
-						+ totalMarchesAvailable + ")");
-				LocalDateTime task = iDailyTaskRepository
-						.findByProfileIdAndTaskName(profile.getId(), gatherType.getTask()).getNextSchedule();
-				if (task.isBefore(earliestAvailableMarch)) {
-					earliestAvailableMarch = task;
-					logInfo("Updated earliest available march: " + earliestAvailableMarch);
-				}
-				break;
-			}
-			if (!resourceFound) {
-				logInfo("March queue for " + gatherType.getName()
-						+ " is not used. Checking for next available march queue... (Used: " + activeMarchQueues + "/"
-						+ totalMarchesAvailable + ")");
-			}
+            DTOImageSearchResult resource = searchTemplateWithRetries(gatherType.getTemplate(),
+                    new DTOPoint(10, 342), new DTOPoint(435, 772));
+            if (!resource.isFound()) {
+                logInfo("March queue for " + gatherType.getName()
+                        + " is not used. Checking for next available march queue... (Used: " + activeMarchQueues + "/"
+                        + totalMarchesAvailable + ")");
+                continue;
+            }
+            // march is detected
+            activeMarchQueues++;
+            logInfo("March queue for " + gatherType.getName() + " found. (Used: "
+                    + activeMarchQueues + "/" + totalMarchesAvailable + ")");
+            LocalDateTime task = iDailyTaskRepository
+                    .findByProfileIdAndTaskName(profile.getId(), gatherType.getTask()).getNextSchedule();
+            if (task.isBefore(earliestAvailableMarch)) {
+                earliestAvailableMarch = task;
+                logInfo("Updated earliest available march: " + earliestAvailableMarch);
+            }
 		}
 		if (activeMarchQueues >= totalMarchesAvailable) {
 			logInfo("All march queues used. Earliest available march: " + earliestAvailableMarch);
