@@ -11,22 +11,18 @@ import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
+import cl.camodev.wosbot.serv.impl.ServTaskManager;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 import cl.camodev.wosbot.serv.task.EnumStartLocation;
-import net.sourceforge.tess4j.TesseractException;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.time.temporal.ChronoUnit;
 
 public class PolarTerrorHuntingTask extends DelayedTask {
     private final int refreshStaminaLevel = 180;
     private final int minStaminaLevel = 100;
     private final IDailyTaskRepository iDailyTaskRepository = DailyTaskRepository.getRepository();
+    private final ServTaskManager servTaskManager = ServTaskManager.getInstance();
     private Integer currentStamina = null;
 
     public PolarTerrorHuntingTask(DTOProfiles profile, TpDailyTaskEnum tpTask) {
@@ -38,12 +34,12 @@ public class PolarTerrorHuntingTask extends DelayedTask {
         logInfo("=== Starting Polar Terror Hunting Task ===");
 
         if (isBearRunning()) {
-            LocalDateTime rescheduleTo = LocalDateTime.now(ZoneId.of("UTC")).plusMinutes(30);
+            LocalDateTime rescheduleTo = LocalDateTime.now().plusMinutes(30);
             logInfo("Bear Hunt is running, rescheduling for " + rescheduleTo);
             reschedule(rescheduleTo);
             return;
         }
-        logDebug("Bear Hunt is not running, coninuing with Polar Terror Hunting Task");
+        logDebug("Bear Hunt is not running, continuing with Polar Terror Hunting Task");
 
         String flagString = profile.getConfig(EnumConfigurationKey.POLAR_TERROR_FLAG_STRING, String.class);
         int flagNumber = 0;
@@ -62,11 +58,12 @@ public class PolarTerrorHuntingTask extends DelayedTask {
         }
 
         if (profile.getConfig(EnumConfigurationKey.INTEL_BOOL, Boolean.class)
-                && useFlag) {
+                && useFlag
+                && servTaskManager.getTaskState(profile.getId(), TpDailyTaskEnum.INTEL.getId()).isScheduled()) {
             // Make sure intel isn't about to run
             DailyTask intel = iDailyTaskRepository.findByProfileIdAndTaskName(profile.getId(), TpDailyTaskEnum.INTEL);
-            if (ChronoUnit.MINUTES.between(LocalDateTime.now(ZoneId.of("UTC")), intel.getNextSchedule()) < 5) {
-                reschedule(LocalDateTime.now(ZoneId.of("UTC")).plusMinutes(35)); // Reschedule in 35 minutes, after intel has run
+            if (ChronoUnit.MINUTES.between(LocalDateTime.now(), intel.getNextSchedule()) < 5) {
+                reschedule(LocalDateTime.now().plusMinutes(35)); // Reschedule in 35 minutes, after intel has run
                 logWarning("Intel task is scheduled to run soon. Rescheduling Polar Hunt to run 30min after intel.");
                 return;
             }
@@ -81,22 +78,23 @@ public class PolarTerrorHuntingTask extends DelayedTask {
         currentStamina = getStaminaValueFromIntelScreen();
         if (currentStamina == null) {
             logWarning("No stamina value found after OCR attempts. Rescheduling task in 5 minutes to try again.");
-            reschedule(LocalDateTime.now(ZoneId.of("UTC")).plusMinutes(5));
+            reschedule(LocalDateTime.now().plusMinutes(5));
             return;
         }
 
         if (currentStamina < minStaminaLevel) {
-            LocalDateTime rescheduleTime = LocalDateTime.now(ZoneId.of("UTC"))
+            LocalDateTime rescheduleTime = LocalDateTime.now()
                     .plusMinutes(staminaRegenerationTime(currentStamina, refreshStaminaLevel));
             reschedule(rescheduleTime);
-            logWarning("Not enough stamina to do polar (Current: " + currentStamina + "). Rescheduling task in "
-                    + (DateTimeFormatter.ofPattern("HH:mm:ss").format(rescheduleTime)));
+            logWarning("Not enough stamina to do polar (Current: " + currentStamina + "/" + minStaminaLevel
+                    + "). Rescheduling task to run in "
+                    + UtilTime.localDateTimeToDDHHMMSS(rescheduleTime));
             return;
         }
 
         if (!checkMarchesAvailable()) {
             logWarning("No marches available, rescheduling for in 5 minutes.");
-            reschedule(LocalDateTime.now(ZoneId.of("UTC")).plusMinutes(5));
+            reschedule(LocalDateTime.now().plusMinutes(5));
             return;
         }
 
@@ -115,7 +113,7 @@ public class PolarTerrorHuntingTask extends DelayedTask {
             // Check marches before each rally
             if (!checkMarchesAvailable()) {
                 logInfo("No marches available after " + ralliesDeployed + " rallies. Waiting for marches to return.");
-                reschedule(LocalDateTime.now(ZoneId.of("UTC")).plusMinutes(10));
+                reschedule(LocalDateTime.now().plusMinutes(10));
                 return;
             }
 
@@ -125,27 +123,27 @@ public class PolarTerrorHuntingTask extends DelayedTask {
             }
 
             int result = launchSingleRally(polarTerrorLevel, false, 0);
-            
+
             if (result == -1) {
                 // OCR error - can't continue reliably
                 logError("OCR error occurred. Rescheduling in 5 minutes.");
-                reschedule(LocalDateTime.now(ZoneId.of("UTC")).plusMinutes(5));
+                reschedule(LocalDateTime.now().plusMinutes(5));
                 return;
             }
-            
+
             if (result == 0) {
                 // Deployment failed - probably out of marches
                 logInfo("Deployment failed after " + ralliesDeployed + " rallies. Rescheduling in 5 minutes.");
-                reschedule(LocalDateTime.now(ZoneId.of("UTC")).plusMinutes(5));
+                reschedule(LocalDateTime.now().plusMinutes(5));
                 return;
             }
-            
+
             if (result == 3) {
                 // Low stamina - already rescheduled in launchSingleRally
                 logInfo("Stamina too low after " + ralliesDeployed + " rallies. Task rescheduled.");
                 return;
             }
-            
+
             // result == 1: success
             ralliesDeployed++;
             logInfo("Rally #" + ralliesDeployed + " deployed successfully. Current stamina: " + currentStamina);
@@ -156,6 +154,7 @@ public class PolarTerrorHuntingTask extends DelayedTask {
 
     /**
      * Launches a single polar rally without recursion
+     * 
      * @return -1 if OCR error occurred
      * @return 0 if deployment failed
      * @return 1 if deployment successful (no-flag mode)
@@ -237,16 +236,16 @@ public class PolarTerrorHuntingTask extends DelayedTask {
                 logError("Failed to parse travel time via OCR. Cannot accurately reschedule for march return.");
                 return -1;
             }
-            LocalDateTime rescheduleTime = LocalDateTime.now(ZoneId.of("UTC")).plusSeconds(travelTimeSeconds).plusMinutes(5);
+            LocalDateTime rescheduleTime = LocalDateTime.now().plusSeconds(travelTimeSeconds).plusMinutes(5);
             reschedule(rescheduleTime);
-            logInfo("Rally with flag scheduled to return in " + (DateTimeFormatter.ofPattern("HH:mm:ss").format(rescheduleTime)));
+            logInfo("Rally with flag scheduled to return in " + UtilTime.localDateTimeToDDHHMMSS(rescheduleTime));
             return 2;
         }
 
         // No-flag mode: check stamina for next rally
         if (currentStamina <= minStaminaLevel) {
             logInfo("Stamina is at or below minimum. Stopping deployment and rescheduling.");
-            reschedule(LocalDateTime.now(ZoneId.of("UTC")).plusMinutes(staminaRegenerationTime(currentStamina, refreshStaminaLevel)));
+            reschedule(LocalDateTime.now().plusMinutes(staminaRegenerationTime(currentStamina, refreshStaminaLevel)));
             return 3;
         }
 
@@ -257,9 +256,9 @@ public class PolarTerrorHuntingTask extends DelayedTask {
         if (result == -1) {
             if (useFlag) {
                 logWarning("March deployed with flag but travel time unknown. Using fallback reschedule.");
-                reschedule(LocalDateTime.now(ZoneId.of("UTC")).plusMinutes(10));
+                reschedule(LocalDateTime.now().plusMinutes(10));
             } else {
-                reschedule(LocalDateTime.now(ZoneId.of("UTC")).plusMinutes(5));
+                reschedule(LocalDateTime.now().plusMinutes(5));
             }
             return;
         }
@@ -267,7 +266,7 @@ public class PolarTerrorHuntingTask extends DelayedTask {
         if (result == 0) {
             if (useFlag) {
                 logError("Failed to deploy march. Trying again in 5 minutes.");
-                reschedule(LocalDateTime.now(ZoneId.of("UTC")).plusMinutes(5));
+                reschedule(LocalDateTime.now().plusMinutes(5));
             }
             return;
         }
@@ -316,7 +315,8 @@ public class PolarTerrorHuntingTask extends DelayedTask {
                 return true;
             }
 
-            // Troops already marching pop-up detected, close it and retry (TODO: Should find another polar terror to rally)
+            // Troops already marching pop-up detected, close it and retry (TODO: Should
+            // find another polar terror to rally)
             sleepTask(500);
             tapBackButton();
             logDebug("Deploy still present, retry " + (i + 1) + " of " + maxRetries);
@@ -363,7 +363,8 @@ public class PolarTerrorHuntingTask extends DelayedTask {
         tapPoint(polarTerror.getPoint());
         if (polarLevel != -1) {
             logInfo(String.format("Adjusting Polar Terror level to %d", polarLevel));
-            emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(435, 1052), new DTOPoint(40, 1052)); // Swipe to level 1
+            emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(435, 1052), new DTOPoint(40, 1052)); // Swipe to level
+                                                                                                       // 1
             sleepTask(300);
             if (polarLevel > 1) {
                 emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(487, 1055), new DTOPoint(487, 1055),
@@ -383,7 +384,8 @@ public class PolarTerrorHuntingTask extends DelayedTask {
             return false;
         }
 
-        // Need to search for the magnifying glass icon to be sure we're on the search screen
+        // Need to search for the magnifying glass icon to be sure we're on the search
+        // screen
         DTOImageSearchResult magnifyingGlass = null;
         int attempts = 0;
         while (attempts < 4) {
@@ -399,7 +401,8 @@ public class PolarTerrorHuntingTask extends DelayedTask {
         if (!magnifyingGlass.isFound()) {
             return false;
         }
-        // Need to scroll down a little bit and search for the remaining hunts "Special Rewards (n left)"
+        // Need to scroll down a little bit and search for the remaining hunts "Special
+        // Rewards (n left)"
         tapPoint(magnifyingGlass.getPoint());
         sleepTask(2000);
         DTOImageSearchResult specialRewards = null;
@@ -408,7 +411,8 @@ public class PolarTerrorHuntingTask extends DelayedTask {
             specialRewards = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.POLAR_TERROR_TAB_SPECIAL_REWARDS,
                     90);
             if (specialRewards.isFound()) {
-                // Due to limited mode being enabled, and there's no special rewards found, means there's no hunts left
+                // Due to limited mode being enabled, and there's no special rewards found,
+                // means there's no hunts left
                 logWarning(
                         "No special rewards found, meaning there's no hunts left for today. Rescheduling task for reset");
                 // Add 30 minutes to let intel and other tasks be processed
@@ -423,34 +427,6 @@ public class PolarTerrorHuntingTask extends DelayedTask {
         tapBackButton();
         sleepTask(500);
         return true;
-    }
-
-    private boolean checkMarchesAvailable() {
-        // Open active marches panel
-        emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(2, 550));
-        sleepTask(500);
-        emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(340, 265));
-        sleepTask(500);
-        // OCR Search for an empty march
-        try {
-            for (int i = 0; i < 5; i++) {
-                String ocrSearchResult = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(10, 342),
-                        new DTOPoint(435, 772));
-                Pattern idleMarchesPattern = Pattern.compile("idle");
-                Matcher m = idleMarchesPattern.matcher(ocrSearchResult.toLowerCase());
-                if (m.find()) {
-                    logInfo("Idle marches detected");
-                    return true;
-                } else {
-                    logInfo("No idle marches detected, trying again (Attempt " + (i + 1) + "/5).");
-                }
-                sleepTask(100);
-            }
-        } catch (IOException | TesseractException e) {
-            logDebug("OCR attempt failed: " + e.getMessage());
-        }
-        logInfo("No idle marches detected. ");
-        return false;
     }
 
     @Override
