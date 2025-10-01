@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Button?>
+<?import javafx.geometry.Insets?>
+<?import java.lang.String?>
+<?import javafx.collections.FXCollections?>
+
+<HBox xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1"
+      spacing="20" prefHeight="306.0" prefWidth="700.0"
+      maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308">
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20" />
+    </padding>
+    <children>
+        <!-- Left side: Main controls -->
+        <VBox spacing="10" HBox.hgrow="ALWAYS">
+            <children>
+                <CheckBox fx:id="checkBoxAllianceMobilization" text="Alliance Mobilization" style="-fx-font-size: 14px; -fx-font-weight: bold;" />
+
+                <Label text="Alliance Mobilization Options" style="-fx-font-size: 16px; -fx-text-fill: #af4c4cff;" />
+                <Label text="(Rudimentary Beta - Under Development)" style="-fx-font-size: 10px; -fx-text-fill: #888888;" />
+
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <children>
+                        <Label text="Rewards Percentage" disable="true" />
+                        <ComboBox fx:id="rewardsPercentageCombo" prefWidth="80.0" value="Any" disable="true">
+                            <items>
+                                <FXCollections fx:factory="observableArrayList">
+                                    <String fx:value="Any" />
+                                    <String fx:value="120%" />
+                                    <String fx:value="200%" />
+                                </FXCollections>
+                            </items>
+                        </ComboBox>
+                    </children>
+                </HBox>
+
+                <GridPane hgap="10" vgap="5">
+            <children>
+                <CheckBox fx:id="buildSpeedupsCheck" text="Build Speedups" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                <CheckBox fx:id="buyPackageCheck" text="Buy Package" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+
+                <CheckBox fx:id="chiefGearCharmCheck" text="Chief Charm" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                <CheckBox fx:id="chiefGearScoreCheck" text="Chief Gear Score" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+
+                <CheckBox fx:id="defeatBeastsCheck" text="Defeat Beasts" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                <CheckBox fx:id="fireCrystalCheck" text="Fire Crystal" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+
+                <CheckBox fx:id="gatherResourcesCheck" text="Gather Resources" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                <CheckBox fx:id="heroGearStoneCheck" text="Hero Gear Stone" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+
+                <CheckBox fx:id="mythicShardCheck" text="Mythic Shard" GridPane.columnIndex="0" GridPane.rowIndex="4" />
+                <CheckBox fx:id="rallyCheck" text="Rally" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+
+                <CheckBox fx:id="trainTroopsCheck" text="Train Troops" GridPane.columnIndex="0" GridPane.rowIndex="5" selected="true" />
+                <CheckBox fx:id="trainingSpeedupsCheck" text="Training Speedups" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+
+                <CheckBox fx:id="useGemsCheck" text="Gems" GridPane.columnIndex="0" GridPane.rowIndex="6" />
+                <CheckBox fx:id="useSpeedupsCheck" text="Speedups" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+            </children>
+        </GridPane>
+
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <children>
+                        <Label text="Minimum Points" />
+                        <TextField fx:id="minimumPointsField" text="520" prefWidth="80.0" />
+                        <CheckBox fx:id="autoAcceptCheck" text="Auto Accept" selected="false" />
+                        <CheckBox fx:id="useGemsBottomCheck" text="Use Gems" disable="true" />
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+
+        <!-- Right side: Compact Help -->
+        <VBox spacing="3" prefWidth="200" style="-fx-background-color: #f0f0f0; -fx-padding: 8; -fx-border-color: #cccccc; -fx-border-width: 1;">
+            <children>
+                <Label text="Quick Guide" style="-fx-font-weight: bold; -fx-font-size: 11px;" />
+                <Label text="• Check task types to accept" wrapText="true" style="-fx-font-size: 9px;" />
+                <Label text="• Set minimum points (520)" wrapText="true" style="-fx-font-size: 9px;" />
+                <Label text="• Only refresh rewards 120% and 200%" wrapText="true" style="-fx-font-size: 9px;" />
+                <Label text="• Bot auto-accepts matching tasks" wrapText="true" style="-fx-font-size: 9px;" />
+                <Label text="• Low points = refresh" wrapText="true" style="-fx-font-size: 9px;" />
+            </children>
+        </VBox>
+
+    </children>
+</HBox>

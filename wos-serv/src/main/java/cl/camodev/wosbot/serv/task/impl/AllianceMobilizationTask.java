@@ -45,7 +45,9 @@ public class AllianceMobilizationTask extends DelayedTask {
         logInfo("\n[STEP 1/2] Navigating to Alliance Mobilization...");
         if (!navigateToAllianceMobilization()) {
             logInfo("❌ Failed to navigate to Alliance Mobilization.");
-            // TODO: Add rescheduling logic
+            logInfo("Rescheduling for 5 minutes to try again");
+            LocalDateTime nextRun = LocalDateTime.now().plusMinutes(5);
+            this.reschedule(nextRun);
             return;
         }
         logInfo("✅ Navigation successful");
@@ -57,7 +59,11 @@ public class AllianceMobilizationTask extends DelayedTask {
         logInfo("\n╔═══════════════════════════════════════════════════════════════╗");
         logInfo("║  Alliance Mobilization Task Finished                         ║");
         logInfo("╚═══════════════════════════════════════════════════════════════╝");
-        // TODO: Add rescheduling logic
+
+        // Default reschedule: Check again in 5 minutes if no other reschedule was set
+        logInfo("No specific reschedule set - checking again in 5 minutes");
+        LocalDateTime nextRun = LocalDateTime.now().plusMinutes(5);
+        this.reschedule(nextRun);
     }
 
     private void printConfiguration() {
@@ -171,6 +177,39 @@ public class AllianceMobilizationTask extends DelayedTask {
         boolean search200 = rewardsPercentage.equals("200%") || rewardsPercentage.equals("Both") || rewardsPercentage.equals("Any");
         boolean search120 = rewardsPercentage.equals("120%") || rewardsPercentage.equals("Both") || rewardsPercentage.equals("Any");
 
+        // First check if ANY task is already running - only one task can run at a time
+        // If a task is running, we can still refresh other tasks but cannot accept them
+        boolean anyTaskRunning = false;
+
+        // Check 200% task
+        if (search200) {
+            DTOImageSearchResult result200 = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.AM_200_PERCENT, 85);
+            if (result200.isFound() && isTaskAlreadyRunning(result200.getPoint())) {
+                logInfo("Task at 200% is already running");
+                anyTaskRunning = true;
+            }
+        }
+
+        // Check 120% tasks
+        if (!anyTaskRunning && search120) {
+            List<DTOImageSearchResult> results120 = emuManager.searchTemplates(EMULATOR_NUMBER, EnumTemplates.AM_120_PERCENT, 85, 2);
+            if (results120 != null && !results120.isEmpty()) {
+                for (DTOImageSearchResult result120 : results120) {
+                    if (isTaskAlreadyRunning(result120.getPoint())) {
+                        logInfo("Task at 120% (" + result120.getPoint() + ") is already running");
+                        anyTaskRunning = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (anyTaskRunning) {
+            logInfo("A task is already running - only one task can run at a time");
+            logInfo("Other tasks will be refreshed to get better options");
+        }
+
+        // Search for available tasks to accept or refresh (if another task is running, treat all as disabled)
         // Search for 200% bonus (only 1 can exist)
         if (search200) {
             logDebug("Searching for 200% bonus task...");
@@ -180,21 +219,29 @@ public class AllianceMobilizationTask extends DelayedTask {
             if (result200.isFound()) {
                 captureDebugScreenshot("found_200_percent");
 
-                // Check if task is already running (orange bar with timer below bonus)
+                // Skip this task if it's already running (has timer bar)
                 if (isTaskAlreadyRunning(result200.getPoint())) {
-                    logInfo("Task at 200% is already running (timer bar detected) - skipping");
+                    logInfo("Task at 200% is already running - skipping this one");
+                    // Don't return yet, check if there are 120% tasks available
                 } else {
-                    // Check task type near the bonus indicator
-                    EnumTemplates taskType = detectTaskTypeNearBonus(result200.getPoint());
-                    if (taskType != null) {
-                        logInfo("Task type detected: " + taskType.name());
-                        boolean isEnabled = isTaskTypeEnabled(taskType);
-
-                        // Process the task and exit
-                        processTask(result200.getPoint(), taskType, isEnabled, minimumPoints);
-                        return; // Exit after processing one task
+                    // Read points from overview screen BEFORE clicking
+                    int detectedPoints = readPointsNearBonus(result200.getPoint());
+                    if (detectedPoints < 0) {
+                        logWarning("Could not read points for 200% task - skipping");
+                        // Continue to check 120% tasks
                     } else {
-                        logInfo("Task type not detected");
+                        // Check task type near the bonus indicator
+                        EnumTemplates taskType = detectTaskTypeNearBonus(result200.getPoint());
+                        if (taskType != null) {
+                            logInfo("Task type detected: " + taskType.name());
+                            boolean isEnabled = isTaskTypeEnabled(taskType);
+
+                            // Decide what to do based on task criteria
+                            processTaskWithPoints(result200.getPoint(), taskType, isEnabled, detectedPoints, minimumPoints, anyTaskRunning);
+                            return; // Exit after processing one task
+                        } else {
+                            logInfo("Task type not detected");
+                        }
                     }
                 }
             }
@@ -212,10 +259,17 @@ public class AllianceMobilizationTask extends DelayedTask {
                     debugTemplateSearch("AM_120_PERCENT", result120, 85);
                     captureDebugScreenshot("found_120_percent");
 
-                    // Check if task is already running (orange bar with timer below bonus)
+                    // Skip this task if it's already running (has timer bar)
                     if (isTaskAlreadyRunning(result120.getPoint())) {
-                        logInfo("Task at 120% (" + result120.getPoint() + ") is already running - skipping");
-                        continue; // Check next position
+                        logInfo("Task at 120% (" + result120.getPoint() + ") is already running - skipping this one");
+                        continue; // Skip to next 120% task
+                    }
+
+                    // Read points from overview screen BEFORE clicking
+                    int detectedPoints = readPointsNearBonus(result120.getPoint());
+                    if (detectedPoints < 0) {
+                        logWarning("Could not read points for 120% task - skipping");
+                        continue; // Try next 120% task
                     }
 
                     // Check task type near the bonus indicator
@@ -224,8 +278,8 @@ public class AllianceMobilizationTask extends DelayedTask {
                         logInfo("Task type detected: " + taskType.name());
                         boolean isEnabled = isTaskTypeEnabled(taskType);
 
-                        // Process the task and exit
-                        processTask(result120.getPoint(), taskType, isEnabled, minimumPoints);
+                        // Decide what to do based on task criteria
+                        processTaskWithPoints(result120.getPoint(), taskType, isEnabled, detectedPoints, minimumPoints, anyTaskRunning);
                         return; // Exit after processing one task
                     } else {
                         logInfo("Task type not detected at " + result120.getPoint());
@@ -260,22 +314,27 @@ public class AllianceMobilizationTask extends DelayedTask {
 
         // Search for task type icon near the bonus indicator (typically to the left)
         for (EnumTemplates template : taskTypeTemplates) {
-            DTOImageSearchResult result = emuManager.searchTemplate(EMULATOR_NUMBER, template, 85);
-            if (result.isFound()) {
-                // Verify the task type icon is near the bonus indicator
-                int deltaX = Math.abs(result.getPoint().getX() - bonusLocation.getX());
-                int deltaY = Math.abs(result.getPoint().getY() - bonusLocation.getY());
+            // Search for multiple matches of the same template (max 5)
+            List<DTOImageSearchResult> results = emuManager.searchTemplates(EMULATOR_NUMBER, template, 85, 5);
 
-                logDebug("  " + template.name() + " found at (" + result.getPoint().getX() + "," +
-                        result.getPoint().getY() + ") - Distance from bonus: ΔX=" + deltaX + "px, ΔY=" + deltaY + "px");
+            if (results != null && !results.isEmpty()) {
+                // Check each match to find one near the bonus
+                for (DTOImageSearchResult result : results) {
+                    // Verify the task type icon is near the bonus indicator
+                    int deltaX = Math.abs(result.getPoint().getX() - bonusLocation.getX());
+                    int deltaY = Math.abs(result.getPoint().getY() - bonusLocation.getY());
 
-                // Task icon should be within reasonable distance (adjust based on UI layout)
-                if (deltaX < 150 && deltaY < 100) {
-                    logInfo("✅ Detected task type: " + template.name() + " at " + result.getPoint() +
-                           " (ΔX=" + deltaX + "px, ΔY=" + deltaY + "px)");
-                    return template;
-                } else {
-                    logDebug("  ❌ Too far from bonus (max: ΔX=150px, ΔY=100px)");
+                    logDebug("  " + template.name() + " found at (" + result.getPoint().getX() + "," +
+                            result.getPoint().getY() + ") - Distance from bonus: ΔX=" + deltaX + "px, ΔY=" + deltaY + "px");
+
+                    // Task icon should be within reasonable distance (adjust based on UI layout)
+                    if (deltaX < 150 && deltaY < 100) {
+                        logInfo("✅ Detected task type: " + template.name() + " at " + result.getPoint() +
+                               " (ΔX=" + deltaX + "px, ΔY=" + deltaY + "px)");
+                        return template;
+                    } else {
+                        logDebug("  ❌ Too far from bonus (max: ΔX=150px, ΔY=100px)");
+                    }
                 }
             }
         }
@@ -287,14 +346,14 @@ public class AllianceMobilizationTask extends DelayedTask {
     private boolean isTaskAlreadyRunning(DTOPoint bonusLocation) {
         logDebug("Checking if task is already running near: " + bonusLocation);
 
-        // Search for AM_Bar.png (orange timer bar) below the bonus indicator
+        // Search for AM_Bar_X.png (timer bar with only fixed frame parts, variable progress excluded) below the bonus indicator
         // The bar appears approximately 150-200px below the bonus icon
         DTOPoint searchTopLeft = new DTOPoint(bonusLocation.getX() - 50, bonusLocation.getY() + 100);
         DTOPoint searchBottomRight = new DTOPoint(bonusLocation.getX() + 250, bonusLocation.getY() + 250);
 
         DTOImageSearchResult barResult = emuManager.searchTemplate(
             EMULATOR_NUMBER,
-            EnumTemplates.AM_BAR,
+            EnumTemplates.AM_BAR_X,
             searchTopLeft,
             searchBottomRight,
             85
@@ -348,23 +407,97 @@ public class AllianceMobilizationTask extends DelayedTask {
         }
     }
 
-    private void processTask(DTOPoint bonusLocation, EnumTemplates taskType, boolean isTaskTypeEnabled, int minimumPoints) {
-        logInfo("Processing task: " + taskType.name() + " at " + bonusLocation + " (Enabled: " + isTaskTypeEnabled + ")");
-        captureDebugScreenshot("before_task_click");
+    private void processTaskWithPoints(DTOPoint bonusLocation, EnumTemplates taskType, boolean isTaskTypeEnabled,
+                                      int detectedPoints, int minimumPoints, boolean anyTaskRunning) {
+        logInfo("Processing task: " + taskType.name() + " at " + bonusLocation);
+        logInfo("  • Task enabled: " + isTaskTypeEnabled);
+        logInfo("  • Points: " + detectedPoints + " (minimum: " + minimumPoints + ")");
+        logInfo("  • Another task running: " + anyTaskRunning);
 
-        // Click on the task to open the selection screen
-        emuManager.tapAtPoint(EMULATOR_NUMBER, bonusLocation);
-        sleepTask(2000);
+        // Decision logic based on points, enabled status, and whether another task is running
+        boolean pointsMeetMinimum = detectedPoints >= minimumPoints;
+        boolean taskIsGood = isTaskTypeEnabled && pointsMeetMinimum;
 
-        captureDebugScreenshot("after_task_click");
-
-        // Check the selection screen and decide whether to Accept or Refresh
-        handleTaskSelectionScreen(taskType, isTaskTypeEnabled, minimumPoints);
+        if (!isTaskTypeEnabled) {
+            // Task type not enabled -> Click and Refresh
+            logInfo("Task type NOT enabled -> Clicking to refresh");
+            clickAndRefreshTask(bonusLocation);
+        } else if (!pointsMeetMinimum) {
+            // Task enabled but points too low -> Click and Refresh
+            logInfo("Points below minimum (" + detectedPoints + " < " + minimumPoints + ") -> Clicking to refresh");
+            clickAndRefreshTask(bonusLocation);
+        } else if (anyTaskRunning) {
+            // Task is GOOD (enabled + enough points) BUT another task is running
+            // -> Don't click, just wait 1 hour
+            logInfo("✅ Task is GOOD (enabled + enough points) BUT another task is running");
+            logInfo("NOT clicking - saving this task for later by waiting 1 hour");
+            LocalDateTime nextRun = LocalDateTime.now().plusHours(1);
+            this.reschedule(nextRun);
+            logInfo("Rescheduled for " + nextRun + " to check again when running task might be finished");
+        } else {
+            // Task is GOOD and no other task running -> Click and Accept
+            logInfo("✅ Task is GOOD and no other task running -> Clicking to accept");
+            clickAndAcceptTask(bonusLocation);
+        }
     }
 
-    private void handleTaskSelectionScreen(EnumTemplates taskType, boolean isTaskTypeEnabled, int minimumPoints) {
+    private void clickAndRefreshTask(DTOPoint bonusLocation) {
+        logInfo("Clicking on task to open selection screen for refresh");
+        captureDebugScreenshot("before_refresh_click");
+
+        // Click on the task
+        emuManager.tapAtPoint(EMULATOR_NUMBER, bonusLocation);
+        sleepTask(2000);
+        captureDebugScreenshot("after_task_click_for_refresh");
+
+        // Click Refresh button
+        DTOPoint refreshButtonLocation = new DTOPoint(200, 805);
+        emuManager.tapAtPoint(EMULATOR_NUMBER, refreshButtonLocation);
+        sleepTask(1500);
+        captureDebugScreenshot("after_refresh_click");
+
+        // Read cooldown from popup
+        DTOPoint timerTopLeft = new DTOPoint(375, 610);
+        DTOPoint timerBottomRight = new DTOPoint(490, 642);
+        int cooldownSeconds = readRefreshCooldownFromPopup(timerTopLeft, timerBottomRight);
+
+        // Confirm refresh
+        DTOPoint refreshConfirmButtonLocation = new DTOPoint(510, 790);
+        logInfo("Confirming refresh at: " + refreshConfirmButtonLocation);
+        emuManager.tapAtPoint(EMULATOR_NUMBER, refreshConfirmButtonLocation);
+        sleepTask(1500);
+        captureDebugScreenshot("after_refresh_confirmed");
+
+        // Reschedule for after cooldown
+        if (cooldownSeconds > 0) {
+            LocalDateTime nextRun = LocalDateTime.now().plusSeconds(cooldownSeconds + 5);
+            this.reschedule(nextRun);
+            logInfo("Mission refreshed. Rescheduled for " + nextRun);
+        } else {
+            logInfo("Mission refreshed. No cooldown detected.");
+        }
+    }
+
+    private void clickAndAcceptTask(DTOPoint bonusLocation) {
+        logInfo("Clicking on task to open selection screen for accept");
+        captureDebugScreenshot("before_accept_click");
+
+        // Click on the task
+        emuManager.tapAtPoint(EMULATOR_NUMBER, bonusLocation);
+        sleepTask(2000);
+        captureDebugScreenshot("after_task_click_for_accept");
+
+        // Click Accept button
+        DTOPoint acceptButtonLocation = new DTOPoint(500, 805);
+        emuManager.tapAtPoint(EMULATOR_NUMBER, acceptButtonLocation);
+        sleepTask(1500);
+        captureDebugScreenshot("after_accept");
+        logInfo("✅ Task accepted successfully");
+    }
+
+    private void handleTaskSelectionScreen(EnumTemplates taskType, boolean isTaskTypeEnabled, int minimumPoints, boolean anyTaskRunning) {
         logInfo("=== Handling Task Selection Screen ===");
-        logInfo("Task type: " + taskType.name() + ", Enabled: " + isTaskTypeEnabled + ", Minimum points: " + minimumPoints);
+        logInfo("Task type: " + taskType.name() + ", Enabled: " + isTaskTypeEnabled + ", Minimum points: " + minimumPoints + ", Another task running: " + anyTaskRunning);
         captureDebugScreenshot("task_selection_screen");
 
         // Fixed button coordinates
@@ -373,7 +506,8 @@ public class AllianceMobilizationTask extends DelayedTask {
 
         // Decision logic:
         // 1. If task type is NOT enabled -> always Refresh
-        // 2. If task type IS enabled -> check points on selection screen
+        // 2. If another task is running -> always Refresh (only one task can run at a time)
+        // 3. If task type IS enabled AND no other task running -> check points on selection screen
 
         if (!isTaskTypeEnabled) {
             logInfo("Task type NOT enabled in UI -> Refreshing mission");
@@ -420,14 +554,35 @@ public class AllianceMobilizationTask extends DelayedTask {
 
         logInfo("Detected points on selection screen: " + detectedPoints);
 
-        // Decision: Accept if points >= minimum, otherwise Refresh
+        // Decision logic based on points and whether another task is running
         if (detectedPoints >= minimumPoints) {
-            logInfo("Points meet minimum (" + detectedPoints + " >= " + minimumPoints + ") -> Accepting task");
-            emuManager.tapAtPoint(EMULATOR_NUMBER, acceptButtonLocation);
-            sleepTask(1500);
-            captureDebugScreenshot("after_accept");
-            logInfo("✅ Task accepted successfully");
+            // Points are good
+            if (anyTaskRunning) {
+                // Points meet criteria AND task enabled BUT another task is running
+                // -> This is a GOOD task, don't refresh it, just wait for the running task to finish
+                logInfo("Points meet minimum (" + detectedPoints + " >= " + minimumPoints + ") AND task is enabled");
+                logInfo("Another task is running - this task is good, saving it by NOT refreshing");
+                logInfo("Closing selection screen and rescheduling for 1 hour to check again");
+
+                // Close the selection screen without accepting or refreshing (press back button)
+                emuManager.tapBackButton(EMULATOR_NUMBER);
+                sleepTask(1500);
+                captureDebugScreenshot("after_closing_selection_screen");
+
+                // Reschedule for 1 hour to check again when running task might be finished
+                LocalDateTime nextRun = LocalDateTime.now().plusHours(1);
+                this.reschedule(nextRun);
+                logInfo("Rescheduled for " + nextRun + " to check again when running task might be finished");
+            } else {
+                // Points meet criteria AND no other task running -> Accept
+                logInfo("Points meet minimum (" + detectedPoints + " >= " + minimumPoints + ") AND no other task running -> Accepting task");
+                emuManager.tapAtPoint(EMULATOR_NUMBER, acceptButtonLocation);
+                sleepTask(1500);
+                captureDebugScreenshot("after_accept");
+                logInfo("✅ Task accepted successfully");
+            }
         } else {
+            // Points too low -> refresh regardless of whether another task is running
             logInfo("Points below minimum (" + detectedPoints + " < " + minimumPoints + ") -> Refreshing mission");
             emuManager.tapAtPoint(EMULATOR_NUMBER, refreshButtonLocation);
             sleepTask(1500);
@@ -668,8 +823,8 @@ public class AllianceMobilizationTask extends DelayedTask {
         sleepTask(1000);
     }
 
-    private boolean verifyPointsNearBonus(DTOPoint bonusLocation, int minimumPoints) {
-        logDebug("Verifying points near bonus location: " + bonusLocation);
+    private int readPointsNearBonus(DTOPoint bonusLocation) {
+        logDebug("Reading points near bonus location: " + bonusLocation);
 
         // The points are displayed at a specific offset from the bonus indicator
         // Based on testing: 120% symbol at (83,632) -> points at (195,790) to (270,824)
@@ -685,28 +840,47 @@ public class AllianceMobilizationTask extends DelayedTask {
 
         logDebug("OCR area for points: " + topLeft + " to " + bottomRight);
 
-        try {
-            String ocrResult = emuManager.ocrRegionText(EMULATOR_NUMBER, topLeft, bottomRight);
-            debugOCRArea("Points near bonus", topLeft, bottomRight, ocrResult);
+        // Retry up to 3 times to read the points
+        int maxRetries = 3;
+        for (int attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                String ocrResult = emuManager.ocrRegionText(EMULATOR_NUMBER, topLeft, bottomRight);
+                debugOCRArea("Points near bonus (attempt " + attempt + ")", topLeft, bottomRight, ocrResult);
 
-            if (ocrResult != null && !ocrResult.trim().isEmpty()) {
-                // Extract numeric value from OCR result
-                String numericValue = ocrResult.replaceAll("[^0-9]", "");
+                if (ocrResult != null && !ocrResult.trim().isEmpty()) {
+                    // Extract numeric value from OCR result (remove any non-digit characters)
+                    String numericValue = ocrResult.replaceAll("[^0-9]", "");
 
-                if (!numericValue.isEmpty()) {
-                    int points = Integer.parseInt(numericValue);
-                    logInfo("✅ Detected points: " + points + " - Minimum required: " + minimumPoints);
-                    return points >= minimumPoints;
+                    if (!numericValue.isEmpty()) {
+                        int points = Integer.parseInt(numericValue);
+                        logInfo("✅ Detected points on overview: " + points + " (attempt " + attempt + ")");
+                        return points;
+                    } else {
+                        logWarning("OCR result contains no numeric value: '" + ocrResult + "' (attempt " + attempt + ")");
+                    }
                 } else {
-                    logWarning("OCR result contains no numeric value: '" + ocrResult + "'");
+                    logWarning("OCR result is empty (attempt " + attempt + ")");
                 }
-            } else {
-                logWarning("OCR result is empty");
+            } catch (Exception e) {
+                logWarning("Failed to read points via OCR (attempt " + attempt + "): " + e.getMessage());
             }
-        } catch (Exception e) {
-            logWarning("Failed to verify points via OCR: " + e.getMessage());
+
+            // Wait 500ms before retry (except after last attempt)
+            if (attempt < maxRetries) {
+                sleepTask(500);
+            }
         }
 
+        logWarning("Could not read points near bonus after " + maxRetries + " attempts");
+        return -1;
+    }
+
+    private boolean verifyPointsNearBonus(DTOPoint bonusLocation, int minimumPoints) {
+        int points = readPointsNearBonus(bonusLocation);
+        if (points >= 0) {
+            logInfo("✅ Points verification: " + points + " >= " + minimumPoints + " ? " + (points >= minimumPoints));
+            return points >= minimumPoints;
+        }
         return false;
     }
 
