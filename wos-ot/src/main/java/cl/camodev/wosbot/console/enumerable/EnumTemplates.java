@@ -172,6 +172,8 @@ public enum EnumTemplates {
 
     AM_120_PERCENT("/templates/events/mobilization/AM_120%.png"),
     AM_200_PERCENT("/templates/events/mobilization/AM_200%.png"),
+    AM_BAR("/templates/events/mobilization/AM_Bar.png"),
+    AM_COMPLETED("/templates/events/mobilization/AM_Completed.png"),
 
     // Task type icons
     AM_BUILD_SPEEDUPS("/templates/events/mobilization/AM_Build_Speedups.png"),
