@@ -1,36 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.layout.GridPane?>
-<?import javafx.scene.layout.VBox?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.CheckBox?>
-<?import javafx.scene.control.TextField?>
-<?import javafx.scene.control.ComboBox?>
-<?import javafx.scene.control.Button?>
-<?import javafx.geometry.Insets?>
 <?import java.lang.String?>
 <?import javafx.collections.FXCollections?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
 
-<HBox xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1"
-      spacing="20" prefHeight="306.0" prefWidth="700.0"
-      maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308">
+<HBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="306.0" prefWidth="700.0" spacing="20" xmlns="http://javafx.com/javafx/24.0.1" xmlns:fx="http://javafx.com/fxml/1">
     <padding>
-        <Insets top="20" right="20" bottom="20" left="20" />
+        <Insets bottom="20" left="20" right="20" top="20" />
     </padding>
     <children>
         <!-- Left side: Main controls -->
         <VBox spacing="10" HBox.hgrow="ALWAYS">
             <children>
-                <CheckBox fx:id="checkBoxAllianceMobilization" text="Alliance Mobilization" style="-fx-font-size: 14px; -fx-font-weight: bold;" />
+                <CheckBox fx:id="checkBoxAllianceMobilization" style="-fx-font-size: 14px; -fx-font-weight: bold;" text="Alliance Mobilization" />
 
-                <Label text="Alliance Mobilization Options" style="-fx-font-size: 16px; -fx-text-fill: #af4c4cff;" />
-                <Label text="(Rudimentary Beta - Under Development)" style="-fx-font-size: 10px; -fx-text-fill: #888888;" />
+                <Label style="-fx-font-size: 16px; -fx-text-fill: #af4c4cff;" text="Alliance Mobilization Options" />
+                <Label style="-fx-font-size: 10px; -fx-text-fill: #888888;" text="(Rudimentary Beta - Under Development)" />
 
-                <HBox spacing="10" alignment="CENTER_LEFT">
+                <HBox alignment="CENTER_LEFT" spacing="10">
                     <children>
-                        <Label text="Rewards Percentage" disable="true" />
-                        <ComboBox fx:id="rewardsPercentageCombo" prefWidth="80.0" value="Any" disable="true">
+                        <Label disable="true" text="Rewards Percentage" />
+                        <ComboBox fx:id="rewardsPercentageCombo" disable="true" prefWidth="80.0" value="Any">
                             <items>
                                 <FXCollections fx:factory="observableArrayList">
                                     <String fx:value="Any" />
@@ -59,35 +58,51 @@
                 <CheckBox fx:id="mythicShardCheck" text="Mythic Shard" GridPane.columnIndex="0" GridPane.rowIndex="4" />
                 <CheckBox fx:id="rallyCheck" text="Rally" GridPane.columnIndex="1" GridPane.rowIndex="4" />
 
-                <CheckBox fx:id="trainTroopsCheck" text="Train Troops" GridPane.columnIndex="0" GridPane.rowIndex="5" selected="true" />
+                <CheckBox fx:id="trainTroopsCheck" selected="true" text="Train Troops" GridPane.columnIndex="0" GridPane.rowIndex="5" />
                 <CheckBox fx:id="trainingSpeedupsCheck" text="Training Speedups" GridPane.columnIndex="1" GridPane.rowIndex="5" />
 
                 <CheckBox fx:id="useGemsCheck" text="Gems" GridPane.columnIndex="0" GridPane.rowIndex="6" />
                 <CheckBox fx:id="useSpeedupsCheck" text="Speedups" GridPane.columnIndex="1" GridPane.rowIndex="6" />
             </children>
+               <columnConstraints>
+                  <ColumnConstraints />
+                  <ColumnConstraints />
+               </columnConstraints>
+               <rowConstraints>
+                  <RowConstraints />
+                  <RowConstraints />
+                  <RowConstraints />
+                  <RowConstraints />
+                  <RowConstraints />
+                  <RowConstraints />
+                  <RowConstraints />
+               </rowConstraints>
         </GridPane>
 
-                <HBox spacing="10" alignment="CENTER_LEFT">
+                <HBox alignment="CENTER_LEFT" spacing="10">
                     <children>
                         <Label text="Minimum Points" />
-                        <TextField fx:id="minimumPointsField" text="520" prefWidth="80.0" />
-                        <CheckBox fx:id="autoAcceptCheck" text="Auto Accept" selected="false" />
-                        <CheckBox fx:id="useGemsBottomCheck" text="Use Gems" disable="true" />
+                        <TextField fx:id="minimumPointsField" prefWidth="80.0" text="520" />
+                        <CheckBox fx:id="autoAcceptCheck" selected="false" text="Auto Accept" />
+                        <CheckBox fx:id="useGemsBottomCheck" disable="true" text="Use Gems" />
                     </children>
                 </HBox>
             </children>
         </VBox>
 
         <!-- Right side: Compact Help -->
-        <VBox spacing="3" prefWidth="200" style="-fx-background-color: #f0f0f0; -fx-padding: 8; -fx-border-color: #cccccc; -fx-border-width: 1;">
+        <VBox prefHeight="309.0" prefWidth="240.0" spacing="5" style="-fx-background-color: #2b2b2b; -fx-padding: 12; -fx-background-radius: 5;">
             <children>
-                <Label text="Quick Guide" style="-fx-font-weight: bold; -fx-font-size: 11px;" />
-                <Label text="• Check task types to accept" wrapText="true" style="-fx-font-size: 9px;" />
-                <Label text="• Set minimum points (520)" wrapText="true" style="-fx-font-size: 9px;" />
-                <Label text="• Only refresh rewards 120% and 200%" wrapText="true" style="-fx-font-size: 9px;" />
-                <Label text="• Bot auto-accepts matching tasks" wrapText="true" style="-fx-font-size: 9px;" />
-                <Label text="• Low points = refresh" wrapText="true" style="-fx-font-size: 9px;" />
+                <Label style="-fx-font-weight: bold; -fx-font-size: 11px; -fx-text-fill: #e0e0e0;" text="Quick Guide" />
+                <Label style="-fx-font-size: 9px; -fx-text-fill: #cccccc;" text="• Check task types to accept" wrapText="true" />
+                <Label style="-fx-font-size: 9px; -fx-text-fill: #cccccc;" text="• Set minimum points (520)" wrapText="true" />
+                <Label style="-fx-font-size: 9px; -fx-text-fill: #cccccc;" text="• Only refresh rewards 120% and 200%" wrapText="true" />
+                <Label style="-fx-font-size: 9px; -fx-text-fill: #cccccc;" text="• Bot auto-accepts matching tasks" wrapText="true" />
+                <Label style="-fx-font-size: 9px; -fx-text-fill: #cccccc;" text="• Low points = refresh" wrapText="true" />
             </children>
+            <HBox.margin>
+                <Insets left="10" />
+            </HBox.margin>
         </VBox>
 
     </children>

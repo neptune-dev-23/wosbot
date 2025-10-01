@@ -25,56 +25,38 @@ public class AllianceMobilizationTask extends DelayedTask {
 
     @Override
     protected void execute() {
-        logInfo("╔═══════════════════════════════════════════════════════════════╗");
-        logInfo("║  Starting Alliance Mobilization Task                         ║");
-        logInfo("║  Profile: " + String.format("%-48s", profile.getName()) + "║");
-        logInfo("╚═══════════════════════════════════════════════════════════════╝");
-
-        // Print current configuration
-        printConfiguration();
+        logInfo("Alliance Mobilization - Starting task for profile: " + profile.getName());
 
         // Check if Alliance Mobilization is enabled
         boolean allianceMobilizationEnabled = profile.getConfig(EnumConfigurationKey.ALLIANCE_MOBILIZATION_BOOL, Boolean.class);
         if (!allianceMobilizationEnabled) {
-            logInfo("Alliance Mobilization is disabled for this profile. Skipping task.");
+            logInfo("Alliance Mobilization is disabled. Skipping task.");
             this.setRecurring(false);
             return;
         }
 
-        // 1. Navigate to the Alliance Mobilization screen.
-        logInfo("\n[STEP 1/2] Navigating to Alliance Mobilization...");
+        // Read Auto Accept configuration
+        boolean autoAcceptEnabled = profile.getConfig(EnumConfigurationKey.ALLIANCE_MOBILIZATION_AUTO_ACCEPT_BOOL, Boolean.class);
+
+        // Navigate to the Alliance Mobilization screen
         if (!navigateToAllianceMobilization()) {
-            logInfo("❌ Failed to navigate to Alliance Mobilization.");
-            logInfo("Rescheduling for 5 minutes to try again");
+            logInfo("Failed to navigate. Retrying in 5 minutes.");
             LocalDateTime nextRun = LocalDateTime.now().plusMinutes(5);
             this.reschedule(nextRun);
             return;
         }
-        logInfo("✅ Navigation successful");
 
-        // 2. Analyze the available tasks.
-        logInfo("\n[STEP 2/2] Analyzing and performing tasks...");
-        analyzeAndPerformTasks();
-
-        logInfo("\n╔═══════════════════════════════════════════════════════════════╗");
-        logInfo("║  Alliance Mobilization Task Finished                         ║");
-        logInfo("╚═══════════════════════════════════════════════════════════════╝");
+        // Analyze and perform tasks
+        boolean rescheduleWasSet = analyzeAndPerformTasks(autoAcceptEnabled);
 
         // Default reschedule: Check again in 5 minutes if no other reschedule was set
-        logInfo("No specific reschedule set - checking again in 5 minutes");
-        LocalDateTime nextRun = LocalDateTime.now().plusMinutes(5);
-        this.reschedule(nextRun);
-    }
+        if (!rescheduleWasSet) {
+            logInfo("No tasks processed. Checking again in 5 minutes.");
+            LocalDateTime nextRun = LocalDateTime.now().plusMinutes(5);
+            this.reschedule(nextRun);
+        }
 
-    private void printConfiguration() {
-        logInfo("\n📋 Current Configuration:");
-        logInfo("  • Rewards Filter: " + profile.getConfig(EnumConfigurationKey.ALLIANCE_MOBILIZATION_REWARDS_PERCENTAGE_STRING, String.class));
-        logInfo("  • Minimum Points: " + profile.getConfig(EnumConfigurationKey.ALLIANCE_MOBILIZATION_MINIMUM_POINTS_INT, Integer.class));
-        logInfo("  • Train Troops: " + (profile.getConfig(EnumConfigurationKey.ALLIANCE_MOBILIZATION_TRAIN_TROOPS_BOOL, Boolean.class) ? "✅" : "❌"));
-        logInfo("  • Build Speedups: " + (profile.getConfig(EnumConfigurationKey.ALLIANCE_MOBILIZATION_BUILD_SPEEDUPS_BOOL, Boolean.class) ? "✅" : "❌"));
-        logInfo("  • Chief Gear Score: " + (profile.getConfig(EnumConfigurationKey.ALLIANCE_MOBILIZATION_CHIEF_GEAR_SCORE_BOOL, Boolean.class) ? "✅" : "❌"));
-        logInfo("  • Debug Mode: ✅ (FORCED ON FOR TESTING)");
-        logInfo("");
+        logInfo("Alliance Mobilization - Task completed");
     }
 
     private boolean navigateToAllianceMobilization() {
@@ -85,8 +67,7 @@ public class AllianceMobilizationTask extends DelayedTask {
         DTOImageSearchResult eventsButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.HOME_EVENTS_BUTTON, 90);
         if (!eventsButton.isFound()) {
             logWarning("Events button not found on home screen.");
-            captureDebugScreenshot("events_button_not_found");
-            return false;
+                return false;
         }
         logDebug("Events button found at: " + eventsButton.getPoint());
         emuManager.tapAtPoint(EMULATOR_NUMBER, eventsButton.getPoint());
@@ -102,15 +83,12 @@ public class AllianceMobilizationTask extends DelayedTask {
 
         if (selectedTab.isFound()) {
             logInfo("Alliance Mobilization tab is already selected at: " + selectedTab.getPoint());
-            captureDebugScreenshot("tab_already_selected");
         } else if (unselectedTab.isFound()) {
             logInfo("Found unselected Alliance Mobilization tab at: " + unselectedTab.getPoint() + ", clicking it.");
             emuManager.tapAtPoint(EMULATOR_NUMBER, unselectedTab.getPoint());
             sleepTask(2000);
-            captureDebugScreenshot("after_tab_click");
         } else {
             logInfo("Alliance Mobilization tabs not found, swiping to search for them...");
-            captureDebugScreenshot("before_tab_search");
 
             // Search for tabs by swiping left to right (shows tabs to the right)
             boolean tabFound = false;
@@ -143,35 +121,36 @@ public class AllianceMobilizationTask extends DelayedTask {
 
             if (!tabFound) {
                 logWarning("Alliance Mobilization tabs not found after multiple swipes. Event may not be active.");
-                captureDebugScreenshot("tab_search_failed");
                 return false;
             }
         }
 
         logInfo("Successfully navigated to Alliance Mobilization.");
-        captureDebugScreenshot("navigation_success");
         return true;
     }
 
-    private void analyzeAndPerformTasks() {
-        logInfo("Analyzing and performing Alliance Mobilization tasks...");
-        captureDebugScreenshot("before_task_analysis");
-
+    private boolean analyzeAndPerformTasks(boolean autoAcceptEnabled) {
         // Get user configuration for reward percentage filter
         String rewardsPercentage = profile.getConfig(EnumConfigurationKey.ALLIANCE_MOBILIZATION_REWARDS_PERCENTAGE_STRING, String.class);
         int minimumPoints = profile.getConfig(EnumConfigurationKey.ALLIANCE_MOBILIZATION_MINIMUM_POINTS_INT, Integer.class);
 
-        logInfo("Filtering tasks by: " + rewardsPercentage + " with minimum points: " + minimumPoints);
+        logInfo("Searching for tasks (Filter: " + rewardsPercentage + ", Min points: " + minimumPoints + ", Auto-accept: " + autoAcceptEnabled + ")");
 
         // Search and process tasks based on bonus percentage
-        searchAndProcessTasksByBonus(rewardsPercentage, minimumPoints);
+        // Returns true if a reschedule was set
+        return searchAndProcessTasksByBonus(rewardsPercentage, minimumPoints, autoAcceptEnabled);
     }
 
-    private void searchAndProcessTasksByBonus(String rewardsPercentage, int minimumPoints) {
+    private boolean searchAndProcessTasksByBonus(String rewardsPercentage, int minimumPoints, boolean autoAcceptEnabled) {
         // First, check for completed tasks to collect rewards
         checkAndCollectCompletedTasks();
 
-        logInfo("=== Searching for tasks by bonus percentage ===");
+        // Check for free mission button
+        checkAndUseFreeMission();
+
+        // Track the shortest cooldown time from all refreshed tasks
+        int shortestCooldownSeconds = Integer.MAX_VALUE;
+        boolean rescheduleWasSet = false;
 
         // Determine which templates to search for based on user selection
         boolean search200 = rewardsPercentage.equals("200%") || rewardsPercentage.equals("Both") || rewardsPercentage.equals("Any");
@@ -217,7 +196,6 @@ public class AllianceMobilizationTask extends DelayedTask {
             debugTemplateSearch("AM_200_PERCENT", result200, 85);
 
             if (result200.isFound()) {
-                captureDebugScreenshot("found_200_percent");
 
                 // Skip this task if it's already running (has timer bar)
                 if (isTaskAlreadyRunning(result200.getPoint())) {
@@ -237,8 +215,14 @@ public class AllianceMobilizationTask extends DelayedTask {
                             boolean isEnabled = isTaskTypeEnabled(taskType);
 
                             // Decide what to do based on task criteria
-                            processTaskWithPoints(result200.getPoint(), taskType, isEnabled, detectedPoints, minimumPoints, anyTaskRunning);
-                            return; // Exit after processing one task
+                            TaskProcessResult result = processTaskWithPoints(result200.getPoint(), taskType, isEnabled, detectedPoints, minimumPoints, anyTaskRunning, autoAcceptEnabled);
+                            if (result.cooldownSeconds > 0 && result.cooldownSeconds < shortestCooldownSeconds) {
+                                shortestCooldownSeconds = result.cooldownSeconds;
+                            }
+                            if (result.shouldStop) {
+                                return true; // Stop checking if we're waiting, reschedule was set
+                            }
+                            // Otherwise continue to check 120% tasks
                         } else {
                             logInfo("Task type not detected");
                         }
@@ -257,7 +241,6 @@ public class AllianceMobilizationTask extends DelayedTask {
 
                 for (DTOImageSearchResult result120 : results120) {
                     debugTemplateSearch("AM_120_PERCENT", result120, 85);
-                    captureDebugScreenshot("found_120_percent");
 
                     // Skip this task if it's already running (has timer bar)
                     if (isTaskAlreadyRunning(result120.getPoint())) {
@@ -279,8 +262,14 @@ public class AllianceMobilizationTask extends DelayedTask {
                         boolean isEnabled = isTaskTypeEnabled(taskType);
 
                         // Decide what to do based on task criteria
-                        processTaskWithPoints(result120.getPoint(), taskType, isEnabled, detectedPoints, minimumPoints, anyTaskRunning);
-                        return; // Exit after processing one task
+                        TaskProcessResult result = processTaskWithPoints(result120.getPoint(), taskType, isEnabled, detectedPoints, minimumPoints, anyTaskRunning, autoAcceptEnabled);
+                        if (result.cooldownSeconds > 0 && result.cooldownSeconds < shortestCooldownSeconds) {
+                            shortestCooldownSeconds = result.cooldownSeconds;
+                        }
+                        if (result.shouldStop) {
+                            return true; // Stop checking if we're waiting, reschedule was set
+                        }
+                        // Otherwise continue to check next 120% task
                     } else {
                         logInfo("Task type not detected at " + result120.getPoint());
                     }
@@ -289,6 +278,27 @@ public class AllianceMobilizationTask extends DelayedTask {
                 logDebug("No 120% bonus tasks found");
             }
         }
+
+        // After processing all tasks, reschedule based on shortest cooldown
+        if (shortestCooldownSeconds < Integer.MAX_VALUE) {
+            LocalDateTime nextRun = LocalDateTime.now().plusSeconds(shortestCooldownSeconds + 5);
+            this.reschedule(nextRun);
+            logInfo("Rescheduling based on shortest cooldown: " + shortestCooldownSeconds + " seconds -> " + nextRun);
+            rescheduleWasSet = true;
+        }
+
+        // If no tasks were found/processed, check for task availability timers
+        if (!rescheduleWasSet) {
+            int timerSeconds = readTaskAvailabilityTimers();
+            if (timerSeconds > 0) {
+                LocalDateTime nextRun = LocalDateTime.now().plusSeconds(timerSeconds + 10);
+                this.reschedule(nextRun);
+                logInfo("Next check in " + (timerSeconds / 60) + "min (task availability timer)");
+                rescheduleWasSet = true;
+            }
+        }
+
+        return rescheduleWasSet;
     }
 
     private EnumTemplates detectTaskTypeNearBonus(DTOPoint bonusLocation) {
@@ -407,98 +417,81 @@ public class AllianceMobilizationTask extends DelayedTask {
         }
     }
 
-    private void processTaskWithPoints(DTOPoint bonusLocation, EnumTemplates taskType, boolean isTaskTypeEnabled,
-                                      int detectedPoints, int minimumPoints, boolean anyTaskRunning) {
-        logInfo("Processing task: " + taskType.name() + " at " + bonusLocation);
-        logInfo("  • Task enabled: " + isTaskTypeEnabled);
-        logInfo("  • Points: " + detectedPoints + " (minimum: " + minimumPoints + ")");
-        logInfo("  • Another task running: " + anyTaskRunning);
+    private static class TaskProcessResult {
+        boolean shouldStop;
+        int cooldownSeconds;
+
+        TaskProcessResult(boolean shouldStop, int cooldownSeconds) {
+            this.shouldStop = shouldStop;
+            this.cooldownSeconds = cooldownSeconds;
+        }
+    }
+
+    private TaskProcessResult processTaskWithPoints(DTOPoint bonusLocation, EnumTemplates taskType, boolean isTaskTypeEnabled,
+                                      int detectedPoints, int minimumPoints, boolean anyTaskRunning, boolean autoAcceptEnabled) {
+        logInfo("Found: " + taskType.name() + " (" + detectedPoints + "pts, enabled: " + isTaskTypeEnabled + ")");
 
         // Decision logic based on points, enabled status, and whether another task is running
         boolean pointsMeetMinimum = detectedPoints >= minimumPoints;
         boolean taskIsGood = isTaskTypeEnabled && pointsMeetMinimum;
 
         if (!isTaskTypeEnabled) {
-            // Task type not enabled -> Click and Refresh
-            logInfo("Task type NOT enabled -> Clicking to refresh");
-            clickAndRefreshTask(bonusLocation);
+            logInfo("→ Refreshing (disabled)");
+            int cooldown = clickAndRefreshTask(bonusLocation);
+            return new TaskProcessResult(false, cooldown);
         } else if (!pointsMeetMinimum) {
-            // Task enabled but points too low -> Click and Refresh
-            logInfo("Points below minimum (" + detectedPoints + " < " + minimumPoints + ") -> Clicking to refresh");
-            clickAndRefreshTask(bonusLocation);
+            logInfo("→ Refreshing (low points: " + detectedPoints + " < " + minimumPoints + ")");
+            int cooldown = clickAndRefreshTask(bonusLocation);
+            return new TaskProcessResult(false, cooldown);
         } else if (anyTaskRunning) {
-            // Task is GOOD (enabled + enough points) BUT another task is running
-            // -> Don't click, just wait 1 hour
-            logInfo("✅ Task is GOOD (enabled + enough points) BUT another task is running");
-            logInfo("NOT clicking - saving this task for later by waiting 1 hour");
+            logInfo("→ Waiting 1h (task good but another task running)");
             LocalDateTime nextRun = LocalDateTime.now().plusHours(1);
             this.reschedule(nextRun);
-            logInfo("Rescheduled for " + nextRun + " to check again when running task might be finished");
+            return new TaskProcessResult(true, 0);
         } else {
-            // Task is GOOD and no other task running -> Click and Accept
-            logInfo("✅ Task is GOOD and no other task running -> Clicking to accept");
-            clickAndAcceptTask(bonusLocation);
+            if (autoAcceptEnabled) {
+                logInfo("→ Accepting task");
+                clickAndAcceptTask(bonusLocation);
+                return new TaskProcessResult(false, 0);
+            } else {
+                logInfo("→ Skipping (auto-accept disabled)");
+                return new TaskProcessResult(false, 0);
+            }
         }
     }
 
-    private void clickAndRefreshTask(DTOPoint bonusLocation) {
-        logInfo("Clicking on task to open selection screen for refresh");
-        captureDebugScreenshot("before_refresh_click");
-
-        // Click on the task
+    private int clickAndRefreshTask(DTOPoint bonusLocation) {
         emuManager.tapAtPoint(EMULATOR_NUMBER, bonusLocation);
         sleepTask(2000);
-        captureDebugScreenshot("after_task_click_for_refresh");
 
-        // Click Refresh button
         DTOPoint refreshButtonLocation = new DTOPoint(200, 805);
         emuManager.tapAtPoint(EMULATOR_NUMBER, refreshButtonLocation);
         sleepTask(1500);
-        captureDebugScreenshot("after_refresh_click");
 
-        // Read cooldown from popup
         DTOPoint timerTopLeft = new DTOPoint(375, 610);
         DTOPoint timerBottomRight = new DTOPoint(490, 642);
         int cooldownSeconds = readRefreshCooldownFromPopup(timerTopLeft, timerBottomRight);
 
-        // Confirm refresh
         DTOPoint refreshConfirmButtonLocation = new DTOPoint(510, 790);
-        logInfo("Confirming refresh at: " + refreshConfirmButtonLocation);
         emuManager.tapAtPoint(EMULATOR_NUMBER, refreshConfirmButtonLocation);
         sleepTask(1500);
-        captureDebugScreenshot("after_refresh_confirmed");
 
-        // Reschedule for after cooldown
-        if (cooldownSeconds > 0) {
-            LocalDateTime nextRun = LocalDateTime.now().plusSeconds(cooldownSeconds + 5);
-            this.reschedule(nextRun);
-            logInfo("Mission refreshed. Rescheduled for " + nextRun);
-        } else {
-            logInfo("Mission refreshed. No cooldown detected.");
-        }
+        logInfo("  Cooldown: " + cooldownSeconds + "s");
+        return cooldownSeconds;
     }
 
     private void clickAndAcceptTask(DTOPoint bonusLocation) {
-        logInfo("Clicking on task to open selection screen for accept");
-        captureDebugScreenshot("before_accept_click");
-
-        // Click on the task
         emuManager.tapAtPoint(EMULATOR_NUMBER, bonusLocation);
         sleepTask(2000);
-        captureDebugScreenshot("after_task_click_for_accept");
 
-        // Click Accept button
         DTOPoint acceptButtonLocation = new DTOPoint(500, 805);
         emuManager.tapAtPoint(EMULATOR_NUMBER, acceptButtonLocation);
         sleepTask(1500);
-        captureDebugScreenshot("after_accept");
-        logInfo("✅ Task accepted successfully");
     }
 
     private void handleTaskSelectionScreen(EnumTemplates taskType, boolean isTaskTypeEnabled, int minimumPoints, boolean anyTaskRunning) {
         logInfo("=== Handling Task Selection Screen ===");
         logInfo("Task type: " + taskType.name() + ", Enabled: " + isTaskTypeEnabled + ", Minimum points: " + minimumPoints + ", Another task running: " + anyTaskRunning);
-        captureDebugScreenshot("task_selection_screen");
 
         // Fixed button coordinates
         DTOPoint acceptButtonLocation = new DTOPoint(500, 805);
@@ -513,7 +506,6 @@ public class AllianceMobilizationTask extends DelayedTask {
             logInfo("Task type NOT enabled in UI -> Refreshing mission");
             emuManager.tapAtPoint(EMULATOR_NUMBER, refreshButtonLocation);
             sleepTask(1500);
-            captureDebugScreenshot("after_refresh_click");
 
             // Read cooldown timer from confirmation popup - focus on "5mins!" part
             DTOPoint timerTopLeft = new DTOPoint(375, 610);
@@ -525,7 +517,6 @@ public class AllianceMobilizationTask extends DelayedTask {
             logInfo("Confirming refresh at: " + refreshConfirmButtonLocation);
             emuManager.tapAtPoint(EMULATOR_NUMBER, refreshConfirmButtonLocation);
             sleepTask(1500);
-            captureDebugScreenshot("after_refresh_confirmed");
 
             // Reschedule task for after cooldown expires
             if (cooldownSeconds > 0) {
@@ -548,7 +539,6 @@ public class AllianceMobilizationTask extends DelayedTask {
             logWarning("Could not read points from selection screen, refreshing as fallback");
             emuManager.tapAtPoint(EMULATOR_NUMBER, refreshButtonLocation);
             sleepTask(1500);
-            captureDebugScreenshot("after_refresh_ocr_failed");
             return;
         }
 
@@ -567,7 +557,6 @@ public class AllianceMobilizationTask extends DelayedTask {
                 // Close the selection screen without accepting or refreshing (press back button)
                 emuManager.tapBackButton(EMULATOR_NUMBER);
                 sleepTask(1500);
-                captureDebugScreenshot("after_closing_selection_screen");
 
                 // Reschedule for 1 hour to check again when running task might be finished
                 LocalDateTime nextRun = LocalDateTime.now().plusHours(1);
@@ -578,7 +567,6 @@ public class AllianceMobilizationTask extends DelayedTask {
                 logInfo("Points meet minimum (" + detectedPoints + " >= " + minimumPoints + ") AND no other task running -> Accepting task");
                 emuManager.tapAtPoint(EMULATOR_NUMBER, acceptButtonLocation);
                 sleepTask(1500);
-                captureDebugScreenshot("after_accept");
                 logInfo("✅ Task accepted successfully");
             }
         } else {
@@ -586,7 +574,6 @@ public class AllianceMobilizationTask extends DelayedTask {
             logInfo("Points below minimum (" + detectedPoints + " < " + minimumPoints + ") -> Refreshing mission");
             emuManager.tapAtPoint(EMULATOR_NUMBER, refreshButtonLocation);
             sleepTask(1500);
-            captureDebugScreenshot("after_refresh_click");
 
             // Read cooldown timer from confirmation popup - focus on "5mins!" part
             DTOPoint timerTopLeft = new DTOPoint(375, 610);
@@ -598,7 +585,6 @@ public class AllianceMobilizationTask extends DelayedTask {
             logInfo("Confirming refresh at: " + refreshConfirmButtonLocation);
             emuManager.tapAtPoint(EMULATOR_NUMBER, refreshConfirmButtonLocation);
             sleepTask(1500);
-            captureDebugScreenshot("after_refresh_confirmed");
 
             // Reschedule task for after cooldown expires
             if (cooldownSeconds > 0) {
@@ -693,6 +679,18 @@ public class AllianceMobilizationTask extends DelayedTask {
 
         // Remove common prefix words
         cleaned = cleaned.replaceAll("^(in|r|ear)", "");
+
+        // Fix common OCR errors for HH:mm:ss format
+        // Numbers: O/o -> 0, l/I -> 1, Z -> 2, S -> 5
+        cleaned = cleaned.replaceAll("O", "0");
+        cleaned = cleaned.replaceAll("o", "0");
+        cleaned = cleaned.replaceAll("l(?=\\d|:)", "1"); // l followed by digit or colon
+        cleaned = cleaned.replaceAll("I(?=\\d|:)", "1"); // I followed by digit or colon
+        cleaned = cleaned.replaceAll("Z(?=\\d|:)", "2");
+        cleaned = cleaned.replaceAll("S(?=\\d|:)", "5");
+
+        // Colon errors: i, l, I, | -> :
+        cleaned = cleaned.replaceAll("(?<=\\d)[il\\|I](?=\\d)", ":");
 
         // Fix common OCR errors: "Smins" -> "5mins", "Zmins" -> "2mins"
         cleaned = cleaned.replaceAll("smins", "5mins");
@@ -912,7 +910,6 @@ public class AllianceMobilizationTask extends DelayedTask {
             DTOImageSearchResult taskFrame = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.valueOf("AM_FRAME"), 80);
             if (taskFrame.isFound()) {
                 logInfo("Found task frame at: " + taskFrame.getPoint());
-                captureDebugScreenshot("task_frame_found");
 
                 // Test OCR in the area around the task frame
                 testOCRAroundPoint(taskFrame.getPoint());
@@ -996,6 +993,92 @@ public class AllianceMobilizationTask extends DelayedTask {
         }
     }
 
+    private void checkAndUseFreeMission() {
+        logDebug("Checking for free mission button...");
+
+        // Search for AM_+_1_Free_Mission.png around position (256, 527) with 90% threshold
+        DTOImageSearchResult freeMissionResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.AM_PLUS_1_FREE_MISSION, 90);
+
+        if (freeMissionResult.isFound()) {
+            DTOPoint location = freeMissionResult.getPoint();
+
+            // Verify it's near expected position (256, 527) - allow tolerance of ±50px
+            int deltaX = Math.abs(location.getX() - 256);
+            int deltaY = Math.abs(location.getY() - 527);
+
+            if (deltaX <= 50 && deltaY <= 50) {
+                logInfo("✅ Free mission button found at " + location + " (near expected 256,527) - using it");
+
+                // Click on the free mission button
+                emuManager.tapAtPoint(EMULATOR_NUMBER, location);
+                sleepTask(1500);
+
+                // Second click at coordinates (340, 780)
+                DTOPoint confirmLocation = new DTOPoint(340, 780);
+                logInfo("Clicking confirm at: " + confirmLocation);
+                emuManager.tapAtPoint(EMULATOR_NUMBER, confirmLocation);
+                sleepTask(1500);
+
+                logInfo("✅ Free mission used successfully");
+            } else {
+                logDebug("Free mission button found at " + location + " but too far from expected position (256,527), skipping");
+            }
+        } else {
+            logDebug("No free mission button found");
+        }
+    }
+
+    private int readTaskAvailabilityTimers() {
+        logDebug("Reading task availability timers from empty task slots...");
+
+        // Timer positions for the two upper task slots
+        // Left timer: 162,705 to 280,743
+        // Right timer: 486,705 to 595,743
+        DTOPoint leftTimerTopLeft = new DTOPoint(162, 705);
+        DTOPoint leftTimerBottomRight = new DTOPoint(280, 743);
+        DTOPoint rightTimerTopLeft = new DTOPoint(486, 705);
+        DTOPoint rightTimerBottomRight = new DTOPoint(595, 743);
+
+        int leftTimerSeconds = readTimerFromRegion(leftTimerTopLeft, leftTimerBottomRight, "Left");
+        int rightTimerSeconds = readTimerFromRegion(rightTimerTopLeft, rightTimerBottomRight, "Right");
+
+        // Return the shorter timer (or 0 if both failed)
+        if (leftTimerSeconds > 0 && rightTimerSeconds > 0) {
+            int shortestTimer = Math.min(leftTimerSeconds, rightTimerSeconds);
+            logInfo("✅ Found task availability timers - using shortest: " + shortestTimer + " seconds");
+            return shortestTimer;
+        } else if (leftTimerSeconds > 0) {
+            logInfo("✅ Found left timer: " + leftTimerSeconds + " seconds");
+            return leftTimerSeconds;
+        } else if (rightTimerSeconds > 0) {
+            logInfo("✅ Found right timer: " + rightTimerSeconds + " seconds");
+            return rightTimerSeconds;
+        } else {
+            logDebug("No task availability timers found");
+            return 0;
+        }
+    }
+
+    private int readTimerFromRegion(DTOPoint topLeft, DTOPoint bottomRight, String timerName) {
+        try {
+            String ocrResult = emuManager.ocrRegionText(EMULATOR_NUMBER, topLeft, bottomRight);
+            debugOCRArea("Task availability timer (" + timerName + ")", topLeft, bottomRight, ocrResult);
+
+            if (ocrResult != null && !ocrResult.trim().isEmpty()) {
+                int seconds = parseTimeToSeconds(ocrResult);
+                if (seconds > 0) {
+                    logInfo("✅ " + timerName + " timer: " + ocrResult + " = " + seconds + " seconds");
+                    return seconds;
+                } else {
+                    logDebug(timerName + " timer OCR failed to parse: '" + ocrResult + "'");
+                }
+            }
+        } catch (Exception e) {
+            logDebug(timerName + " timer OCR failed: " + e.getMessage());
+        }
+        return 0;
+    }
+
     private void checkAndCollectCompletedTasks() {
         logDebug("Checking for completed tasks to collect rewards...");
 
@@ -1004,12 +1087,10 @@ public class AllianceMobilizationTask extends DelayedTask {
 
         if (completedResult.isFound()) {
             logInfo("✅ Completed task found at " + completedResult.getPoint() + " - collecting rewards");
-            captureDebugScreenshot("completed_task_found");
 
             // Click on the completed task
             emuManager.tapAtPoint(EMULATOR_NUMBER, completedResult.getPoint());
             sleepTask(1500);
-            captureDebugScreenshot("after_completed_task_click");
 
             logInfo("Rewards collected from completed task");
         } else {
@@ -1017,52 +1098,9 @@ public class AllianceMobilizationTask extends DelayedTask {
         }
     }
 
-    // Helper method to capture debug screenshots
-    private void captureDebugScreenshot(String description) {
-        // Screenshots temporarily disabled - uncomment to re-enable
-        /*
-        try {
-            // TEMPORARY: Force debug mode ON for Alliance Mobilization testing
-            boolean debugMode = true; // profile.getConfig(EnumConfigurationKey.BOOL_DEBUG, Boolean.class);
-            if (debugMode) {
-                String timestamp = String.valueOf(System.currentTimeMillis());
-                String filename = "AM_" + description + "_" + timestamp + ".png";
-                logInfo("📸 Debug screenshot: " + filename);
-
-                // Capture and save screenshot
-                byte[] screenshotBytes = emuManager.captureScreenshotViaADB(EMULATOR_NUMBER);
-                if (screenshotBytes != null && screenshotBytes.length > 0) {
-                    // Save to screenshots folder
-                    java.io.File screenshotsDir = new java.io.File("screenshots");
-                    if (!screenshotsDir.exists()) {
-                        screenshotsDir.mkdirs();
-                    }
-
-                    java.io.File screenshotFile = new java.io.File(screenshotsDir, filename);
-                    java.nio.file.Files.write(screenshotFile.toPath(), screenshotBytes);
-                    logInfo("Screenshot saved: " + screenshotFile.getAbsolutePath());
-                } else {
-                    logWarning("Screenshot capture returned empty data");
-                }
-            } else {
-                logDebug("Debug screenshot skipped (debug mode off): " + description);
-            }
-        } catch (Exception e) {
-            logWarning("Failed to capture debug screenshot: " + e.getMessage());
-            e.printStackTrace();
-        }
-        */
-    }
-
     // Helper method to visualize OCR area
     private void debugOCRArea(String description, DTOPoint topLeft, DTOPoint bottomRight, String ocrResult) {
-        logDebug("═══ OCR Debug: " + description + " ═══");
-        logDebug("  Area: (" + topLeft.getX() + "," + topLeft.getY() + ") → (" +
-                 bottomRight.getX() + "," + bottomRight.getY() + ")");
-        logDebug("  Width: " + (bottomRight.getX() - topLeft.getX()) + "px");
-        logDebug("  Height: " + (bottomRight.getY() - topLeft.getY()) + "px");
-        logDebug("  Result: '" + (ocrResult != null ? ocrResult : "null") + "'");
-        logDebug("═══════════════════════════════════");
+        logDebug("OCR " + description + ": '" + (ocrResult != null ? ocrResult : "null") + "'");
     }
 
     // Helper method to log template search results
