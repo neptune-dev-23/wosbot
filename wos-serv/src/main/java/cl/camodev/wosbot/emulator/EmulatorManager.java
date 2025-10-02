@@ -23,6 +23,7 @@ import cl.camodev.wosbot.emulator.impl.MuMuEmulator;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
+import cl.camodev.wosbot.ot.DTOTesseractSettings;
 import cl.camodev.wosbot.serv.impl.ServConfig;
 import cl.camodev.wosbot.serv.impl.ServProfiles;
 import cl.camodev.wosbot.serv.task.WaitingThread;
@@ -207,6 +208,21 @@ public class EmulatorManager {
     public String ocrRegionText(String emulatorNumber, DTOPoint p1, DTOPoint p2) throws IOException, TesseractException {
         checkEmulatorInitialized();
         return emulator.ocrRegionText(emulatorNumber, p1, p2);
+    }
+
+    /**
+     * Executes OCR on a screen region and extracts text with custom Tesseract settings.
+     * @param emulatorNumber Emulator identifier
+     * @param p1 First corner of the region
+     * @param p2 Second corner of the region
+     * @param settings Tesseract OCR configuration settings
+     * @return Recognized text
+     * @throws IOException if image capture fails
+     * @throws TesseractException if OCR fails
+     */
+    public String ocrRegionText(String emulatorNumber, DTOPoint p1, DTOPoint p2, DTOTesseractSettings settings) throws IOException, TesseractException {
+        checkEmulatorInitialized();
+        return emulator.ocrRegionText(emulatorNumber, p1, p2, settings);
     }
 
     /**
