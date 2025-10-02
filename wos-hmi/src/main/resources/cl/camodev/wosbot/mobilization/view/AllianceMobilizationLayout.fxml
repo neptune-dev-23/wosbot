@@ -8,14 +8,13 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TextField?>
-<?import javafx.scene.control.TitledPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<GridPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="320.0" prefWidth="720.0" hgap="20" xmlns="http://javafx.com/javafx/24.0.1" xmlns:fx="http://javafx.com/fxml/1">
+<GridPane hgap="20" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="320.0" prefWidth="720.0" xmlns="http://javafx.com/javafx/24.0.1" xmlns:fx="http://javafx.com/fxml/1">
     <padding>
         <Insets bottom="18" left="18" right="18" top="18" />
     </padding>
@@ -27,7 +26,7 @@
         <RowConstraints vgrow="ALWAYS" />
     </rowConstraints>
     <children>
-    <VBox spacing="14" GridPane.columnIndex="0" GridPane.rowIndex="0" style="-fx-background-color: #1f1f1f; -fx-background-radius: 8; -fx-padding: 18;">
+    <VBox spacing="14" style="-fx-background-color: #1f1f1f; -fx-background-radius: 8; -fx-padding: 18;" GridPane.columnIndex="0" GridPane.rowIndex="0">
             <children>
         <CheckBox fx:id="checkBoxAllianceMobilization" mnemonicParsing="false" style="-fx-font-size: 15px; -fx-font-weight: bold;" text="Enable Alliance Mobilization" />
 
@@ -59,34 +58,45 @@
 
                 <VBox spacing="0" style="-fx-background-color: #242424; -fx-background-radius: 8;">
                     <children>
-                        <Label style="-fx-background-color: linear-gradient(#ffb347, #ff7a18); -fx-background-radius: 8 8 0 0; -fx-padding: 8 12; -fx-font-weight: bold; -fx-text-fill: #1c1c1c;" text="Task types" />
-                        <GridPane hgap="16" vgap="8" style="-fx-padding: 12 16 16 16;">
+                        <Label maxWidth="1.7976931348623157E308" style="-fx-background-color: linear-gradient(#ffb347, #ff7a18); -fx-background-radius: 8 8 0 0; -fx-padding: 8 12; -fx-font-weight: bold; -fx-text-fill: #1c1c1c;" text="Task types" />
+                        <GridPane hgap="16" maxWidth="1.7976931348623157E308" style="-fx-padding: 12 16 16 16;" vgap="8">
                             <columnConstraints>
-                                <ColumnConstraints prefWidth="160" />
-                                <ColumnConstraints prefWidth="160" />
+                                <ColumnConstraints percentWidth="50" />
+                                <ColumnConstraints percentWidth="50" />
+                        <ColumnConstraints minWidth="10.0" percentWidth="50.0" prefWidth="100.0" />
+                        <ColumnConstraints minWidth="10.0" percentWidth="50.0" prefWidth="100.0" />
                             </columnConstraints>
                             <children>
-                                <CheckBox fx:id="buildSpeedupsCheck" mnemonicParsing="false" text="Build Speedups" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                                <CheckBox fx:id="buildSpeedupsCheck" mnemonicParsing="false" text="Build Speedups" GridPane.rowIndex="2" />
                                 <CheckBox fx:id="buyPackageCheck" mnemonicParsing="false" text="Buy Package" GridPane.columnIndex="1" GridPane.rowIndex="0" />
 
                                 <CheckBox fx:id="chiefGearCharmCheck" mnemonicParsing="false" text="Chief Charm" GridPane.columnIndex="0" GridPane.rowIndex="1" />
                                 <CheckBox fx:id="chiefGearScoreCheck" mnemonicParsing="false" text="Chief Gear Score" GridPane.columnIndex="1" GridPane.rowIndex="1" />
 
-                                <CheckBox fx:id="defeatBeastsCheck" mnemonicParsing="false" text="Defeat Beasts" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                                <CheckBox fx:id="defeatBeastsCheck" mnemonicParsing="false" text="Defeat Beasts" GridPane.columnIndex="2" GridPane.rowIndex="1" />
                                 <CheckBox fx:id="fireCrystalCheck" mnemonicParsing="false" text="Fire Crystal" GridPane.columnIndex="1" GridPane.rowIndex="2" />
 
                                 <CheckBox fx:id="gatherResourcesCheck" mnemonicParsing="false" text="Gather Resources" GridPane.columnIndex="0" GridPane.rowIndex="3" />
                                 <CheckBox fx:id="heroGearStoneCheck" mnemonicParsing="false" text="Hero Gear Stone" GridPane.columnIndex="1" GridPane.rowIndex="3" />
 
-                                <CheckBox fx:id="mythicShardCheck" mnemonicParsing="false" text="Mythic Shard" GridPane.columnIndex="0" GridPane.rowIndex="4" />
-                                <CheckBox fx:id="rallyCheck" mnemonicParsing="false" text="Rally" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                                <CheckBox fx:id="mythicShardCheck" mnemonicParsing="false" text="Mythic Shard" GridPane.columnIndex="2" />
+                                <CheckBox fx:id="rallyCheck" mnemonicParsing="false" text="Rally" GridPane.columnIndex="3" />
 
-                                <CheckBox fx:id="trainTroopsCheck" mnemonicParsing="false" selected="true" text="Train Troops" GridPane.columnIndex="0" GridPane.rowIndex="5" />
-                                <CheckBox fx:id="trainingSpeedupsCheck" mnemonicParsing="false" text="Training Speedups" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                                <CheckBox fx:id="trainTroopsCheck" mnemonicParsing="false" selected="true" text="Train Troops" />
+                                <CheckBox fx:id="trainingSpeedupsCheck" mnemonicParsing="false" text="Training Speedups" GridPane.columnIndex="2" GridPane.rowIndex="3" />
 
-                                <CheckBox fx:id="useGemsCheck" mnemonicParsing="false" text="Use Gems" GridPane.columnIndex="0" GridPane.rowIndex="6" />
-                                <CheckBox fx:id="useSpeedupsCheck" mnemonicParsing="false" text="Use Speedups" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+                                <CheckBox fx:id="useGemsCheck" mnemonicParsing="false" text="Use Gems" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                                <CheckBox fx:id="useSpeedupsCheck" mnemonicParsing="false" text="Use Speedups" GridPane.columnIndex="3" GridPane.rowIndex="3" />
                             </children>
+                     <rowConstraints>
+                        <RowConstraints />
+                        <RowConstraints />
+                        <RowConstraints />
+                        <RowConstraints />
+                        <RowConstraints />
+                        <RowConstraints />
+                        <RowConstraints />
+                     </rowConstraints>
                         </GridPane>
                     </children>
                 </VBox>
@@ -120,7 +130,7 @@
             </children>
         </VBox>
 
-        <VBox alignment="TOP_LEFT" spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="0" style="-fx-background-color: #262626; -fx-background-radius: 8; -fx-padding: 16;">
+        <VBox alignment="TOP_LEFT" spacing="8" style="-fx-background-color: #262626; -fx-background-radius: 8; -fx-padding: 16;" GridPane.columnIndex="1" GridPane.rowIndex="0">
             <children>
                 <Label style="-fx-font-weight: bold; -fx-font-size: 11px; -fx-text-fill: #f2f2f2;" text="Quick guide" />
                 <Separator />
