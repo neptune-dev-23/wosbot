@@ -45,7 +45,9 @@ public class MobilizationLayoutController extends AbstractProfileController {
     private CheckBox useSpeedupsCheck;
 
     @FXML
-    private TextField minimumPointsField;
+    private TextField minimumPoints200Field;
+    @FXML
+    private TextField minimumPoints120Field;
     @FXML
     private CheckBox autoAcceptCheck;
     @FXML
@@ -75,7 +77,8 @@ public class MobilizationLayoutController extends AbstractProfileController {
         checkBoxMappings.put(useGemsBottomCheck, EnumConfigurationKey.ALLIANCE_MOBILIZATION_USE_GEMS_FOR_ACCEPT_BOOL);
 
         // Map text fields
-        textFieldMappings.put(minimumPointsField, EnumConfigurationKey.ALLIANCE_MOBILIZATION_MINIMUM_POINTS_INT);
+    textFieldMappings.put(minimumPoints200Field, EnumConfigurationKey.ALLIANCE_MOBILIZATION_MINIMUM_POINTS_200_INT);
+    textFieldMappings.put(minimumPoints120Field, EnumConfigurationKey.ALLIANCE_MOBILIZATION_MINIMUM_POINTS_120_INT);
 
         // Map combo box
         comboBoxMappings.put(rewardsPercentageCombo, EnumConfigurationKey.ALLIANCE_MOBILIZATION_REWARDS_PERCENTAGE_STRING);

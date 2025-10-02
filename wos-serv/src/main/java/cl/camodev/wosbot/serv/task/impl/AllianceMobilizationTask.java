@@ -132,16 +132,30 @@ public class AllianceMobilizationTask extends DelayedTask {
     private boolean analyzeAndPerformTasks(boolean autoAcceptEnabled) {
         // Get user configuration for reward percentage filter
         String rewardsPercentage = profile.getConfig(EnumConfigurationKey.ALLIANCE_MOBILIZATION_REWARDS_PERCENTAGE_STRING, String.class);
-        int minimumPoints = profile.getConfig(EnumConfigurationKey.ALLIANCE_MOBILIZATION_MINIMUM_POINTS_INT, Integer.class);
+    int legacyMinimumPoints = profile.getConfig(EnumConfigurationKey.ALLIANCE_MOBILIZATION_MINIMUM_POINTS_INT, Integer.class);
+    int minimumPoints200 = resolveMinimumPointsThreshold(profile, EnumConfigurationKey.ALLIANCE_MOBILIZATION_MINIMUM_POINTS_200_INT, legacyMinimumPoints);
+    int minimumPoints120 = resolveMinimumPointsThreshold(profile, EnumConfigurationKey.ALLIANCE_MOBILIZATION_MINIMUM_POINTS_120_INT, legacyMinimumPoints);
 
-        logInfo("Searching for tasks (Filter: " + rewardsPercentage + ", Min points: " + minimumPoints + ", Auto-accept: " + autoAcceptEnabled + ")");
+        logInfo("Searching for tasks (Filter: " + rewardsPercentage + ", Min points 200%: " + minimumPoints200 + ", Min points 120%: " + minimumPoints120 + ", Auto-accept: " + autoAcceptEnabled + ")");
 
         // Search and process tasks based on bonus percentage
         // Returns true if a reschedule was set
-        return searchAndProcessTasksByBonus(rewardsPercentage, minimumPoints, autoAcceptEnabled);
+        return searchAndProcessTasksByBonus(rewardsPercentage, minimumPoints200, minimumPoints120, autoAcceptEnabled);
     }
 
-    private boolean searchAndProcessTasksByBonus(String rewardsPercentage, int minimumPoints, boolean autoAcceptEnabled) {
+    private int resolveMinimumPointsThreshold(DTOProfiles profile, EnumConfigurationKey key, int fallbackValue) {
+        boolean hasExplicitConfig = profile.getConfigs().stream()
+            .anyMatch(cfg -> cfg.getConfigurationName().equalsIgnoreCase(key.name()));
+
+        if (hasExplicitConfig) {
+            return profile.getConfig(key, Integer.class);
+        }
+
+        profile.setConfig(key, fallbackValue);
+        return fallbackValue;
+    }
+
+    private boolean searchAndProcessTasksByBonus(String rewardsPercentage, int minimumPoints200, int minimumPoints120, boolean autoAcceptEnabled) {
         // First, check for completed tasks to collect rewards
         checkAndCollectCompletedTasks();
 
@@ -155,9 +169,13 @@ public class AllianceMobilizationTask extends DelayedTask {
         int shortestCooldownSeconds = Integer.MAX_VALUE;
         boolean rescheduleWasSet = false;
 
-        // Determine which templates to search for based on user selection
-        boolean search200 = rewardsPercentage.equals("200%") || rewardsPercentage.equals("Both") || rewardsPercentage.equals("Any");
-        boolean search120 = rewardsPercentage.equals("120%") || rewardsPercentage.equals("Both") || rewardsPercentage.equals("Any");
+    // Determine which templates to search for based on user selection
+    boolean accept200 = rewardsPercentage.equals("200%") || rewardsPercentage.equals("Both") || rewardsPercentage.equals("Any");
+    boolean accept120 = rewardsPercentage.equals("120%") || rewardsPercentage.equals("Both") || rewardsPercentage.equals("Any");
+
+    // Always inspect both bonus levels so non-selected ones can be refreshed
+    boolean search200 = accept200 || rewardsPercentage.equals("120%");
+    boolean search120 = accept120 || rewardsPercentage.equals("200%");
 
         // First check if ANY task is already running - only one task can run at a time
         // If a task is running, we can still refresh other tasks but cannot accept them
@@ -218,7 +236,7 @@ public class AllianceMobilizationTask extends DelayedTask {
                             boolean isEnabled = isTaskTypeEnabled(taskType);
 
                             // Decide what to do based on task criteria
-                            TaskProcessResult result = processTaskWithPoints(result200.getPoint(), taskType, isEnabled, detectedPoints, minimumPoints, anyTaskRunning, autoAcceptEnabled);
+                            TaskProcessResult result = processTaskWithPoints(result200.getPoint(), taskType, isEnabled, detectedPoints, minimumPoints200, anyTaskRunning, autoAcceptEnabled, "200%", rewardsPercentage);
                             if (result.cooldownSeconds > 0 && result.cooldownSeconds < shortestCooldownSeconds) {
                                 shortestCooldownSeconds = result.cooldownSeconds;
                             }
@@ -265,7 +283,7 @@ public class AllianceMobilizationTask extends DelayedTask {
                         boolean isEnabled = isTaskTypeEnabled(taskType);
 
                         // Decide what to do based on task criteria
-                        TaskProcessResult result = processTaskWithPoints(result120.getPoint(), taskType, isEnabled, detectedPoints, minimumPoints, anyTaskRunning, autoAcceptEnabled);
+                        TaskProcessResult result = processTaskWithPoints(result120.getPoint(), taskType, isEnabled, detectedPoints, minimumPoints120, anyTaskRunning, autoAcceptEnabled, "120%", rewardsPercentage);
                         if (result.cooldownSeconds > 0 && result.cooldownSeconds < shortestCooldownSeconds) {
                             shortestCooldownSeconds = result.cooldownSeconds;
                         }
@@ -431,8 +449,24 @@ public class AllianceMobilizationTask extends DelayedTask {
     }
 
     private TaskProcessResult processTaskWithPoints(DTOPoint bonusLocation, EnumTemplates taskType, boolean isTaskTypeEnabled,
-                                      int detectedPoints, int minimumPoints, boolean anyTaskRunning, boolean autoAcceptEnabled) {
-        logInfo("Found: " + taskType.name() + " (" + detectedPoints + "pts, enabled: " + isTaskTypeEnabled + ")");
+                                      int detectedPoints, int minimumPoints, boolean anyTaskRunning, boolean autoAcceptEnabled,
+                                      String currentBonusPercentage, String rewardsPercentage) {
+        logInfo("Found: " + taskType.name() + " (" + detectedPoints + "pts, " + currentBonusPercentage + ", enabled: " + isTaskTypeEnabled + ")");
+
+        // Check if we should refresh based on bonus mismatch
+        boolean shouldRefreshDueToBonus = false;
+        if (rewardsPercentage.equals("200%") && currentBonusPercentage.equals("120%")) {
+            shouldRefreshDueToBonus = true;
+            logInfo("→ Refreshing (120% task but 200% is selected)");
+        } else if (rewardsPercentage.equals("120%") && currentBonusPercentage.equals("200%")) {
+            shouldRefreshDueToBonus = true;
+            logInfo("→ Refreshing (200% task but 120% is selected)");
+        }
+
+        if (shouldRefreshDueToBonus) {
+            int cooldown = clickAndRefreshTask(bonusLocation);
+            return new TaskProcessResult(false, cooldown);
+        }
 
         // Decision logic based on points, enabled status, and whether another task is running
         boolean pointsMeetMinimum = detectedPoints >= minimumPoints;
