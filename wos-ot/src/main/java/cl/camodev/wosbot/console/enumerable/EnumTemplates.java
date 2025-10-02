@@ -177,6 +177,7 @@ public enum EnumTemplates {
     AM_BAR_X("/templates/events/mobilization/AM_Bar_X.png"),
     AM_COMPLETED("/templates/events/mobilization/AM_Completed.png"),
     AM_PLUS_1_FREE_MISSION("/templates/events/mobilization/AM_+_1_Free_Mission.png"),
+    AM_ALLIANCE_MONUMENTS("/templates/events/mobilization/AM_Alliance_Monuments.png"),
     AM_BUILD_SPEEDUPS("/templates/events/mobilization/AM_Build_Speedups.png"),
     AM_BUY_PACKAGE("/templates/events/mobilization/AM_Buy_Package.png"),
     AM_CHIEF_GEAR_CHARM("/templates/events/mobilization/AM_Chief_Gear_Charm.png"),

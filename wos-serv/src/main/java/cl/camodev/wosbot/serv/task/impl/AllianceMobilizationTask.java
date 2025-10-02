@@ -148,6 +148,9 @@ public class AllianceMobilizationTask extends DelayedTask {
         // Check for free mission button
         checkAndUseFreeMission();
 
+        // Check for Alliance Monuments button
+        checkAndUseAllianceMonuments();
+
         // Track the shortest cooldown time from all refreshed tasks
         int shortestCooldownSeconds = Integer.MAX_VALUE;
         boolean rescheduleWasSet = false;
@@ -489,114 +492,6 @@ public class AllianceMobilizationTask extends DelayedTask {
         sleepTask(1500);
     }
 
-    private void handleTaskSelectionScreen(EnumTemplates taskType, boolean isTaskTypeEnabled, int minimumPoints, boolean anyTaskRunning) {
-        logInfo("=== Handling Task Selection Screen ===");
-        logInfo("Task type: " + taskType.name() + ", Enabled: " + isTaskTypeEnabled + ", Minimum points: " + minimumPoints + ", Another task running: " + anyTaskRunning);
-
-        // Fixed button coordinates
-        DTOPoint acceptButtonLocation = new DTOPoint(500, 805);
-        DTOPoint refreshButtonLocation = new DTOPoint(200, 805);
-
-        // Decision logic:
-        // 1. If task type is NOT enabled -> always Refresh
-        // 2. If another task is running -> always Refresh (only one task can run at a time)
-        // 3. If task type IS enabled AND no other task running -> check points on selection screen
-
-        if (!isTaskTypeEnabled) {
-            logInfo("Task type NOT enabled in UI -> Refreshing mission");
-            emuManager.tapAtPoint(EMULATOR_NUMBER, refreshButtonLocation);
-            sleepTask(1500);
-
-            // Read cooldown timer from confirmation popup - focus on "5mins!" part
-            DTOPoint timerTopLeft = new DTOPoint(375, 610);
-            DTOPoint timerBottomRight = new DTOPoint(490, 642);
-            int cooldownSeconds = readRefreshCooldownFromPopup(timerTopLeft, timerBottomRight);
-
-            // Click Refresh button (blue button on the right)
-            DTOPoint refreshConfirmButtonLocation = new DTOPoint(510, 790);
-            logInfo("Confirming refresh at: " + refreshConfirmButtonLocation);
-            emuManager.tapAtPoint(EMULATOR_NUMBER, refreshConfirmButtonLocation);
-            sleepTask(1500);
-
-            // Reschedule task for after cooldown expires
-            if (cooldownSeconds > 0) {
-                LocalDateTime nextRun = LocalDateTime.now().plusSeconds(cooldownSeconds + 5);
-                this.reschedule(nextRun);
-                logInfo("Mission refreshed (task type not enabled). Rescheduled for " + nextRun);
-            } else {
-                logInfo("Mission refreshed (task type not enabled). No cooldown detected.");
-            }
-            return;
-        }
-
-        // Task type IS enabled -> verify points on selection screen
-        logInfo("Task type IS enabled -> Checking points on selection screen");
-
-        // Read the points value from the selection screen
-        int detectedPoints = readPointsFromSelectionScreen();
-
-        if (detectedPoints < 0) {
-            logWarning("Could not read points from selection screen, refreshing as fallback");
-            emuManager.tapAtPoint(EMULATOR_NUMBER, refreshButtonLocation);
-            sleepTask(1500);
-            return;
-        }
-
-        logInfo("Detected points on selection screen: " + detectedPoints);
-
-        // Decision logic based on points and whether another task is running
-        if (detectedPoints >= minimumPoints) {
-            // Points are good
-            if (anyTaskRunning) {
-                // Points meet criteria AND task enabled BUT another task is running
-                // -> This is a GOOD task, don't refresh it, just wait for the running task to finish
-                logInfo("Points meet minimum (" + detectedPoints + " >= " + minimumPoints + ") AND task is enabled");
-                logInfo("Another task is running - this task is good, saving it by NOT refreshing");
-                logInfo("Closing selection screen and rescheduling for 1 hour to check again");
-
-                // Close the selection screen without accepting or refreshing (press back button)
-                emuManager.tapBackButton(EMULATOR_NUMBER);
-                sleepTask(1500);
-
-                // Reschedule for 1 hour to check again when running task might be finished
-                LocalDateTime nextRun = LocalDateTime.now().plusHours(1);
-                this.reschedule(nextRun);
-                logInfo("Rescheduled for " + nextRun + " to check again when running task might be finished");
-            } else {
-                // Points meet criteria AND no other task running -> Accept
-                logInfo("Points meet minimum (" + detectedPoints + " >= " + minimumPoints + ") AND no other task running -> Accepting task");
-                emuManager.tapAtPoint(EMULATOR_NUMBER, acceptButtonLocation);
-                sleepTask(1500);
-                logInfo("✅ Task accepted successfully");
-            }
-        } else {
-            // Points too low -> refresh regardless of whether another task is running
-            logInfo("Points below minimum (" + detectedPoints + " < " + minimumPoints + ") -> Refreshing mission");
-            emuManager.tapAtPoint(EMULATOR_NUMBER, refreshButtonLocation);
-            sleepTask(1500);
-
-            // Read cooldown timer from confirmation popup - focus on "5mins!" part
-            DTOPoint timerTopLeft = new DTOPoint(375, 610);
-            DTOPoint timerBottomRight = new DTOPoint(490, 642);
-            int cooldownSeconds = readRefreshCooldownFromPopup(timerTopLeft, timerBottomRight);
-
-            // Click Refresh button (blue button on the right)
-            DTOPoint refreshConfirmButtonLocation = new DTOPoint(510, 790);
-            logInfo("Confirming refresh at: " + refreshConfirmButtonLocation);
-            emuManager.tapAtPoint(EMULATOR_NUMBER, refreshConfirmButtonLocation);
-            sleepTask(1500);
-
-            // Reschedule task for after cooldown expires
-            if (cooldownSeconds > 0) {
-                LocalDateTime nextRun = LocalDateTime.now().plusSeconds(cooldownSeconds + 5);
-                this.reschedule(nextRun);
-                logInfo("Mission refreshed (points too low). Rescheduled for " + nextRun);
-            } else {
-                logInfo("Mission refreshed (points too low). No cooldown detected.");
-            }
-        }
-    }
-
     private int readRefreshCooldownFromPopup(DTOPoint topLeft, DTOPoint bottomRight) {
         logDebug("Reading refresh cooldown from popup: " + topLeft + " to " + bottomRight);
 
@@ -627,50 +522,6 @@ public class AllianceMobilizationTask extends DelayedTask {
 
         logWarning("Could not read cooldown from confirmation popup, using default 5 minutes");
         return 300; // Default 5 minutes if OCR fails
-    }
-
-    private int readRefreshCooldownTimer(DTOPoint refreshButtonLocation) {
-        logDebug("Reading refresh cooldown timer near button: " + refreshButtonLocation);
-
-        // The cooldown timer is typically displayed near the Refresh button
-        // Try multiple OCR areas around the button
-        DTOPoint[] ocrOffsets = {
-            // Above the button
-            new DTOPoint(0, -40),
-            // Below the button
-            new DTOPoint(0, 40),
-            // To the right of the button
-            new DTOPoint(80, 0),
-            // To the left of the button
-            new DTOPoint(-80, 0)
-        };
-
-        for (DTOPoint offset : ocrOffsets) {
-            int testX = refreshButtonLocation.getX() + offset.getX();
-            int testY = refreshButtonLocation.getY() + offset.getY();
-
-            DTOPoint topLeft = new DTOPoint(testX - 50, testY - 15);
-            DTOPoint bottomRight = new DTOPoint(testX + 50, testY + 15);
-
-            try {
-                String ocrResult = emuManager.ocrRegionText(EMULATOR_NUMBER, topLeft, bottomRight);
-                logDebug("OCR cooldown result at offset " + offset + ": '" + ocrResult + "'");
-
-                if (ocrResult != null && !ocrResult.trim().isEmpty()) {
-                    // Parse time format: could be "5:30", "05:30", "5m 30s", "5m30s", "330s", etc.
-                    int seconds = parseTimeToSeconds(ocrResult);
-                    if (seconds > 0) {
-                        logInfo("Detected refresh cooldown: " + seconds + " seconds (from: '" + ocrResult + "')");
-                        return seconds;
-                    }
-                }
-            } catch (Exception e) {
-                logDebug("OCR cooldown failed at offset " + offset + ": " + e.getMessage());
-            }
-        }
-
-        logWarning("Could not read refresh cooldown timer");
-        return 0;
     }
 
     private int parseTimeToSeconds(String timeString) {
@@ -766,61 +617,6 @@ public class AllianceMobilizationTask extends DelayedTask {
         return 0;
     }
 
-    private int readPointsFromSelectionScreen() {
-        logDebug("Reading points from selection screen");
-
-        // OCR area for points on selection screen: wider area to capture centered text ("+90" to "+1200")
-        DTOPoint topLeft = new DTOPoint(320, 735);
-        DTOPoint bottomRight = new DTOPoint(450, 765);
-
-        logDebug("OCR area: " + topLeft + " to " + bottomRight);
-
-        // Retry up to 3 times to read the points
-        int maxRetries = 3;
-        for (int attempt = 1; attempt <= maxRetries; attempt++) {
-            try {
-                String ocrResult = emuManager.ocrRegionText(EMULATOR_NUMBER, topLeft, bottomRight);
-                debugOCRArea("Selection screen points (attempt " + attempt + ")", topLeft, bottomRight, ocrResult);
-
-                if (ocrResult != null && !ocrResult.trim().isEmpty()) {
-                    // Extract numeric value from OCR result
-                    // Look for pattern "+XXX" to avoid capturing other numbers like "2) +860"
-                    String numericValue = ocrResult.replaceAll(".*\\+\\s*", ""); // Remove everything before "+"
-                    numericValue = numericValue.replaceAll("[^0-9]", ""); // Keep only digits
-
-                    if (!numericValue.isEmpty()) {
-                        int points = Integer.parseInt(numericValue);
-                        logInfo("✅ Read points from selection screen: " + points + " (attempt " + attempt + ")");
-                        return points;
-                    } else {
-                        logWarning("OCR result contains no numeric value: '" + ocrResult + "' (attempt " + attempt + ")");
-                    }
-                } else {
-                    logWarning("OCR result is empty (attempt " + attempt + ")");
-                }
-            } catch (Exception e) {
-                logWarning("OCR failed (attempt " + attempt + "): " + e.getMessage());
-            }
-
-            // Wait 500ms before retry (except after last attempt)
-            if (attempt < maxRetries) {
-                sleepTask(500);
-            }
-        }
-
-        logWarning("Could not read points from selection screen after " + maxRetries + " attempts");
-        return -1;
-    }
-
-    private void closeSelectionScreen() {
-        logDebug("Attempting to close selection screen");
-        // Press back or close button to exit the selection screen
-        // This will need to be implemented based on the UI
-        // For now, we'll just log and continue
-        logInfo("Selection screen closed (or attempted to close)");
-        sleepTask(1000);
-    }
-
     private int readPointsNearBonus(DTOPoint bonusLocation) {
         logDebug("Reading points near bonus location: " + bonusLocation);
 
@@ -873,126 +669,6 @@ public class AllianceMobilizationTask extends DelayedTask {
         return -1;
     }
 
-    private boolean verifyPointsNearBonus(DTOPoint bonusLocation, int minimumPoints) {
-        int points = readPointsNearBonus(bonusLocation);
-        if (points >= 0) {
-            logInfo("✅ Points verification: " + points + " >= " + minimumPoints + " ? " + (points >= minimumPoints));
-            return points >= minimumPoints;
-        }
-        return false;
-    }
-
-    private void testTemplateDetection() {
-        logInfo("=== Testing Template Detection ===");
-
-        // Test all available templates to see what's currently visible
-        String[] testTemplates = {
-            "MOBILIZATION_EXCLUSIVE_BUTTON",
-            // Add more template tests based on what we have
-        };
-
-        for (String templateName : testTemplates) {
-            try {
-                EnumTemplates template = EnumTemplates.valueOf(templateName);
-                DTOImageSearchResult result = emuManager.searchTemplate(EMULATOR_NUMBER, template, 85);
-                logDebug("Template " + templateName + ": " + (result.isFound() ? "FOUND at " + result.getPoint() : "NOT FOUND"));
-            } catch (Exception e) {
-                logDebug("Template " + templateName + ": ERROR - " + e.getMessage());
-            }
-        }
-    }
-
-    private void analyzeTaskCards() {
-        logInfo("=== Analyzing Task Cards ===");
-
-        // Look for task frames/cards
-        try {
-            DTOImageSearchResult taskFrame = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.valueOf("AM_FRAME"), 80);
-            if (taskFrame.isFound()) {
-                logInfo("Found task frame at: " + taskFrame.getPoint());
-
-                // Test OCR in the area around the task frame
-                testOCRAroundPoint(taskFrame.getPoint());
-            } else {
-                logInfo("No task frame found, searching for individual task elements...");
-                // Try to find specific task types
-                searchForTaskTypes();
-            }
-        } catch (IllegalArgumentException e) {
-            logDebug("AM_FRAME template not found in enum, searching for individual elements...");
-            searchForTaskTypes();
-        }
-    }
-
-    private void searchForTaskTypes() {
-        logInfo("=== Searching for Task Types ===");
-
-        // Based on available templates, search for task-specific elements
-        String[] taskTemplates = {
-            "AM_Build_Speedups", "AM_Buy_Package", "AM_Chief_Gear_Charm",
-            "AM_Defeat_Beasts", "AM_Fire_Crystal", "AM_Gather_Resources",
-            "AM_Train_Troops", "AM_Use_Gems"
-        };
-
-        for (String templateName : taskTemplates) {
-            try {
-                // Try to find template (need to convert to proper enum)
-                logDebug("Searching for task type: " + templateName);
-                // This is a placeholder - we'd need to map these to actual enum values
-            } catch (Exception e) {
-                logDebug("Error searching for " + templateName + ": " + e.getMessage());
-            }
-        }
-    }
-
-    private void testBasicOCR() {
-        logInfo("=== Testing Basic OCR ===");
-
-        // Define test areas for OCR
-        DTOPoint[] testAreas = {
-            // Top area for percentage indicators
-            new DTOPoint(100, 100),
-            new DTOPoint(300, 150),
-            // Middle area for task descriptions
-            new DTOPoint(200, 250),
-            new DTOPoint(400, 300),
-            // Bottom area for rewards/costs
-            new DTOPoint(150, 400),
-            new DTOPoint(350, 450)
-        };
-
-        for (int i = 0; i < testAreas.length; i++) {
-            DTOPoint testPoint = testAreas[i];
-            logDebug("Testing OCR at region " + (i + 1) + " around point: " + testPoint);
-
-            try {
-                // Test OCR in a small area around each point
-                testOCRAroundPoint(testPoint);
-            } catch (Exception e) {
-                logDebug("OCR test " + (i + 1) + " failed: " + e.getMessage());
-            }
-        }
-    }
-
-    private void testOCRAroundPoint(DTOPoint centerPoint) {
-        // Define OCR area around the center point
-        DTOPoint topLeft = new DTOPoint(centerPoint.getX() - 50, centerPoint.getY() - 25);
-        DTOPoint bottomRight = new DTOPoint(centerPoint.getX() + 50, centerPoint.getY() + 25);
-
-        logDebug("OCR test area: " + topLeft + " to " + bottomRight);
-
-        try {
-            String ocrResult = emuManager.ocrRegionText(EMULATOR_NUMBER, topLeft, bottomRight);
-            if (ocrResult != null && !ocrResult.trim().isEmpty()) {
-                logInfo("OCR detected text: '" + ocrResult.trim() + "' at " + centerPoint);
-            } else {
-                logDebug("No text detected in OCR area around " + centerPoint);
-            }
-        } catch (Exception e) {
-            logDebug("OCR failed at " + centerPoint + ": " + e.getMessage());
-        }
-    }
-
     private void checkAndUseFreeMission() {
         logDebug("Checking for free mission button...");
 
@@ -1025,6 +701,48 @@ public class AllianceMobilizationTask extends DelayedTask {
             }
         } else {
             logDebug("No free mission button found");
+        }
+    }
+
+    private void checkAndUseAllianceMonuments() {
+        logDebug("Checking for Alliance Monuments button...");
+
+        // Search for AM_Alliance_Monuments.png in the upper right area with 94% threshold
+        DTOImageSearchResult monumentsResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.AM_ALLIANCE_MONUMENTS, 94);
+
+        if (monumentsResult.isFound()) {
+            DTOPoint location = monumentsResult.getPoint();
+            logInfo("✅ Alliance Monuments button found at " + location + " - using it");
+
+            // Click on the Alliance Monuments button
+            emuManager.tapAtPoint(EMULATOR_NUMBER, location);
+            sleepTask(1500);
+
+            // First click at coordinates (366, 1014)
+            DTOPoint firstClick = new DTOPoint(366, 1014);
+            logInfo("Clicking first position at: " + firstClick);
+            emuManager.tapAtPoint(EMULATOR_NUMBER, firstClick);
+            sleepTask(1500);
+
+            // Second click at coordinates (154, 1002)
+            DTOPoint secondClick = new DTOPoint(154, 1002);
+            logInfo("Clicking second position at: " + secondClick);
+            emuManager.tapAtPoint(EMULATOR_NUMBER, secondClick);
+            sleepTask(1500);
+
+            // Click back button twice to close
+            DTOPoint backButton = new DTOPoint(50, 50);
+            logInfo("Clicking back button (1/2) at: " + backButton);
+            emuManager.tapAtPoint(EMULATOR_NUMBER, backButton);
+            sleepTask(500);
+
+            logInfo("Clicking back button (2/2) at: " + backButton);
+            emuManager.tapAtPoint(EMULATOR_NUMBER, backButton);
+            sleepTask(500);
+
+            logInfo("✅ Alliance Monuments used successfully");
+        } else {
+            logDebug("No Alliance Monuments button found");
         }
     }
 
