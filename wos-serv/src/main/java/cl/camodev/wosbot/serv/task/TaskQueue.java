@@ -147,6 +147,7 @@ public class TaskQueue {
                 if (paused == LocalDateTime.MIN) delayUntil = LocalDateTime.MIN;
             } else if (task != null) {
                 delayUntil = LocalDateTime.now().plusSeconds(task.getDelay(TimeUnit.SECONDS));
+                logInfo("Next task: " + task.getTaskName() + " scheduled at " + task.getScheduled() + " (in " + task.getDelay(TimeUnit.SECONDS) + " seconds)");
             }
 
             // Handle background help actions
@@ -502,22 +503,23 @@ public class TaskQueue {
     }
 
     private void runBackgroundChecks() {
+        // help allies checks
+        boolean runHelpAllies = true;
+        helpAlliesCount++;
+        if (helpAlliesCount % 10 != 0) return; // Only check every 10 cycles
+        helpAlliesCount = 0;
+        if (!profile.getConfig(EnumConfigurationKey.ALLIANCE_HELP_BOOL, Boolean.class) ) {
+            runHelpAllies = false; // Only check every 10 cycles, or if help is enabled
+        }
+
         if (!emuManager.isRunning(profile.getEmulatorNumber()) || paused != LocalDateTime.MIN) {
             logInfo("Emulator not running or queue is paused, not running background checks.");
             return; // emulator isn't running or the queue should be paused, just leave.
         }
-        // help allies checks
-        boolean runHelpAllies = true;
-        helpAlliesCount++;
-        if (helpAlliesCount % 10 != 0 || !profile.getConfig(EnumConfigurationKey.ALLIANCE_HELP_BOOL, Boolean.class) ) {
-            runHelpAllies = false; // Only check every 10 cycles, or if help is enabled
-        } else {
-            helpAlliesCount = 0;
-        }
 
         try {
-                isBearRunning();
-                if (runHelpAllies) checkHelpAllies();
+            isBearRunning();
+            if (runHelpAllies) checkHelpAllies();
         } catch (Exception e) {
             logError("Error running background tasks: " + e.getMessage());
         }
@@ -552,7 +554,7 @@ public class TaskQueue {
             .filter(task -> task.getTpTask() != TpDailyTaskEnum.INITIALIZE) // Exclude Initialize tasks
             .anyMatch(task -> {
                 long taskDelay = task.getDelay(TimeUnit.SECONDS);
-//                return taskDelay >= 0 && taskDelay < maxIdleSeconds;
+                // return taskDelay >= 0 && taskDelay < maxIdleSeconds;
                 return taskDelay < maxIdleSeconds;
 
             });
