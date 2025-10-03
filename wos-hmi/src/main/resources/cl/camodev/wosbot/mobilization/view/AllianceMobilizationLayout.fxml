@@ -30,8 +30,6 @@
             <children>
         <CheckBox fx:id="checkBoxAllianceMobilization" mnemonicParsing="false" style="-fx-font-size: 15px; -fx-font-weight: bold;" text="Enable Alliance Mobilization" />
 
-        <Label style="-fx-font-size: 10px; -fx-text-fill: linear-gradient(#ffcf66, #ff9f1a); -fx-font-weight: bold;" text="Rudimentary beta – behaviour may change in upcoming releases." wrapText="true" />
-
         <Label style="-fx-font-size: 12px; -fx-text-fill: #b5b5b5;" text="Configure which missions the bot should accept or refresh." wrapText="true" />
 
                 <Separator />
@@ -112,11 +110,15 @@
                                     <children>
                                         <Label style="-fx-text-fill: #e5e5e5;" text="Min points (200%)" />
                                         <TextField fx:id="minimumPoints200Field" prefWidth="90.0" text="520" />
-
-                                        <Label style="-fx-text-fill: #e5e5e5;" text="Min points (120%)" />
-                                        <TextField fx:id="minimumPoints120Field" prefWidth="90.0" text="400" />
                                     </children>
                                 </VBox>
+                        <VBox spacing="6">
+                           <children>
+      
+                                        <Label style="-fx-text-fill: #e5e5e5;" text="Min points (120%)" />
+                                        <TextField fx:id="minimumPoints120Field" prefWidth="90.0" text="400" />
+                           </children>
+                        </VBox>
                                 <VBox spacing="8">
                                     <children>
                                         <CheckBox fx:id="autoAcceptCheck" mnemonicParsing="false" text="Auto accept" />
@@ -132,13 +134,17 @@
 
         <VBox alignment="TOP_LEFT" spacing="8" style="-fx-background-color: #262626; -fx-background-radius: 8; -fx-padding: 16;" GridPane.columnIndex="1" GridPane.rowIndex="0">
             <children>
+
+                <Label style="-fx-font-size: 12px; -fx-text-fill: linear-gradient(#ffcf66, #ff571aff); -fx-font-weight: bold;" text="Rudimentary beta - behaviour may change in upcoming releases" wrapText="true" />
+                <Label text="" />
                 <Label style="-fx-font-weight: bold; -fx-font-size: 11px; -fx-text-fill: #f2f2f2;" text="Quick guide" />
-                <Separator />
+                <Separator style="-fx-background-color: #d79300ff; -fx-opacity: 1;" />
                 <Label style="-fx-font-size: 10px; -fx-text-fill: #d0d0d0;" text="• Enable Alliance Mobilization to activate the task." wrapText="true" />
                 <Label style="-fx-font-size: 10px; -fx-text-fill: #d0d0d0;" text="• Select the bonus percentages the bot should consider." wrapText="true" />
                 <Label style="-fx-font-size: 10px; -fx-text-fill: #d0d0d0;" text="• Check the task types you want to allow." wrapText="true" />
                 <Label style="-fx-font-size: 10px; -fx-text-fill: #d0d0d0;" text="• Minimum points below the threshold trigger a refresh." wrapText="true" />
                 <Label style="-fx-font-size: 10px; -fx-text-fill: #d0d0d0;" text="• Auto accept will immediately take matching tasks." wrapText="true" />
+                <Separator style="-fx-background-color: #d79300ff; -fx-opacity: 1;" />
             </children>
         </VBox>
     </children>
