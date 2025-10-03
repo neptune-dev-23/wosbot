@@ -21,6 +21,7 @@ import cl.camodev.wosbot.ex.ADBConnectionException;
 import com.android.ddmlib.*;
 
 import cl.camodev.wosbot.ot.DTOPoint;
+import cl.camodev.wosbot.ot.DTOTesseractSettings;
 import net.sourceforge.tess4j.TesseractException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -625,6 +626,24 @@ public abstract class Emulator {
 
         String language = (EmulatorManager.GAME == GameVersion.CHINA) ? "eng+chi_sim" : "eng";
 		return UtilOCR.ocrFromRegion(image, p1, p2, language);
+	}
+
+	/**
+	 * Performs OCR on a region of the emulator screen with custom Tesseract settings.
+	 * @param emulatorNumber Emulator identifier
+	 * @param p1 First corner
+	 * @param p2 Second corner
+	 * @param settings Tesseract OCR configuration settings
+	 * @return Recognized text
+	 * @throws IOException if image capture fails
+	 * @throws TesseractException if OCR fails
+	 */
+	public String ocrRegionText(String emulatorNumber, DTOPoint p1, DTOPoint p2, DTOTesseractSettings settings) throws IOException, TesseractException {
+		BufferedImage image = ImageIO.read(new ByteArrayInputStream(captureScreenshot(emulatorNumber)));
+		if (image == null)
+			throw new IOException("Could not capture image.");
+
+		return UtilOCR.ocrFromRegion(image, p1, p2, settings);
 	}
 
 	/**

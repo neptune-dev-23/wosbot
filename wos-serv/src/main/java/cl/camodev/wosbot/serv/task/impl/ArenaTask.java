@@ -157,9 +157,9 @@ public class ArenaTask extends DelayedTask {
 	private boolean navigateToArena() {
 		// Navigate to marksman camp first
         // This sequence of taps is intended to open the event list.
-        emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(3, 513), new DTOPoint(26, 588));
+        tapRandomPoint(new DTOPoint(3, 513), new DTOPoint(26, 588));
         sleepTask(500);
-        emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(20, 250), new DTOPoint(200, 280));
+        tapRandomPoint(new DTOPoint(20, 250), new DTOPoint(200, 280));
         sleepTask(500);
 		
         // Click on marksman camp shortcut
@@ -168,11 +168,11 @@ public class ArenaTask extends DelayedTask {
 			logWarning("Marksman camp shortcut not found.");
             return false;
         }
-		emuManager.tapAtPoint(EMULATOR_NUMBER, marksmanResult.getPoint());
+		tapPoint(marksmanResult.getPoint());
         sleepTask(1000);
 		
         // Open arena
-		emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(702, 727));
+		tapPoint(new DTOPoint(702, 727));
         sleepTask(1000);
         return true;
     }
@@ -201,7 +201,7 @@ public class ArenaTask extends DelayedTask {
             return false;
         }
 		
-        emuManager.tapAtPoint(EMULATOR_NUMBER, challengeResult.getPoint());
+        tapPoint(challengeResult.getPoint());
         sleepTask(1000);
         return true;
     }
@@ -215,6 +215,9 @@ public class ArenaTask extends DelayedTask {
                 boolean foundOpponent = false;
                 // Process each opponent from top to bottom
                 for (int i = 0; i < 5; i++) {
+                    if (attempts <= 0) {
+                        break; // No more attempts left
+                    }
                     // Calculate Y position for each opponent (starting from top)
                     int y;
                     if(firstRun) {
@@ -250,7 +253,7 @@ public class ArenaTask extends DelayedTask {
 
                         // Since the text is mostly green, the opponent's power is lower than ours
 						// Click the challenge button for this opponent
-                        emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(624, y));
+                        tapPoint(new DTOPoint(624, y));
                         sleepTask(2000);
                         
                         // Handle the battle and continue with remaining attempts
@@ -273,7 +276,7 @@ public class ArenaTask extends DelayedTask {
                         logInfo("No more refreshes available and no suitable opponents found. Challenging first opponent to use remaining attempts.");
                         int y = firstRun ? 380 : 354;  // Y-coordinate for first opponent
                         
-                        emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(624, y));
+                        tapPoint(new DTOPoint(624, y));
                         sleepTask(2000);
                         
                         handleBattle();
@@ -297,11 +300,11 @@ public class ArenaTask extends DelayedTask {
     }
 	
     private void handleBattle() {
-		emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(530, 1200)); // Tap to start battle
+		tapPoint(new DTOPoint(530, 1200)); // Tap to start battle
         sleepTask(3000);
-        emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(60, 962)); // Tap pause button
+        tapPoint(new DTOPoint(60, 962)); // Tap pause button
         sleepTask(500);
-        emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(252, 635)); // Tap retreat button to skip arena animation
+        tapPoint(new DTOPoint(252, 635)); // Tap retreat button to skip arena animation
         sleepTask(1000);
     }
 	
@@ -312,7 +315,7 @@ public class ArenaTask extends DelayedTask {
 			
         if (freeRefreshResult.isFound()) {
 			logInfo("Using free refresh");
-            emuManager.tapAtPoint(EMULATOR_NUMBER, freeRefreshResult.getPoint());
+            tapPoint(freeRefreshResult.getPoint());
             return true;
         }
 
@@ -324,7 +327,7 @@ public class ArenaTask extends DelayedTask {
             if (gemsRefreshResult.isFound()) {
                 gemRefreshCount++;
 				logInfo(String.format("Using gems refresh (%d/%d)", gemRefreshCount, MAX_GEM_REFRESHES));
-                emuManager.tapAtPoint(EMULATOR_NUMBER, gemsRefreshResult.getPoint());
+                tapPoint(gemsRefreshResult.getPoint());
                 sleepTask(500);
 				
                 // Check for confirmation popup
@@ -332,9 +335,9 @@ public class ArenaTask extends DelayedTask {
 					EMULATOR_NUMBER, EnumTemplates.ARENA_GEMS_REFRESH_CONFIRM_BUTTON, 90);
                 
 					if (confirmResult.isFound()) {
-						emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(210,712));
+						tapPoint(new DTOPoint(210,712));
 						sleepTask(300);
-                    emuManager.tapAtPoint(EMULATOR_NUMBER, confirmResult.getPoint());
+                    tapPoint(confirmResult.getPoint());
                 }
                 return true;
             }
@@ -423,7 +426,7 @@ public class ArenaTask extends DelayedTask {
 	private int buyExtraAttempts() {
 
 		// Tap the "+" attempts button
-		emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(467, 965));
+		tapPoint(new DTOPoint(467, 965));
 		sleepTask(1000);
 
         // Check if the purchase confirmation popup appears
@@ -436,7 +439,7 @@ public class ArenaTask extends DelayedTask {
 
 		// Reset the queue counter to zero first
 		logDebug("Resetting queue counter");
-		emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(420, 733), new DTOPoint(40, 733));
+		swipe(new DTOPoint(420, 733), new DTOPoint(40, 733));
 		sleepTask(300);
 		
 		logInfo("Attempting to buy " + extraAttempts + " extra attempts");
@@ -501,7 +504,7 @@ public class ArenaTask extends DelayedTask {
                   previousAttempts, remainingAttempts, expectedPrice));
 
         if (remainingAttempts > 1) {
-            emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(457, 713), new DTOPoint(499, 752),
+            tapRandomPoint(new DTOPoint(457, 713), new DTOPoint(499, 752),
                     remainingAttempts - 1, 400);
             sleepTask(300);
         }
@@ -517,7 +520,7 @@ public class ArenaTask extends DelayedTask {
 
         // Price matches, proceed with purchase
         logInfo(String.format("Buying %d attempts for %d gems", remainingAttempts, expectedPrice));
-		emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(360, 860)); // Tap buy button
+		tapPoint(new DTOPoint(360, 860)); // Tap buy button
         return remainingAttempts;
 	}
 
