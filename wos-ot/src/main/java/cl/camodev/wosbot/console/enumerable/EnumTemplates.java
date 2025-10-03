@@ -1,7 +1,8 @@
 package cl.camodev.wosbot.console.enumerable;
 
 /**
- * Enum containing all image template paths used for image recognition in the game.
+ * Enum containing all image template paths used for image recognition in the
+ * game.
  * Templates are organized by functional categories for easier maintenance.
  */
 public enum EnumTemplates {
@@ -352,7 +353,15 @@ public enum EnumTemplates {
 	MERCENARY_ATTACK_BUTTON("/templates/mercenary/mercenaryEventAttack.png"),
 	MERCENARY_DEPLOY_BUTTON("/templates/mercenary/mercenaryEventDeploy.png"),
 	MERCENARY_DIFFICULTY_CHALLENGE("/templates/mercenary/mercenaryEventDifficultyChallenge.png"),
-	
+
+	// ========================================================================
+    // HERO'S MISSION EVENT
+    // ========================================================================
+	HERO_MISSION_EVENT_TAB("/templates/events/heromission/heroMissionEventTab.png"),
+	HERO_MISSION_EVENT_TRACE_BUTTON("/templates/events/heromission/heroMissionEventTraceButton.png"),
+	HERO_MISSION_EVENT_CAPTURE_BUTTON("/templates/events/heromission/heroMissionEventCaptureButton.png"),
+	HERO_MISSION_EVENT_CHEST("/templates/events/heromission/heroMissionEventChest.png"),
+
     // ========================================================================
     // POLAR TERROR HUNTING
     // ========================================================================
@@ -384,13 +393,13 @@ public enum EnumTemplates {
 	CHIEF_ORDER_ENACT_BUTTON("/templates/chieforder/chiefOrderEnactButton.png");
 
 	// @formatter:on
-    private String template;
+	private String template;
 
-    private EnumTemplates(String template) {
-        this.template = template;
-    }
+	private EnumTemplates(String template) {
+		this.template = template;
+	}
 
-    public String getTemplate() {
-        return template;
-    }
+	public String getTemplate() {
+		return template;
+	}
 }
