@@ -1,5 +1,6 @@
 package cl.camodev.wosbot.serv.task;
 
+import cl.camodev.utiles.ocr.TextRecognitionRetrier;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
@@ -10,12 +11,16 @@ import cl.camodev.wosbot.logging.ProfileLogger;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
+import cl.camodev.wosbot.ot.DTOTesseractSettings;
 import cl.camodev.wosbot.serv.impl.ServLogs;
 import cl.camodev.wosbot.serv.impl.ServScheduler;
+import cl.camodev.wosbot.serv.impl.StaminaService;
+import cl.camodev.wosbot.serv.ocr.BotTextRecognitionProvider;
 import cl.camodev.wosbot.serv.task.impl.InitializeTask;
 import cl.camodev.wosbot.almac.repo.ProfileRepository;
 import net.sourceforge.tess4j.TesseractException;
 
+import java.awt.*;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -40,6 +45,8 @@ public abstract class DelayedTask implements Runnable, Delayed {
     protected ServScheduler servScheduler = ServScheduler.getServices();
     protected ServLogs servLogs = ServLogs.getServices();
     private ProfileLogger logger; // Will be initialized in the constructor
+    private BotTextRecognitionProvider provider = new BotTextRecognitionProvider(emuManager, EMULATOR_NUMBER);
+    protected TextRecognitionRetrier<Integer> integerHelper = new TextRecognitionRetrier<>(provider);
 
     public DelayedTask(DTOProfiles profile, TpDailyTaskEnum tpTask) {
         this.profile = profile;
@@ -88,6 +95,13 @@ public abstract class DelayedTask implements Runnable, Delayed {
         }
 
         ensureCorrectScreenLocation(getRequiredStartLocation());
+        // Validate stamina before executing the task
+        if (consumesStamina()) {
+            if (StaminaService.getServices().requiresUpdate(profile.getId())){
+                updateStaminaFromProfile();
+            }
+
+        }
         execute();
         ensureCorrectScreenLocation(EnumStartLocation.ANY);
     }
@@ -253,6 +267,43 @@ public abstract class DelayedTask implements Runnable, Delayed {
         }
         int staminaNeeded = targetStamina - currentStamina;
         return staminaNeeded * 5; // 1 stamina every 5 minutes
+    }
+
+    protected void updateStaminaFromProfile(){
+        // i need to update stamina on profile (maybe most reliable than intel screen)
+        //go to profile
+        tapRandomPoint(new DTOPoint(24,24), new DTOPoint(61,61),1,500);
+        //go to stamina
+        tapRandomPoint(new DTOPoint(223,1101), new DTOPoint(244,1123),1,500);
+
+        try {
+            //read stamina
+            String result = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(324,255), new DTOPoint(477,283), DTOTesseractSettings.builder().setRemoveBackground(true).setTextColor(new Color(255,255,255)).build());
+            logInfo("Stamina OCR result: '" + result + "'");
+            // parse stamina x,xxx/xxx or xxx/xxx or x.xxx/xxx
+            Pattern pattern = Pattern.compile("([\\d,\\.]+)\\s*/\\s*([\\d,\\.]+)");
+            Matcher matcher = pattern.matcher(result);
+
+            if (matcher.find()) {
+                try {
+                    // Extract the first number (before the "/") and remove separators
+                    String currentStaminaStr = matcher.group(1).replace(",", "").replace(".", "");
+                    int currentStamina = Integer.parseInt(currentStaminaStr);
+
+                    // Store in StaminaService
+                    StaminaService.getServices().setStamina(profile.getId(), currentStamina);
+                    logInfo("Stamina parsed and stored: " + currentStamina);
+                } catch (NumberFormatException e) {
+                    logWarning("Failed to parse stamina number: " + e.getMessage());
+                }
+            } else {
+                logWarning("Stamina OCR result does not match expected format (x,xxx/xxx or xxx/xxx or x.xxx/xxx)");
+            }
+
+        } catch (IOException | TesseractException e) {
+            logWarning("Failed to read stamina via OCR: " + e.getMessage());
+        }
+        ensureCorrectScreenLocation(getRequiredStartLocation());
     }
 
     protected Integer getStaminaValueFromIntelScreen() {
@@ -545,6 +596,10 @@ public abstract class DelayedTask implements Runnable, Delayed {
     }
 
     public boolean provideTriumphProgress() {
+        return false;
+    }
+
+    protected boolean consumesStamina() {
         return false;
     }
 

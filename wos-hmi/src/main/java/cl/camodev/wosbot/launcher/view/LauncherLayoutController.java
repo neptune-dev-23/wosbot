@@ -14,6 +14,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import cl.camodev.utiles.ImageSearchUtil;
 import cl.camodev.wosbot.alliance.view.AllianceLayoutController;
+import cl.camodev.wosbot.mobilization.view.MobilizationLayoutController;
 import cl.camodev.wosbot.chieforder.view.ChiefOrderLayoutController;
 import cl.camodev.wosbot.city.view.CityEventsExtraLayoutController;
 import cl.camodev.wosbot.city.view.CityEventsLayoutController;
@@ -370,6 +371,7 @@ public class LauncherLayoutController implements IProfileLoadListener {
 				new ModuleDefinition("TrainingLayout", "Training", TrainingLayoutController::new),
 				new ModuleDefinition("PetsLayout", "Pets", PetsLayoutController::new),
 				new ModuleDefinition("EventsLayout", "Events", EventsLayoutController::new),
+				new ModuleDefinition("AllianceMobilizationLayout", "Alliance Mobilization", MobilizationLayoutController::new),
 				new ModuleDefinition("ExpertsLayout", "Experts", ExpertsLayoutController::new),
 				new ModuleDefinition("ChiefOrderLayout", "Chief Order", ChiefOrderLayoutController::new),
 				new ModuleDefinition("EmuConfigLayout", "Config", EmuConfigLayoutController::new)
