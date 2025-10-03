@@ -99,7 +99,7 @@ public abstract class AbstractProfileController implements IProfileLoadListener,
 		}
 		try {
 			int number = Integer.parseInt(value);
-			return number >= 0 && number <= 999;
+			return number >= 0 && number <= 1999;
 		} catch (NumberFormatException e) {
 			return false;
 		}
