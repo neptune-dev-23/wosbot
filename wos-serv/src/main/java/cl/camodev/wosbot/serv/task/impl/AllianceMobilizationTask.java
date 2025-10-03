@@ -21,6 +21,10 @@ import java.util.regex.Pattern;
  */
 public class AllianceMobilizationTask extends DelayedTask {
 
+    private static final Pattern ATTEMPTS_PATTERN = Pattern.compile("(\\d{1,2})\\s*/\\s*(\\d{0,3})");
+    private static final DTOPoint ATTEMPTS_COUNTER_TOP_LEFT = new DTOPoint(168, 528);
+    private static final DTOPoint ATTEMPTS_COUNTER_BOTTOM_RIGHT = new DTOPoint(235, 565);
+
     public AllianceMobilizationTask(DTOProfiles profile, TpDailyTaskEnum tpTask) {
         super(profile, tpTask);
         // TODO: Add scheduling logic if needed, similar to ArenaTask
@@ -163,14 +167,10 @@ public class AllianceMobilizationTask extends DelayedTask {
     }
 
     private AttemptStatus readAttemptsCounter() {
-    DTOPoint topLeft = new DTOPoint(168, 528);
-    DTOPoint bottomRight = new DTOPoint(235, 565);
-        Pattern attemptsPattern = Pattern.compile("(\\d{1,2})\\s*/\\s*(\\d{0,3})");
-
         for (int attempt = 1; attempt <= 3; attempt++) {
             try {
-                String ocrResult = emuManager.ocrRegionText(EMULATOR_NUMBER, topLeft, bottomRight);
-                debugOCRArea("Attempts counter (attempt " + attempt + ")", topLeft, bottomRight, ocrResult);
+                String ocrResult = emuManager.ocrRegionText(EMULATOR_NUMBER, ATTEMPTS_COUNTER_TOP_LEFT, ATTEMPTS_COUNTER_BOTTOM_RIGHT);
+                debugOCRArea("Attempts counter (attempt " + attempt + ")", ATTEMPTS_COUNTER_TOP_LEFT, ATTEMPTS_COUNTER_BOTTOM_RIGHT, ocrResult);
 
                 if (ocrResult == null || ocrResult.trim().isEmpty()) {
                     sleepTask(200);
@@ -185,7 +185,7 @@ public class AllianceMobilizationTask extends DelayedTask {
                         .replace('|', '1')
                         .replaceAll("[^0-9/]+", " ")
                         .trim();
-                Matcher matcher = attemptsPattern.matcher(normalized);
+                Matcher matcher = ATTEMPTS_PATTERN.matcher(normalized);
                 if (matcher.find()) {
                     int remaining = Integer.parseInt(matcher.group(1));
                     Integer total = null;
@@ -848,7 +848,7 @@ public class AllianceMobilizationTask extends DelayedTask {
             sleepTask(500);
 
             // Fourth click at coordinates (154, 1002)
-            DTOPoint fourthClick = new DTOPoint(154, 870);
+            DTOPoint fourthClick = new DTOPoint(154, 1002);
             logInfo("Clicking fourth position at: " + fourthClick);
             emuManager.tapAtPoint(EMULATOR_NUMBER, fourthClick);
             sleepTask(500);
