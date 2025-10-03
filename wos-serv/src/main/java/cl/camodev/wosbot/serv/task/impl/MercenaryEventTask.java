@@ -10,9 +10,11 @@ import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
+import cl.camodev.wosbot.ot.DTOTesseractSettings;
 import cl.camodev.wosbot.serv.impl.ServTaskManager;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 import cl.camodev.wosbot.serv.task.EnumStartLocation;
+import java.awt.Color;
 import net.sourceforge.tess4j.TesseractException;
 
 import java.io.IOException;
@@ -27,6 +29,8 @@ public class MercenaryEventTask extends DelayedTask {
     private final ServTaskManager servTaskManager = ServTaskManager.getInstance();
     private Integer lastMercenaryLevel = null;
     private int attackAttempts = 0;
+    private int flagNumber = 0;
+    private boolean useFlag = false;
 
     public MercenaryEventTask(DTOProfiles profile, TpDailyTaskEnum tpDailyTask) {
         super(profile, tpDailyTask);
@@ -39,8 +43,13 @@ public class MercenaryEventTask extends DelayedTask {
 
     @Override
     protected void execute() {
+        logInfo("=== Starting Mercenary Event ===");
+
+        flagNumber = profile.getConfig(EnumConfigurationKey.MERCENARY_FLAG_INT, Integer.class);
+        useFlag = flagNumber > 0;
+
         if (profile.getConfig(EnumConfigurationKey.INTEL_BOOL, Boolean.class)
-                && profile.getConfig(EnumConfigurationKey.MERCENARY_USE_FLAG_BOOL, Boolean.class)
+                && useFlag
                 && servTaskManager.getTaskState(profile.getId(), TpDailyTaskEnum.INTEL.getId()).isScheduled()) {
             // Make sure intel isn't about to run
             DailyTask intel = iDailyTaskRepository.findByProfileIdAndTaskName(profile.getId(), TpDailyTaskEnum.INTEL);
@@ -82,7 +91,7 @@ public class MercenaryEventTask extends DelayedTask {
         ensureOnIntelScreen();
         sleepTask(2000);
 
-        Integer staminaValue = readNumberValue(new DTOPoint(582, 23), new DTOPoint(672, 55));
+        Integer staminaValue = getStaminaValueFromIntelScreen();
         if (staminaValue == null) {
             logWarning("No stamina value found after OCR attempts.");
             reschedule(LocalDateTime.now().plusMinutes(5));
@@ -148,7 +157,16 @@ public class MercenaryEventTask extends DelayedTask {
     }
 
     private Integer checkMercenaryLevel() {
-        Integer level = readNumberValue(new DTOPoint(322, 867), new DTOPoint(454, 918));
+        DTOTesseractSettings settings = new DTOTesseractSettings.Builder()
+                .setPageSegMode(DTOTesseractSettings.PageSegMode.SINGLE_LINE)
+                .setOcrEngineMode(DTOTesseractSettings.OcrEngineMode.LSTM)
+                .setRemoveBackground(true)
+                .setTextColor(new Color(255, 255, 255)) // White text
+                .setDebug(true)
+                .setAllowedChars("0123456789") // Only allow digits and '/'
+                .build();
+
+        Integer level = readNumberValue(new DTOPoint(322, 867), new DTOPoint(454, 918), settings);
         if (level == null) {
             logWarning("No mercenary level found after OCR attempts.");
             return null;
@@ -243,8 +261,6 @@ public class MercenaryEventTask extends DelayedTask {
     }
 
     private boolean navigateToEventScreen() {
-
-        logInfo("Starting the Mercenary Event task.");
 
         // Search for the events button
         DTOImageSearchResult eventsResult = emuManager.searchTemplate(EMULATOR_NUMBER,
@@ -370,11 +386,9 @@ public class MercenaryEventTask extends DelayedTask {
                 }
 
                 // Check if we should use a specific flag
-                boolean useFlag = profile.getConfig(EnumConfigurationKey.MERCENARY_USE_FLAG_BOOL, Boolean.class);
                 if (useFlag && !sameLevelAsLastTime) {
                     // Select the specified flag
-                    int flagToSelect = profile.getConfig(EnumConfigurationKey.MERCENARY_FLAG_INT, Integer.class);
-                    selectMarchFlag(flagToSelect);
+                    selectMarchFlag(flagNumber);
                     sleepTask(500); // Wait for flag selection
                 }
 
