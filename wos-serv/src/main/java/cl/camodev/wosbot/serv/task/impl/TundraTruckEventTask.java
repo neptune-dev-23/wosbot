@@ -23,13 +23,14 @@ public class TundraTruckEventTask extends DelayedTask {
 	private boolean useGems = profile.getConfig(EnumConfigurationKey.TUNDRA_TRUCK_USE_GEMS_BOOL, Boolean.class);
 	private boolean truckSSR = profile.getConfig(EnumConfigurationKey.TUNDRA_TRUCK_SSR_BOOL, Boolean.class);
 	private int activationHour = profile.getConfig(EnumConfigurationKey.TUNDRA_TRUCK_ACTIVATION_HOUR_INT, Integer.class);
+	private boolean useActivationHour = profile.getConfig(EnumConfigurationKey.TUNDRA_TRUCK_ACTIVATION_HOUR_BOOL, Boolean.class);
 
 	public TundraTruckEventTask(DTOProfiles profile, TpDailyTaskEnum tpDailyTask) {
 		super(profile, tpDailyTask);
 		
 		// Only schedule if the task is enabled and activation hour is valid
 		boolean isTaskEnabled = profile.getConfig(EnumConfigurationKey.TUNDRA_TRUCK_EVENT_BOOL, Boolean.class);
-		if (isTaskEnabled && activationHour >= 0 && activationHour <= 23) {
+		if (isTaskEnabled && useActivationHour && activationHour >= 0 && activationHour <= 23) {
 			scheduleActivationTime();
 		}
 	}
@@ -65,7 +66,7 @@ public class TundraTruckEventTask extends DelayedTask {
 	 */
 	private void rescheduleWithActivationHour() {
 		// If activation hour is configured to a valid hour (0-23)
-		if (activationHour >= 0 && activationHour <= 23) {
+		if (activationHour >= 0 && activationHour <= 23 && useActivationHour) {
 			// Schedule based on the configured activation hour for the next day
 			ZonedDateTime nowUtc = ZonedDateTime.now(ZoneId.of("UTC"));
 			ZonedDateTime tomorrowActivationUtc = nowUtc.toLocalDate().plusDays(1)

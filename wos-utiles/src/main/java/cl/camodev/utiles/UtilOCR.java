@@ -157,7 +157,7 @@ public class UtilOCR {
                 // Save stage 1: cutted
                 ByteArrayOutputStream baos1 = new java.io.ByteArrayOutputStream();
                 ImageIO.write(cuttedImage, "png", baos1);
-                Path outputPath1 = tempDir.resolve(timestamp + "_1_cutted.png");
+                Path outputPath1 = tempDir.resolve(timestamp + "_1_cut.png");
                 Files.write(outputPath1, baos1.toByteArray());
                 
                 // Save stage 2: processed
