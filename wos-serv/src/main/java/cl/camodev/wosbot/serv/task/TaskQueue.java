@@ -147,7 +147,6 @@ public class TaskQueue {
                 if (paused == LocalDateTime.MIN) delayUntil = LocalDateTime.MIN;
             } else if (task != null) {
                 delayUntil = LocalDateTime.now().plusSeconds(task.getDelay(TimeUnit.SECONDS));
-                logInfo("Next task: " + task.getTaskName() + " scheduled at " + task.getScheduled() + " (in " + task.getDelay(TimeUnit.SECONDS) + " seconds)");
             }
 
             // Handle background help actions
@@ -421,6 +420,10 @@ public class TaskQueue {
             else {
                 paused = LocalDateTime.MIN;
                 updateProfileStatus("RESUMING");
+                if (!emuManager.isRunning(profile.getEmulatorNumber())) {
+                    logInfo("While resuming, found instance closed. Acquiring a slot now.");
+                    acquireEmulatorSlot();
+                }
             }
             return;
         }
@@ -506,17 +509,17 @@ public class TaskQueue {
         // help allies checks
         boolean runHelpAllies = true;
         helpAlliesCount++;
-        if (helpAlliesCount % 10 != 0) return; // Only check every 10 cycles
+        if (helpAlliesCount % 60 != 0) return; // Only check every 60 cycles
         helpAlliesCount = 0;
         if (!profile.getConfig(EnumConfigurationKey.ALLIANCE_HELP_BOOL, Boolean.class) ) {
-            runHelpAllies = false; // Only check every 10 cycles, or if help is enabled
+            runHelpAllies = false;
         }
 
         if (!emuManager.isRunning(profile.getEmulatorNumber()) || paused != LocalDateTime.MIN) {
             logInfo("Emulator not running or queue is paused, not running background checks.");
             return; // emulator isn't running or the queue should be paused, just leave.
         }
-
+        logInfo("Running background checks...");
         try {
             isBearRunning();
             if (runHelpAllies) checkHelpAllies();
