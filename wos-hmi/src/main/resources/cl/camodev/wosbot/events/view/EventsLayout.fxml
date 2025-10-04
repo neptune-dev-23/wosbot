@@ -40,12 +40,12 @@
                <children>
                   <Label fx:id="labelTundraActivationHour" text="Activation hour (UTC): ">
                      <tooltip>
-                        <Tooltip text="Enter hour in HH format (00-23)" />
+                        <Tooltip text="Enter hour in HH format (0-23)" />
                      </tooltip>
                   </Label>
                   <TextField fx:id="textfieldTundraActivationHour" prefWidth="60.0">
                      <tooltip>
-                        <Tooltip text="Enter hour in HH format (00-23)" />
+                        <Tooltip text="Enter hour in HH format (0-23)" />
                      </tooltip>
                   </TextField>
                </children>
@@ -55,20 +55,12 @@
             <Insets />
          </GridPane.margin>
       </VBox>
-      <VBox alignment="CENTER_LEFT" prefHeight="200.0" prefWidth="100.0" spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
+      <HBox fx:id="hboxMercenaryFlagSelection" alignment="CENTER_LEFT" spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
          <children>
-            <CheckBox fx:id="checkBoxMercenaryUseFlag" mnemonicParsing="false" text="Use flag" />
-            <HBox fx:id="hboxMercenaryFlagSelection" alignment="CENTER_LEFT" spacing="5.0">
-               <children>
-                  <Label text="Flag selection" />
-                  <ComboBox fx:id="comboBoxMercenaryFlag" />
-               </children>
-            </HBox>
+            <Label text="Flag selection" />
+            <ComboBox fx:id="comboBoxMercenaryFlag" />
          </children>
-         <GridPane.margin>
-            <Insets />
-         </GridPane.margin>
-      </VBox>
+      </HBox>
       <VBox alignment="CENTER_LEFT" prefHeight="200.0" prefWidth="100.0" spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
          <children>
             <HBox alignment="CENTER_LEFT" spacing="5.0">
