@@ -32,6 +32,7 @@ public enum TpDailyTaskEnum {
 	ALLIANCE_CHESTS(44, "Alliance Chests",         EnumConfigurationKey.ALLIANCE_CHESTS_BOOL),
 	ALLIANCE_TRIUMPH(45, "Alliance Triumph",       EnumConfigurationKey.ALLIANCE_TRIUMPH_BOOL),
 	ALLIANCE_MOBILIZATION(46, "Alliance Mobilization", EnumConfigurationKey.ALLIANCE_MOBILIZATION_BOOL),
+    ALLIANCE_SHOP(47, "Alliance Shop",             	null),
 
 	PET_SKILL_STAMINA(51, "Pet Skill Stamina",     EnumConfigurationKey.PET_SKILL_STAMINA_BOOL),
 	PET_SKILL_FOOD(52, "Pet Skill Food",           EnumConfigurationKey.PET_SKILL_FOOD_BOOL),

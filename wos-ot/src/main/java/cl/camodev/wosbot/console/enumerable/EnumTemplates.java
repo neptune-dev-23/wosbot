@@ -1,7 +1,8 @@
 package cl.camodev.wosbot.console.enumerable;
 
 /**
- * Enum containing all image template paths used for image recognition in the game.
+ * Enum containing all image template paths used for image recognition in the
+ * game.
  * Templates are organized by functional categories for easier maintenance.
  */
 public enum EnumTemplates {
@@ -164,8 +165,11 @@ public enum EnumTemplates {
 	ALLIANCE_TRIUMPH_WEEKLY("/templates/alliance/triumphWeekly.png"),
 	ALLIANCE_TECH_THUMB_UP("/templates/alliance/techThumbUp.png"),
 	ALLIANCE_WAR_BUTTON("/templates/alliance/warButton.png"),
+    ALLIANCE_SHOP_BUTTON("/templates/alliance/shopButton.png"),
 	ALLIANCE_HELP_BUTTON("/templates/alliance/helpButton.png"),
 	ALLIANCE_HELP_REQUESTS("/templates/alliance/helpRequests.png"),
+
+    ALLIANCE_SHOP_SOLD_OUT("/templates/alliance/shopSoldOut.png"),
 
     // ========================================================================
     // ALLIANCE MOBILIZATION
@@ -192,6 +196,7 @@ public enum EnumTemplates {
     AM_TRAINING_SPEEDUPS("/templates/events/mobilization/AM_Training_Speedups.png"),
     AM_USE_GEMS("/templates/events/mobilization/AM_Use_Gems.png"),
     AM_USE_SPEEDUPS("/templates/events/mobilization/AM_Use_Speedups.png"),
+
 
     // ========================================================================
     // CRYSTAL LAB AND UPGRADES
@@ -352,7 +357,15 @@ public enum EnumTemplates {
 	MERCENARY_ATTACK_BUTTON("/templates/mercenary/mercenaryEventAttack.png"),
 	MERCENARY_DEPLOY_BUTTON("/templates/mercenary/mercenaryEventDeploy.png"),
 	MERCENARY_DIFFICULTY_CHALLENGE("/templates/mercenary/mercenaryEventDifficultyChallenge.png"),
-	
+
+	// ========================================================================
+    // HERO'S MISSION EVENT
+    // ========================================================================
+	HERO_MISSION_EVENT_TAB("/templates/events/heromission/heroMissionEventTab.png"),
+	HERO_MISSION_EVENT_TRACE_BUTTON("/templates/events/heromission/heroMissionEventTraceButton.png"),
+	HERO_MISSION_EVENT_CAPTURE_BUTTON("/templates/events/heromission/heroMissionEventCaptureButton.png"),
+	HERO_MISSION_EVENT_CHEST("/templates/events/heromission/heroMissionEventChest.png"),
+
     // ========================================================================
     // POLAR TERROR HUNTING
     // ========================================================================
@@ -384,13 +397,13 @@ public enum EnumTemplates {
 	CHIEF_ORDER_ENACT_BUTTON("/templates/chieforder/chiefOrderEnactButton.png");
 
 	// @formatter:on
-    private String template;
+	private String template;
 
-    private EnumTemplates(String template) {
-        this.template = template;
-    }
+	private EnumTemplates(String template) {
+		this.template = template;
+	}
 
-    public String getTemplate() {
-        return template;
-    }
+	public String getTemplate() {
+		return template;
+	}
 }

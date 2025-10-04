@@ -17,10 +17,12 @@ import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.impl.StaminaService;
 import cl.camodev.wosbot.serv.ocr.BotTextRecognitionProvider;
 import cl.camodev.wosbot.serv.task.impl.InitializeTask;
+import java.awt.Color;
+import java.util.List;
+
 import cl.camodev.wosbot.almac.repo.ProfileRepository;
 import net.sourceforge.tess4j.TesseractException;
 
-import java.awt.*;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -45,8 +47,8 @@ public abstract class DelayedTask implements Runnable, Delayed {
     protected ServScheduler servScheduler = ServScheduler.getServices();
     protected ServLogs servLogs = ServLogs.getServices();
     private ProfileLogger logger; // Will be initialized in the constructor
-    private BotTextRecognitionProvider provider = new BotTextRecognitionProvider(emuManager, EMULATOR_NUMBER);
-    protected TextRecognitionRetrier<Integer> integerHelper = new TextRecognitionRetrier<>(provider);
+    protected BotTextRecognitionProvider provider;
+    protected TextRecognitionRetrier<Integer> integerHelper;
 
     public DelayedTask(DTOProfiles profile, TpDailyTaskEnum tpTask) {
         this.profile = profile;
@@ -55,6 +57,8 @@ public abstract class DelayedTask implements Runnable, Delayed {
         this.EMULATOR_NUMBER = profile.getEmulatorNumber();
         this.tpTask = tpTask;
         this.logger = new ProfileLogger(this.getClass(), profile);
+        this.provider = new BotTextRecognitionProvider(emuManager, EMULATOR_NUMBER);
+        this.integerHelper = new TextRecognitionRetrier<>(provider);
     }
 
     protected Object getDistinctKey() {
@@ -72,7 +76,8 @@ public abstract class DelayedTask implements Runnable, Delayed {
 
     @Override
     public void run() {
-        // Before executing, refresh the profile from the database to ensure current configurations
+        // Before executing, refresh the profile from the database to ensure current
+        // configurations
         try {
             if (profile != null && profile.getId() != null) {
                 DTOProfiles updated = ProfileRepository.getRepository().getProfileWithConfigsById(profile.getId());
@@ -109,8 +114,10 @@ public abstract class DelayedTask implements Runnable, Delayed {
     protected abstract void execute();
 
     /**
-     * Ensures the emulator is on the correct screen (Home or World) before continuing.
-     * It will attempt to navigate if it's on the wrong screen or press back if it's lost.
+     * Ensures the emulator is on the correct screen (Home or World) before
+     * continuing.
+     * It will attempt to navigate if it's on the wrong screen or press back if it's
+     * lost.
      * 
      * @param requiredLocation The desired screen (HOME, WORLD or ANY).
      */
@@ -279,7 +286,7 @@ public abstract class DelayedTask implements Runnable, Delayed {
         try {
             //read stamina
             String result = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(324,255), new DTOPoint(477,283), DTOTesseractSettings.builder().setRemoveBackground(true).setTextColor(new Color(255,255,255)).build());
-            logInfo("Stamina OCR result: '" + result + "'");
+            logDebug("Stamina OCR result: '" + result + "'");
             // parse stamina x,xxx/xxx or xxx/xxx or x.xxx/xxx
             Pattern pattern = Pattern.compile("([\\d,\\.]+)\\s*/\\s*([\\d,\\.]+)");
             Matcher matcher = pattern.matcher(result);
@@ -308,13 +315,21 @@ public abstract class DelayedTask implements Runnable, Delayed {
 
     protected Integer getStaminaValueFromIntelScreen() {
         ensureOnIntelScreen();
-        Integer currentStamina = readNumberValue(new DTOPoint(582, 23), new DTOPoint(672, 55));
+        DTOTesseractSettings settings = new DTOTesseractSettings.Builder()
+                .setPageSegMode(DTOTesseractSettings.PageSegMode.SINGLE_LINE)
+                .setOcrEngineMode(DTOTesseractSettings.OcrEngineMode.LSTM)
+                .setRemoveBackground(true)
+                .setTextColor(new Color(255, 255, 255)) // White text
+                .setDebug(true)
+                .setAllowedChars("0123456789") // Only allow digits and ':'
+                .build();
+        Integer currentStamina = readNumberValue(new DTOPoint(582, 23), new DTOPoint(672, 55), settings);
         ensureCorrectScreenLocation(getRequiredStartLocation());
         logInfo("Current stamina: " + currentStamina);
         return currentStamina;
     }
 
-    protected Integer readNumberValue(DTOPoint topLeft, DTOPoint bottomRight) {
+    protected Integer readNumberValue(DTOPoint topLeft, DTOPoint bottomRight, DTOTesseractSettings settings) {
         Integer numberValue = null;
         Pattern numberPattern = Pattern.compile("(\\d{1,3}(?:[.,]\\d{3})*|\\d+)");
 
@@ -330,71 +345,49 @@ public abstract class DelayedTask implements Runnable, Delayed {
                 "Ti", 111,
                 "|", 121);
 
-        for (int attempt = 0; attempt < 5 && numberValue == null; attempt++) {
-            try {
-                String ocr = emuManager.ocrRegionText(EMULATOR_NUMBER, topLeft, bottomRight);
-                logDebug(ocr != null ? "OCR Result: '" + ocr + "'" : "OCR Result: null");
+        String ocr = settings != null ? OCRWithRetries(topLeft, bottomRight, 5, settings)
+                : OCRWithRetries(topLeft, bottomRight, 5);
 
-                if (ocr != null && !ocr.trim().isEmpty()) {
-                    // 1) Handle hard-coded weird cases
-                    for (Map.Entry<String, Integer> entry : specialCases.entrySet()) {
-                        if (ocr.contains(entry.getKey())) {
-                            numberValue = entry.getValue();
-                            logDebug("Detected special pattern '" + entry.getKey() + "', setting value to "
-                                    + numberValue);
-                            break;
-                        }
-                    }
+        logDebug(ocr != null ? "OCR Result: '" + ocr + "'" : "OCR Result: null");
 
-                    // 2) If not matched, normalize OCR text
-                    if (numberValue == null) {
-                        String cleaned = ocr
-                                .replace(';', ',') // interpret ; as comma
-                                .replaceAll("[){}\\s]", "") // remove junk like ) or }
-                                .trim();
+        if (ocr != null && !ocr.trim().isEmpty()) {
+            // 1) Handle hard-coded weird cases
+            for (Map.Entry<String, Integer> entry : specialCases.entrySet()) {
+                if (ocr.contains(entry.getKey())) {
+                    numberValue = entry.getValue();
+                    logDebug("Detected special pattern '" + entry.getKey() + "', setting value to "
+                            + numberValue);
+                    break;
+                }
+            }
 
-                        Matcher m = numberPattern.matcher(cleaned);
-                        if (m.find()) {
-                            String raw = m.group(1);
-                            // Remove valid separators before parsing
-                            String normalized = raw.replaceAll("[.,]", "");
-                            try {
-                                numberValue = Integer.valueOf(normalized);
-                                logDebug("Parsed number value: " + numberValue);
-                            } catch (NumberFormatException nfe) {
-                                logDebug("Parsed number not a valid integer: '" + raw + "'");
-                            }
-                        }
+            // 2) If not matched, normalize OCR text
+            if (numberValue == null) {
+                String cleaned = ocr
+                        .replace(';', ',') // interpret ; as comma
+                        .replaceAll("[){}\\s]", "") // remove junk like ) or }
+                        .trim();
+
+                Matcher m = numberPattern.matcher(cleaned);
+                if (m.find()) {
+                    String raw = m.group(1);
+                    // Remove valid separators before parsing
+                    String normalized = raw.replaceAll("[.,]", "");
+                    try {
+                        numberValue = Integer.valueOf(normalized);
+                        logDebug("Parsed number value: " + numberValue);
+                    } catch (NumberFormatException nfe) {
+                        logDebug("Parsed number not a valid integer: '" + raw + "'");
                     }
                 }
-            } catch (IOException | TesseractException ex) {
-                logDebug("OCR attempt " + (attempt + 1) + " failed: " + ex.getMessage());
-            }
-            if (numberValue == null) {
-                sleepTask(100);
             }
         }
+
         return numberValue;
     }
 
     protected DTOImageSearchResult searchTemplateWithRetries(EnumTemplates template) {
         return searchTemplateWithRetries(template, 90, 5);
-    }
-
-    protected DTOImageSearchResult searchTemplateWithRetries(EnumTemplates template, DTOPoint p1, DTOPoint p2) {
-        return searchTemplateWithRetries(template, p1, p2, 90, 5);
-    }
-
-    protected DTOImageSearchResult searchTemplateWithRetries(EnumTemplates template, DTOPoint p1, DTOPoint p2, int threshold, int maxRetries) {
-        DTOImageSearchResult result = null;
-        for (int i = 0; i < maxRetries && (result == null || !result.isFound()); i++) {
-            logDebug("Searching template " + template + ", (attempt " + (i + 1) + "/" + maxRetries + ")");
-            result = emuManager.searchTemplate(EMULATOR_NUMBER, template, p1, p2, threshold);
-            sleepTask(200);
-        }
-        assert result != null;
-        logDebug(result.isFound() ? "Template " + template + " found." : "Template " + template + " not found.");
-        return result;
     }
 
     protected DTOImageSearchResult searchTemplateWithRetries(EnumTemplates template, int threshold, int maxRetries) {
@@ -404,22 +397,55 @@ public abstract class DelayedTask implements Runnable, Delayed {
             result = emuManager.searchTemplate(EMULATOR_NUMBER, template, threshold);
             sleepTask(200);
         }
-            assert result != null;
-            logDebug(result.isFound() ? "Template " + template + " found." : "Template " + template + " not found.");
+        logDebug(result.isFound() ? "Template " + template + " found." : "Template " + template + " not found.");
         return result;
     }
     protected String OCRWithRetries(String searchStringLower, DTOPoint p1, DTOPoint p2) {
         return OCRWithRetries(searchStringLower, p1, p2, 5);
     }
 
-    protected String OCRWithRetries(String searchStringLower, DTOPoint p1, DTOPoint p2, int maxRetries) {
+    protected DTOImageSearchResult searchTemplateWithRetries(EnumTemplates template, DTOPoint topLeft, DTOPoint bottomRight, int threshold, int maxRetries) {
+        DTOImageSearchResult result = null;
+        for (int i = 0; i < maxRetries && (result == null || !result.isFound()); i++) {
+            logDebug("Searching template " + template + ", (attempt " + (i + 1) + "/" + maxRetries + ")");
+            result = emuManager.searchTemplate(EMULATOR_NUMBER, template, topLeft, bottomRight, threshold);
+            sleepTask(200);
+        }
+        logDebug(result.isFound() ? "Template " + template + " found." : "Template " + template + " not found.");
+        return result;
+    }
+
+    protected List<DTOImageSearchResult> searchTemplatesWithRetries(EnumTemplates template, int threshold, int maxRetries, int maxResults) {
+        List<DTOImageSearchResult> result = null;
+        for (int i = 0; i < maxRetries && (result == null || result.isEmpty()); i++) {
+            logDebug("Searching template " + template + ", (attempt " + (i + 1) + "/" + maxRetries + ")");
+            result = emuManager.searchTemplates(EMULATOR_NUMBER, template, threshold, maxResults);
+            sleepTask(200);
+        }
+        logDebug(!result.isEmpty() ? "Template " + template + " found " + result.size() + " times." : "Template " + template + " not found.");
+        return result;
+    }
+
+    protected List<DTOImageSearchResult> searchTemplatesWithRetries(EnumTemplates template, DTOPoint topLeft, DTOPoint bottomRight, int threshold, int maxRetries, int maxResults) {
+        List<DTOImageSearchResult> result = null;
+        for (int i = 0; i < maxRetries && (result == null || result.isEmpty()); i++) {
+            logDebug("Searching template " + template + ", (attempt " + (i + 1) + "/" + maxRetries + ")");
+            result = emuManager.searchTemplates(EMULATOR_NUMBER, template, topLeft, bottomRight, threshold, maxResults);
+            sleepTask(200);
+        }
+        logDebug(!result.isEmpty() ? "Template " + template + " found " + result.size() + " times." : "Template " + template + " not found.");
+        return result;
+    }
+
+    protected String OCRWithRetries(String searchString, DTOPoint p1, DTOPoint p2, int maxRetries) {
         String result = null;
         for (int attempt = 0; attempt < maxRetries; attempt++) {
             logDebug(
-                    "Performing OCR to find '" + searchStringLower + "' (attempt " + (attempt + 1) + "/" + maxRetries + ")");
+                    "Performing OCR to find '" + searchString + "' (attempt " + (attempt + 1) + "/" + maxRetries + ")");
             try {
                 result = emuManager.ocrRegionText(EMULATOR_NUMBER, p1, p2);
-                if (result != null && result.toLowerCase().contains(searchStringLower.toLowerCase())) {
+                if (result != null && result.toLowerCase().contains(searchString.toLowerCase())) {
+                    logDebug("OCRWithRetries result: " + result);
                     return result;
                 }
             } catch (IOException | TesseractException e) {
@@ -444,6 +470,41 @@ public abstract class DelayedTask implements Runnable, Delayed {
             }
             sleepTask(200);
         }
+        logDebug("OCRWithRetries result: " + result);
+        return result;
+    }
+
+    protected String OCRWithRetries(String searchString, DTOPoint p1, DTOPoint p2, int maxRetries,
+            DTOTesseractSettings settings) {
+        String result = null;
+        for (int attempt = 0; attempt < maxRetries; attempt++) {
+            logDebug(
+                    "Performing OCR to find '" + searchString + "' (attempt " + (attempt + 1) + "/" + maxRetries + ")");
+            try {
+                result = emuManager.ocrRegionText(EMULATOR_NUMBER, p1, p2, settings);
+                if (result != null && result.toLowerCase().contains(searchString.toLowerCase())) {
+                    logDebug("OCRWithRetries result: " + result);
+                    return result;
+                }
+            } catch (IOException | TesseractException e) {
+                logWarning("OCR attempt " + (attempt + 1) + " threw an exception: " + e.getMessage());
+            }
+            sleepTask(200);
+        }
+        return null;
+    }
+
+    protected String OCRWithRetries(DTOPoint p1, DTOPoint p2, int maxRetries, DTOTesseractSettings settings) {
+        String result = null;
+        for (int attempt = 0; attempt < maxRetries && (result == null || result.isEmpty()); attempt++) {
+            try {
+                result = emuManager.ocrRegionText(EMULATOR_NUMBER, p1, p2, settings);
+            } catch (IOException | TesseractException e) {
+                logWarning("OCR attempt " + attempt + " threw an exception: " + e.getMessage());
+            }
+            sleepTask(200);
+        }
+        logDebug("OCRWithRetries result: " + result);
         return result;
     }
 
@@ -456,34 +517,53 @@ public abstract class DelayedTask implements Runnable, Delayed {
 
         // Define march slot coordinates
         DTOPoint[] marchTopLeft = {
-                new DTOPoint(189, 375), // March 1
-                new DTOPoint(189, 448), // March 2
-                new DTOPoint(189, 521), // March 3
-                new DTOPoint(189, 594), // March 4
-                new DTOPoint(189, 667), // March 5
-                new DTOPoint(189, 740), // March 6
+            new DTOPoint(189, 740), // March 6
+            new DTOPoint(189, 667), // March 5
+            new DTOPoint(189, 594), // March 4
+            new DTOPoint(189, 521), // March 3
+            new DTOPoint(189, 448), // March 2
+            new DTOPoint(189, 375), // March 1
         };
         DTOPoint[] marchBottomRight = {
-                new DTOPoint(258, 403), // March 1
-                new DTOPoint(258, 476), // March 2
-                new DTOPoint(258, 549), // March 3
-                new DTOPoint(258, 622), // March 4
-                new DTOPoint(258, 695), // March 5
-                new DTOPoint(258, 768), // March 6
+            new DTOPoint(258, 768), // March 6
+            new DTOPoint(258, 695), // March 5
+            new DTOPoint(258, 622), // March 4
+            new DTOPoint(258, 549), // March 3
+            new DTOPoint(258, 476), // March 2
+            new DTOPoint(258, 403), // March 1
         };
 
         // Check each march slot for "idle" status
-            String ocrResult;
+        try {
             for (int marchSlot = 0; marchSlot < 6; marchSlot++) {
-                ocrResult = OCRWithRetries("idle", marchTopLeft[marchSlot], marchBottomRight[marchSlot], 3);
-                if (ocrResult != null) {
-                    logInfo("Idle march detected in slot " + (marchSlot + 1));
-                    return true;
+                for (int attempt = 0; attempt < 3; attempt++) {
+                    String ocrResult = emuManager.ocrRegionText(EMULATOR_NUMBER,
+                            marchTopLeft[marchSlot],
+                            marchBottomRight[marchSlot]);
+
+                    if (ocrResult.toLowerCase().contains("idle")) {
+                        logInfo("Idle march detected in slot " + (6 - marchSlot));
+                        return true;
+                    }
+
+                    if (attempt < 2) {
+                        sleepTask(100);
+                    }
                 }
-                logDebug("March slot " + (marchSlot + 1) + " is not idle");
+                logDebug("March slot " + (6 - marchSlot) + " is not idle");
             }
+        } catch (IOException | TesseractException e) {
+            logError("OCR attempt failed while checking marches: " + e.getMessage());
+            return false;
+        }
+
         logInfo("No idle marches detected in any of the 6 slots.");
         return false;
+    }
+
+    public boolean isBearRunning() {
+        DTOImageSearchResult result = searchTemplateWithRetries(EnumTemplates.BEAR_HUNT_IS_RUNNING);
+        return result.isFound();
     }
 
     public boolean isRecurring() {
