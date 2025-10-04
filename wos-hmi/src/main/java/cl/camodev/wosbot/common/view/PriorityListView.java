@@ -347,7 +347,17 @@ public class PriorityListView extends HBox {
                 getStyleClass().setAll(StyleConstants.PRIORITY_LIST_CELL);
             } else {
                 enabledCheckBox.setSelected(item.isEnabled());
-                priorityLabel.setText(item.getPriority() + ".");
+
+                // Calculate visible priority (only count enabled items)
+                int visiblePriority = calculateVisiblePriority(item);
+
+                // Show priority number only if enabled
+                if (item.isEnabled()) {
+                    priorityLabel.setText(visiblePriority + ".");
+                } else {
+                    priorityLabel.setText("--");
+                }
+
                 nameLabel.setText(item.getName());
 
                 // Clear previous listeners to avoid duplicates
@@ -358,6 +368,8 @@ public class PriorityListView extends HBox {
                     item.setEnabled(enabledCheckBox.isSelected());
                     // Update visual state immediately
                     updateVisualState(item.isEnabled());
+                    // Refresh all cells to update numbering
+                    listView.refresh();
                     if (onChangeCallback != null) {
                         onChangeCallback.run();
                     }
@@ -368,6 +380,23 @@ public class PriorityListView extends HBox {
 
                 setGraphic(content);
             }
+        }
+
+        /**
+         * Calculates the visible priority number for an item
+         * Only counts enabled items that appear before this item
+         */
+        private int calculateVisiblePriority(DTOPriorityItem currentItem) {
+            int visiblePriority = 0;
+            for (DTOPriorityItem item : items) {
+                if (item.isEnabled()) {
+                    visiblePriority++;
+                    if (item == currentItem) {
+                        break;
+                    }
+                }
+            }
+            return visiblePriority;
         }
 
         /**
