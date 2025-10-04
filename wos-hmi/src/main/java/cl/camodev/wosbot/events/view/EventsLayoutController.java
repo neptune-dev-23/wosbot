@@ -45,8 +45,8 @@ public class EventsLayoutController extends AbstractProfileController {
         // Map the activation hour text field
         textFieldMappings.put(textfieldTundraActivationHour, EnumConfigurationKey.TUNDRA_TRUCK_ACTIVATION_HOUR_INT);
         
-        // Set default value (00:00-23:59)
-        textfieldTundraActivationHour.setText("00:00");
+        // Set default value (0-23)
+        textfieldTundraActivationHour.setText("0");
 
         initializeChangeEvents();
     }
