@@ -53,6 +53,8 @@ public abstract class DelayedTask implements Runnable, Delayed {
     protected BotTextRecognitionProvider provider;
     protected TextRecognitionRetrier<Integer> integerHelper;
 
+    private static final int DEFAULT_RETRIES = 5;
+
     public DelayedTask(DTOProfiles profile, TpDailyTaskEnum tpTask) {
         this.profile = profile;
         this.taskName = tpTask.getName();
@@ -475,7 +477,7 @@ public abstract class DelayedTask implements Runnable, Delayed {
     }
 
     protected DTOImageSearchResult searchTemplateWithRetries(EnumTemplates template) {
-        return searchTemplateWithRetries(template, 90, 5);
+        return searchTemplateWithRetries(template, 90, DEFAULT_RETRIES);
     }
 
     protected DTOImageSearchResult searchTemplateWithRetries(EnumTemplates template, int threshold, int maxRetries) {
@@ -489,7 +491,7 @@ public abstract class DelayedTask implements Runnable, Delayed {
         return result;
     }
     protected String OCRWithRetries(String searchStringLower, DTOPoint p1, DTOPoint p2) {
-        return OCRWithRetries(searchStringLower, p1, p2, 5);
+        return OCRWithRetries(searchStringLower, p1, p2, DEFAULT_RETRIES);
     }
 
     protected DTOImageSearchResult searchTemplateWithRetries(EnumTemplates template, DTOPoint topLeft, DTOPoint bottomRight, int threshold, int maxRetries) {
