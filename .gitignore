@@ -27,3 +27,4 @@ database.db
 log/bot.log
 .vscode/settings.json
 /log
+/temp

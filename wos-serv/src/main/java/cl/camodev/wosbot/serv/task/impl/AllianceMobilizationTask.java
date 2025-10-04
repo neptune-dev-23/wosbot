@@ -1,5 +1,6 @@
 package cl.camodev.wosbot.serv.task.impl;
 
+import cl.camodev.utiles.UtilTime;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
@@ -11,12 +12,18 @@ import cl.camodev.wosbot.serv.task.EnumStartLocation;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Task responsible for Alliance Mobilization.
  * It will use OCR and image recognition to select and perform tasks.
  */
 public class AllianceMobilizationTask extends DelayedTask {
+
+    private static final Pattern ATTEMPTS_PATTERN = Pattern.compile("(\\d{1,2})\\s*/\\s*(\\d{0,3})");
+    private static final DTOPoint ATTEMPTS_COUNTER_TOP_LEFT = new DTOPoint(168, 528);
+    private static final DTOPoint ATTEMPTS_COUNTER_BOTTOM_RIGHT = new DTOPoint(235, 565);
 
     public AllianceMobilizationTask(DTOProfiles profile, TpDailyTaskEnum tpTask) {
         super(profile, tpTask);
@@ -44,6 +51,22 @@ public class AllianceMobilizationTask extends DelayedTask {
             LocalDateTime nextRun = LocalDateTime.now().plusMinutes(5);
             this.reschedule(nextRun);
             return;
+        }
+
+        AttemptStatus attemptStatus = readAttemptsCounter();
+        if (attemptStatus != null) {
+            String totalDisplay = attemptStatus.total() != null && attemptStatus.total() > 0
+                    ? attemptStatus.total().toString()
+                    : "?";
+            logInfo("Detected attempts counter: " + attemptStatus.remaining() + "/" + totalDisplay);
+            if (attemptStatus.remaining() <= 0) {
+                LocalDateTime nextReset = UtilTime.getGameReset();
+                logInfo("No attempts remaining. Rescheduling for next UTC reset at " + nextReset + ".");
+                this.reschedule(nextReset);
+                return;
+            }
+        } else {
+            logWarning("Unable to detect attempts counter. Proceeding with default processing.");
         }
 
         // Analyze and perform tasks
@@ -141,6 +164,60 @@ public class AllianceMobilizationTask extends DelayedTask {
         // Search and process tasks based on bonus percentage
         // Returns true if a reschedule was set
         return searchAndProcessTasksByBonus(rewardsPercentage, minimumPoints200, minimumPoints120, autoAcceptEnabled);
+    }
+
+    private AttemptStatus readAttemptsCounter() {
+        for (int attempt = 1; attempt <= 3; attempt++) {
+            try {
+                String ocrResult = emuManager.ocrRegionText(EMULATOR_NUMBER, ATTEMPTS_COUNTER_TOP_LEFT, ATTEMPTS_COUNTER_BOTTOM_RIGHT);
+                debugOCRArea("Attempts counter (attempt " + attempt + ")", ATTEMPTS_COUNTER_TOP_LEFT, ATTEMPTS_COUNTER_BOTTOM_RIGHT, ocrResult);
+
+                if (ocrResult == null || ocrResult.trim().isEmpty()) {
+                    sleepTask(200);
+                    continue;
+                }
+
+                String normalized = ocrResult
+                        .replace('O', '0')
+                        .replace('o', '0')
+                        .replace('I', '1')
+                        .replace('l', '1')
+                        .replace('|', '1')
+                        .replaceAll("[^0-9/]+", " ")
+                        .trim();
+                Matcher matcher = ATTEMPTS_PATTERN.matcher(normalized);
+                if (matcher.find()) {
+                    int remaining = Integer.parseInt(matcher.group(1));
+                    Integer total = null;
+                    String totalGroup = matcher.group(2);
+                    if (totalGroup != null && !totalGroup.isEmpty()) {
+                        total = Integer.parseInt(totalGroup);
+                        if (total == 0) {
+                            logDebug("OCR attempts counter returned total=0, retrying...");
+                            continue;
+                        }
+                    }
+                    return new AttemptStatus(remaining, total);
+                }
+
+                String condensed = normalized.replaceAll("\\s+", "");
+                if (condensed.startsWith("0/")) {
+                    Integer total = null;
+                    String afterSlash = condensed.substring(2).replaceAll("[^0-9]", "");
+                    if (!afterSlash.isEmpty()) {
+                        total = Integer.parseInt(afterSlash);
+                    }
+                    return new AttemptStatus(0, total);
+                }
+            } catch (Exception e) {
+                logDebug("Failed to read attempts counter via OCR (attempt " + attempt + "): " + e.getMessage());
+            }
+
+            sleepTask(200);
+        }
+
+        logWarning("Unable to capture attempts counter after multiple tries.");
+        return null;
     }
 
     private int resolveMinimumPointsThreshold(DTOProfiles profile, EnumConfigurationKey key, int fallbackValue) {
@@ -758,11 +835,23 @@ public class AllianceMobilizationTask extends DelayedTask {
             emuManager.tapAtPoint(EMULATOR_NUMBER, firstClick);
             sleepTask(1500);
 
-            // Second click at coordinates (154, 1002)
-            DTOPoint secondClick = new DTOPoint(154, 1002);
+            // Second click at coordinates (250, 870)
+            DTOPoint secondClick = new DTOPoint(250, 870);
             logInfo("Clicking second position at: " + secondClick);
             emuManager.tapAtPoint(EMULATOR_NUMBER, secondClick);
-            sleepTask(1500);
+            sleepTask(1000);
+
+            // Third click at coordinates (366, 1014)
+            DTOPoint thirdClick = new DTOPoint(366, 1014);
+            logInfo("Clicking third position at: " + thirdClick);
+            emuManager.tapAtPoint(EMULATOR_NUMBER, thirdClick);
+            sleepTask(500);
+
+            // Fourth click at coordinates (154, 1002)
+            DTOPoint fourthClick = new DTOPoint(154, 1002);
+            logInfo("Clicking fourth position at: " + fourthClick);
+            emuManager.tapAtPoint(EMULATOR_NUMBER, fourthClick);
+            sleepTask(500);
 
             // Click back button twice to close
             DTOPoint backButton = new DTOPoint(50, 50);
@@ -852,7 +941,7 @@ public class AllianceMobilizationTask extends DelayedTask {
 
     // Helper method to visualize OCR area
     private void debugOCRArea(String description, DTOPoint topLeft, DTOPoint bottomRight, String ocrResult) {
-        logDebug("OCR " + description + ": '" + (ocrResult != null ? ocrResult : "null") + "'");
+        logDebug("[OCR] " + description + " - Region: TL=" + topLeft + ", BR=" + bottomRight + ", Result='" + ocrResult + "'");
     }
 
     // Helper method to log template search results
@@ -876,4 +965,6 @@ public class AllianceMobilizationTask extends DelayedTask {
     public boolean provideDailyMissionProgress() {
         return false; // Or true, depending on whether this task contributes to daily missions
     }
+
+    private record AttemptStatus(int remaining, Integer total) {}
 }
