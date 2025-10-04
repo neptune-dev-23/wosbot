@@ -25,6 +25,7 @@ public abstract class AbstractProfileController implements IProfileLoadListener,
 	protected final Map<RadioButton, EnumConfigurationKey> radioButtonMappings = new HashMap<>();
 	protected final Map<ComboBox<?>, EnumConfigurationKey> comboBoxMappings = new HashMap<>();
 	protected final Map<PriorityListView, EnumConfigurationKey> priorityListMappings = new HashMap<>();
+	protected final Map<PriorityListView, Class<? extends Enum<?>>> priorityListEnumClasses = new HashMap<>();
 	protected IProfileChangeObserver profileObserver;
 	protected boolean isLoadingProfile = false;
 
@@ -32,12 +33,22 @@ public abstract class AbstractProfileController implements IProfileLoadListener,
 	public void setProfileObserver(IProfileChangeObserver observer) {
 		this.profileObserver = observer;
 	}
+
+	protected <T extends Enum<T> & PrioritizableItem> void registerPriorityList(
+			PriorityListView priorityListView,
+			EnumConfigurationKey configKey,
+			Class<T> enumClass) {
+		priorityListMappings.put(priorityListView, configKey);
+		priorityListEnumClasses.put(priorityListView, enumClass);
+	}
+
 	protected void initializeChangeEvents() {
 		checkBoxMappings.forEach(this::setupCheckBoxListener);
 		textFieldMappings.forEach(this::setupTextFieldUpdateOnFocusOrEnter);
 		radioButtonMappings.forEach(this::setupRadioButtonListener);
 		comboBoxMappings.forEach(this::setupComboBoxListener);
 		priorityListMappings.forEach(this::setupPriorityListListener);
+        priorityListEnumClasses.forEach(this::initializePriorityListFromEnum);
 	}
 
 	protected void createToggleGroup(RadioButton... radioButtons) {
@@ -156,6 +167,11 @@ public abstract class AbstractProfileController implements IProfileLoadListener,
 				String value = profile.getConfiguration(key);
 				if (value != null && !value.trim().isEmpty()) {
 					priorityListView.fromConfigString(value);
+				} else {
+                    Class<? extends Enum<?>> enumClass = priorityListEnumClasses.get(priorityListView);
+					if (enumClass != null) {
+						reinitializePriorityListWithDefaults(priorityListView, enumClass);
+					}
 				}
 			});
 
@@ -166,9 +182,10 @@ public abstract class AbstractProfileController implements IProfileLoadListener,
 
 	protected <T extends Enum<T> & PrioritizableItem> void initializePriorityListFromEnum(
 			PriorityListView priorityListView,
-			Class<T> enumClass) {
+			Class<? extends Enum<?>> enumClass) {
+
 		List<DTOPriorityItem> items = new ArrayList<>();
-		T[] enumConstants = enumClass.getEnumConstants();
+		T[] enumConstants = ((Class<T>) enumClass).getEnumConstants();
 
 		for (int i = 0; i < enumConstants.length; i++) {
 			items.add(new DTOPriorityItem(
@@ -176,6 +193,25 @@ public abstract class AbstractProfileController implements IProfileLoadListener,
 				enumConstants[i].getDisplayName(),
 				i + 1,
 				false
+			));
+		}
+
+		priorityListView.setItems(items);
+	}
+
+	private <T extends Enum<T> & PrioritizableItem> void reinitializePriorityListWithDefaults(
+			PriorityListView priorityListView,
+			Class<? extends Enum<?>> enumClass) {
+
+		List<DTOPriorityItem> items = new ArrayList<>();
+		T[] enumConstants = ((Class<T>) enumClass).getEnumConstants();
+
+		for (int i = 0; i < enumConstants.length; i++) {
+			items.add(new DTOPriorityItem(
+				enumConstants[i].getIdentifier(),
+				enumConstants[i].getDisplayName(),
+				i + 1,
+				false // All disabled
 			));
 		}
 
