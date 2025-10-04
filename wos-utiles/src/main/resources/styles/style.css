@@ -574,7 +574,7 @@
 .priority-label-disabled {
     -fx-font-weight: bold;
     -fx-font-size: 12px;
-    -fx-text-fill: #666666;
+    -fx-text-fill: #ff5555;
 }
 
 /* Item Name Label */
