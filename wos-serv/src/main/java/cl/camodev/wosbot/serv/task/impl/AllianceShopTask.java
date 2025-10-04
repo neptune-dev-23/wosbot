@@ -37,6 +37,7 @@ public class AllianceShopTask extends DelayedTask {
 
         if (!shopButton.isFound()) {
             logWarning("Could not find Alliance Shop button");
+            setRecurring(false);
             return;
         }
         emuManager.tapAtRandomPoint(EMULATOR_NUMBER, shopButton.getPoint(), shopButton.getPoint(),1,1000);
@@ -55,16 +56,20 @@ public class AllianceShopTask extends DelayedTask {
 
         if (currentCoins == null) {
             logWarning("Could not read current alliance coins.");
+            setRecurring(false);
             return;
         }
-
+        
         Integer minCoins = profile.getConfig(EnumConfigurationKey.ALLIANCE_SHOP_MIN_COINS_INT, Integer.class);
+        logInfo("Current alliance coins: " + currentCoins + ". Minimum to save: " + minCoins);
 
         if (currentCoins < minCoins) {
             logInfo("Current alliance coins (" + currentCoins + ") are less than the minimum required (" + minCoins + "). Skipping purchases.");
+            setRecurring(false);
             return;
         }
-        //tap on top to exit from coins details
+
+        // Tap on top to exit from coins details
         emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(270,30), new DTOPoint(280,80),3,200);
 
 		// 2. Get purchase priorities from profile configuration using the utility
@@ -75,15 +80,15 @@ public class AllianceShopTask extends DelayedTask {
 
         if (enabledPriorities.isEmpty()) {
             logWarning("No enabled purchase priorities configured. Please enable items in the Alliance Shop settings.");
+            setRecurring(false);
             return;
         }
 
-        logInfo("Current alliance coins: " + currentCoins + ". Minimum to save: " + minCoins);
         logInfo("Found " + enabledPriorities.size() + " enabled purchase priorities:");
 
         // Log the ordered list of enabled priorities
         for (DTOPriorityItem priority : enabledPriorities) {
-            logInfo("  Priority " + priority.getPriority() + ": " + priority.getName() + " (ID: " + priority.getIdentifier() + ")");
+            logInfo(" Priority " + priority.getPriority() + ": " + priority.getName() + " (ID: " + priority.getIdentifier() + ")");
         }
 
         //navigate do week
