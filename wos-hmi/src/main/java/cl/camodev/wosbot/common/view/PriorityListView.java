@@ -1,6 +1,7 @@
 package cl.camodev.wosbot.common.view;
 
 import cl.camodev.wosbot.ot.DTOPriorityItem;
+import cl.camodev.utiles.StyleConstants;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -79,12 +80,8 @@ public class PriorityListView extends HBox {
      * Apply dark theme styles to the list view
      */
     private void applyDarkStyles() {
-        // Dark background for the list
-        listView.setStyle(
-                "-fx-background-color: #2b2b2b;" +
-                        "-fx-border-color: #3c3f41;" +
-                        "-fx-border-width: 1px;"
-        );
+        // Apply CSS class instead of inline styles
+        listView.getStyleClass().add(StyleConstants.PRIORITY_LIST_VIEW);
     }
 
     /**
@@ -203,25 +200,19 @@ public class PriorityListView extends HBox {
 
             // Visual drag indicator
             dragIndicator = new Label("☰");
-            dragIndicator.setStyle("-fx-font-size: 14px; -fx-text-fill: #808080; -fx-cursor: move;");
             dragIndicator.setMinWidth(18);
 
             enabledCheckBox = new CheckBox();
             priorityLabel = new Label();
             priorityLabel.setMinWidth(25);
-            priorityLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 12px; -fx-text-fill: #bbbbbb;");
 
             nameLabel = new Label();
-            nameLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #cccccc;");
             HBox.setHgrow(nameLabel, Priority.ALWAYS);
 
             content.getChildren().addAll(dragIndicator, enabledCheckBox, priorityLabel, nameLabel);
 
-            // Apply dark theme to the cell
-            setStyle(
-                    "-fx-background-color: #2b2b2b;" +
-                            "-fx-text-fill: #cccccc;"
-            );
+            // Apply CSS class to the cell
+            getStyleClass().add(StyleConstants.PRIORITY_LIST_CELL);
 
             setupDragAndDrop();
         }
@@ -251,20 +242,18 @@ public class PriorityListView extends HBox {
                     double mouseY = event.getY();
                     double cellHeight = getHeight();
 
+                    // Remove previous drag classes
+                    getStyleClass().removeAll(
+                            StyleConstants.PRIORITY_LIST_CELL_DRAG_OVER_TOP,
+                            StyleConstants.PRIORITY_LIST_CELL_DRAG_OVER_BOTTOM
+                    );
+
                     if (mouseY < cellHeight / 2) {
                         // Upper half - show border on top
-                        setStyle(
-                                "-fx-background-color: #2b2b2b;" +
-                                        "-fx-border-color: #4A9EFF transparent transparent transparent;" +
-                                        "-fx-border-width: 2 0 0 0;"
-                        );
+                        getStyleClass().add(StyleConstants.PRIORITY_LIST_CELL_DRAG_OVER_TOP);
                     } else {
                         // Lower half - show border on bottom
-                        setStyle(
-                                "-fx-background-color: #2b2b2b;" +
-                                        "-fx-border-color: transparent transparent #4A9EFF transparent;" +
-                                        "-fx-border-width: 0 0 2 0;"
-                        );
+                        getStyleClass().add(StyleConstants.PRIORITY_LIST_CELL_DRAG_OVER_BOTTOM);
                     }
                 }
                 event.consume();
@@ -272,7 +261,10 @@ public class PriorityListView extends HBox {
 
             // Restore style when exiting cell
             setOnDragExited(event -> {
-                setStyle("-fx-background-color: #2b2b2b; -fx-text-fill: #cccccc;");
+                getStyleClass().removeAll(
+                        StyleConstants.PRIORITY_LIST_CELL_DRAG_OVER_TOP,
+                        StyleConstants.PRIORITY_LIST_CELL_DRAG_OVER_BOTTOM
+                );
                 event.consume();
             });
 
@@ -337,6 +329,10 @@ public class PriorityListView extends HBox {
 
             // Finalize drag
             setOnDragDone(event -> {
+                getStyleClass().removeAll(
+                        StyleConstants.PRIORITY_LIST_CELL_DRAG_OVER_TOP,
+                        StyleConstants.PRIORITY_LIST_CELL_DRAG_OVER_BOTTOM
+                );
                 event.consume();
             });
         }
@@ -347,49 +343,64 @@ public class PriorityListView extends HBox {
 
             if (empty || item == null) {
                 setGraphic(null);
-                setStyle("-fx-background-color: #2b2b2b;");
+                // Keep base CSS class
+                getStyleClass().setAll(StyleConstants.PRIORITY_LIST_CELL);
             } else {
                 enabledCheckBox.setSelected(item.isEnabled());
                 priorityLabel.setText(item.getPriority() + ".");
                 nameLabel.setText(item.getName());
 
-                // Listener for checkbox changes
+                // Clear previous listeners to avoid duplicates
+                enabledCheckBox.setOnAction(null);
+
+                // Listener for checkbox changes - this updates the visual state
                 enabledCheckBox.setOnAction(e -> {
                     item.setEnabled(enabledCheckBox.isSelected());
+                    // Update visual state immediately
+                    updateVisualState(item.isEnabled());
                     if (onChangeCallback != null) {
                         onChangeCallback.run();
                     }
                 });
 
-                // Visual style based on enabled state
-                if (item.isEnabled()) {
-                    nameLabel.setStyle("-fx-opacity: 1.0; -fx-font-size: 12px; -fx-text-fill: #cccccc;");
-                    dragIndicator.setStyle("-fx-font-size: 14px; -fx-text-fill: #808080; -fx-cursor: move;");
-                    priorityLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 12px; -fx-text-fill: #4A9EFF;");
-                } else {
-                    nameLabel.setStyle("-fx-opacity: 0.5; -fx-font-size: 12px; -fx-text-fill: #888888;");
-                    dragIndicator.setStyle("-fx-font-size: 14px; -fx-text-fill: #555555; -fx-cursor: move;");
-                    priorityLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 12px; -fx-text-fill: #666666;");
-                }
-
-                // Dark theme background
-                setStyle("-fx-background-color: #2b2b2b; -fx-text-fill: #cccccc;");
-
-                // Hover effect
-                setOnMouseEntered(e -> {
-                    if (!isEmpty()) {
-                        setStyle("-fx-background-color: #313335; -fx-text-fill: #cccccc;");
-                    }
-                });
-
-                setOnMouseExited(e -> {
-                    if (!isEmpty()) {
-                        setStyle("-fx-background-color: #2b2b2b; -fx-text-fill: #cccccc;");
-                    }
-                });
+                // Update visual state based on enabled status
+                updateVisualState(item.isEnabled());
 
                 setGraphic(content);
             }
+        }
+
+        /**
+         * Updates the visual state of all labels based on enabled status
+         * Uses CSS classes for persistent styling
+         */
+        private void updateVisualState(boolean enabled) {
+            // Update drag indicator style classes
+            dragIndicator.getStyleClass().removeAll(
+                    StyleConstants.PRIORITY_DRAG_INDICATOR,
+                    StyleConstants.PRIORITY_DRAG_INDICATOR_DISABLED
+            );
+            dragIndicator.getStyleClass().add(
+                    enabled ? StyleConstants.PRIORITY_DRAG_INDICATOR : StyleConstants.PRIORITY_DRAG_INDICATOR_DISABLED
+            );
+
+            // Update priority label style classes
+            priorityLabel.getStyleClass().removeAll(
+                    StyleConstants.PRIORITY_LABEL,
+                    StyleConstants.PRIORITY_LABEL_DISABLED
+            );
+            priorityLabel.getStyleClass().add(
+                    enabled ? StyleConstants.PRIORITY_LABEL : StyleConstants.PRIORITY_LABEL_DISABLED
+            );
+
+            // Update name label style classes
+            nameLabel.getStyleClass().removeAll(
+                    StyleConstants.PRIORITY_NAME_LABEL,
+                    StyleConstants.PRIORITY_NAME_LABEL_DISABLED
+            );
+            nameLabel.getStyleClass().add(
+                    enabled ? StyleConstants.PRIORITY_NAME_LABEL : StyleConstants.PRIORITY_NAME_LABEL_DISABLED
+            );
         }
     }
 }
