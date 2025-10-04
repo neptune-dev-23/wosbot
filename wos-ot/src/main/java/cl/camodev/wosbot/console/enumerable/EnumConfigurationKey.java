@@ -14,6 +14,7 @@ public enum EnumConfigurationKey {
 	GAME_VERSION_STRING("GLOBAL", String.class),
 	MAX_RUNNING_EMULATORS_INT("1", Integer.class),
 	MAX_IDLE_TIME_INT("1", Integer.class),
+	IDLE_BEHAVIOR_SEND_TO_BACKGROUND_BOOL("false", Boolean.class),
 	MUMU_PATH_STRING("", String.class),
 	MEMU_PATH_STRING("", String.class),
 	LDPLAYER_PATH_STRING("", String.class),
@@ -166,6 +167,7 @@ public enum EnumConfigurationKey {
 	
 	// Tundra events
 	TUNDRA_TRUCK_EVENT_BOOL("false", Boolean.class),
+	TUNDRA_TRUCK_ACTIVATION_HOUR_BOOL("false", Boolean.class),
 	TUNDRA_TRUCK_USE_GEMS_BOOL("false", Boolean.class),
 	TUNDRA_TRUCK_SSR_BOOL("false", Boolean.class),
 	TUNDRA_TRUCK_ACTIVATION_HOUR_INT("0", Integer.class),
@@ -180,11 +182,12 @@ public enum EnumConfigurationKey {
 
 	// Mercenary event
 	MERCENARY_EVENT_BOOL("false", Boolean.class),
-	MERCENARY_USE_FLAG_BOOL("false", Boolean.class),
-	MERCENARY_FLAG_INT("1", Integer.class),
+	MERCENARY_FLAG_INT("0", Integer.class),
 	
 	// Hero mission event
 	HERO_MISSION_EVENT_BOOL("false", Boolean.class),
+	HERO_MISSION_FLAG_INT("0", Integer.class),
+	HERO_MISSION_MODE_STRING("Limited (10)", String.class),
 
     // Journey of Light event
     JOURNEY_OF_LIGHT_BOOL("false", Boolean.class),
@@ -198,7 +201,17 @@ public enum EnumConfigurationKey {
 	EXPERT_AGNES_INTEL_BOOL("false", Boolean.class),
 	EXPERT_ROMULUS_TAG_BOOL("false", Boolean.class),
 	EXPERT_ROMULUS_TROOPS_BOOL("false", Boolean.class),
-	EXPERT_ROMULUS_TROOPS_TYPE_STRING("Infantry", String.class);
+	EXPERT_ROMULUS_TROOPS_TYPE_STRING("Infantry", String.class),
+
+    // ========================================================================
+    // PRIORITIZED LIST SETTINGS
+    // ========================================================================
+	// Stored format: "name:priority:enabled|name:priority:enabled|..."
+	// Example: "Fire Crystals:1:true|VIP Points:2:true|Hero Shards:3:false|Speedups:4:true"
+    ALLIANCE_SHOP_ENABLED_BOOL("false", Boolean.class),
+	ALLIANCE_SHOP_PRIORITIES_STRING("", String.class),
+	ALLIANCE_SHOP_MIN_COINS_TO_ACTIVATE_INT("0", Integer.class),
+	ALLIANCE_SHOP_MIN_COINS_INT("0", Integer.class);
 
 	// @formatter:on
     private final String defaultValue;
