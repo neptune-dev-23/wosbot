@@ -48,6 +48,7 @@ public class DelayedTaskRegistry {
         // Alliance tasks
         registry.put(TpDailyTaskEnum.ALLIANCE_AUTOJOIN, profile -> new AllianceAutojoinTask(profile, TpDailyTaskEnum.ALLIANCE_AUTOJOIN));
         registry.put(TpDailyTaskEnum.ALLIANCE_TECH, profile -> new AllianceTechTask(profile, TpDailyTaskEnum.ALLIANCE_TECH));
+        registry.put(TpDailyTaskEnum.ALLIANCE_SHOP, profile -> new AllianceShopTask(profile, TpDailyTaskEnum.ALLIANCE_SHOP));
         registry.put(TpDailyTaskEnum.ALLIANCE_PET_TREASURE, profile -> new PetAllianceTreasuresTask(profile, TpDailyTaskEnum.ALLIANCE_PET_TREASURE));
         registry.put(TpDailyTaskEnum.ALLIANCE_CHESTS, profile -> new AllianceChestTask(profile, TpDailyTaskEnum.ALLIANCE_CHESTS));
         registry.put(TpDailyTaskEnum.ALLIANCE_TRIUMPH, profile -> new TriumphTask(profile, TpDailyTaskEnum.ALLIANCE_TRIUMPH));

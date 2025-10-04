@@ -28,6 +28,7 @@ import cl.camodev.wosbot.events.view.EventsLayoutController;
 import cl.camodev.wosbot.experts.view.ExpertsLayoutController;
 import cl.camodev.wosbot.gather.view.GatherLayoutController;
 import cl.camodev.wosbot.intel.view.IntelLayoutController;
+import cl.camodev.wosbot.mobilization.view.MobilizationLayoutController;
 import cl.camodev.wosbot.ot.DTOBotState;
 import cl.camodev.wosbot.ot.DTOLogMessage;
 import cl.camodev.wosbot.pets.view.PetsLayoutController;
@@ -55,6 +56,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import cl.camodev.wosbot.alliance.view.AllianceShopController;
 
 public class LauncherLayoutController implements IProfileLoadListener {
 
@@ -368,10 +370,11 @@ public class LauncherLayoutController implements IProfileLoadListener {
 				new ModuleDefinition("GatherLayout", "Gather", GatherLayoutController::new),
 				new ModuleDefinition("IntelLayout", "Intel", IntelLayoutController::new),
 				new ModuleDefinition("AllianceLayout", "Alliance", AllianceLayoutController::new),
+                new ModuleDefinition("AllianceShop", "Alliance Shop", AllianceShopController::new),
+                new ModuleDefinition("AllianceMobilizationLayout", "Alliance Mobilization", MobilizationLayoutController::new),
 				new ModuleDefinition("TrainingLayout", "Training", TrainingLayoutController::new),
 				new ModuleDefinition("PetsLayout", "Pets", PetsLayoutController::new),
 				new ModuleDefinition("EventsLayout", "Events", EventsLayoutController::new),
-				new ModuleDefinition("AllianceMobilizationLayout", "Alliance Mobilization", MobilizationLayoutController::new),
 				new ModuleDefinition("ExpertsLayout", "Experts", ExpertsLayoutController::new),
 				new ModuleDefinition("ChiefOrderLayout", "Chief Order", ChiefOrderLayoutController::new),
 				new ModuleDefinition("EmuConfigLayout", "Config", EmuConfigLayoutController::new)

@@ -165,8 +165,11 @@ public enum EnumTemplates {
 	ALLIANCE_TRIUMPH_WEEKLY("/templates/alliance/triumphWeekly.png"),
 	ALLIANCE_TECH_THUMB_UP("/templates/alliance/techThumbUp.png"),
 	ALLIANCE_WAR_BUTTON("/templates/alliance/warButton.png"),
+    ALLIANCE_SHOP_BUTTON("/templates/alliance/shopButton.png"),
 	ALLIANCE_HELP_BUTTON("/templates/alliance/helpButton.png"),
 	ALLIANCE_HELP_REQUESTS("/templates/alliance/helpRequests.png"),
+
+    ALLIANCE_SHOP_SOLD_OUT("/templates/alliance/shopSoldOut.png"),
 
     // ========================================================================
     // ALLIANCE MOBILIZATION
@@ -193,6 +196,7 @@ public enum EnumTemplates {
     AM_TRAINING_SPEEDUPS("/templates/events/mobilization/AM_Training_Speedups.png"),
     AM_USE_GEMS("/templates/events/mobilization/AM_Use_Gems.png"),
     AM_USE_SPEEDUPS("/templates/events/mobilization/AM_Use_Speedups.png"),
+
 
     // ========================================================================
     // CRYSTAL LAB AND UPGRADES
