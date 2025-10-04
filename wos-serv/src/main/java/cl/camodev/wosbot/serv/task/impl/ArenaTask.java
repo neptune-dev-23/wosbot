@@ -11,8 +11,10 @@ import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
+import cl.camodev.wosbot.ot.DTOTesseractSettings;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 import cl.camodev.wosbot.serv.task.EnumStartLocation;
+import java.awt.Color;
 
 /**
  * Task responsible for managing arena challenges.
@@ -180,7 +182,16 @@ public class ArenaTask extends DelayedTask {
     private boolean checkFirstRun() {
         try {
 			// Get arena score
-            Integer arenaScore = readNumberValue(new DTOPoint(567, 1065), new DTOPoint(649, 1099));
+            DTOTesseractSettings settings = new DTOTesseractSettings.Builder()
+                .setPageSegMode(DTOTesseractSettings.PageSegMode.SINGLE_LINE)
+                .setOcrEngineMode(DTOTesseractSettings.OcrEngineMode.LSTM)
+                .setRemoveBackground(true)
+                .setTextColor(new Color(255, 255, 255)) // White text
+                .setDebug(true)
+                .setAllowedChars("0123456789") // Only allow digits
+                .build();
+
+            Integer arenaScore = readNumberValue(new DTOPoint(567, 1065), new DTOPoint(649, 1099), settings);
             logInfo("Arena score: " + arenaScore);
             if(arenaScore != null && arenaScore == 1000) {
                 logInfo("First run detected based on arena score of 1000.");
@@ -260,12 +271,15 @@ public class ArenaTask extends DelayedTask {
                         handleBattle();
                         attempts--;
                         if(!checkResult()) {
+                            sleepTask(500);
                             continue; // If we lost, continue to next opponent
                         }
                         foundOpponent = true;
                         firstRun = false;
                         sleepTask(1000);
                         break;
+                    } else {
+                        logInfo("Found predominantly red text for opponent" + (i + 1) + " - power is higher than ours, skipping opponent.");
                     }
                 }
 				
@@ -409,7 +423,16 @@ public class ArenaTask extends DelayedTask {
 	
 	private boolean getAttempts() {
 		try {
-			Integer attemptsText = readNumberValue(CHALLENGES_LEFT_TOP_LEFT, CHALLENGES_LEFT_BOTTOM_RIGHT);
+            DTOTesseractSettings settings = new DTOTesseractSettings.Builder()
+                .setPageSegMode(DTOTesseractSettings.PageSegMode.SINGLE_LINE)
+                .setOcrEngineMode(DTOTesseractSettings.OcrEngineMode.LSTM)
+                .setRemoveBackground(true)
+                .setTextColor(new Color(91, 112, 147)) // Exact text color
+                .setDebug(true)
+                .setAllowedChars("0123456789") // Only allow digits
+                .build();
+
+			Integer attemptsText = readNumberValue(CHALLENGES_LEFT_TOP_LEFT, CHALLENGES_LEFT_BOTTOM_RIGHT, settings);
 			if (attemptsText != null) {
 				attempts = attemptsText;
 				logInfo("Initial attempts available: " + attempts);
@@ -424,7 +447,6 @@ public class ArenaTask extends DelayedTask {
 	}
 
 	private int buyExtraAttempts() {
-
 		// Tap the "+" attempts button
 		tapPoint(new DTOPoint(467, 965));
 		sleepTask(1000);
@@ -452,7 +474,17 @@ public class ArenaTask extends DelayedTask {
         // for(int i = 0; i < 10; i++) {
         //     Integer price = readNumberValue(topLeft, bottomRight);
         // }
-        Integer singleAttemptPrice = readNumberValue(topLeft, bottomRight);
+
+        DTOTesseractSettings settings = new DTOTesseractSettings.Builder()
+                .setPageSegMode(DTOTesseractSettings.PageSegMode.SINGLE_LINE)
+                .setOcrEngineMode(DTOTesseractSettings.OcrEngineMode.LSTM)
+                .setRemoveBackground(true)
+                .setTextColor(new Color(91, 112, 147)) // White text
+                .setDebug(true)
+                .setAllowedChars("0123456789") // Only allow digits
+                .build();
+
+        Integer singleAttemptPrice = readNumberValue(topLeft, bottomRight, settings);
         if (singleAttemptPrice == null) {
             logWarning("Failed to read single attempt price");
             tapBackButton();

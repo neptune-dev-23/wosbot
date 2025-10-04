@@ -49,6 +49,7 @@ public class IntelligenceTask extends DelayedTask {
 		boolean intelFound = false;
 		boolean nonBeastIntelFound = false;
 		beastMarchSent = false;
+		marchQueueLimitReached = !checkMarchesAvailable();
 
 		if (useSmartProcessing) {
 			// Check how many marches are available

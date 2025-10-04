@@ -326,11 +326,6 @@ public class PolarTerrorHuntingTask extends DelayedTask {
         return false;
     }
 
-    private boolean isBearRunning() {
-        DTOImageSearchResult result = searchTemplateWithRetries(EnumTemplates.BEAR_HUNT_IS_RUNNING);
-        return result.isFound();
-    }
-
     private boolean openPolarsMenu(int polarLevel) {
         // Navigate to the specified polar terror level
         // Open search (magnifying glass)
