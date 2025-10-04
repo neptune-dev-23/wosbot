@@ -18,96 +18,95 @@ import cl.camodev.wosbot.serv.task.TaskQueue;
 import static cl.camodev.wosbot.console.enumerable.EnumConfigurationKey.ALLIANCE_SHOP_ENABLED_BOOL;
 
 public class AllianceTechTask extends DelayedTask {
-
+	
 	public AllianceTechTask(DTOProfiles profile, TpDailyTaskEnum tpDailyTask) {
 		super(profile, tpDailyTask);
 	}
-
+	
 	@Override
 	protected void execute() {
-
+		
 		logInfo("Starting alliance tech task.");
+		
+		Integer minutes = profile.getConfig(EnumConfigurationKey.ALLIANCE_TECH_OFFSET_INT, Integer.class);
 
 		// Go to the alliance tech section
-		emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(493, 1187), new DTOPoint(561, 1240));
+		tapRandomPoint(new DTOPoint(493, 1187), new DTOPoint(561, 1240));
 		sleepTask(3000);
 
-		DTOImageSearchResult menuResult = emuManager.searchTemplate(EMULATOR_NUMBER,
-				EnumTemplates.ALLIANCE_TECH_BUTTON,  90);
+		DTOImageSearchResult menuResult = searchTemplateWithRetries(EnumTemplates.ALLIANCE_TECH_BUTTON, 90, 3);
 		if (!menuResult.isFound()) {
-			logWarning("Alliance tech button not found. Rescheduling.");
-			this.reschedule(LocalDateTime.now()
-					.plusMinutes(profile.getConfig(EnumConfigurationKey.ALLIANCE_TECH_OFFSET_INT, Integer.class)));
+			logWarning("Alliance tech button not found. Rescheduling to run again in " + minutes + " minutes.");
+			reschedule(LocalDateTime.now().plusMinutes(minutes));
 			return;
 		}
 
-		emuManager.tapAtRandomPoint(EMULATOR_NUMBER, menuResult.getPoint(), menuResult.getPoint());
+		tapPoint(menuResult.getPoint());
 		sleepTask(500);
 
-		// search for thumb up button
-		DTOImageSearchResult thumbUpResult = emuManager.searchTemplate(EMULATOR_NUMBER,
-				EnumTemplates.ALLIANCE_TECH_THUMB_UP,  90);
+		// Search for thumbs up button
+		DTOImageSearchResult thumbsUpResult = searchTemplateWithRetries(EnumTemplates.ALLIANCE_TECH_THUMB_UP, 90, 3);
 
-		if (!thumbUpResult.isFound()) {
-			logWarning("No task marked for upgrade. Rescheduling.");
-			this.reschedule(LocalDateTime.now()
-					.plusMinutes(profile.getConfig(EnumConfigurationKey.ALLIANCE_TECH_OFFSET_INT, Integer.class)));
+		if (!thumbsUpResult.isFound()) {
+			logWarning("Thumbs-up button not found. Rescheduling to run again in " + minutes + " minutes.");
+			reschedule(LocalDateTime.now().plusMinutes(minutes));
 			return;
 		}
 
-		logInfo("Thumb-up button found. Proceeding with donation.");
-		emuManager.tapAtRandomPoint(EMULATOR_NUMBER, thumbUpResult.getPoint(), thumbUpResult.getPoint());
+		logInfo("Thumbs-up button found. Proceeding with donation.");
+		tapPoint(thumbsUpResult.getPoint());
 
 		sleepTask(500);
 
 		logInfo("Donating to alliance tech...");
-		emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(450, 1000), new DTOPoint(580, 1050), 25, 150);
-        if (profile.getConfig(ALLIANCE_SHOP_ENABLED_BOOL,Boolean.class)){
-            emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(270,30), new DTOPoint(280,80),3,200);
-            emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(580,30), new DTOPoint(670,50),1,1000);
+		tapRandomPoint(new DTOPoint(450, 1000), new DTOPoint(580, 1050), 25, 150);
 
+		if (profile.getConfig(ALLIANCE_SHOP_ENABLED_BOOL, Boolean.class)) {
+			logInfo("Alliance Shop enabled. Checking current coins.");
 
-            Integer currentCoins = integerHelper.execute(
-                    new DTOPoint(272,257),
-                    new DTOPoint(443,285),
-                    5,
-                    200L,
-                    DTOTesseractSettings.builder().setAllowedChars("0123456789").setPageSegMode(DTOTesseractSettings.PageSegMode.SINGLE_WORD).build(),
-                    text -> NumberValidators.matchesPattern(text, Pattern.compile(".*?(\\d+).*")),
-                    text -> NumberConverters.regexToInt(text, Pattern.compile(".*?(\\d+).*"))
-            );
+			tapRandomPoint(new DTOPoint(270, 30), new DTOPoint(280, 80), 3, 200);
+			tapRandomPoint(new DTOPoint(580, 30), new DTOPoint(670, 50), 1, 1000);
 
-            if (currentCoins == null) {
-                logWarning("Could not read current alliance coins.");
-                return;
-            }
+			Integer currentCoins = integerHelper.execute(
+					new DTOPoint(272, 257),
+					new DTOPoint(443, 285),
+					5,
+					200L,
+					DTOTesseractSettings.builder().setAllowedChars("0123456789")
+							.setPageSegMode(DTOTesseractSettings.PageSegMode.SINGLE_WORD).build(),
+					text -> NumberValidators.matchesPattern(text, Pattern.compile(".*?(\\d+).*")),
+					text -> NumberConverters.regexToInt(text, Pattern.compile(".*?(\\d+).*")));
 
-            Integer minCoins = profile.getConfig(EnumConfigurationKey.ALLIANCE_SHOP_MIN_COINS_TO_ACTIVATE_INT, Integer.class);
+			if (currentCoins == null) {
+				logWarning("Could not read current alliance coins.");
+			} else {
+				Integer minCoins = profile.getConfig(EnumConfigurationKey.ALLIANCE_SHOP_MIN_COINS_TO_ACTIVATE_INT,
+						Integer.class);
 
-            if (currentCoins > minCoins) {
-                TaskQueue queue = servScheduler.getQueueManager().getQueue(profile.getId());
-                if (queue!=null){
-                    logInfo("Current alliance coins: " + currentCoins + ". Minimum required to activate shop: " + minCoins + ". Executing alliance shop task.");
-                    queue.executeTaskNow(TpDailyTaskEnum.ALLIANCE_SHOP,true);
+				if (currentCoins > minCoins) {
+					TaskQueue queue = servScheduler.getQueueManager().getQueue(profile.getId());
+					if (queue != null) {
+						logInfo("Current alliance coins: " + currentCoins + ". Minimum required to activate shop: "
+								+ minCoins + ". Executing alliance shop task.");
+						queue.executeTaskNow(TpDailyTaskEnum.ALLIANCE_SHOP, true);
 
-                }
-
-            }
-        }
+					}
+				}
+			}
+		}
 
 		tapBackButton();
 		tapBackButton();
 		tapBackButton();
 
-		Integer minutes = profile.getConfig(EnumConfigurationKey.ALLIANCE_TECH_OFFSET_INT, Integer.class);
-		LocalDateTime nextSchedule = LocalDateTime.now()
-				.plusMinutes(minutes);
-		this.reschedule(nextSchedule);
-		logInfo("Alliance tech task completed. Next execution scheduled in " + minutes + " minutes.");
+		reschedule(LocalDateTime.now().plusMinutes(minutes));
+		logInfo("Alliance tech task completed. Rescheduling to run again in " + minutes + " minutes.");
 
 	}
 
 	@Override
-	public boolean provideDailyMissionProgress() {return true;}
+	public boolean provideDailyMissionProgress() {
+		return true;
+	}
 
 }
