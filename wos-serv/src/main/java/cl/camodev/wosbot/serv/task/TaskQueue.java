@@ -506,10 +506,6 @@ public class TaskQueue {
     }
 
     private void runBackgroundChecks() {
-        if (!emuManager.isRunning(profile.getEmulatorNumber()) || paused != LocalDateTime.MIN) {
-            logInfo("Emulator not running or queue is paused, not running background checks.");
-            return; // emulator isn't running or the queue should be paused, just leave.
-        }
         // help allies checks
         boolean runHelpAllies = true;
         helpAlliesCount++;
@@ -518,6 +514,11 @@ public class TaskQueue {
         if (!profile.getConfig(EnumConfigurationKey.ALLIANCE_HELP_BOOL, Boolean.class) ) {
             runHelpAllies = false;
         }
+        if (!emuManager.isRunning(profile.getEmulatorNumber()) || paused != LocalDateTime.MIN) {
+            logInfo("Emulator not running or queue is paused, not running background checks.");
+            return; // emulator isn't running or the queue should be paused, just leave.
+        }
+
 
         if (!emuManager.isRunning(profile.getEmulatorNumber()) || paused != LocalDateTime.MIN) {
             logInfo("Emulator not running or queue is paused, not running background checks.");
