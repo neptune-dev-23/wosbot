@@ -457,8 +457,7 @@ public class IntelligenceTask extends DelayedTask {
 																					// a very long time (impossible for
 																					// gatherer to take so long)
 		for (GatherType gatherType : GatherType.values()) { // iterate over all the gather types
-            DTOImageSearchResult resource = searchTemplateWithRetries(gatherType.getTemplate(),
-                    new DTOPoint(10, 342), new DTOPoint(435, 772));
+            DTOImageSearchResult resource = searchTemplateWithRetries(gatherType.getTemplate());
             if (!resource.isFound()) {
                 logInfo("March queue for " + gatherType.getName()
                         + " is not used. Checking for next available march queue... (Used: " + activeMarchQueues + "/"
