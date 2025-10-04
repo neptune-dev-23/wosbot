@@ -174,7 +174,7 @@ public class AllianceShopTask extends DelayedTask {
             //tap on top a few times to exit from buy confirm and item details
             emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(270,30), new DTOPoint(280,80),3,200);
         }
-
+        setRecurring(false);
 		logInfo("Alliance Shop task completed.");
 	}
 
