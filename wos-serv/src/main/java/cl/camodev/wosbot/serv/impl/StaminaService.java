@@ -1,7 +1,11 @@
 package cl.camodev.wosbot.serv.impl;
 
+import cl.camodev.wosbot.serv.IStaminaChangeListener;
+
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -24,6 +28,9 @@ public class StaminaService {
     // Scheduled executor for automatic stamina regeneration
     private final ScheduledExecutorService regenerationScheduler;
 
+    // List of stamina change listeners (thread-safe)
+    private final List<IStaminaChangeListener> listeners;
+
     // Maximum stamina threshold for regeneration
     private static final int MAX_STAMINA_FOR_REGEN = 200;
 
@@ -40,6 +47,7 @@ public class StaminaService {
     private StaminaService() {
         this.staminaMap = new ConcurrentHashMap<>();
         this.lastUpdateMap = new ConcurrentHashMap<>();
+        this.listeners = new ArrayList<>();
         this.regenerationScheduler = Executors.newSingleThreadScheduledExecutor(r -> {
             Thread thread = new Thread(r, "StaminaRegeneration");
             thread.setDaemon(true);
@@ -55,15 +63,52 @@ public class StaminaService {
      *
      * @return the singleton instance
      */
-    public static StaminaService getServices() {
+    public static synchronized StaminaService getServices() {
         if (instance == null) {
-            synchronized (StaminaService.class) {
-                if (instance == null) {
-                    instance = new StaminaService();
-                }
-            }
+            instance = new StaminaService();
         }
         return instance;
+    }
+
+    /**
+     * Adds a listener to be notified of stamina changes.
+     *
+     * @param listener the listener to add
+     */
+    public synchronized void addStaminaChangeListener(IStaminaChangeListener listener) {
+        if (listener != null && !listeners.contains(listener)) {
+            listeners.add(listener);
+        }
+    }
+
+    /**
+     * Removes a listener from stamina change notifications.
+     *
+     * @param listener the listener to remove
+     */
+    public synchronized void removeStaminaChangeListener(IStaminaChangeListener listener) {
+        listeners.remove(listener);
+    }
+
+    /**
+     * Notifies all listeners of a stamina change.
+     *
+     * @param profileId the profile ID
+     * @param newStamina the new stamina value
+     */
+    private void notifyStaminaChange(Long profileId, int newStamina) {
+        List<IStaminaChangeListener> listenersCopy;
+        synchronized (this) {
+            listenersCopy = new ArrayList<>(listeners);
+        }
+
+        for (IStaminaChangeListener listener : listenersCopy) {
+            try {
+                listener.onStaminaChanged(profileId, newStamina);
+            } catch (Exception e) {
+                System.err.println("Error notifying stamina listener: " + e.getMessage());
+            }
+        }
     }
 
     /**
@@ -76,8 +121,10 @@ public class StaminaService {
         if (profileId == null) {
             throw new IllegalArgumentException("Profile ID cannot be null");
         }
-        staminaMap.put(profileId, Math.max(0, stamina));
+        int newStamina = Math.max(0, stamina);
+        staminaMap.put(profileId, newStamina);
         lastUpdateMap.put(profileId, LocalDateTime.now());
+        notifyStaminaChange(profileId, newStamina);
     }
 
     /**
@@ -90,10 +137,13 @@ public class StaminaService {
         if (profileId == null) {
             throw new IllegalArgumentException("Profile ID cannot be null");
         }
+        int[] newStamina = new int[1];
         staminaMap.compute(profileId, (id, currentStamina) -> {
             int current = (currentStamina == null) ? 0 : currentStamina;
-            return Math.max(0, current + amount);
+            newStamina[0] = Math.max(0, current + amount);
+            return newStamina[0];
         });
+        notifyStaminaChange(profileId, newStamina[0]);
         //lastUpdateMap.put(profileId, LocalDateTime.now());
     }
 
@@ -107,10 +157,13 @@ public class StaminaService {
         if (profileId == null) {
             throw new IllegalArgumentException("Profile ID cannot be null");
         }
+        int[] newStamina = new int[1];
         staminaMap.compute(profileId, (id, currentStamina) -> {
             int current = (currentStamina == null) ? 0 : currentStamina;
-            return Math.max(0, current - amount);
+            newStamina[0] = Math.max(0, current - amount);
+            return newStamina[0];
         });
+        notifyStaminaChange(profileId, newStamina[0]);
         //lastUpdateMap.put(profileId, LocalDateTime.now());
     }
 
@@ -174,13 +227,18 @@ public class StaminaService {
     private void regenerateStamina() {
         staminaMap.forEach((profileId, currentStamina) -> {
             if (currentStamina < MAX_STAMINA_FOR_REGEN) {
+                int[] newStamina = new int[1];
                 staminaMap.compute(profileId, (id, stamina) -> {
                     int current = (stamina == null) ? 0 : stamina;
                     if (current < MAX_STAMINA_FOR_REGEN) {
-                        return current + REGEN_AMOUNT;
+                        newStamina[0] = current + REGEN_AMOUNT;
+                        return newStamina[0];
                     }
                     return current;
                 });
+                if (newStamina[0] > 0) {
+                    notifyStaminaChange(profileId, newStamina[0]);
+                }
             }
         });
     }
