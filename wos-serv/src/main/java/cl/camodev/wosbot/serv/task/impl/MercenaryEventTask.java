@@ -323,6 +323,7 @@ public class MercenaryEventTask extends DelayedTask {
         DTOImageSearchResult challengeButton = searchTemplateWithRetries(EnumTemplates.MERCENARY_CHALLENGE_BUTTON, 90,
                 3);
         if (challengeButton.isFound()) {
+            scout = false;
             logInfo("Found challenge button for mercenary event.");
             return challengeButton;
         }
