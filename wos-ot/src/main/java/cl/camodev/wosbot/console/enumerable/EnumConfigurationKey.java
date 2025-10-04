@@ -201,7 +201,17 @@ public enum EnumConfigurationKey {
 	EXPERT_AGNES_INTEL_BOOL("false", Boolean.class),
 	EXPERT_ROMULUS_TAG_BOOL("false", Boolean.class),
 	EXPERT_ROMULUS_TROOPS_BOOL("false", Boolean.class),
-	EXPERT_ROMULUS_TROOPS_TYPE_STRING("Infantry", String.class);
+	EXPERT_ROMULUS_TROOPS_TYPE_STRING("Infantry", String.class),
+
+    // ========================================================================
+    // PRIORITIZED LIST SETTINGS
+    // ========================================================================
+	// Stored format: "name:priority:enabled|name:priority:enabled|..."
+	// Example: "Fire Crystals:1:true|VIP Points:2:true|Hero Shards:3:false|Speedups:4:true"
+    ALLIANCE_SHOP_ENABLED_BOOL("false", Boolean.class),
+	ALLIANCE_SHOP_PRIORITIES_STRING("", String.class),
+	ALLIANCE_SHOP_MIN_COINS_TO_ACTIVATE_INT("0", Integer.class),
+	ALLIANCE_SHOP_MIN_COINS_INT("0", Integer.class);
 
 	// @formatter:on
     private final String defaultValue;

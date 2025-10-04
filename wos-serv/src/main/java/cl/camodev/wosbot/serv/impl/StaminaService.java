@@ -148,9 +148,9 @@ public class StaminaService {
             return true;
         }
 
-        // Check if more than 1 hour has passed since last update
-        long hoursSinceUpdate = ChronoUnit.HOURS.between(lastUpdate, LocalDateTime.now());
-        return hoursSinceUpdate >= 1;
+        // Check if more than 30 minutes has passed since last update
+        long hoursSinceUpdate = ChronoUnit.MINUTES.between(lastUpdate, LocalDateTime.now());
+        return hoursSinceUpdate >= 30;
     }
 
     /**

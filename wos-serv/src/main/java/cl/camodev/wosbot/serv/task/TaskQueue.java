@@ -250,8 +250,10 @@ public class TaskQueue {
 
         // Prevent infinite loop by ensuring the scheduled time has changed
         if (scheduledBefore.equals(scheduledAfter)) {
-            logInfoWithTask(task, "Task " + task.getTaskName() + " executed without rescheduling, changing scheduled time to now to avoid infinite loop");
-            task.reschedule(LocalDateTime.now());
+            if (task.isRecurring()) {
+                logInfoWithTask(task, "Task " + task.getTaskName() + " executed without rescheduling, changing scheduled time to now to avoid infinite loop");
+                task.reschedule(LocalDateTime.now());
+            }
         }
 
         if (task.isRecurring()) {
