@@ -4,6 +4,7 @@ import cl.camodev.wosbot.common.view.AbstractProfileController;
 import cl.camodev.wosbot.common.view.PriorityListView;
 import cl.camodev.wosbot.console.enumerable.AllianceShopItem;
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
+import cl.camodev.wosbot.profile.model.ProfileAux;
 import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
@@ -45,9 +46,9 @@ public class AllianceShopController extends AbstractProfileController {
     }
 
     @Override
-    public void onProfileLoad(cl.camodev.wosbot.profile.model.ProfileAux profile) {
+    public void onProfileLoad(ProfileAux profile) {
         super.onProfileLoad(profile);
-        mergeEnumWithSavedPriorities(profile, allianceShopPriorities, AllianceShopItem.class,
+        mergeEnumWithSavedPriorities(allianceShopPriorities, AllianceShopItem.class,
             EnumConfigurationKey.ALLIANCE_SHOP_PRIORITIES_STRING);
     }
 }
