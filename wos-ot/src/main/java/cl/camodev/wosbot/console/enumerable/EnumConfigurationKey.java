@@ -167,6 +167,7 @@ public enum EnumConfigurationKey {
 	
 	// Tundra events
 	TUNDRA_TRUCK_EVENT_BOOL("false", Boolean.class),
+	TUNDRA_TRUCK_ACTIVATION_HOUR_BOOL("false", Boolean.class),
 	TUNDRA_TRUCK_USE_GEMS_BOOL("false", Boolean.class),
 	TUNDRA_TRUCK_SSR_BOOL("false", Boolean.class),
 	TUNDRA_TRUCK_ACTIVATION_HOUR_INT("0", Integer.class),
@@ -181,11 +182,12 @@ public enum EnumConfigurationKey {
 
 	// Mercenary event
 	MERCENARY_EVENT_BOOL("false", Boolean.class),
-	MERCENARY_USE_FLAG_BOOL("false", Boolean.class),
-	MERCENARY_FLAG_INT("1", Integer.class),
+	MERCENARY_FLAG_INT("0", Integer.class),
 	
 	// Hero mission event
 	HERO_MISSION_EVENT_BOOL("false", Boolean.class),
+	HERO_MISSION_FLAG_INT("0", Integer.class),
+	HERO_MISSION_MODE_STRING("Limited (10)", String.class),
 
     // Journey of Light event
     JOURNEY_OF_LIGHT_BOOL("false", Boolean.class),
