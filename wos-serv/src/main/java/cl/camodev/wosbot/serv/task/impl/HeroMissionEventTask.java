@@ -161,11 +161,20 @@ public class HeroMissionEventTask extends DelayedTask {
     }
 
     private void handleHeroMissionEvent() {
-        if (!reapersAvailable()) {
+        ReaperAvailabilityResult reaperStatus = reapersAvailable();
+
+        if (reaperStatus.isOcrError()) {
+            logWarning("OCR error while checking reaper availability. Retrying in 5 minutes.");
+            reschedule(LocalDateTime.now().plusMinutes(5));
+            return;
+        }
+
+        if (!reaperStatus.isAvailable()) {
             logInfo("No reapers available. Rescheduling task for next reset.");
             reschedule(UtilTime.getGameReset());
             return;
         }
+
         claimAllRewards();
         if (!rallyReaper()) {
             reschedule(LocalDateTime.now().plusMinutes(5));
@@ -312,7 +321,7 @@ public class HeroMissionEventTask extends DelayedTask {
 
     }
 
-    private boolean reapersAvailable() {
+    private ReaperAvailabilityResult reapersAvailable() {
         DTOTesseractSettings settingsRallied = new DTOTesseractSettings.Builder()
                 .setPageSegMode(DTOTesseractSettings.PageSegMode.SINGLE_LINE)
                 .setOcrEngineMode(DTOTesseractSettings.OcrEngineMode.LSTM)
@@ -332,32 +341,62 @@ public class HeroMissionEventTask extends DelayedTask {
                 .build();
 
         if (limitedHunting) {
-            Integer reapersRallied = readNumberValue(new DTOPoint(68, 1062), new DTOPoint(125, 1093), settingsRallied);
-            if (reapersRallied != null) {
-                logInfo("Reapers rallied until now: " + reapersRallied);
+            // Limited mode: Check how many reapers have been rallied
+            Integer reapersRallied = readNumberValue(
+                    new DTOPoint(68, 1062),
+                    new DTOPoint(125, 1093),
+                    settingsRallied);
+
+            if (reapersRallied == null) {
+                logWarning("Failed to parse reapers rallied count via OCR");
                 sleepTask(500);
-                return reapersRallied < 10;
-            } else {
-                logWarning("Failed to parse reapers rallied text");
-            }
-        } else {
-            Integer hornsRemaining = null;
-            try {
-                hornsRemaining = Integer.parseInt(
-                        OCRWithRetries(new DTOPoint(68, 1062), new DTOPoint(125, 1093), 5, settingsHorns)
-                                .split("/")[0]);
-            } catch (NumberFormatException e) {
-                logWarning("Failed to parse horns remaining text");
+                return ReaperAvailabilityResult.OCR_ERROR_RALLIED_COUNT;
             }
 
-            if (hornsRemaining != null) {
-                logInfo("Horns remaining: " + hornsRemaining);
+            logInfo("Reapers rallied until now: " + reapersRallied);
+            sleepTask(500);
+
+            if (reapersRallied < 10) {
+                return ReaperAvailabilityResult.AVAILABLE;
+            } else {
+                return ReaperAvailabilityResult.UNAVAILABLE;
+            }
+
+        } else {
+            // Unlimited mode: Check how many horns remain
+            Integer hornsRemaining = null;
+            try {
+                String hornsRemainingText = OCRWithRetries(
+                        new DTOPoint(68, 1062),
+                        new DTOPoint(125, 1093),
+                        5,
+                        settingsHorns);
+
+                if (hornsRemainingText != null) {
+                    String[] parts = hornsRemainingText.split("/");
+                    if (parts.length > 0) {
+                        hornsRemaining = Integer.parseInt(parts[0]);
+                    }
+                }
+            } catch (NumberFormatException e) {
+                logWarning("Failed to parse horns remaining text: " + e.getMessage());
+            }
+
+            if (hornsRemaining == null) {
+                logWarning("Failed to read horns remaining count via OCR");
                 sleepTask(500);
-                return hornsRemaining > 0;
+                return ReaperAvailabilityResult.OCR_ERROR_HORNS_COUNT;
+            }
+
+            logInfo("Horns remaining: " + hornsRemaining);
+            sleepTask(500);
+
+            if (hornsRemaining > 0) {
+                return ReaperAvailabilityResult.AVAILABLE;
+            } else {
+                return ReaperAvailabilityResult.UNAVAILABLE;
             }
         }
-        sleepTask(500);
-        return false;
     }
 
     @Override
@@ -368,6 +407,45 @@ public class HeroMissionEventTask extends DelayedTask {
     @Override
     protected boolean consumesStamina() {
         return true;
+    }
+
+    /**
+     * Represents the result of checking reaper/horn availability
+     */
+    public enum ReaperAvailabilityResult {
+        /**
+         * Reapers are available (limited mode: < 10 rallied, unlimited mode: horns > 0)
+         */
+        AVAILABLE,
+
+        /**
+         * No reapers available (limited mode: >= 10 rallied, unlimited mode: horns = 0)
+         */
+        UNAVAILABLE,
+
+        /**
+         * Failed to read the OCR value for reapers rallied count (limited mode)
+         */
+        OCR_ERROR_RALLIED_COUNT,
+
+        /**
+         * Failed to read the OCR value for horns remaining count (unlimited mode)
+         */
+        OCR_ERROR_HORNS_COUNT;
+
+        /**
+         * Convenience method to check if reapers are available
+         */
+        public boolean isAvailable() {
+            return this == AVAILABLE;
+        }
+
+        /**
+         * Convenience method to check if result is an OCR error
+         */
+        public boolean isOcrError() {
+            return this == OCR_ERROR_RALLIED_COUNT || this == OCR_ERROR_HORNS_COUNT;
+        }
     }
 
 }
