@@ -154,12 +154,9 @@ public abstract class AbstractProfileController implements IProfileLoadListener,
 
 			priorityListMappings.forEach((priorityListView, key) -> {
 				String value = profile.getConfiguration(key);
-				// Load from configuration if there's a saved value
 				if (value != null && !value.trim().isEmpty()) {
 					priorityListView.fromConfigString(value);
 				}
-				// Note: If value is null/empty, the list keeps the default items
-				// set during initialization (from enum or controller)
 			});
 
 		} finally {
@@ -186,12 +183,15 @@ public abstract class AbstractProfileController implements IProfileLoadListener,
 	}
 
 	protected <T extends Enum<T> & PrioritizableItem> void mergeEnumWithSavedPriorities(
-			ProfileAux profile,
 			PriorityListView priorityListView,
 			Class<T> enumClass,
 			EnumConfigurationKey configKey) {
 
 		List<DTOPriorityItem> currentItems = priorityListView.getItems();
+
+		if (currentItems.isEmpty()) {
+			return;
+		}
 
 		Map<String, DTOPriorityItem> savedItemsMap = new HashMap<>();
 		for (DTOPriorityItem item : currentItems) {
@@ -206,8 +206,12 @@ public abstract class AbstractProfileController implements IProfileLoadListener,
 
 			if (savedItemsMap.containsKey(identifier)) {
 				DTOPriorityItem savedItem = savedItemsMap.get(identifier);
-				savedItem.setName(enumItem.getDisplayName());
-				mergedItems.add(savedItem);
+				mergedItems.add(new DTOPriorityItem(
+					identifier,
+					enumItem.getDisplayName(),
+					savedItem.getPriority(),
+					savedItem.isEnabled()
+				));
 			}
 		}
 
@@ -242,6 +246,8 @@ public abstract class AbstractProfileController implements IProfileLoadListener,
 				String mergedConfig = priorityListView.toConfigString();
 				profileObserver.notifyProfileChange(configKey, mergedConfig);
 			}
+		} else {
+			priorityListView.setItems(mergedItems);
 		}
 	}
 
