@@ -1,11 +1,15 @@
 package cl.camodev.wosbot.serv.task.impl;
 
+import java.awt.*;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import cl.camodev.utiles.UtilTime;
+import cl.camodev.utiles.number.NumberConverters;
+import cl.camodev.utiles.number.NumberValidators;
 import cl.camodev.wosbot.almac.entity.DailyTask;
 import cl.camodev.wosbot.almac.repo.DailyTaskRepository;
 import cl.camodev.wosbot.almac.repo.IDailyTaskRepository;
@@ -15,8 +19,11 @@ import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
+import cl.camodev.wosbot.ot.DTOTesseractSettings;
+import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 import cl.camodev.wosbot.serv.task.EnumStartLocation;
+import cl.camodev.wosbot.serv.task.TaskQueue;
 
 public class GatherTask extends DelayedTask {
     private final GatherType gatherType;
@@ -133,11 +140,44 @@ public class GatherTask extends DelayedTask {
                 // Set resource level
                 int level = profile.getConfig(gatherType.getConfig(), Integer.class);
                 logInfo("Setting resource level to " + level + ".");
-                emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(435, 1052), new DTOPoint(40, 1052)); // Swipe to level 1
-                sleepTask(300);
-                if (level > 1) {
-                    emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(487, 1055), new DTOPoint(487, 1055),
-                            (level - 1), 150);
+
+                //check if the current level is already selected to not act like a bot
+                Integer currentLevel = integerHelper.execute(
+                        new DTOPoint(588, 1040),
+                        new DTOPoint(628, 1066),
+                        5,
+                        200L,
+                        DTOTesseractSettings.builder()
+                                .setAllowedChars("0123456789")
+                                .setPageSegMode(DTOTesseractSettings.PageSegMode.SINGLE_LINE)
+                                .setRemoveBackground(true)
+                                .setTextColor(new Color(71,106,143))
+                                .build(),
+                        text -> NumberValidators.matchesPattern(text, Pattern.compile(".*?(\\d+).*")),
+                        text -> NumberConverters.regexToInt(text, Pattern.compile(".*?(\\d+).*")));
+
+                if (currentLevel != null && currentLevel == level) {
+                    logInfo("The desired level is already selected. No need to change.");
+
+                }else if (currentLevel == null) {
+                    //backup plan if OCR fails
+                    emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(435, 1052), new DTOPoint(40, 1052)); // Swipe to level 1
+                    sleepTask(300);
+                    if (level > 1) {
+                        emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(487, 1055), new DTOPoint(487, 1055),
+                                (level - 1), 150);
+                    }
+                }else {
+                    logInfo("Current level detected as " + currentLevel + ". Changing to level " + level + ".");
+                    if (currentLevel < level) {
+                        // increase level
+                        emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(470, 1040), new DTOPoint(500, 1066),
+                                (level - currentLevel), 150);
+                    } else {
+                        // decrease level
+                        emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(50, 1040), new DTOPoint(85, 1066),
+                                (currentLevel - level), 150);
+                    }
                 }
 
                 DTOImageSearchResult tick = emuManager.searchTemplate(EMULATOR_NUMBER,
