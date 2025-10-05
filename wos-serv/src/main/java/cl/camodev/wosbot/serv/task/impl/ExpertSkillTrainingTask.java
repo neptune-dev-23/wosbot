@@ -9,10 +9,10 @@ import cl.camodev.wosbot.console.enumerable.ExpertSkillItem;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.ot.*;
 import cl.camodev.wosbot.serv.task.DelayedTask;
-import cl.camodev.wosbot.serv.task.EnumStartLocation;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -87,7 +87,7 @@ public class ExpertSkillTrainingTask extends DelayedTask {
         //enter on cyrille
         tapRandomPoint( new DTOPoint(361,800),new DTOPoint(437,860),1,1000);
 
-        // map the available experts to not overloop on experts that we dont have
+        // map the available experts to not over loop on experts that we don't have
         HashMap<EXPERTS, Boolean> expertAvailabilityMap = new HashMap<>();
 
         //search all expert badges to know which experts we have, we must search 1 by 1 then cling on change expert button (right arrow)
@@ -100,23 +100,36 @@ public class ExpertSkillTrainingTask extends DelayedTask {
         };
 
         for (int i = 0; i < 10; i++) {
-            for (EnumTemplates expertBadge : expertBadges) {
-                DTOImageSearchResult badge = searchTemplateWithRetries(expertBadge);
-                if (badge.isFound()) {
-                    EXPERTS expert = getExpertFromTemplate(expertBadge);
-                    boolean alreadyAvailable = expertAvailabilityMap.getOrDefault(expert, false);
+            List<BadgeSearchResult> results = Arrays.stream(expertBadges)
+                    .parallel()
+                    .map(expertBadge -> {
+                        DTOImageSearchResult badge = searchTemplateWithRetries(expertBadge);
+                        EXPERTS expert = getExpertFromTemplate(expertBadge);
+                        return new BadgeSearchResult(badge, expert, expertBadge);
+                    })
+                    .toList();
+
+            boolean shouldBreak = false;
+            for (BadgeSearchResult result : results) {
+                if (result.badge.isFound()) {
+                    boolean alreadyAvailable = expertAvailabilityMap.getOrDefault(result.expert, false);
                     if (alreadyAvailable) {
                         i = 10;
+                        shouldBreak = true;
                         break;
                     }
-                    expertAvailabilityMap.put(expert, true);
+                    expertAvailabilityMap.put(result.expert, true);
                     break;
                 } else {
-                    EXPERTS expert = getExpertFromTemplate(expertBadge);
-                    expertAvailabilityMap.putIfAbsent(expert, false);
+                    expertAvailabilityMap.putIfAbsent(result.expert, false);
                 }
             }
-            tapPoint(new DTOPoint(671,650)); //right arrow to change expert
+
+            if (shouldBreak) {
+                break;
+            }
+
+            tapPoint(new DTOPoint(671, 650)); // right arrow to change expert
             sleepTask(300);
         }
 
@@ -172,6 +185,14 @@ public class ExpertSkillTrainingTask extends DelayedTask {
             tapPoint(learnResult.getPoint());
             sleepTask(500);
 
+            // check if the skill have pending points to learn, lets search the learn button again
+            learnResult = searchTemplateWithRetries(EnumTemplates.EXPERT_TRAINING_LEARN_BUTTON, 90, 3);
+            if (learnResult.isFound()) {
+               logInfo("Skill " + priorityItem.getName() + " has no available skill points to learn. Skipping.");
+               tapRandomPoint(new DTOPoint(360,33), new DTOPoint(374,44),3,300);
+                continue;
+            }
+
             // we must try with the times in decreasing order to not waste time 23h -> 10h -> 2h -> 10m (if 10 also fails, use it as last resort)
             List<LearningTime> timesDescending = List.of(
                     LearningTime.TIME_23_00_00,
@@ -184,7 +205,7 @@ public class ExpertSkillTrainingTask extends DelayedTask {
                 DTOArea timeCheckboxArea = getLearningTimeCheckbox(learningTime);
                 tapRandomPoint(timeCheckboxArea.topLeft(), timeCheckboxArea.bottomRight(),1,300);
                 tapRandomPoint(new DTOPoint(474,888), new DTOPoint(579,910),1,400);
-                //check if the pop up disappeared, that mean it was successful
+                //check if the pop-up disappeared, that mean it was successful
 
                 DTOImageSearchResult badgeResult = searchTemplateWithRetries(expertBadgeTemplate, 90, 3);
 
@@ -255,32 +276,11 @@ private DTOArea getSkillArea(ExpertSkillItem skillItem) {
 
     public record LearningTime(String label, Duration duration) {
 
-        // Constantes predefinidas
         public static final LearningTime TIME_00_10_00 = new LearningTime("00:10:00", Duration.ofMinutes(10));
         public static final LearningTime TIME_02_00_00 = new LearningTime("02:00:00", Duration.ofHours(2));
         public static final LearningTime TIME_10_00_00 = new LearningTime("10:00:00", Duration.ofHours(10));
         public static final LearningTime TIME_23_00_00 = new LearningTime("23:00:00", Duration.ofHours(23));
 
-        // Lista de todos los tiempos disponibles
-        public static final List<LearningTime> ALL_TIMES = List.of(
-                TIME_00_10_00,
-                TIME_02_00_00,
-                TIME_10_00_00,
-                TIME_23_00_00
-        );
-
-        // Métodos de utilidad
-        public long toMinutes() {
-            return duration.toMinutes();
-        }
-
-        public long toHours() {
-            return duration.toHours();
-        }
-
-        public long toSeconds() {
-            return duration.toSeconds();
-        }
     }
 
     private DTOArea getLearningTimeCheckbox(LearningTime time) {
@@ -302,7 +302,7 @@ private DTOArea getSkillArea(ExpertSkillItem skillItem) {
         HOLGER,
         ROMULUS
     }
-
+    record BadgeSearchResult(DTOImageSearchResult badge, EXPERTS expert, EnumTemplates template) {}
 
 
 }
