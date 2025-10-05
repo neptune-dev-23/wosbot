@@ -4,7 +4,6 @@ import cl.camodev.wosbot.common.view.AbstractProfileController;
 import cl.camodev.wosbot.common.view.PriorityListView;
 import cl.camodev.wosbot.console.enumerable.AllianceShopItem;
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
-import cl.camodev.wosbot.profile.model.ProfileAux;
 import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;

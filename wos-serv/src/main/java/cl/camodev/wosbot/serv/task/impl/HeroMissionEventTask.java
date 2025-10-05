@@ -3,12 +3,9 @@ package cl.camodev.wosbot.serv.task.impl;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.regex.Pattern;
 
 import cl.camodev.utiles.UtilRally;
 import cl.camodev.utiles.UtilTime;
-import cl.camodev.utiles.number.NumberConverters;
-import cl.camodev.utiles.number.NumberValidators;
 import cl.camodev.wosbot.almac.entity.DailyTask;
 import cl.camodev.wosbot.almac.repo.DailyTaskRepository;
 import cl.camodev.wosbot.almac.repo.IDailyTaskRepository;
@@ -20,7 +17,6 @@ import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.ot.DTOTesseractSettings;
 import cl.camodev.wosbot.serv.impl.ServTaskManager;
-import cl.camodev.wosbot.serv.impl.StaminaService;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 import cl.camodev.wosbot.serv.task.EnumStartLocation;
 
@@ -34,7 +30,6 @@ public class HeroMissionEventTask extends DelayedTask {
     private int flagNumber = 0;
     private boolean useFlag = false;
     private boolean limitedHunting = false;
-    private int currentStamina;
 
     public HeroMissionEventTask(DTOProfiles profile, TpDailyTaskEnum tpTask) {
         super(profile, tpTask);
@@ -46,7 +41,6 @@ public class HeroMissionEventTask extends DelayedTask {
 
         flagNumber = profile.getConfig(EnumConfigurationKey.HERO_MISSION_FLAG_INT, Integer.class);
         String mode = profile.getConfig(EnumConfigurationKey.HERO_MISSION_MODE_STRING, String.class);
-        currentStamina = getCurrentStamina();
         limitedHunting = mode.equals("Limited (10)");
         useFlag = flagNumber > 0;
 
