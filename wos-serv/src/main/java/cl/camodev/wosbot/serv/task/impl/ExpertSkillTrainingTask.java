@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Task for training expert skills based on priority configuration
@@ -84,8 +85,13 @@ public class ExpertSkillTrainingTask extends DelayedTask {
             reschedule(LocalDateTime.now().plus(trainingTime));
             return;
         }
+        //scroll down to normalize position
+        for (int i = 0; i < 2; i++) {
+            emuManager.executeSwipe(EMULATOR_NUMBER,new DTOPoint(358,1000),new DTOPoint(258,100));
+        }
+
         //enter on cyrille
-        tapRandomPoint( new DTOPoint(361,800),new DTOPoint(437,860),1,1000);
+        tapRandomPoint( new DTOPoint(151,414),new DTOPoint(227,465),3,1000);
 
         // map the available experts to not over loop on experts that we don't have
         HashMap<EXPERTS, Boolean> expertAvailabilityMap = new HashMap<>();
@@ -100,37 +106,38 @@ public class ExpertSkillTrainingTask extends DelayedTask {
         };
 
         for (int i = 0; i < 10; i++) {
-            List<BadgeSearchResult> results = Arrays.stream(expertBadges)
+            Optional<BadgeSearchResult> foundResult = Arrays.stream(expertBadges)
                     .parallel()
                     .map(expertBadge -> {
                         DTOImageSearchResult badge = searchTemplateWithRetries(expertBadge);
                         EXPERTS expert = getExpertFromTemplate(expertBadge);
                         return new BadgeSearchResult(badge, expert, expertBadge);
                     })
-                    .toList();
+                    .filter(result -> result.badge.isFound())
+                    .findAny();
 
-            boolean shouldBreak = false;
-            for (BadgeSearchResult result : results) {
-                if (result.badge.isFound()) {
-                    boolean alreadyAvailable = expertAvailabilityMap.getOrDefault(result.expert, false);
-                    if (alreadyAvailable) {
-                        i = 10;
-                        shouldBreak = true;
-                        break;
-                    }
-                    expertAvailabilityMap.put(result.expert, true);
+            if (foundResult.isPresent()) {
+                BadgeSearchResult result = foundResult.get();
+                boolean alreadyAvailable = expertAvailabilityMap.getOrDefault(result.expert, false);
+
+                if (alreadyAvailable) {
                     break;
-                } else {
-                    expertAvailabilityMap.putIfAbsent(result.expert, false);
                 }
+                expertAvailabilityMap.put(result.expert, true);
+            } else {
+                Arrays.stream(expertBadges)
+                        .map(this::getExpertFromTemplate)
+                        .forEach(expert -> expertAvailabilityMap.putIfAbsent(expert, false));
             }
-
-            if (shouldBreak) {
-                break;
-            }
-
             tapPoint(new DTOPoint(671, 650)); // right arrow to change expert
             sleepTask(300);
+        }
+
+        long availableCount = expertAvailabilityMap.values().stream().filter(Boolean::booleanValue).count();
+        if (availableCount == 0) {
+            logInfo("No experts found, scheduling to check again in 10 minutes.");
+            reschedule(LocalDateTime.now().plusMinutes(10));
+            return;
         }
 
         //print expert availability map
