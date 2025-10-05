@@ -1,5 +1,6 @@
 package cl.camodev.wosbot.serv.task.impl;
 
+import cl.camodev.utiles.UtilRally;
 import cl.camodev.utiles.UtilTime;
 import cl.camodev.wosbot.almac.entity.DailyTask;
 import cl.camodev.wosbot.almac.repo.DailyTaskRepository;
@@ -368,8 +369,8 @@ public class MercenaryEventTask extends DelayedTask {
 
         // Check if we should use a specific flag
         if (useFlag && !sameLevelAsLastTime) {
-            selectMarchFlag(flagNumber);
-            sleepTask(500);
+            tapPoint(UtilRally.getMarchFlagPoint(flagNumber));
+            sleepTask(300);
         }
 
         // Parse travel time
@@ -424,30 +425,6 @@ public class MercenaryEventTask extends DelayedTask {
         logInfo("Mercenary march sent. Task will run again at " +
                 rescheduleTime.format(DateTimeFormatter.ofPattern("HH:mm:ss")) +
                 " (in " + (returnTimeSeconds / 60) + " minutes).");
-    }
-
-    /**
-     * Selects a flag for the march.
-     * 
-     * @param flagNumber The flag number to select (1-8)
-     */
-    private void selectMarchFlag(int flagNumber) {
-        logInfo("Selecting march flag " + flagNumber + ".");
-        DTOPoint flagPoint = switch (flagNumber) {
-            case 1 -> new DTOPoint(70, 120);
-            case 2 -> new DTOPoint(140, 120);
-            case 3 -> new DTOPoint(210, 120);
-            case 4 -> new DTOPoint(280, 120);
-            case 5 -> new DTOPoint(350, 120);
-            case 6 -> new DTOPoint(420, 120);
-            case 7 -> new DTOPoint(490, 120);
-            case 8 -> new DTOPoint(560, 120);
-            default -> {
-                logError("Invalid flag number: " + flagNumber + ". Defaulting to flag 1.");
-                yield new DTOPoint(70, 120);
-            }
-        };
-        tapPoint(flagPoint);
     }
 
 }
