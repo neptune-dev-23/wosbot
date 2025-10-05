@@ -32,6 +32,7 @@ public enum EnumTemplates {
 	LEFT_MENU_CITY_TAB("/templates/leftmenu/cityTab.png"),
 	LEFT_MENU_LABYRINTH_BUTTON("/templates/leftmenu/labyrinth.png"),
 	LEFT_MENU_TUNDRA_TREK_BUTTON("/templates/leftmenu/tundraTrek.png"),
+    LEFT_MENU_EXPERT_TRAINING_BUTTON("/templates/leftmenu/expertTraining.png"),
 
     // ========================================================================
     // SHORTCUTS AND BUILDING ACCESS
@@ -350,6 +351,13 @@ public enum EnumTemplates {
 	ROMULUS_CLAIM_TROOPS_BUTTON("/templates/experts/romulusClaimTroopsButton.png"),
 	ROMULUS_CLAIM_TAG_BUTTON("/templates/experts/romulusClaimTagButton.png"),
 	AGNES_CLAIM_INTEL("/templates/experts/intelAgnes.png"),
+
+    EXPERT_TRAINING_SPEEDUP_ICON("/templates/experts/expertTrainingSpeedupIcon.png"),
+    EXPERT_TRAINING_CYRILLE_BADGE("/templates/experts/cyrilleBadge.png"),
+    EXPERT_TRAINING_AGNES_BADGE("/templates/experts/agnesBadge.png"),
+    EXPERT_TRAINING_ROMULUS_BADGE("/templates/experts/romulusBadge.png"),
+    EXPERT_TRAINING_HOLGER_BADGE("/templates/experts/holgerBadge.png"),
+    EXPERT_TRAINING_LEARN_BUTTON("/templates/experts/learnButton.png"),
 	
 	MERCENARY_EVENT_TAB("/templates/mercenary/mercenaryEventTab.png"),
 	MERCENARY_SCOUT_BUTTON("/templates/mercenary/mercenaryEventScout.png"),
