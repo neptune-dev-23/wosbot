@@ -109,7 +109,7 @@ public abstract class DelayedTask implements Runnable, Delayed {
         ensureCorrectScreenLocation(getRequiredStartLocation());
         // Validate stamina before executing the task
         if (consumesStamina()) {
-            if (StaminaService.getServices().requiresUpdate(profile.getId())){
+            if (StaminaService.getServices().requiresUpdate(profile.getId())) {
                 updateStaminaFromProfile();
             }
 
@@ -283,16 +283,18 @@ public abstract class DelayedTask implements Runnable, Delayed {
         return staminaNeeded * 5; // 1 stamina every 5 minutes
     }
 
-    protected void updateStaminaFromProfile(){
+    protected void updateStaminaFromProfile() {
         // i need to update stamina on profile (maybe most reliable than intel screen)
-        //go to profile
-        tapRandomPoint(new DTOPoint(24,24), new DTOPoint(61,61),1,500);
-        //go to stamina
-        tapRandomPoint(new DTOPoint(223,1101), new DTOPoint(244,1123),1,500);
+        // go to profile
+        tapRandomPoint(new DTOPoint(24, 24), new DTOPoint(61, 61), 1, 500);
+        // go to stamina
+        tapRandomPoint(new DTOPoint(223, 1101), new DTOPoint(244, 1123), 1, 500);
 
         try {
-            //read stamina
-            String result = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(324,255), new DTOPoint(477,283), DTOTesseractSettings.builder().setRemoveBackground(true).setTextColor(new Color(255,255,255)).build());
+            // read stamina
+            String result = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(324, 255), new DTOPoint(477, 283),
+                    DTOTesseractSettings.builder().setRemoveBackground(true).setTextColor(new Color(255, 255, 255))
+                            .build());
             logDebug("Stamina OCR result: '" + result + "'");
             // parse stamina x,xxx/xxx or xxx/xxx or x.xxx/xxx
             Pattern pattern = Pattern.compile("([\\d,\\.]+)\\s*/\\s*([\\d,\\.]+)");
@@ -322,20 +324,20 @@ public abstract class DelayedTask implements Runnable, Delayed {
 
     protected Integer getSpentStamina() {
         Integer spentStamina = 0;
-        spentStamina = integerHelper.execute( new DTOPoint(540, 1215),
-            new DTOPoint(590, 1245),
-            5,
-            200L,
-            DTOTesseractSettings.builder()
-                .setPageSegMode(DTOTesseractSettings.PageSegMode.SINGLE_LINE)
-                .setOcrEngineMode(DTOTesseractSettings.OcrEngineMode.LSTM)
-                .setRemoveBackground(true)
-                .setTextColor(new Color(254, 254, 254)) // White text
-                .setDebug(true)
-                .setAllowedChars("0123456789") // Only allow digits
-                .build(),
-            text -> NumberValidators.matchesPattern(text, Pattern.compile(".*?(\\d+).*")),
-            text -> NumberConverters.regexToInt(text, Pattern.compile(".*?(\\d+).*")));
+        spentStamina = integerHelper.execute(new DTOPoint(540, 1215),
+                new DTOPoint(590, 1245),
+                5,
+                200L,
+                DTOTesseractSettings.builder()
+                        .setPageSegMode(DTOTesseractSettings.PageSegMode.SINGLE_LINE)
+                        .setOcrEngineMode(DTOTesseractSettings.OcrEngineMode.LSTM)
+                        .setRemoveBackground(true)
+                        .setTextColor(new Color(254, 254, 254)) // White text
+                        .setDebug(true)
+                        .setAllowedChars("0123456789") // Only allow digits
+                        .build(),
+                text -> NumberValidators.matchesPattern(text, Pattern.compile(".*?(\\d+).*")),
+                text -> NumberConverters.regexToInt(text, Pattern.compile(".*?(\\d+).*")));
         logDebug("Spent stamina read: " + spentStamina);
         return spentStamina;
     }
@@ -356,6 +358,7 @@ public abstract class DelayedTask implements Runnable, Delayed {
             StaminaService.getServices().subtractStamina(profile.getId(), 25);
         }
     }
+
     protected long parseTravelTime() {
         long travelTimeSeconds = 0;
         DTOTesseractSettings timeSettings = new DTOTesseractSettings.Builder()
@@ -492,11 +495,13 @@ public abstract class DelayedTask implements Runnable, Delayed {
         logDebug(result.isFound() ? "Template " + template + " found." : "Template " + template + " not found.");
         return result;
     }
+
     protected String OCRWithRetries(String searchStringLower, DTOPoint p1, DTOPoint p2) {
         return OCRWithRetries(searchStringLower, p1, p2, DEFAULT_RETRIES);
     }
 
-    protected DTOImageSearchResult searchTemplateWithRetries(EnumTemplates template, DTOPoint topLeft, DTOPoint bottomRight, int threshold, int maxRetries) {
+    protected DTOImageSearchResult searchTemplateWithRetries(EnumTemplates template, DTOPoint topLeft,
+            DTOPoint bottomRight, int threshold, int maxRetries) {
         DTOImageSearchResult result = null;
         for (int i = 0; i < maxRetries && (result == null || !result.isFound()); i++) {
             logDebug("Searching template " + template + ", (attempt " + (i + 1) + "/" + maxRetries + ")");
@@ -507,25 +512,29 @@ public abstract class DelayedTask implements Runnable, Delayed {
         return result;
     }
 
-    protected List<DTOImageSearchResult> searchTemplatesWithRetries(EnumTemplates template, int threshold, int maxRetries, int maxResults) {
+    protected List<DTOImageSearchResult> searchTemplatesWithRetries(EnumTemplates template, int threshold,
+            int maxRetries, int maxResults) {
         List<DTOImageSearchResult> result = null;
         for (int i = 0; i < maxRetries && (result == null || result.isEmpty()); i++) {
             logDebug("Searching template " + template + ", (attempt " + (i + 1) + "/" + maxRetries + ")");
             result = emuManager.searchTemplates(EMULATOR_NUMBER, template, threshold, maxResults);
             sleepTask(200);
         }
-        logDebug(!result.isEmpty() ? "Template " + template + " found " + result.size() + " times." : "Template " + template + " not found.");
+        logDebug(!result.isEmpty() ? "Template " + template + " found " + result.size() + " times."
+                : "Template " + template + " not found.");
         return result;
     }
 
-    protected List<DTOImageSearchResult> searchTemplatesWithRetries(EnumTemplates template, DTOPoint topLeft, DTOPoint bottomRight, int threshold, int maxRetries, int maxResults) {
+    protected List<DTOImageSearchResult> searchTemplatesWithRetries(EnumTemplates template, DTOPoint topLeft,
+            DTOPoint bottomRight, int threshold, int maxRetries, int maxResults) {
         List<DTOImageSearchResult> result = null;
         for (int i = 0; i < maxRetries && (result == null || result.isEmpty()); i++) {
             logDebug("Searching template " + template + ", (attempt " + (i + 1) + "/" + maxRetries + ")");
             result = emuManager.searchTemplates(EMULATOR_NUMBER, template, topLeft, bottomRight, threshold, maxResults);
             sleepTask(200);
         }
-        logDebug(!result.isEmpty() ? "Template " + template + " found " + result.size() + " times." : "Template " + template + " not found.");
+        logDebug(!result.isEmpty() ? "Template " + template + " found " + result.size() + " times."
+                : "Template " + template + " not found.");
         return result;
     }
 
@@ -609,20 +618,20 @@ public abstract class DelayedTask implements Runnable, Delayed {
 
         // Define march slot coordinates
         DTOPoint[] marchTopLeft = {
-            new DTOPoint(189, 740), // March 6
-            new DTOPoint(189, 667), // March 5
-            new DTOPoint(189, 594), // March 4
-            new DTOPoint(189, 521), // March 3
-            new DTOPoint(189, 448), // March 2
-            new DTOPoint(189, 375), // March 1
+                new DTOPoint(189, 740), // March 6
+                new DTOPoint(189, 667), // March 5
+                new DTOPoint(189, 594), // March 4
+                new DTOPoint(189, 521), // March 3
+                new DTOPoint(189, 448), // March 2
+                new DTOPoint(189, 375), // March 1
         };
         DTOPoint[] marchBottomRight = {
-            new DTOPoint(258, 768), // March 6
-            new DTOPoint(258, 695), // March 5
-            new DTOPoint(258, 622), // March 4
-            new DTOPoint(258, 549), // March 3
-            new DTOPoint(258, 476), // March 2
-            new DTOPoint(258, 403), // March 1
+                new DTOPoint(258, 768), // March 6
+                new DTOPoint(258, 695), // March 5
+                new DTOPoint(258, 622), // March 4
+                new DTOPoint(258, 549), // March 3
+                new DTOPoint(258, 476), // March 2
+                new DTOPoint(258, 403), // March 1
         };
 
         // Check each march slot for "idle" status
@@ -635,6 +644,7 @@ public abstract class DelayedTask implements Runnable, Delayed {
 
                     if (ocrResult.toLowerCase().contains("idle")) {
                         logInfo("Idle march detected in slot " + (6 - marchSlot));
+                        closeLeftMenu();
                         return true;
                     }
 
@@ -646,11 +656,20 @@ public abstract class DelayedTask implements Runnable, Delayed {
             }
         } catch (IOException | TesseractException e) {
             logError("OCR attempt failed while checking marches: " + e.getMessage());
+            closeLeftMenu();
             return false;
         }
 
         logInfo("No idle marches detected in any of the 6 slots.");
+        closeLeftMenu();
         return false;
+    }
+
+    public void closeLeftMenu() {
+        tapPoint(new DTOPoint(110, 270));
+        sleepTask(500);
+        tapPoint(new DTOPoint(463, 548));
+        sleepTask(500);
     }
 
     public boolean isBearRunning() {

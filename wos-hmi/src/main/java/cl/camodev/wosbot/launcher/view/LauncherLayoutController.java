@@ -82,7 +82,6 @@ public class LauncherLayoutController implements IProfileLoadListener, IStaminaC
     private ProfileManagerLayoutController profileManagerLayoutController;
     private boolean estado = false;
     private boolean updatingComboBox = false;
-    private Stage logModuleStage = null;
     private ProfileAux currentProfile = null; // Perfil actualmente cargado
 
     public LauncherLayoutController(Stage stage) {

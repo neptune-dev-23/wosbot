@@ -75,12 +75,8 @@ public class PolarTerrorHuntingTask extends DelayedTask {
                 useFlag ? "#" + flagString : "None"));
 
         // Verify if there's enough stamina to hunt, if not, reschedule the task
-        if (!hasEnoughStaminaAndMarches(minStaminaLevel, refreshStaminaLevel)) return;
-        if (!checkMarchesAvailable()) {
-            logWarning("No marches available, rescheduling for in 5 minutes.");
-            reschedule(LocalDateTime.now().plusMinutes(5));
+        if (!hasEnoughStaminaAndMarches(minStaminaLevel, refreshStaminaLevel))
             return;
-        }
 
         // Flag mode: Send single rally
         if (useFlag) {
