@@ -49,6 +49,7 @@ public abstract class DelayedTask implements Runnable, Delayed {
     private ProfileLogger logger; // Will be initialized in the constructor
     protected BotTextRecognitionProvider provider;
     protected TextRecognitionRetrier<Integer> integerHelper;
+    protected TextRecognitionRetrier<Duration> durationHelper;
 
     public DelayedTask(DTOProfiles profile, TpDailyTaskEnum tpTask) {
         this.profile = profile;
@@ -59,6 +60,7 @@ public abstract class DelayedTask implements Runnable, Delayed {
         this.logger = new ProfileLogger(this.getClass(), profile);
         this.provider = new BotTextRecognitionProvider(emuManager, EMULATOR_NUMBER);
         this.integerHelper = new TextRecognitionRetrier<>(provider);
+        this.durationHelper = new TextRecognitionRetrier<>(provider);
     }
 
     protected Object getDistinctKey() {

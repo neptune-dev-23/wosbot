@@ -49,7 +49,7 @@ public class AllianceShopTask extends DelayedTask {
                 new DTOPoint(443,285),
                 5,
                 200L,
-                DTOTesseractSettings.builder().setAllowedChars("0123456789").setPageSegMode(DTOTesseractSettings.PageSegMode.SINGLE_WORD).build(),
+                DTOTesseractSettings.builder().setAllowedChars("0123456789").setPageSegMode(DTOTesseractSettings.PageSegMode.SINGLE_LINE).build(),
                 text -> NumberValidators.matchesPattern(text, Pattern.compile(".*?(\\d+).*")),
                 text -> NumberConverters.regexToInt(text, Pattern.compile(".*?(\\d+).*"))
         );
@@ -254,34 +254,34 @@ public class AllianceShopTask extends DelayedTask {
 
         return new DTOArea(new DTOPoint(x1, y1), new DTOPoint(x2, y2));
     }
-
-    public int getCardIndexFromPoint(DTOPoint point) {
-
-        final int startX = 27;
-        final int startY = 192;
-        final int itemWidth = 215;
-        final int itemHeight = 266;
-        final int spacingX = 5;
-        final int spacingY = 19;
-
-        int x = point.getX();
-        int y = point.getY();
-
-        for (int row = 0; row < 3; row++) {
-            for (int col = 0; col < 3; col++) {
-                int x1 = startX + col * (itemWidth + spacingX);
-                int y1 = startY + row * (itemHeight + spacingY);
-                int x2 = x1 + itemWidth;
-                int y2 = y1 + itemHeight;
-
-                if (x >= x1 && x <= x2 && y >= y1 && y <= y2) {
-                    return row * 3 + col + 1;
-                }
-            }
-        }
-
-        return -1;
-    }
+// in case we need to find a card by point
+//    public int getCardIndexFromPoint(DTOPoint point) {
+//
+//        final int startX = 27;
+//        final int startY = 192;
+//        final int itemWidth = 215;
+//        final int itemHeight = 266;
+//        final int spacingX = 5;
+//        final int spacingY = 19;
+//
+//        int x = point.getX();
+//        int y = point.getY();
+//
+//        for (int row = 0; row < 3; row++) {
+//            for (int col = 0; col < 3; col++) {
+//                int x1 = startX + col * (itemWidth + spacingX);
+//                int y1 = startY + row * (itemHeight + spacingY);
+//                int x2 = x1 + itemWidth;
+//                int y2 = y1 + itemHeight;
+//
+//                if (x >= x1 && x <= x2 && y >= y1 && y <= y2) {
+//                    return row * 3 + col + 1;
+//                }
+//            }
+//        }
+//
+//        return -1;
+//    }
 
     public DTOArea getPriceArea(int cardNumber) {
         if (cardNumber < 1 || cardNumber > 9) {
