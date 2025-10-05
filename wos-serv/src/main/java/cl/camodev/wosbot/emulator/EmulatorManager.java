@@ -4,9 +4,11 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.PriorityQueue;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -42,6 +44,7 @@ public class EmulatorManager {
     private final PriorityQueue<WaitingThread> waitingQueue = new PriorityQueue<>();
     private Emulator emulator;
     private int MAX_RUNNING_EMULATORS = 3;
+    private final Set<Thread> activeSlots = new HashSet<>();
 
     private EmulatorManager() {
 
@@ -545,23 +548,31 @@ public class EmulatorManager {
     }
 
     public void adquireEmulatorSlot(DTOProfiles profile, PositionCallback callback) throws InterruptedException {
+        Thread currentThread = Thread.currentThread();
         lock.lock();
         try {
+            // Check if this thread already has an active slot
+            if (activeSlots.contains(currentThread)) {
+                logger.info("Profile {} already has an active slot, continuing without acquiring a new one.", profile.getName());
+                profile.setQueuePosition(0);
+                return;
+            }
+
             // If a slot is available and no one is waiting, it is acquired immediately.
             logger.info("Profile " + profile.getName() + " is getting queue slot.");
             if (MAX_RUNNING_EMULATORS > 0 && waitingQueue.isEmpty()) {
                 logger.info("Profile " + profile.getName() + " acquired slot immediately.");
                 profile.setQueuePosition(0);
                 MAX_RUNNING_EMULATORS--;
+                activeSlots.add(currentThread); // Track this thread as having a slot
                 return;
             }
 
             // Create the object representing the current thread with its priority
-            WaitingThread currentWaiting = new WaitingThread(Thread.currentThread(), profile);
+            WaitingThread currentWaiting = new WaitingThread(currentThread, profile);
             waitingQueue.add(currentWaiting);
 
             // Wait with a timeout to be able to notify the position periodically.
-
             while (waitingQueue.peek() != currentWaiting || MAX_RUNNING_EMULATORS <= 0) {
                 // Wait for up to 1 second.
                 permitsAvailable.await(1, TimeUnit.SECONDS);
@@ -569,13 +580,14 @@ public class EmulatorManager {
                 // Query and notify the current position of the thread in the queue.
                 int position = getPosition(currentWaiting);
                 profile.setQueuePosition(position);
-                callback.onPositionUpdate(Thread.currentThread(), position);
+                callback.onPositionUpdate(currentThread, position);
             }
             logger.info("Profile {} acquired slot", profile.getName());
             // It's the turn and a slot is available.
             waitingQueue.poll(); // Remove the thread from the queue.
             profile.setQueuePosition(0);
             MAX_RUNNING_EMULATORS--; // Acquire the slot.
+            activeSlots.add(currentThread); // Track this thread as having a slot
 
             // Notify other threads to re-evaluate the condition.
             permitsAvailable.signalAll();
@@ -585,16 +597,26 @@ public class EmulatorManager {
     }
 
     public void releaseEmulatorSlot(DTOProfiles profile) {
+        Thread currentThread = Thread.currentThread();
         lock.lock();
         try {
             logger.info("Profile {} is releasing queue slot.", profile.getName());
             profile.setQueuePosition(Integer.MAX_VALUE);
-            MAX_RUNNING_EMULATORS++;
+
+            // Only increment MAX_RUNNING_EMULATORS if this thread actually had a slot
+            if (activeSlots.remove(currentThread)) {
+                MAX_RUNNING_EMULATORS++;
+                logger.debug("Thread {} released its slot, slots available: {}", currentThread.getName(), MAX_RUNNING_EMULATORS);
+            } else {
+                logger.warn("Thread {} tried to release a slot it didn't have", currentThread.getName());
+            }
+
             permitsAvailable.signalAll();
         } finally {
             lock.unlock();
         }
     }
+
     private int getPosition(WaitingThread waitingThread) {
         int position = 1;
         for (WaitingThread wt : waitingQueue) {
@@ -610,6 +632,7 @@ public class EmulatorManager {
         lock.lock();
         try {
             waitingQueue.clear();
+            activeSlots.clear(); // Clear the set of active slots
             permitsAvailable.signalAll();
         } finally {
             lock.unlock();
