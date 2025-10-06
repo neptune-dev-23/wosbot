@@ -319,7 +319,8 @@ public abstract class DelayedTask implements Runnable, Delayed {
         } catch (IOException | TesseractException e) {
             logWarning("Failed to read stamina via OCR: " + e.getMessage());
         }
-        ensureCorrectScreenLocation(getRequiredStartLocation());
+        tapBackButton();
+        tapBackButton();
     }
 
     protected Integer getSpentStamina() {
