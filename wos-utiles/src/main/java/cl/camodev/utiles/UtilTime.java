@@ -116,6 +116,25 @@ public class UtilTime {
     }
 
     /**
+     * Returns the next Monday at 00:00 UTC in the system's local timezone.
+     * If it's already Monday before midnight UTC, returns next week's Monday.
+     *
+     * @return LocalDateTime representing the next Monday at 00:00 UTC
+     */
+    public static LocalDateTime getNextMondayUtc() {
+        ZonedDateTime nowUtc = ZonedDateTime.now(ZoneId.of("UTC"));
+        ZonedDateTime nextMonday = nowUtc.toLocalDate()
+                .plusDays(1)
+                .atStartOfDay(ZoneId.of("UTC"));
+
+        while (nextMonday.getDayOfWeek() != DayOfWeek.MONDAY) {
+            nextMonday = nextMonday.plusDays(1);
+        }
+
+        return nextMonday.withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
+    }
+
+    /**
      * Parses a time string in the format "HH:mm:ss" or "H:mm:ss" and converts it to total seconds.
      * If the input is invalid or null, returns -1.
      *
