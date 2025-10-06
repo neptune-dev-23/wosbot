@@ -2,10 +2,6 @@ package cl.camodev.wosbot.ot;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.concurrent.DelayQueue;
-import java.util.concurrent.Delayed;
-import java.util.concurrent.TimeUnit;
-
 
 public class DTOTaskQueueStatus {
     private boolean running;
@@ -15,13 +11,11 @@ public class DTOTaskQueueStatus {
     private boolean idleTimeExceeded;
     private Integer idleTimeLimit;
     private Integer backgroundChecks = 0;
-    private Integer BACKGROUND_CHECKS_INTERVAL = 60; // every 60 loops
+    private int backgroundChecksInterval = 60; // every 60 loops
 
     private LocalDateTime pausedAt;
     private LocalDateTime delayUntil;
     private LocalDateTime reconnectAt;
-    
-    private final DelayQueue<Delayed> reconnectTimer = new DelayQueue<>();
 
     private LoopState loopState;
 
@@ -67,8 +61,8 @@ public class DTOTaskQueueStatus {
      */
     public boolean shouldRunBackgroundChecks() {
         this.backgroundChecks++;
-        if (this.backgroundChecks % this.BACKGROUND_CHECKS_INTERVAL == 0) {
-            this.backgroundChecks = 1;
+        if (this.backgroundChecks >= this.backgroundChecksInterval) {
+            this.backgroundChecks = 0;
             return true;
         }
         return false;
@@ -76,24 +70,31 @@ public class DTOTaskQueueStatus {
 
     @SuppressWarnings(value = { "unused" })
     public void setBACKGROUND_CHECKS_INTERVAL(Integer BACKGROUND_CHECKS_INTERVAL) {
-        this.BACKGROUND_CHECKS_INTERVAL = BACKGROUND_CHECKS_INTERVAL;
+        this.backgroundChecksInterval = BACKGROUND_CHECKS_INTERVAL;
     }
 
+
+    /**
+     * Sets the reconnection time and schedules a delayed reconnection.
+     * Updates both the delay until the next action and the reconnection timestamp.
+     *
+     * @param reconnectionTime The time to wait before reconnecting, in minutes
+     */
     public void setReconnectAt(long reconnectionTime) {
         this.setDelayUntil(reconnectionTime);
-        this.setReconnectAt(LocalDateTime.now().plusSeconds(reconnectionTime));
+        this.setReconnectAt(LocalDateTime.now().plusMinutes(reconnectionTime));
     }
 
     public void setReconnectAt(LocalDateTime reconnectAt) {
         this.pause();
         this.setNeedsReconnect(true);
         this.reconnectAt = reconnectAt;
-        this.reconnectTimer.offer(new DelayedReconnect(reconnectAt));
         Thread.startVirtualThread(() -> {
             try {
-                this.reconnectTimer.take();
+                Thread.sleep(Duration.between(LocalDateTime.now(), reconnectAt).toMillis());
                 this.readyToReconnect = true;
             } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
                 throw new RuntimeException(e);
             }
         });
@@ -109,11 +110,11 @@ public class DTOTaskQueueStatus {
     }
 
     public void reset() {
+        this.running = false;
         this.paused = false;
         this.needsReconnect = false;
-        this.pausedAt = null;
-        this.delayUntil = null;
-        this.running = false;
+        this.pausedAt = LocalDateTime.MIN;
+        this.delayUntil = LocalDateTime.now();
     }
 
     public boolean isPaused() {
@@ -171,22 +172,6 @@ public class DTOTaskQueueStatus {
 
     public boolean isReadyToReconnect() {
         return this.readyToReconnect;
-    }
-
-    record DelayedReconnect(LocalDateTime reconnectAt) implements Delayed {
-        @Override
-        public long getDelay(TimeUnit unit) {
-            long delay = Duration.between(LocalDateTime.now(), reconnectAt).toMillis();
-            return unit.convert(delay, TimeUnit.MILLISECONDS);
-        }
-        @Override
-        @SuppressWarnings("NullableProblems")
-        public int compareTo(Delayed other) {
-            if (other instanceof DelayedReconnect) {
-                return this.reconnectAt.compareTo(((DelayedReconnect) other).reconnectAt);
-            }
-            return 0;
-        }
     }
 
     public static class LoopState {
