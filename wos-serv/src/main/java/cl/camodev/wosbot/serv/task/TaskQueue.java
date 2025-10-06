@@ -147,6 +147,7 @@ public class TaskQueue {
 
             if (task != null && task.getDelay(TimeUnit.SECONDS) <= 0) {
                 taskQueue.poll(); // Remove the task from the queue
+                // Future<?> f = workers.submit(task);
                 executedTask = executeTask(task);
                 if (paused == LocalDateTime.MIN) delayUntil = LocalDateTime.MIN;
             } else if (task != null) {
