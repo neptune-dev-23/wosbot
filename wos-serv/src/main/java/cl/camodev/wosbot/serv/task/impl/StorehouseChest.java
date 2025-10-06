@@ -7,7 +7,6 @@ import java.util.regex.Pattern;
 import cl.camodev.utiles.UtilTime;
 import cl.camodev.utiles.number.NumberConverters;
 import cl.camodev.utiles.number.NumberValidators;
-import cl.camodev.utiles.ocr.TextRecognitionRetrier;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
@@ -15,7 +14,6 @@ import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.ot.DTOTesseractSettings;
 import cl.camodev.wosbot.serv.impl.StaminaService;
-import cl.camodev.wosbot.serv.ocr.BotTextRecognitionProvider;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 import cl.camodev.wosbot.serv.task.EnumStartLocation;
 
@@ -26,9 +24,8 @@ public class StorehouseChest extends DelayedTask {
 
     private LocalDateTime nextStaminaClaim = LocalDateTime.now();
 
-
     DTOTesseractSettings staminaSettings = DTOTesseractSettings.builder()
-            .setTextColor(new Color(248,247,234))
+            .setTextColor(new Color(248, 247, 234))
             .setRemoveBackground(true)
             .setAllowedChars("0123456789")
             .setPageSegMode(SINGLE_LINE)
@@ -138,24 +135,23 @@ public class StorehouseChest extends DelayedTask {
                         tapPoint(stamina.getPoint());
                         sleepTask(2000);
                         Integer agnesStamina = integerHelper.execute(
-                                new DTOPoint(436,632),
-                                new DTOPoint(487,657),
+                                new DTOPoint(436, 632),
+                                new DTOPoint(487, 657),
                                 5,
                                 200L,
                                 staminaSettings,
                                 text -> NumberValidators.matchesPattern(text, Pattern.compile(".*?(\\d+).*")),
-                                text -> NumberConverters.regexToInt(text, Pattern.compile(".*?(\\d+).*"))
-                        );
+                                text -> NumberConverters.regexToInt(text, Pattern.compile(".*?(\\d+).*")));
                         if (agnesStamina != null) {
                             StaminaService.getServices().addStamina(profile.getId(), 120);
                             StaminaService.getServices().addStamina(profile.getId(), agnesStamina);
                             logInfo("Claimed 120 stamina + " + agnesStamina + " for Agnes.");
-                        }else {
+                        } else {
                             StaminaService.getServices().addStamina(profile.getId(), 120);
                             logInfo("Claimed 120 from storehouse");
                         }
 
-                        //claim button
+                        // claim button
                         tapRandomPoint(new DTOPoint(250, 930), new DTOPoint(450, 950));
                         sleepTask(4000);
 
