@@ -3,6 +3,7 @@ package cl.camodev.utiles;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAdjusters;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -123,15 +124,9 @@ public class UtilTime {
      */
     public static LocalDateTime getNextMondayUtc() {
         ZonedDateTime nowUtc = ZonedDateTime.now(ZoneId.of("UTC"));
-        ZonedDateTime nextMonday = nowUtc.toLocalDate()
-                .plusDays(1)
-                .atStartOfDay(ZoneId.of("UTC"));
-
-        while (nextMonday.getDayOfWeek() != DayOfWeek.MONDAY) {
-            nextMonday = nextMonday.plusDays(1);
-        }
-
-        return nextMonday.withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
+        ZonedDateTime nextMondayUtc = nowUtc.with(TemporalAdjusters.next(DayOfWeek.MONDAY))
+                .truncatedTo(ChronoUnit.DAYS);
+        return nextMondayUtc.withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
     }
 
     /**
