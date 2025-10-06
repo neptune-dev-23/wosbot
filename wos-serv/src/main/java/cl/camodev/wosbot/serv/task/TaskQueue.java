@@ -4,8 +4,8 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
-import java.util.concurrent.PriorityBlockingQueue;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 import cl.camodev.utiles.UtilTime;
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
@@ -41,6 +41,10 @@ public class TaskQueue {
 
     private final PriorityBlockingQueue<DelayedTask> taskQueue = new PriorityBlockingQueue<>();
     protected EmulatorManager emuManager = EmulatorManager.getInstance();
+
+    // Virtual-thread worker pool and running task registry
+    private final ExecutorService workers = Executors.newVirtualThreadPerTaskExecutor();
+    private final AtomicReference<Future<?>> currentRunningTask = new AtomicReference<>();
 
     // State flags
     private volatile boolean running = false;
@@ -126,7 +130,7 @@ public class TaskQueue {
         boolean idlingTimeExceeded = false;
         acquireEmulatorSlot();
 
-        while (running) {
+        while (running && !Thread.currentThread().isInterrupted()) {
             if (paused != LocalDateTime.MIN && paused != LocalDateTime.MAX) {
                 handlePausedState();
                 continue;
