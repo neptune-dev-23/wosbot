@@ -92,7 +92,7 @@ public class ExpertSkillTrainingTask extends DelayedTask {
 
         // map the available experts to not over loop on experts that we don't have
         HashMap<EXPERTS, Boolean> expertAvailabilityMap = new HashMap<>();
-
+        List<EXPERTS> expertsOrderList = new ArrayList<>(); // To keep track of the order of detected experts
         //search all expert badges to know which experts we have, we must search 1 by 1 then cling on change expert button (right arrow)
 
         EnumTemplates[] expertBadges = {
@@ -106,7 +106,7 @@ public class ExpertSkillTrainingTask extends DelayedTask {
             Optional<BadgeSearchResult> foundResult = Arrays.stream(expertBadges)
                     .parallel()
                     .map(expertBadge -> {
-                        DTOImageSearchResult badge = searchTemplateWithRetries(expertBadge);
+                        DTOImageSearchResult badge = searchTemplateWithRetries(expertBadge, 90, 2);
                         EXPERTS expert = getExpertFromTemplate(expertBadge);
                         return new BadgeSearchResult(badge, expert, expertBadge);
                     })
@@ -120,6 +120,7 @@ public class ExpertSkillTrainingTask extends DelayedTask {
                 if (alreadyAvailable) {
                     break;
                 }
+                expertsOrderList.add(result.expert);
                 expertAvailabilityMap.put(result.expert, true);
             } else {
                 Arrays.stream(expertBadges)
@@ -174,19 +175,13 @@ public class ExpertSkillTrainingTask extends DelayedTask {
                     if (currentExpert != null) {
                         logInfo("Detected current expert: " + currentExpert);
                     } else {
-                        logWarning("Could not detect current expert. Assuming first available expert.");
-                        // Find first available expert
-                        currentExpert = expertAvailabilityMap.entrySet().stream()
-                                .filter(Map.Entry::getValue)
-                                .map(Map.Entry::getKey)
-                                .min(Comparator.comparingInt(EXPERTS::getPosition))
-                                .orElse(EXPERTS.CYRILLE);
+                        logWarning("Could not detect current expert. Assuming first expert in detected order.");
+                        currentExpert = expertsOrderList.isEmpty() ? EXPERTS.CYRILLE : expertsOrderList.get(0);
                     }
                 }
 
-                // Calculate how many taps are needed considering only available experts
-                List<EXPERTS> availableExpertsList = getAvailableExpertsInOrder(expertAvailabilityMap);
-                int tapsNeeded = calculateTapsToReach(currentExpert, expert, availableExpertsList);
+                // Calculate how many taps are needed using the dynamically detected order
+                int tapsNeeded = calculateTapsToReach(currentExpert, expert, expertsOrderList);
 
                 if (tapsNeeded > 0) {
                     logInfo("Moving from " + currentExpert + " to " + expert + " - tapping " + tapsNeeded + " time(s)");
@@ -409,8 +404,9 @@ private DTOArea getSkillArea(ExpertSkillItem skillItem) {
     private enum EXPERTS {
         CYRILLE(1),
         AGNES(2),
-        ROMULUS(3),
-        HOLGER(4);
+        HOLGER(3),
+        ROMULUS(4);
+
 
         private final int position;
 
