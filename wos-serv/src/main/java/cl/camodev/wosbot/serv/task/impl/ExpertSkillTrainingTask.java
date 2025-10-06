@@ -12,10 +12,7 @@ import cl.camodev.wosbot.serv.task.DelayedTask;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Task for training expert skills based on priority configuration
@@ -154,6 +151,8 @@ public class ExpertSkillTrainingTask extends DelayedTask {
         tapRandomPoint(new DTOPoint(500,1232), new DTOPoint(570,1251),1,500);
 
         // 3. Iterate through priorities and train skills
+        EXPERTS currentExpert = null; // Track the current expert to avoid unnecessary navigation
+
         for (DTOPriorityItem priorityItem : enabledPriorities) {
             //check if the expert related is available
             ExpertSkillItem skillItem = ExpertSkillItem.valueOf(priorityItem.getIdentifier().toUpperCase());
@@ -164,20 +163,56 @@ public class ExpertSkillTrainingTask extends DelayedTask {
                 continue;
             }
             logInfo("Training skill: " + priorityItem.getName() + " for expert: " + expert);
-            //navigate to expert via template
-            EnumTemplates expertBadgeTemplate = getExpertTemplate(skillItem);
-            DTOImageSearchResult expertBadgeResult = searchTemplateWithRetries(expertBadgeTemplate, 90, 2);
-            int availableExperts = (int) expertAvailabilityMap.values().stream().filter(Boolean::booleanValue).count();
-            int currentIndex = 0;
-            while (!expertBadgeResult.isFound() && currentIndex < availableExperts) {
-                tapPoint(new DTOPoint(671,650));
-                expertBadgeResult = searchTemplateWithRetries(expertBadgeTemplate, 90, 2);
-                currentIndex++;
+
+            // Only navigate to expert if it's different from the current one
+            if (currentExpert == null || !currentExpert.equals(expert)) {
+                logInfo("Navigating to expert: " + expert);
+
+                // Detect current expert by checking which badge is visible
+                if (currentExpert == null) {
+                    currentExpert = detectCurrentExpert();
+                    if (currentExpert != null) {
+                        logInfo("Detected current expert: " + currentExpert);
+                    } else {
+                        logWarning("Could not detect current expert. Assuming first available expert.");
+                        // Find first available expert
+                        currentExpert = expertAvailabilityMap.entrySet().stream()
+                                .filter(Map.Entry::getValue)
+                                .map(Map.Entry::getKey)
+                                .min(Comparator.comparingInt(EXPERTS::getPosition))
+                                .orElse(EXPERTS.CYRILLE);
+                    }
+                }
+
+                // Calculate how many taps are needed considering only available experts
+                List<EXPERTS> availableExpertsList = getAvailableExpertsInOrder(expertAvailabilityMap);
+                int tapsNeeded = calculateTapsToReach(currentExpert, expert, availableExpertsList);
+
+                if (tapsNeeded > 0) {
+                    logInfo("Moving from " + currentExpert + " to " + expert + " - tapping " + tapsNeeded + " time(s)");
+
+                    for (int i = 0; i < tapsNeeded; i++) {
+                        tapPoint(new DTOPoint(671, 650)); // right arrow to change expert
+                        sleepTask(300);
+                    }
+                } else if (tapsNeeded == 0) {
+                    logInfo("Already at expert: " + expert);
+                }
+
+                //Verify we're on the correct expert by checking the badge
+                EnumTemplates expertBadgeTemplate = getExpertTemplate(skillItem);
+                DTOImageSearchResult expertBadgeResult = searchTemplateWithRetries(expertBadgeTemplate, 90, 2);
+
+                if (!expertBadgeResult.isFound()) {
+                    logWarning("Could not verify navigation to expert: " + expert + ". Badge not found. Skipping skill: " + priorityItem.getName());
+                    continue;
+                }
+
+                currentExpert = expert; // Update the current expert
+            } else {
+                logInfo("Already on expert " + expert + " page, skipping navigation.");
             }
-            if (!expertBadgeResult.isFound()) {
-                logWarning("Could not navigate to expert: " + expert + ". Skipping skill: " + priorityItem.getName());
-                continue;
-            }
+
             DTOArea skillArea = getSkillArea(skillItem);
             tapRandomPoint(skillArea.topLeft(), skillArea.bottomRight(),1,300);
 
@@ -214,11 +249,13 @@ public class ExpertSkillTrainingTask extends DelayedTask {
                 tapRandomPoint(new DTOPoint(474,888), new DTOPoint(579,910),1,400);
                 //check if the pop-up disappeared, that mean it was successful
 
-                DTOImageSearchResult badgeResult = searchTemplateWithRetries(expertBadgeTemplate, 90, 3);
+                DTOImageSearchResult badgeResult = searchTemplateWithRetries(getExpertTemplate(skillItem), 90, 3);
 
                 if (badgeResult.isFound()) {
                     logInfo("Successfully started training for skill: " + priorityItem.getName() + " with duration: " + learningTime.label());
                     this.reschedule(LocalDateTime.now().plus(learningTime.duration())); // add 1 minute buffer
+                    tapBackButton();
+                    tapBackButton();
                     return;
                 }else{
                     tapRandomPoint(new DTOPoint(284,329), new DTOPoint(452,359),1,300);
@@ -281,6 +318,72 @@ private DTOArea getSkillArea(ExpertSkillItem skillItem) {
         };
     }
 
+    /**
+     * Detect which expert is currently visible by searching for their badge
+     */
+    private EXPERTS detectCurrentExpert() {
+        EnumTemplates[] expertBadges = {
+                EnumTemplates.EXPERT_TRAINING_CYRILLE_BADGE,
+                EnumTemplates.EXPERT_TRAINING_AGNES_BADGE,
+                EnumTemplates.EXPERT_TRAINING_ROMULUS_BADGE,
+                EnumTemplates.EXPERT_TRAINING_HOLGER_BADGE
+        };
+
+        for (EnumTemplates badge : expertBadges) {
+            DTOImageSearchResult result = searchTemplateWithRetries(badge, 90, 1);
+            if (result.isFound()) {
+                return getExpertFromTemplate(badge);
+            }
+        }
+
+        return null; // Could not detect current expert
+    }
+
+    /**
+     * Get a list of available experts in order based on the availability map
+     */
+    private List<EXPERTS> getAvailableExpertsInOrder(HashMap<EXPERTS, Boolean> availabilityMap) {
+        return Arrays.stream(EXPERTS.values())
+                .filter(expert -> availabilityMap.getOrDefault(expert, false))
+                .sorted(Comparator.comparingInt(EXPERTS::getPosition))
+                .toList();
+    }
+
+    /**
+     * Calculate how many taps are needed to reach the target expert
+     * considering only the available experts (carousel is dynamic)
+     * Example: If only CYRILLE, AGNES, ROMULUS are available (HOLGER is missing):
+     * - From CYRILLE to AGNES = 1 tap
+     * - From AGNES to ROMULUS = 1 tap
+     * - From ROMULUS to CYRILLE = 1 tap (wraps around, skipping HOLGER)
+     */
+    private int calculateTapsToReach(EXPERTS current, EXPERTS target, List<EXPERTS> availableExperts) {
+        if (current.equals(target)) {
+            return 0;
+        }
+
+        int currentIndex = availableExperts.indexOf(current);
+        int targetIndex = availableExperts.indexOf(target);
+
+        if (currentIndex == -1 || targetIndex == -1) {
+            logWarning("Expert not found in available list. Current: " + current + ", Target: " + target);
+            return -1;
+        }
+
+        // Calculate distance in the circular list
+        int size = availableExperts.size();
+        int distance;
+
+        if (targetIndex > currentIndex) {
+            distance = targetIndex - currentIndex;
+        } else {
+            // Wrap around
+            distance = (size - currentIndex) + targetIndex;
+        }
+
+        return distance;
+    }
+
     public record LearningTime(String label, Duration duration) {
 
         public static final LearningTime TIME_00_10_00 = new LearningTime("00:10:00", Duration.ofMinutes(10));
@@ -304,10 +407,20 @@ private DTOArea getSkillArea(ExpertSkillItem skillItem) {
     }
 
     private enum EXPERTS {
-        CYRILLE,
-        AGNES,
-        HOLGER,
-        ROMULUS
+        CYRILLE(1),
+        AGNES(2),
+        ROMULUS(3),
+        HOLGER(4);
+
+        private final int position;
+
+        EXPERTS(int position) {
+            this.position = position;
+        }
+
+        public int getPosition() {
+            return position;
+        }
     }
     record BadgeSearchResult(DTOImageSearchResult badge, EXPERTS expert, EnumTemplates template) {}
 
