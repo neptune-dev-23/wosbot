@@ -105,11 +105,10 @@ public class TaskQueue {
      * Starts queue processing.
      */
     public void start() {
-        if (taskQueueStatus != null && taskQueueStatus.isRunning()) {
+        if (taskQueueStatus.isRunning()) {
             return;
         }
 
-        assert taskQueueStatus != null;
         taskQueueStatus.setRunning(true);
 
         schedulerThread = Thread.ofVirtual().unstarted(this::processTaskQueue);
@@ -287,7 +286,7 @@ public class TaskQueue {
             logErrorWithTask(task, "Error executing task: " + e.getMessage());
         }
     }
-
+    @SuppressWarnings(value = { "unused" })
     private void handleReconnectStateException(ProfileInReconnectStateException e) {
         Long reconnectionTime = profile.getReconnectionTime(); // in minutes
         if (reconnectionTime != null && reconnectionTime > 0) {
