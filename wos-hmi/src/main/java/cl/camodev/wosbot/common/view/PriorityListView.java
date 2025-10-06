@@ -2,6 +2,7 @@ package cl.camodev.wosbot.common.view;
 
 import cl.camodev.wosbot.ot.DTOPriorityItem;
 import cl.camodev.utiles.StyleConstants;
+import javafx.animation.AnimationTimer;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -16,25 +17,33 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
 /**
  * Generic custom control to manage priority lists.
  * Can be used for purchase priorities, tasks, events, etc.
- *
  * Features:
  * - Enable/Disable items
  * - Sort by priority (1 = highest priority)
  * - Move items up/down with buttons
  * - Drag and drop items to reorder
+ * - Auto-scroll when dragging near edges
  */
 public class PriorityListView extends HBox {
 
     private static final DataFormat PRIORITY_DATA_FORMAT = new DataFormat("application/x-java-priority-item");
+    private static final double SCROLL_ZONE_HEIGHT = 80.0; // Pixels from edge to trigger scroll (increased for smoother gradient)
+    private static final double MAX_SCROLL_SPEED = 0.015; // Maximum scroll speed at the edge (reduced from 0.05)
+    private static final double MIN_SCROLL_SPEED = 0.002; // Minimum scroll speed at the zone boundary (reduced from 0.005)
+
     private final ListView<DTOPriorityItem> listView;
     private final ObservableList<DTOPriorityItem> items;
     private Runnable onChangeCallback;
+    private AnimationTimer autoScrollTimer;
+    private double scrollDirection = 0; // -1 = up, 1 = down, 0 = no scroll
+    private double scrollSpeed = 0; // Current scroll speed (proportional to distance from edge)
 
     public PriorityListView() {
         this.items = FXCollections.observableArrayList();
@@ -43,6 +52,7 @@ public class PriorityListView extends HBox {
         setupListView();
         setupLayout();
         applyDarkStyles();
+        setupAutoScroll();
     }
 
     private void setupListView() {
@@ -141,7 +151,7 @@ public class PriorityListView extends HBox {
      * Sorts items by priority
      */
     private void sortByPriority() {
-        FXCollections.sort(items, (p1, p2) -> Integer.compare(p1.getPriority(), p2.getPriority()));
+        FXCollections.sort(items, Comparator.comparingInt(DTOPriorityItem::getPriority));
     }
 
     /**
@@ -180,6 +190,40 @@ public class PriorityListView extends HBox {
         }
 
         sortByPriority();
+    }
+
+    /**
+     * Sets up the auto-scroll animation timer
+     */
+    private void setupAutoScroll() {
+        autoScrollTimer = new AnimationTimer() {
+            @Override
+            public void handle(long now) {
+                if (scrollDirection != 0 && scrollSpeed > 0) {
+                    ScrollBar scrollBar = getVerticalScrollBar();
+                    if (scrollBar != null && scrollBar.isVisible()) {
+                        double currentValue = scrollBar.getValue();
+                        double newValue = currentValue + (scrollDirection * scrollSpeed);
+                        newValue = Math.max(scrollBar.getMin(), Math.min(scrollBar.getMax(), newValue));
+                        scrollBar.setValue(newValue);
+                    }
+                }
+            }
+        };
+    }
+
+    /**
+     * Gets the vertical scroll bar from the ListView
+     */
+    private ScrollBar getVerticalScrollBar() {
+        for (var node : listView.lookupAll(".scroll-bar")) {
+            if (node instanceof ScrollBar scrollBar) {
+                if (scrollBar.getOrientation() == javafx.geometry.Orientation.VERTICAL) {
+                    return scrollBar;
+                }
+            }
+        }
+        return null;
     }
 
     /**
@@ -229,16 +273,49 @@ public class PriorityListView extends HBox {
                 content.put(PRIORITY_DATA_FORMAT, getIndex());
                 dragboard.setContent(content);
 
+                // Start auto-scroll timer
+                autoScrollTimer.start();
+
                 event.consume();
             });
 
-            // Update style based on cursor position
+            // Update style based on cursor position and handle auto-scroll
             setOnDragOver(event -> {
                 if (event.getGestureSource() != this &&
                         event.getDragboard().hasContent(PRIORITY_DATA_FORMAT)) {
                     event.acceptTransferModes(TransferMode.MOVE);
 
-                    // Determine if cursor is in upper or lower half
+                    // Calculate mouse position relative to ListView
+                    double mouseYInListView = event.getSceneY() - listView.localToScene(0, 0).getY();
+                    double listViewHeight = listView.getHeight();
+
+                    // Determine scroll direction and speed based on mouse position
+                    if (mouseYInListView < SCROLL_ZONE_HEIGHT) {
+                        // Near top edge - scroll up
+                        scrollDirection = -1;
+                        // Calculate proportional speed: closer to edge = faster
+                        // Distance from top edge (0 = at edge, SCROLL_ZONE_HEIGHT = at boundary)
+                        // Normalize to 0-1 range (1 = at edge, 0 = at boundary)
+                        double proximity = 1.0 - (mouseYInListView / SCROLL_ZONE_HEIGHT);
+                        // Calculate speed: interpolate between MIN and MAX based on proximity
+                        scrollSpeed = MIN_SCROLL_SPEED + (proximity * (MAX_SCROLL_SPEED - MIN_SCROLL_SPEED));
+                    } else if (mouseYInListView > listViewHeight - SCROLL_ZONE_HEIGHT) {
+                        // Near bottom edge - scroll down
+                        scrollDirection = 1;
+                        // Calculate proportional speed: closer to edge = faster
+                        // Distance from bottom edge (0 = at edge, SCROLL_ZONE_HEIGHT = at boundary)
+                        double distanceFromEdge = listViewHeight - mouseYInListView;
+                        // Normalize to 0-1 range (1 = at edge, 0 = at boundary)
+                        double proximity = 1.0 - (distanceFromEdge / SCROLL_ZONE_HEIGHT);
+                        // Calculate speed: interpolate between MIN and MAX based on proximity
+                        scrollSpeed = MIN_SCROLL_SPEED + (proximity * (MAX_SCROLL_SPEED - MIN_SCROLL_SPEED));
+                    } else {
+                        // In the middle - no scroll
+                        scrollDirection = 0;
+                        scrollSpeed = 0;
+                    }
+
+                    // Determine if cursor is in upper or lower half of this cell
                     double mouseY = event.getY();
                     double cellHeight = getHeight();
 
@@ -296,14 +373,10 @@ public class PriorityListView extends HBox {
                         // Item dragged from top to bottom
                         if (dropAbove) {
                             targetIdx = thisIdx - 1;
-                        } else {
-                            targetIdx = thisIdx;
                         }
                     } else {
                         // Item dragged from bottom to top
-                        if (dropAbove) {
-                            targetIdx = thisIdx;
-                        } else {
+                        if (!dropAbove) {
                             targetIdx = thisIdx + 1;
                         }
                     }
@@ -323,6 +396,11 @@ public class PriorityListView extends HBox {
                     success = true;
                 }
 
+                // Stop auto-scroll
+                scrollDirection = 0;
+                scrollSpeed = 0;
+                autoScrollTimer.stop();
+
                 event.setDropCompleted(success);
                 event.consume();
             });
@@ -333,6 +411,12 @@ public class PriorityListView extends HBox {
                         StyleConstants.PRIORITY_LIST_CELL_DRAG_OVER_TOP,
                         StyleConstants.PRIORITY_LIST_CELL_DRAG_OVER_BOTTOM
                 );
+
+                // Stop auto-scroll
+                scrollDirection = 0;
+                scrollSpeed = 0;
+                autoScrollTimer.stop();
+
                 event.consume();
             });
         }
