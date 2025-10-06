@@ -3,6 +3,7 @@ package cl.camodev.utiles;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAdjusters;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -113,6 +114,19 @@ public class UtilTime {
         }
         
         return proposedSchedule;
+    }
+
+    /**
+     * Returns the next Monday at 00:00 UTC in the system's local timezone.
+     * If it's already Monday before midnight UTC, returns next week's Monday.
+     *
+     * @return LocalDateTime representing the next Monday at 00:00 UTC
+     */
+    public static LocalDateTime getNextMondayUtc() {
+        ZonedDateTime nowUtc = ZonedDateTime.now(ZoneId.of("UTC"));
+        ZonedDateTime nextMondayUtc = nowUtc.with(TemporalAdjusters.next(DayOfWeek.MONDAY))
+                .truncatedTo(ChronoUnit.DAYS);
+        return nextMondayUtc.withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
     }
 
     /**
