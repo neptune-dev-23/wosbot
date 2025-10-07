@@ -17,7 +17,7 @@ public class DTOTaskQueueStatus {
     private LocalDateTime delayUntil;
     private LocalDateTime reconnectAt;
 
-    private LoopState loopState;
+    private LoopState loopState = new LoopState();
 
     public DTOTaskQueueStatus() {
         this.running = false;
