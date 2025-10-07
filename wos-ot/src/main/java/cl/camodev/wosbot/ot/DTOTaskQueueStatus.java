@@ -17,7 +17,7 @@ public class DTOTaskQueueStatus {
     private LocalDateTime delayUntil;
     private LocalDateTime reconnectAt;
 
-    private LoopState loopState;
+    private LoopState loopState = new LoopState();
 
     public DTOTaskQueueStatus() {
         this.running = false;
@@ -178,7 +178,7 @@ public class DTOTaskQueueStatus {
         private final long startTime;
         private long endTime;
 
-        private boolean executedTask;
+        private boolean executedTask = false;
 
         public LoopState() {
             this.startTime = System.currentTimeMillis();
