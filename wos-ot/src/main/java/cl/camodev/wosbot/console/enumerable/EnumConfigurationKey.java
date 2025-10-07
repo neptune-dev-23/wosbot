@@ -202,6 +202,8 @@ public enum EnumConfigurationKey {
 	EXPERT_ROMULUS_TAG_BOOL("false", Boolean.class),
 	EXPERT_ROMULUS_TROOPS_BOOL("false", Boolean.class),
 	EXPERT_ROMULUS_TROOPS_TYPE_STRING("Infantry", String.class),
+	EXPERT_SKILL_TRAINING_ENABLED_BOOL("false", Boolean.class),
+	EXPERT_SKILL_TRAINING_PRIORITIES_STRING("", String.class),
 
     // ========================================================================
     // PRIORITIZED LIST SETTINGS

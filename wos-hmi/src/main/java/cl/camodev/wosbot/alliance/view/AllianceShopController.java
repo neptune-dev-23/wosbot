@@ -29,25 +29,14 @@ public class AllianceShopController extends AbstractProfileController {
     @FXML
     public void initialize() {
         setupMappings();
-        initializePriorityLists();
         initializeChangeEvents();
     }
 
     private void setupMappings() {
         checkBoxMappings.put(enableAllianceShopCheckbox, EnumConfigurationKey.ALLIANCE_SHOP_ENABLED_BOOL);
-        priorityListMappings.put(allianceShopPriorities, EnumConfigurationKey.ALLIANCE_SHOP_PRIORITIES_STRING);
+        registerPriorityList(allianceShopPriorities, EnumConfigurationKey.ALLIANCE_SHOP_PRIORITIES_STRING, AllianceShopItem.class);
         textFieldMappings.put(minCoinsToActivateTextField, EnumConfigurationKey.ALLIANCE_SHOP_MIN_COINS_TO_ACTIVATE_INT);
         textFieldMappings.put(minCoinsTextField, EnumConfigurationKey.ALLIANCE_SHOP_MIN_COINS_INT);
     }
 
-    private void initializePriorityLists() {
-        initializePriorityListFromEnum(allianceShopPriorities, AllianceShopItem.class);
-    }
-
-    @Override
-    public void onProfileLoad(cl.camodev.wosbot.profile.model.ProfileAux profile) {
-        super.onProfileLoad(profile);
-        mergeEnumWithSavedPriorities(profile, allianceShopPriorities, AllianceShopItem.class,
-            EnumConfigurationKey.ALLIANCE_SHOP_PRIORITIES_STRING);
-    }
 }
