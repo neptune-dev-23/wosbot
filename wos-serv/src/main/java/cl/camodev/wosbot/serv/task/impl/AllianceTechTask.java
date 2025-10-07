@@ -67,15 +67,15 @@ public class AllianceTechTask extends DelayedTask {
 			tapRandomPoint(new DTOPoint(270, 30), new DTOPoint(280, 80), 3, 200);
 			tapRandomPoint(new DTOPoint(580, 30), new DTOPoint(670, 50), 1, 1000);
 
-			Integer currentCoins = integerHelper.execute(
-					new DTOPoint(272, 257),
-					new DTOPoint(443, 285),
-					5,
-					200L,
-					DTOTesseractSettings.builder().setAllowedChars("0123456789")
-							.setPageSegMode(DTOTesseractSettings.PageSegMode.SINGLE_WORD).build(),
-					text -> NumberValidators.matchesPattern(text, Pattern.compile(".*?(\\d+).*")),
-					text -> NumberConverters.regexToInt(text, Pattern.compile(".*?(\\d+).*")));
+                Integer currentCoins = integerHelper.execute(
+                        new DTOPoint(272, 257),
+                        new DTOPoint(443, 285),
+                        5,
+                        200L,
+                        DTOTesseractSettings.builder().setAllowedChars("0123456789")
+                                .setPageSegMode(DTOTesseractSettings.PageSegMode.SINGLE_LINE).build(),
+                        text -> NumberValidators.matchesPattern(text, Pattern.compile(".*?(\\d+).*")),
+                        text -> NumberConverters.regexToInt(text, Pattern.compile(".*?(\\d+).*")));
 
 			if (currentCoins == null) {
 				logWarning("Could not read current alliance coins.");
