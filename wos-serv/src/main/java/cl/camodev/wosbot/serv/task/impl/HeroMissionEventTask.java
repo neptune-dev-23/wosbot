@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
-import cl.camodev.utiles.UtilRally;
 import cl.camodev.utiles.UtilTime;
 import cl.camodev.wosbot.almac.entity.DailyTask;
 import cl.camodev.wosbot.almac.repo.DailyTaskRepository;
@@ -66,7 +65,8 @@ public class HeroMissionEventTask extends DelayedTask {
         }
 
         // Verify if there's enough stamina to hunt, if not, reschedule the task
-        if (!hasEnoughStaminaAndMarches(minStaminaLevel, refreshStaminaLevel)) return;
+        if (!checkStaminaAndMarchesOrReschedule(minStaminaLevel, refreshStaminaLevel))
+            return;
 
         int attempt = 0;
         while (attempt < 2) {
@@ -192,8 +192,7 @@ public class HeroMissionEventTask extends DelayedTask {
 
         // Select flag if needed
         if (useFlag) {
-            tapPoint(UtilRally.getMarchFlagPoint(flagNumber));
-            sleepTask(300);
+            selectFlag(flagNumber);
         }
 
         // Parse travel time
@@ -244,14 +243,14 @@ public class HeroMissionEventTask extends DelayedTask {
             logError("Failed to parse travel time via OCR. Rescheduling in 10 minutes as fallback.");
             LocalDateTime rescheduleTime = LocalDateTime.now().plusMinutes(10);
             reschedule(rescheduleTime);
-            logInfo("Reaper rally with flag scheduled to return in "
+            logInfo("Reaper rally scheduled to return in "
                     + UtilTime.localDateTimeToDDHHMMSS(rescheduleTime));
             return true;
         }
 
         LocalDateTime rescheduleTime = LocalDateTime.now().plusSeconds(travelTimeSeconds).plusMinutes(5);
         reschedule(rescheduleTime);
-        logInfo("Reaper with flag scheduled to return in " + UtilTime.localDateTimeToDDHHMMSS(rescheduleTime));
+        logInfo("Reaper rally scheduled to return in " + UtilTime.localDateTimeToDDHHMMSS(rescheduleTime));
         return true;
     }
 
