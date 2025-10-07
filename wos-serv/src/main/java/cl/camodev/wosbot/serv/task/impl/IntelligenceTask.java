@@ -99,7 +99,7 @@ public class IntelligenceTask extends DelayedTask {
 		}
 
 		if (profile.getConfig(EnumConfigurationKey.INTEL_BEASTS_BOOL, Boolean.class)) {
-			if ((useSmartProcessing && !marchQueueLimitReached) || (!useSmartProcessing)) {
+			if (!useSmartProcessing || !marchQueueLimitReached) {
 				ensureOnIntelScreen();
 
 				boolean fireBeastsEnabled = profile.getConfig(EnumConfigurationKey.INTEL_FIRE_BEAST_BOOL,
@@ -344,7 +344,12 @@ public class IntelligenceTask extends DelayedTask {
                     new DTOPoint(590, 1245),
                     5,
                     200L,
-                    DTOTesseractSettings.builder().setRemoveBackground(true).setTextColor(new Color(255,255,255)).setPageSegMode(DTOTesseractSettings.PageSegMode.SINGLE_WORD).build(),
+                    DTOTesseractSettings.builder()
+                            .setRemoveBackground(true)
+                            .setTextColor(new Color(255,255,255))
+                            //.setDebug(true)
+                            .setPageSegMode(DTOTesseractSettings.PageSegMode.SINGLE_LINE)
+                            .build(),
                     text -> NumberValidators.matchesPattern(text, Pattern.compile(".*?(\\d+).*")),
                     text -> NumberConverters.regexToInt(text, Pattern.compile(".*?(\\d+).*"))
             );
@@ -453,38 +458,27 @@ public class IntelligenceTask extends DelayedTask {
 		int totalMarchesAvailable = profile.getConfig(EnumConfigurationKey.GATHER_ACTIVE_MARCH_QUEUE_INT,
 				Integer.class);
 		int activeMarchQueues = 0;
-		boolean resourceFound = false;
 		LocalDateTime earliestAvailableMarch = LocalDateTime.now().plusHours(14); // Set to earliest available march to
 																					// a very long time (impossible for
 																					// gatherer to take so long)
 		for (GatherType gatherType : GatherType.values()) { // iterate over all the gather types
-			resourceFound = false;
-			for (int i = 0; i < 5; i++) {
-				DTOImageSearchResult resource = emuManager.searchTemplate(EMULATOR_NUMBER,
-						gatherType.getTemplate(), new DTOPoint(10, 342), new DTOPoint(435, 772), 90);
-				if (!resource.isFound()) {
-					logInfo("March queue for " + gatherType.getName() + " not found (Attempt " + i + 1 + "/5) (Used: "
-							+ activeMarchQueues + "/" + totalMarchesAvailable + ")");
-					continue;
-				}
-				resourceFound = true;
-				activeMarchQueues++;
-				logInfo("March queue for " + gatherType.getName()
-						+ " is used. Checking for remaining available march queues... (Used: " + activeMarchQueues + "/"
-						+ totalMarchesAvailable + ")");
-				LocalDateTime task = iDailyTaskRepository
-						.findByProfileIdAndTaskName(profile.getId(), gatherType.getTask()).getNextSchedule();
-				if (task.isBefore(earliestAvailableMarch)) {
-					earliestAvailableMarch = task;
-					logInfo("Updated earliest available march: " + earliestAvailableMarch);
-				}
-				break;
-			}
-			if (!resourceFound) {
-				logInfo("March queue for " + gatherType.getName()
-						+ " is not used. Checking for next available march queue... (Used: " + activeMarchQueues + "/"
-						+ totalMarchesAvailable + ")");
-			}
+            DTOImageSearchResult resource = searchTemplateWithRetries(gatherType.getTemplate());
+            if (!resource.isFound()) {
+                logInfo("March queue for " + gatherType.getName()
+                        + " is not used. Checking for next available march queue... (Used: " + activeMarchQueues + "/"
+                        + totalMarchesAvailable + ")");
+                continue;
+            }
+            // march is detected
+            activeMarchQueues++;
+            logInfo("March queue for " + gatherType.getName() + " found. (Used: "
+                    + activeMarchQueues + "/" + totalMarchesAvailable + ")");
+            LocalDateTime task = iDailyTaskRepository
+                    .findByProfileIdAndTaskName(profile.getId(), gatherType.getTask()).getNextSchedule();
+            if (task.isBefore(earliestAvailableMarch)) {
+                earliestAvailableMarch = task;
+                logInfo("Updated earliest available march: " + earliestAvailableMarch);
+            }
 		}
 		if (activeMarchQueues >= totalMarchesAvailable) {
 			logInfo("All march queues used. Earliest available march: " + earliestAvailableMarch);

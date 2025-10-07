@@ -27,7 +27,6 @@ public class AllianceMobilizationTask extends DelayedTask {
 
     public AllianceMobilizationTask(DTOProfiles profile, TpDailyTaskEnum tpTask) {
         super(profile, tpTask);
-        // TODO: Add scheduling logic if needed, similar to ArenaTask
     }
 
     @Override
@@ -47,9 +46,9 @@ public class AllianceMobilizationTask extends DelayedTask {
 
         // Navigate to the Alliance Mobilization screen
         if (!navigateToAllianceMobilization()) {
-            logInfo("Failed to navigate. Retrying in 5 minutes.");
-            LocalDateTime nextRun = LocalDateTime.now().plusMinutes(5);
-            this.reschedule(nextRun);
+            LocalDateTime nextMonday = UtilTime.getNextMondayUtc();
+            logInfo("Failed to navigate. Event may not be active. Retrying on next Monday at " + nextMonday + ".");
+            this.reschedule(nextMonday);
             return;
         }
 
@@ -547,7 +546,6 @@ public class AllianceMobilizationTask extends DelayedTask {
 
         // Decision logic based on points, enabled status, and whether another task is running
         boolean pointsMeetMinimum = detectedPoints >= minimumPoints;
-        boolean taskIsGood = isTaskTypeEnabled && pointsMeetMinimum;
 
         if (!isTaskTypeEnabled) {
             logInfo("→ Refreshing (disabled)");

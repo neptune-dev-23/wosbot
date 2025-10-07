@@ -514,3 +514,78 @@
 .scroll-pane .scroll-bar:horizontal {
     -fx-pref-height: 8px;
 }
+
+/* ========================================
+   Priority List View Styles
+   ======================================== */
+
+/* List View Container */
+.priority-list-view {
+    -fx-background-color: #2b2b2b;
+    -fx-border-color: #3c3f41;
+    -fx-border-width: 1px;
+}
+
+/* List Cell Base Style */
+.priority-list-cell {
+    -fx-background-color: #2b2b2b;
+    -fx-text-fill: #cccccc;
+}
+
+/* List Cell Hover Effect */
+.priority-list-cell:hover {
+    -fx-background-color: #313335;
+}
+
+/* List Cell - Drag Over Top */
+.priority-list-cell-drag-over-top {
+    -fx-background-color: #2b2b2b;
+    -fx-border-color: #4A9EFF transparent transparent transparent;
+    -fx-border-width: 2 0 0 0;
+}
+
+/* List Cell - Drag Over Bottom */
+.priority-list-cell-drag-over-bottom {
+    -fx-background-color: #2b2b2b;
+    -fx-border-color: transparent transparent #4A9EFF transparent;
+    -fx-border-width: 0 0 2 0;
+}
+
+/* Drag Indicator (☰ icon) */
+.priority-drag-indicator {
+    -fx-font-size: 14px;
+    -fx-text-fill: #808080;
+    -fx-cursor: hand;
+}
+
+.priority-drag-indicator-disabled {
+    -fx-font-size: 14px;
+    -fx-text-fill: #555555;
+    -fx-cursor: hand;
+}
+
+/* Priority Number Label */
+.priority-label {
+    -fx-font-weight: bold;
+    -fx-font-size: 12px;
+    -fx-text-fill: #4A9EFF;
+}
+
+.priority-label-disabled {
+    -fx-font-weight: bold;
+    -fx-font-size: 12px;
+    -fx-text-fill: #ff5555;
+}
+
+/* Item Name Label */
+.priority-name-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: #cccccc;
+    -fx-opacity: 1.0;
+}
+
+.priority-name-label-disabled {
+    -fx-font-size: 12px;
+    -fx-text-fill: #888888;
+    -fx-opacity: 0.5;
+}

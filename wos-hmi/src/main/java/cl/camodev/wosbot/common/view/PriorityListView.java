@@ -1,6 +1,8 @@
 package cl.camodev.wosbot.common.view;
 
 import cl.camodev.wosbot.ot.DTOPriorityItem;
+import cl.camodev.utiles.StyleConstants;
+import javafx.animation.AnimationTimer;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -15,25 +17,33 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
 /**
  * Generic custom control to manage priority lists.
  * Can be used for purchase priorities, tasks, events, etc.
- *
  * Features:
  * - Enable/Disable items
  * - Sort by priority (1 = highest priority)
  * - Move items up/down with buttons
  * - Drag and drop items to reorder
+ * - Auto-scroll when dragging near edges
  */
 public class PriorityListView extends HBox {
 
     private static final DataFormat PRIORITY_DATA_FORMAT = new DataFormat("application/x-java-priority-item");
+    private static final double SCROLL_ZONE_HEIGHT = 80.0; // Pixels from edge to trigger scroll (increased for smoother gradient)
+    private static final double MAX_SCROLL_SPEED = 0.015; // Maximum scroll speed at the edge (reduced from 0.05)
+    private static final double MIN_SCROLL_SPEED = 0.002; // Minimum scroll speed at the zone boundary (reduced from 0.005)
+
     private final ListView<DTOPriorityItem> listView;
     private final ObservableList<DTOPriorityItem> items;
     private Runnable onChangeCallback;
+    private AnimationTimer autoScrollTimer;
+    private double scrollDirection = 0; // -1 = up, 1 = down, 0 = no scroll
+    private double scrollSpeed = 0; // Current scroll speed (proportional to distance from edge)
 
     public PriorityListView() {
         this.items = FXCollections.observableArrayList();
@@ -42,6 +52,7 @@ public class PriorityListView extends HBox {
         setupListView();
         setupLayout();
         applyDarkStyles();
+        setupAutoScroll();
     }
 
     private void setupListView() {
@@ -79,12 +90,8 @@ public class PriorityListView extends HBox {
      * Apply dark theme styles to the list view
      */
     private void applyDarkStyles() {
-        // Dark background for the list
-        listView.setStyle(
-                "-fx-background-color: #2b2b2b;" +
-                        "-fx-border-color: #3c3f41;" +
-                        "-fx-border-width: 1px;"
-        );
+        // Apply CSS class instead of inline styles
+        listView.getStyleClass().add(StyleConstants.PRIORITY_LIST_VIEW);
     }
 
     /**
@@ -144,7 +151,7 @@ public class PriorityListView extends HBox {
      * Sorts items by priority
      */
     private void sortByPriority() {
-        FXCollections.sort(items, (p1, p2) -> Integer.compare(p1.getPriority(), p2.getPriority()));
+        FXCollections.sort(items, Comparator.comparingInt(DTOPriorityItem::getPriority));
     }
 
     /**
@@ -186,6 +193,40 @@ public class PriorityListView extends HBox {
     }
 
     /**
+     * Sets up the auto-scroll animation timer
+     */
+    private void setupAutoScroll() {
+        autoScrollTimer = new AnimationTimer() {
+            @Override
+            public void handle(long now) {
+                if (scrollDirection != 0 && scrollSpeed > 0) {
+                    ScrollBar scrollBar = getVerticalScrollBar();
+                    if (scrollBar != null && scrollBar.isVisible()) {
+                        double currentValue = scrollBar.getValue();
+                        double newValue = currentValue + (scrollDirection * scrollSpeed);
+                        newValue = Math.max(scrollBar.getMin(), Math.min(scrollBar.getMax(), newValue));
+                        scrollBar.setValue(newValue);
+                    }
+                }
+            }
+        };
+    }
+
+    /**
+     * Gets the vertical scroll bar from the ListView
+     */
+    private ScrollBar getVerticalScrollBar() {
+        for (var node : listView.lookupAll(".scroll-bar")) {
+            if (node instanceof ScrollBar scrollBar) {
+                if (scrollBar.getOrientation() == javafx.geometry.Orientation.VERTICAL) {
+                    return scrollBar;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
      * Custom cell to display each item with drag and drop support
      */
     private class PriorityItemCell extends ListCell<DTOPriorityItem> {
@@ -203,25 +244,19 @@ public class PriorityListView extends HBox {
 
             // Visual drag indicator
             dragIndicator = new Label("☰");
-            dragIndicator.setStyle("-fx-font-size: 14px; -fx-text-fill: #808080; -fx-cursor: move;");
             dragIndicator.setMinWidth(18);
 
             enabledCheckBox = new CheckBox();
             priorityLabel = new Label();
             priorityLabel.setMinWidth(25);
-            priorityLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 12px; -fx-text-fill: #bbbbbb;");
 
             nameLabel = new Label();
-            nameLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #cccccc;");
             HBox.setHgrow(nameLabel, Priority.ALWAYS);
 
             content.getChildren().addAll(dragIndicator, enabledCheckBox, priorityLabel, nameLabel);
 
-            // Apply dark theme to the cell
-            setStyle(
-                    "-fx-background-color: #2b2b2b;" +
-                            "-fx-text-fill: #cccccc;"
-            );
+            // Apply CSS class to the cell
+            getStyleClass().add(StyleConstants.PRIORITY_LIST_CELL);
 
             setupDragAndDrop();
         }
@@ -238,33 +273,64 @@ public class PriorityListView extends HBox {
                 content.put(PRIORITY_DATA_FORMAT, getIndex());
                 dragboard.setContent(content);
 
+                // Start auto-scroll timer
+                autoScrollTimer.start();
+
                 event.consume();
             });
 
-            // Update style based on cursor position
+            // Update style based on cursor position and handle auto-scroll
             setOnDragOver(event -> {
                 if (event.getGestureSource() != this &&
                         event.getDragboard().hasContent(PRIORITY_DATA_FORMAT)) {
                     event.acceptTransferModes(TransferMode.MOVE);
 
-                    // Determine if cursor is in upper or lower half
+                    // Calculate mouse position relative to ListView
+                    double mouseYInListView = event.getSceneY() - listView.localToScene(0, 0).getY();
+                    double listViewHeight = listView.getHeight();
+
+                    // Determine scroll direction and speed based on mouse position
+                    if (mouseYInListView < SCROLL_ZONE_HEIGHT) {
+                        // Near top edge - scroll up
+                        scrollDirection = -1;
+                        // Calculate proportional speed: closer to edge = faster
+                        // Distance from top edge (0 = at edge, SCROLL_ZONE_HEIGHT = at boundary)
+                        // Normalize to 0-1 range (1 = at edge, 0 = at boundary)
+                        double proximity = 1.0 - (mouseYInListView / SCROLL_ZONE_HEIGHT);
+                        // Calculate speed: interpolate between MIN and MAX based on proximity
+                        scrollSpeed = MIN_SCROLL_SPEED + (proximity * (MAX_SCROLL_SPEED - MIN_SCROLL_SPEED));
+                    } else if (mouseYInListView > listViewHeight - SCROLL_ZONE_HEIGHT) {
+                        // Near bottom edge - scroll down
+                        scrollDirection = 1;
+                        // Calculate proportional speed: closer to edge = faster
+                        // Distance from bottom edge (0 = at edge, SCROLL_ZONE_HEIGHT = at boundary)
+                        double distanceFromEdge = listViewHeight - mouseYInListView;
+                        // Normalize to 0-1 range (1 = at edge, 0 = at boundary)
+                        double proximity = 1.0 - (distanceFromEdge / SCROLL_ZONE_HEIGHT);
+                        // Calculate speed: interpolate between MIN and MAX based on proximity
+                        scrollSpeed = MIN_SCROLL_SPEED + (proximity * (MAX_SCROLL_SPEED - MIN_SCROLL_SPEED));
+                    } else {
+                        // In the middle - no scroll
+                        scrollDirection = 0;
+                        scrollSpeed = 0;
+                    }
+
+                    // Determine if cursor is in upper or lower half of this cell
                     double mouseY = event.getY();
                     double cellHeight = getHeight();
 
+                    // Remove previous drag classes
+                    getStyleClass().removeAll(
+                            StyleConstants.PRIORITY_LIST_CELL_DRAG_OVER_TOP,
+                            StyleConstants.PRIORITY_LIST_CELL_DRAG_OVER_BOTTOM
+                    );
+
                     if (mouseY < cellHeight / 2) {
                         // Upper half - show border on top
-                        setStyle(
-                                "-fx-background-color: #2b2b2b;" +
-                                        "-fx-border-color: #4A9EFF transparent transparent transparent;" +
-                                        "-fx-border-width: 2 0 0 0;"
-                        );
+                        getStyleClass().add(StyleConstants.PRIORITY_LIST_CELL_DRAG_OVER_TOP);
                     } else {
                         // Lower half - show border on bottom
-                        setStyle(
-                                "-fx-background-color: #2b2b2b;" +
-                                        "-fx-border-color: transparent transparent #4A9EFF transparent;" +
-                                        "-fx-border-width: 0 0 2 0;"
-                        );
+                        getStyleClass().add(StyleConstants.PRIORITY_LIST_CELL_DRAG_OVER_BOTTOM);
                     }
                 }
                 event.consume();
@@ -272,7 +338,10 @@ public class PriorityListView extends HBox {
 
             // Restore style when exiting cell
             setOnDragExited(event -> {
-                setStyle("-fx-background-color: #2b2b2b; -fx-text-fill: #cccccc;");
+                getStyleClass().removeAll(
+                        StyleConstants.PRIORITY_LIST_CELL_DRAG_OVER_TOP,
+                        StyleConstants.PRIORITY_LIST_CELL_DRAG_OVER_BOTTOM
+                );
                 event.consume();
             });
 
@@ -304,14 +373,10 @@ public class PriorityListView extends HBox {
                         // Item dragged from top to bottom
                         if (dropAbove) {
                             targetIdx = thisIdx - 1;
-                        } else {
-                            targetIdx = thisIdx;
                         }
                     } else {
                         // Item dragged from bottom to top
-                        if (dropAbove) {
-                            targetIdx = thisIdx;
-                        } else {
+                        if (!dropAbove) {
                             targetIdx = thisIdx + 1;
                         }
                     }
@@ -331,12 +396,27 @@ public class PriorityListView extends HBox {
                     success = true;
                 }
 
+                // Stop auto-scroll
+                scrollDirection = 0;
+                scrollSpeed = 0;
+                autoScrollTimer.stop();
+
                 event.setDropCompleted(success);
                 event.consume();
             });
 
             // Finalize drag
             setOnDragDone(event -> {
+                getStyleClass().removeAll(
+                        StyleConstants.PRIORITY_LIST_CELL_DRAG_OVER_TOP,
+                        StyleConstants.PRIORITY_LIST_CELL_DRAG_OVER_BOTTOM
+                );
+
+                // Stop auto-scroll
+                scrollDirection = 0;
+                scrollSpeed = 0;
+                autoScrollTimer.stop();
+
                 event.consume();
             });
         }
@@ -347,49 +427,93 @@ public class PriorityListView extends HBox {
 
             if (empty || item == null) {
                 setGraphic(null);
-                setStyle("-fx-background-color: #2b2b2b;");
+                // Keep base CSS class
+                getStyleClass().setAll(StyleConstants.PRIORITY_LIST_CELL);
             } else {
                 enabledCheckBox.setSelected(item.isEnabled());
-                priorityLabel.setText(item.getPriority() + ".");
+
+                // Calculate visible priority (only count enabled items)
+                int visiblePriority = calculateVisiblePriority(item);
+
+                // Show priority number only if enabled
+                if (item.isEnabled()) {
+                    priorityLabel.setText(visiblePriority + ".");
+                } else {
+                    priorityLabel.setText("--");
+                }
+
                 nameLabel.setText(item.getName());
 
-                // Listener for checkbox changes
+                // Clear previous listeners to avoid duplicates
+                enabledCheckBox.setOnAction(null);
+
+                // Listener for checkbox changes - this updates the visual state
                 enabledCheckBox.setOnAction(e -> {
                     item.setEnabled(enabledCheckBox.isSelected());
+                    // Update visual state immediately
+                    updateVisualState(item.isEnabled());
+                    // Refresh all cells to update numbering
+                    listView.refresh();
                     if (onChangeCallback != null) {
                         onChangeCallback.run();
                     }
                 });
 
-                // Visual style based on enabled state
-                if (item.isEnabled()) {
-                    nameLabel.setStyle("-fx-opacity: 1.0; -fx-font-size: 12px; -fx-text-fill: #cccccc;");
-                    dragIndicator.setStyle("-fx-font-size: 14px; -fx-text-fill: #808080; -fx-cursor: move;");
-                    priorityLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 12px; -fx-text-fill: #4A9EFF;");
-                } else {
-                    nameLabel.setStyle("-fx-opacity: 0.5; -fx-font-size: 12px; -fx-text-fill: #888888;");
-                    dragIndicator.setStyle("-fx-font-size: 14px; -fx-text-fill: #555555; -fx-cursor: move;");
-                    priorityLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 12px; -fx-text-fill: #666666;");
-                }
-
-                // Dark theme background
-                setStyle("-fx-background-color: #2b2b2b; -fx-text-fill: #cccccc;");
-
-                // Hover effect
-                setOnMouseEntered(e -> {
-                    if (!isEmpty()) {
-                        setStyle("-fx-background-color: #313335; -fx-text-fill: #cccccc;");
-                    }
-                });
-
-                setOnMouseExited(e -> {
-                    if (!isEmpty()) {
-                        setStyle("-fx-background-color: #2b2b2b; -fx-text-fill: #cccccc;");
-                    }
-                });
+                // Update visual state based on enabled status
+                updateVisualState(item.isEnabled());
 
                 setGraphic(content);
             }
+        }
+
+        /**
+         * Calculates the visible priority number for an item
+         * Only counts enabled items that appear before this item
+         */
+        private int calculateVisiblePriority(DTOPriorityItem currentItem) {
+            int visiblePriority = 0;
+            for (DTOPriorityItem item : items) {
+                if (item.isEnabled()) {
+                    visiblePriority++;
+                    if (item == currentItem) {
+                        break;
+                    }
+                }
+            }
+            return visiblePriority;
+        }
+
+        /**
+         * Updates the visual state of all labels based on enabled status
+         * Uses CSS classes for persistent styling
+         */
+        private void updateVisualState(boolean enabled) {
+            // Update drag indicator style classes
+            dragIndicator.getStyleClass().removeAll(
+                    StyleConstants.PRIORITY_DRAG_INDICATOR,
+                    StyleConstants.PRIORITY_DRAG_INDICATOR_DISABLED
+            );
+            dragIndicator.getStyleClass().add(
+                    enabled ? StyleConstants.PRIORITY_DRAG_INDICATOR : StyleConstants.PRIORITY_DRAG_INDICATOR_DISABLED
+            );
+
+            // Update priority label style classes
+            priorityLabel.getStyleClass().removeAll(
+                    StyleConstants.PRIORITY_LABEL,
+                    StyleConstants.PRIORITY_LABEL_DISABLED
+            );
+            priorityLabel.getStyleClass().add(
+                    enabled ? StyleConstants.PRIORITY_LABEL : StyleConstants.PRIORITY_LABEL_DISABLED
+            );
+
+            // Update name label style classes
+            nameLabel.getStyleClass().removeAll(
+                    StyleConstants.PRIORITY_NAME_LABEL,
+                    StyleConstants.PRIORITY_NAME_LABEL_DISABLED
+            );
+            nameLabel.getStyleClass().add(
+                    enabled ? StyleConstants.PRIORITY_NAME_LABEL : StyleConstants.PRIORITY_NAME_LABEL_DISABLED
+            );
         }
     }
 }

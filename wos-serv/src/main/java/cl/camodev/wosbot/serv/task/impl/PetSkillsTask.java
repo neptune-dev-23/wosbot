@@ -1,12 +1,18 @@
 package cl.camodev.wosbot.serv.task.impl;
 
+import java.awt.*;
 import java.time.LocalDateTime;
+import java.util.regex.Pattern;
 
+import cl.camodev.utiles.number.NumberConverters;
+import cl.camodev.utiles.number.NumberValidators;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
+import cl.camodev.wosbot.ot.DTOTesseractSettings;
+import cl.camodev.wosbot.serv.impl.StaminaService;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 import cl.camodev.wosbot.serv.task.EnumStartLocation;
 
@@ -68,13 +74,34 @@ public class PetSkillsTask extends DelayedTask {
 			if (skillButton.isFound()) {
 				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, skillButton.getPoint(), skillButton.getPoint(), 10, 100);
 				sleepTask(500);
+                if (petSkill == PetSkill.STAMINA) {
+                    Integer level = integerHelper.execute(
+                            new DTOPoint(276, 779),
+                            new DTOPoint(363, 811),
+                            5,
+                            200L,
+                            DTOTesseractSettings.builder()
+                                    .setAllowedChars("0123456789")
+                                    .setPageSegMode(DTOTesseractSettings.PageSegMode.SINGLE_LINE)
+                                    .setRemoveBackground(true)
+                                    .setTextColor(new Color(69, 88, 110))
+                                    .build(),
+                            text -> NumberValidators.matchesPattern(text, Pattern.compile(".*?(\\d+).*")),
+                            text -> NumberConverters.regexToInt(text, Pattern.compile(".*?(\\d+).*")));
+                    if (level != null) {
+                        int staminaToAdd = 35 + (level - 1) * 5;
+                        StaminaService.getServices().addStamina(profile.getId(), staminaToAdd);
+                        logInfo("Skill " + petSkill.name() + " level is " + level + ". Added " + staminaToAdd + " stamina to the profile.");
+                    }
+
+                }
 			}
 
 			try {
 				logInfo("Skill used. Parsing cooldown to determine next schedule for " + petSkill.name() + ".");
-				String nextSchedulteText = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(210, 1080), new DTOPoint(520, 1105));
-				LocalDateTime nextSchedule = parseCooldown(nextSchedulteText);
-				this.reschedule(parseCooldown(nextSchedulteText));
+				String nextScheduleText = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(210, 1080), new DTOPoint(520, 1105));
+				LocalDateTime nextSchedule = parseCooldown(nextScheduleText);
+				this.reschedule(parseCooldown(nextScheduleText));
                 logInfo("Rescheduled " + petSkill.name() + " task for " + nextSchedule);
 			} catch (Exception e) {
 				logError("Error parsing cooldown for " + petSkill.name() + ". Rescheduling for 5 minutes.", e);
@@ -96,9 +123,9 @@ public class PetSkillsTask extends DelayedTask {
 
 			String timePart = input.substring(input.toLowerCase().indexOf("on cooldown:") + 12).trim();
 
-			timePart = timePart.replaceAll("\\s+", "").replaceAll("[Oo]", "0").replaceAll("[lI]", "1").replaceAll("[S]", "5").replaceAll("[B]", "8").replaceAll("[Z]", "2").replaceAll("[^0-9d:]", "");
+			timePart = timePart.replaceAll("\\s+", "").replaceAll("[Oo]", "0").replaceAll("[lI]", "1").replaceAll("S", "5").replaceAll("B", "8").replaceAll("Z", "2").replaceAll("[^0-9d:]", "");
 
-			int days = 0, hours = 0, minutes = 0, seconds = 0;
+			int days = 0, hours, minutes, seconds;
 
 			if (timePart.contains("d")) {
 				String[] daySplit = timePart.split("d", 2);

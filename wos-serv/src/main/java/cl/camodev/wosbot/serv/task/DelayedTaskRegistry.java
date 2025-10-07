@@ -44,6 +44,7 @@ public class DelayedTaskRegistry {
         registry.put(TpDailyTaskEnum.EXPERT_AGNES_INTEL, profile -> new ExpertsAgnesIntelTask(profile, TpDailyTaskEnum.EXPERT_AGNES_INTEL));
         registry.put(TpDailyTaskEnum.EXPERT_ROMULUS_TAG, profile -> new ExpertsRomulusTagTask(profile, TpDailyTaskEnum.EXPERT_ROMULUS_TAG));
         registry.put(TpDailyTaskEnum.EXPERT_ROMULUS_TROOPS, profile -> new ExpertsRomulusTroopsTask(profile, TpDailyTaskEnum.EXPERT_ROMULUS_TROOPS));
+        registry.put(TpDailyTaskEnum.EXPERT_SKILL_TRAINING, profile -> new ExpertSkillTrainingTask(profile, TpDailyTaskEnum.EXPERT_SKILL_TRAINING));
 
         // Alliance tasks
         registry.put(TpDailyTaskEnum.ALLIANCE_AUTOJOIN, profile -> new AllianceAutojoinTask(profile, TpDailyTaskEnum.ALLIANCE_AUTOJOIN));
