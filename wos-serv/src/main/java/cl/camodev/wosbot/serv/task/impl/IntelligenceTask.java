@@ -344,7 +344,12 @@ public class IntelligenceTask extends DelayedTask {
                     new DTOPoint(590, 1245),
                     5,
                     200L,
-                    DTOTesseractSettings.builder().setRemoveBackground(true).setTextColor(new Color(255,255,255)).setPageSegMode(DTOTesseractSettings.PageSegMode.SINGLE_WORD).build(),
+                    DTOTesseractSettings.builder()
+                            .setRemoveBackground(true)
+                            .setTextColor(new Color(255,255,255))
+                            //.setDebug(true)
+                            .setPageSegMode(DTOTesseractSettings.PageSegMode.SINGLE_LINE)
+                            .build(),
                     text -> NumberValidators.matchesPattern(text, Pattern.compile(".*?(\\d+).*")),
                     text -> NumberConverters.regexToInt(text, Pattern.compile(".*?(\\d+).*"))
             );
