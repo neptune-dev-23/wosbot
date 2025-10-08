@@ -1,5 +1,10 @@
 package cl.camodev.wosbot.console.enumerable;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+
 /**
  * Configuration keys for the application.
  * Keys are organized by functional categories for easier management.
@@ -195,6 +200,18 @@ public enum EnumConfigurationKey {
     // Myriad Bazaar event
     MYRIAD_BAZAAR_EVENT_BOOL("false", Boolean.class),
 
+    // Bear trap event
+    BEAR_TRAP_EVENT_BOOL("false", Boolean.class),
+    BEAR_TRAP_RALLY_FLAG_INT("1", Integer.class),
+    BEAR_TRAP_SCHEDULE_DATETIME_STRING("", LocalDateTime.class),
+    BEAR_TRAP_PREPARATION_TIME_INT("5", Integer.class),
+    BEAR_TRAP_ACTIVE_PETS_BOOL("false", Boolean.class),
+    BEAR_TRAP_NUMBER_INT("1", Integer.class),
+    BEAR_TRAP_RECALL_TROOPS_BOOL("false", Boolean.class),
+    BEAR_TRAP_CALL_RALLY_BOOL("false", Boolean.class),
+    BEAR_TRAP_JOIN_RALLY_BOOL("false", Boolean.class),
+    BEAR_TRAP_JOIN_FLAG_INT("1", Integer.class),
+
     // ========================================================================
     // EXPERT SETTINGS
     // ========================================================================
@@ -245,7 +262,21 @@ public enum EnumConfigurationKey {
             return (T) Double.valueOf(value);
         } else if (type.equals(String.class)) {
             return (T) value;
+        } else if (type.equals(LocalDateTime.class)) {
+            if (value == null || value.isBlank()) {
+                LocalDateTime nowUtc = LocalDateTime.now(ZoneOffset.UTC);
+                return (T) nowUtc.truncatedTo(ChronoUnit.HOURS).plusHours(1);
+            }
+            try {
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
+                return (T) LocalDateTime.parse(value, formatter);
+            } catch (Exception e) {
+                // Si el formato no coincide o hay error, devuelve la siguiente hora UTC exacta
+                LocalDateTime nowUtc = LocalDateTime.now(ZoneOffset.UTC);
+                return (T) nowUtc.truncatedTo(ChronoUnit.HOURS).plusHours(1);
+            }
         }
+
         // Add other if/else according to the supported types
         throw new UnsupportedOperationException("Type " + type.getSimpleName() + " not supported for casting.");
     }
