@@ -295,17 +295,16 @@ public abstract class DelayedTask implements Runnable, Delayed {
                 .setRemoveBackground(true)
                 .setTextColor(new Color(255, 255, 255)) // White text
                 .setPageSegMode(DTOTesseractSettings.PageSegMode.SINGLE_LINE)
-                //.setReuseLastImage(true)
+                // .setReuseLastImage(true)
                 .build();
 
         Integer stamina = integerHelper.execute(
                 new DTOPoint(324, 255), new DTOPoint(477, 283), 5, 200L,
                 settings,
                 NumberValidators::isFractionFormat,
-                NumberConverters::fractionToFirstInt
-        );
+                NumberConverters::fractionToFirstInt);
 
-        if (stamina!= null){
+        if (stamina != null) {
             logInfo("Stamina parsed and stored: " + stamina);
             StaminaService.getServices().setStamina(profile.getId(), stamina);
         }
@@ -396,9 +395,9 @@ public abstract class DelayedTask implements Runnable, Delayed {
 
     protected void selectFlag(Integer flagNumber) {
         tapPoint(UtilRally.getMarchFlagPoint(flagNumber));
-		sleepTask(300);
+        sleepTask(300);
         String str = OCRWithRetries("unlock", new DTOPoint(297, 126), new DTOPoint(424, 168));
-        if(str != null && str.toLowerCase().equals("unlock")) {
+        if (str != null && str.toLowerCase().equals("unlock")) {
             // Why would you select a flag that you don't have available..........
             logWarning("This flag is not unlocked, proceeding without selecting a flag.");
             tapBackButton();
@@ -471,40 +470,40 @@ public abstract class DelayedTask implements Runnable, Delayed {
     protected boolean disableAutoJoin() {
         ensureCorrectScreenLocation(EnumStartLocation.ANY);
         // Navigate to the alliance screen
-		logDebug("Navigating to Alliance screen");
+        logDebug("Navigating to Alliance screen");
 
-		// Tap on Alliance button at bottom of screen
-		tapRandomPoint(new DTOPoint(493, 1187), new DTOPoint(561, 1240));
-		sleepTask(3000);
-		
-		// Locate the Alliance War button
-		DTOImageSearchResult menuResult = searchTemplateWithRetries(EnumTemplates.ALLIANCE_WAR_BUTTON);
-		if (!menuResult.isFound()) {
-			logError("Alliance War button not found");
-			return false;
-		}
+        // Tap on Alliance button at bottom of screen
+        tapRandomPoint(new DTOPoint(493, 1187), new DTOPoint(561, 1240));
+        sleepTask(3000);
 
-		// Open the Alliance War menu
-		logDebug("Opening Alliance War menu");
-		tapPoint(menuResult.getPoint());
-		sleepTask(1000);
+        // Locate the Alliance War button
+        DTOImageSearchResult menuResult = searchTemplateWithRetries(EnumTemplates.ALLIANCE_WAR_BUTTON);
+        if (!menuResult.isFound()) {
+            logError("Alliance War button not found");
+            return false;
+        }
 
-		// Open the auto-join menu
-		logDebug("Opening auto-join settings");
-		tapRandomPoint(new DTOPoint(260, 1200), new DTOPoint(450, 1240));
-		sleepTask(1500);
+        // Open the Alliance War menu
+        logDebug("Opening Alliance War menu");
+        tapPoint(menuResult.getPoint());
+        sleepTask(1000);
+
+        // Open the auto-join menu
+        logDebug("Opening auto-join settings");
+        tapRandomPoint(new DTOPoint(260, 1200), new DTOPoint(450, 1240));
+        sleepTask(1500);
 
         // Disabling auto-join
         tapRandomPoint(new DTOPoint(120, 1069), new DTOPoint(249, 1122));
-		sleepTask(300);
+        sleepTask(300);
 
         // Return to home screen
-		logDebug("Returning to home screen");
-		tapBackButton();
-		sleepTask(300);
-		tapBackButton();
-		sleepTask(300);
-		tapBackButton();
+        logDebug("Returning to home screen");
+        tapBackButton();
+        sleepTask(300);
+        tapBackButton();
+        sleepTask(300);
+        tapBackButton();
         sleepTask(300);
 
         return true;
