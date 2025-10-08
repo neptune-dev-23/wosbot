@@ -215,6 +215,7 @@ public class PolarTerrorHuntingTask extends DelayedTask {
 
         // Update stamina
         subtractStamina(spentStamina, true);
+        currentStamina = getSpentStamina();
 
         // Flag mode: reschedule for march return
         if (useFlag) {
