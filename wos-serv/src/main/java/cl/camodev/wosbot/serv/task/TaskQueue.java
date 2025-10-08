@@ -646,7 +646,7 @@ public class TaskQueue {
             }
         }
 
-        taskQueueStatus = new DTOTaskQueueStatus(); // Reset status
+        taskQueueStatus.reset(); // Reset status
         // Remove all pending tasks from the queue
         taskQueue.clear();
         updateProfileStatus("NOT RUNNING");
@@ -677,11 +677,13 @@ public class TaskQueue {
     public void executeTaskNow(TpDailyTaskEnum taskEnum, boolean recurring) {
         // Obtain the task prototype from the registry
         DelayedTask prototype = DelayedTaskRegistry.create(taskEnum, profile);
-        taskQueueStatus.setPaused(false);
         if (prototype == null) {
             logWarning("Task not found: " + taskEnum);
             return;
         }
+
+        taskQueueStatus.setNeedsReconnect(true);
+        taskQueueStatus.setPaused(false);
 
         // Check if the task already exists in the queue
         DelayedTask existing = taskQueue.stream()
