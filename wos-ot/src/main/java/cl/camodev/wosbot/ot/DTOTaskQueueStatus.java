@@ -18,6 +18,7 @@ public class DTOTaskQueueStatus {
     private LocalDateTime reconnectAt;
 
     private LoopState loopState = new LoopState();
+    private Thread reconnectThread;
 
     public DTOTaskQueueStatus() {
         this.running = false;
@@ -81,7 +82,7 @@ public class DTOTaskQueueStatus {
      * @param reconnectionTime The time to wait before reconnecting, in minutes
      */
     public void setReconnectAt(long reconnectionTime) {
-        this.setDelayUntil(reconnectionTime);
+        this.setDelayUntil(reconnectionTime * 60); // convert minutes to seconds
         this.setReconnectAt(LocalDateTime.now().plusMinutes(reconnectionTime));
     }
 
@@ -89,7 +90,7 @@ public class DTOTaskQueueStatus {
         this.pause();
         this.setNeedsReconnect(true);
         this.reconnectAt = reconnectAt;
-        Thread.startVirtualThread(() -> {
+        this.reconnectThread = Thread.startVirtualThread(() -> {
             try {
                 Thread.sleep(Duration.between(LocalDateTime.now(), reconnectAt).toMillis());
                 this.readyToReconnect = true;
@@ -99,13 +100,17 @@ public class DTOTaskQueueStatus {
             }
         });
     }
+    @SuppressWarnings(value = "unused" )
+    public void cancelReconnectThread() {
+        this.reconnectThread.interrupt();
+    }
 
     @SuppressWarnings(value = { "unused" })
     public LocalDateTime getReconnectAt() {
         return this.reconnectAt;
     }
 
-    public void loopStarted () {
+    public void loopStarted() {
         this.loopState = new LoopState();
     }
 
@@ -126,7 +131,7 @@ public class DTOTaskQueueStatus {
     }
     public void setPaused(boolean paused) {
         this.paused = paused;
-        this.pausedAt = paused ? LocalDateTime.now() : null;
+        this.pausedAt = LocalDateTime.now();
     }
 
     public boolean needsReconnect() {
@@ -189,6 +194,10 @@ public class DTOTaskQueueStatus {
         }
 
         public long getDuration() {
+            // If endTime is 0, endLoop() hasn't been called yet, return current duration
+            if (this.endTime == 0) {
+                return System.currentTimeMillis() - this.startTime;
+            }
             return this.endTime - this.startTime;
         }
 
