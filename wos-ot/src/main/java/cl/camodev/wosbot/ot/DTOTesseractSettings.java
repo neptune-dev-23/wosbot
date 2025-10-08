@@ -64,6 +64,7 @@ public class DTOTesseractSettings {
 	private Color textColor;
 	private boolean debug;
 	private String allowedChars;
+	private boolean reuseLastImage;
 
 	private DTOTesseractSettings(Builder builder) {
 		this.pageSegMode = builder.pageSegMode;
@@ -72,6 +73,7 @@ public class DTOTesseractSettings {
 		this.textColor = builder.textColor;
 		this.debug = builder.debug;
 		this.allowedChars = builder.allowedChars;
+		this.reuseLastImage = builder.reuseLastImage;
 	}
 
 	public Integer getPageSegMode() {
@@ -110,11 +112,15 @@ public class DTOTesseractSettings {
 		return allowedChars != null && !allowedChars.isEmpty();
 	}
 
+	public boolean isReuseLastImage() {
+		return reuseLastImage;
+	}
+
 	@Override
 	public String toString() {
 		return "DTOTesseractSettings [pageSegMode=" + pageSegMode + ", ocrEngineMode=" + ocrEngineMode
 				+ ", removeBackground=" + removeBackground + ", textColor=" + textColor + ", debug=" + debug 
-				+ ", allowedChars=" + allowedChars + "]";
+				+ ", allowedChars=" + allowedChars + ", reuseLastImage=" + reuseLastImage + "]";
 	}
 
 	public static Builder builder() {
@@ -128,6 +134,7 @@ public class DTOTesseractSettings {
 		private Color textColor;
 		private boolean debug;
 		private String allowedChars;
+		private boolean reuseLastImage = false; // Default: disabled
 
 		public Builder setPageSegMode(PageSegMode pageSegMode) {
 			this.pageSegMode = pageSegMode;
@@ -156,6 +163,11 @@ public class DTOTesseractSettings {
 
 		public Builder setAllowedChars(String allowedChars) {
 			this.allowedChars = allowedChars;
+			return this;
+		}
+
+		public Builder setReuseLastImage(boolean reuseLastImage) {
+			this.reuseLastImage = reuseLastImage;
 			return this;
 		}
 
