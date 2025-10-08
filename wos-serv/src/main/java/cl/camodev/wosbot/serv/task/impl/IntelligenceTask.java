@@ -491,14 +491,12 @@ public class IntelligenceTask extends DelayedTask {
 			logError("Failed to parse travel time via OCR. Using 5 minute fallback reschedule.");
 			LocalDateTime rescheduleTime = LocalDateTime.now().plusMinutes(5);
 			reschedule(rescheduleTime);
-			logInfo("Beast march scheduled to return at " + UtilTime.localDateTimeToDDHHMMSS(rescheduleTime));
 			return;
 		}
 
-		LocalDateTime rescheduleTime = LocalDateTime.now().plusSeconds(travelTimeSeconds).plusMinutes(5);
+		LocalDateTime rescheduleTime = LocalDateTime.now().plusSeconds(travelTimeSeconds);
 		reschedule(rescheduleTime);
-		logInfo("Beast march scheduled to return at " + UtilTime.localDateTimeToDDHHMMSS(rescheduleTime) +
-				" (in " + (travelTimeSeconds / 60) + " minutes)");
+		logInfo("Beast march scheduled to return at " + UtilTime.localDateTimeToDDHHMMSS(rescheduleTime));
 	}
 
 	private MarchesAvailable getMarchesAvailable() {
