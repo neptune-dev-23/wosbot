@@ -61,6 +61,8 @@ public class PolarTerrorHuntingTask extends DelayedTask {
             }
         }
 
+        currentStamina = getCurrentStamina();
+
         logInfo(String.format("Configuration: Level %d | %s Mode | Flag: %s",
                 polarTerrorLevel,
                 limitedHunting ? "Limited (10 hunts)" : "Unlimited",
