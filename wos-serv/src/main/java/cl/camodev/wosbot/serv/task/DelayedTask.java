@@ -20,6 +20,8 @@ import cl.camodev.wosbot.serv.impl.ServLogs;
 import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.impl.StaminaService;
 import cl.camodev.wosbot.serv.ocr.BotTextRecognitionProvider;
+import cl.camodev.wosbot.serv.task.impl.ArenaTask;
+import cl.camodev.wosbot.serv.task.impl.BearTrapTask;
 import cl.camodev.wosbot.serv.task.impl.InitializeTask;
 import java.awt.Color;
 import java.util.List;
@@ -707,6 +709,7 @@ public abstract class DelayedTask implements Runnable, Delayed {
         if (this == o)
             return 0;
 
+        // Priority 1: InitializeTask has highest priority
         boolean thisInit = this instanceof InitializeTask;
         boolean otherInit = o instanceof InitializeTask;
         if (thisInit && !otherInit)
@@ -714,6 +717,29 @@ public abstract class DelayedTask implements Runnable, Delayed {
         if (!thisInit && otherInit)
             return 1;
 
+        // Priority 2: BearTrapTask
+        boolean thisBearTrap = this instanceof BearTrapTask;
+        boolean otherBearTrap = o instanceof BearTrapTask;
+
+        if (thisBearTrap && !otherBearTrap && this.getDelay(TimeUnit.NANOSECONDS) <= 0) {
+            return -1;
+        }
+
+        if (!thisBearTrap && otherBearTrap && o.getDelay(TimeUnit.NANOSECONDS) <= 0) {
+            return 1;
+        }
+
+        // Priority 3: ArenaTask
+        boolean thisArena = this instanceof ArenaTask;
+        boolean otherArena = o instanceof ArenaTask;
+
+        if (thisArena && !otherArena && this.getDelay(TimeUnit.NANOSECONDS) <= 0)
+            return -1;
+
+        if (!thisArena && otherArena && o.getDelay(TimeUnit.NANOSECONDS) <= 0)
+            return 1;
+
+        // For tasks of same priority, compare by scheduled time
         long diff = this.getDelay(TimeUnit.NANOSECONDS)
                 - o.getDelay(TimeUnit.NANOSECONDS);
         return Long.compare(diff, 0);
