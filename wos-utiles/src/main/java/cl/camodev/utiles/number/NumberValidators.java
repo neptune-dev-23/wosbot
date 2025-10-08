@@ -25,4 +25,20 @@ public final class NumberValidators {
         Matcher matcher = pattern.matcher(input.trim());
         return matcher.matches();
     }
+
+    /**
+     * Tests whether the input contains a fraction format "n/n" (e.g., "3/10", "5 / 7").
+     * Allows optional whitespace around the slash and other text before/after the fraction.
+     *
+     * @param input the string to test, may be null
+     * @return {@code true} if the input contains a valid fraction format; {@code false} otherwise
+     */
+    public static boolean isFractionFormat(String input) {
+        if (input == null) {
+            return false;
+        }
+        Pattern pattern = Pattern.compile(".*?\\d+\\s*/\\s*\\d+.*");
+        Matcher matcher = pattern.matcher(input.trim());
+        return matcher.matches();
+    }
 }

@@ -38,4 +38,66 @@ public final class NumberConverters {
             return null;
         }
     }
+
+    /**
+     * Extracts the first number from a fraction format "n/n" (e.g., "3/10" returns 3).
+     * Supports various formats like "3/10", "5 / 7", "12/100", etc.
+     *
+     * @param input the string containing a fraction format, may be null
+     * @return the first number (numerator) or {@code null} if parsing fails
+     */
+    public static Integer fractionToFirstInt(String input) {
+        if (input == null) {
+            return null;
+        }
+        Pattern pattern = Pattern.compile(".*?(\\d+)\\s*/\\s*\\d+.*");
+        Matcher matcher = pattern.matcher(input.trim());
+        if (!matcher.matches()) {
+            return null;
+        }
+        try {
+            return Integer.parseInt(matcher.group(1));
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    /**
+     * Extracts the second number from a fraction format "n/n" (e.g., "3/10" returns 10).
+     * Supports various formats like "3/10", "5 / 7", "12/100", etc.
+     *
+     * @param input the string containing a fraction format, may be null
+     * @return the second number (denominator) or {@code null} if parsing fails
+     */
+    public static Integer fractionToSecondInt(String input) {
+        if (input == null) {
+            return null;
+        }
+        Pattern pattern = Pattern.compile(".*?\\d+\\s*/\\s*(\\d+).*");
+        Matcher matcher = pattern.matcher(input.trim());
+        if (!matcher.matches()) {
+            return null;
+        }
+        try {
+            return Integer.parseInt(matcher.group(1));
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    /**
+     * Extracts a specific number from a fraction format "n/n" based on the position.
+     *
+     * @param input the string containing a fraction format, may be null
+     * @param position the position to extract: 1 for first number (numerator), 2 for second number (denominator)
+     * @return the requested number or {@code null} if parsing fails or position is invalid
+     */
+    public static Integer fractionToInt(String input, int position) {
+        if (position == 1) {
+            return fractionToFirstInt(input);
+        } else if (position == 2) {
+            return fractionToSecondInt(input);
+        }
+        return null;
+    }
 }
