@@ -87,7 +87,7 @@ public class PolarTerrorHuntingTask extends DelayedTask {
             // Check marches before each rally
             if (!checkMarchesAvailable()) {
                 logInfo("No marches available after " + ralliesDeployed + " rallies. Waiting for marches to return.");
-                reschedule(LocalDateTime.now().plusMinutes(10));
+                reschedule(LocalDateTime.now().plusMinutes(5));
                 return;
             }
 
@@ -215,7 +215,7 @@ public class PolarTerrorHuntingTask extends DelayedTask {
 
         // Update stamina
         subtractStamina(spentStamina, true);
-        currentStamina = getSpentStamina();
+        currentStamina = getCurrentStamina();
 
         // Flag mode: reschedule for march return
         if (useFlag) {
