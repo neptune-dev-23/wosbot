@@ -295,7 +295,7 @@ public abstract class DelayedTask implements Runnable, Delayed {
                 .setRemoveBackground(true)
                 .setTextColor(new Color(255, 255, 255)) // White text
                 .setPageSegMode(DTOTesseractSettings.PageSegMode.SINGLE_LINE)
-                .setReuseLastImage(true)
+                //.setReuseLastImage(true)
                 .build();
 
         Integer stamina = integerHelper.execute(
