@@ -290,34 +290,24 @@ public abstract class DelayedTask implements Runnable, Delayed {
         // go to stamina
         tapRandomPoint(new DTOPoint(223, 1101), new DTOPoint(244, 1123), 1, 500);
 
-        try {
-            // read stamina
-            String result = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(324, 255), new DTOPoint(477, 283),
-                    DTOTesseractSettings.builder().setRemoveBackground(true).setTextColor(new Color(255, 255, 255))
-                            .build());
-            logDebug("Stamina OCR result: '" + result + "'");
-            // parse stamina x,xxx/xxx or xxx/xxx or x.xxx/xxx
-            Pattern pattern = Pattern.compile("([\\d,\\.]+)\\s*/\\s*([\\d,\\.]+)");
-            Matcher matcher = pattern.matcher(result);
+        DTOTesseractSettings settings = DTOTesseractSettings.builder()
+                .setAllowedChars("0123456789/")
+                .setRemoveBackground(true)
+                .setTextColor(new Color(255, 255, 255)) // White text
+                .setPageSegMode(DTOTesseractSettings.PageSegMode.SINGLE_LINE)
+                .setReuseLastImage(true)
+                .build();
 
-            if (matcher.find()) {
-                try {
-                    // Extract the first number (before the "/") and remove separators
-                    String currentStaminaStr = matcher.group(1).replace(",", "").replace(".", "");
-                    int currentStamina = Integer.parseInt(currentStaminaStr);
+        Integer stamina = integerHelper.execute(
+                new DTOPoint(324, 255), new DTOPoint(477, 283), 5, 200L,
+                settings,
+                NumberValidators::isFractionFormat,
+                NumberConverters::fractionToFirstInt
+        );
 
-                    // Store in StaminaService
-                    StaminaService.getServices().setStamina(profile.getId(), currentStamina);
-                    logInfo("Stamina parsed and stored: " + currentStamina);
-                } catch (NumberFormatException e) {
-                    logWarning("Failed to parse stamina number: " + e.getMessage());
-                }
-            } else {
-                logWarning("Stamina OCR result does not match expected format (x,xxx/xxx or xxx/xxx or x.xxx/xxx)");
-            }
-
-        } catch (IOException | TesseractException e) {
-            logWarning("Failed to read stamina via OCR: " + e.getMessage());
+        if (stamina!= null){
+            logInfo("Stamina parsed and stored: " + stamina);
+            StaminaService.getServices().setStamina(profile.getId(), stamina);
         }
         tapBackButton();
         tapBackButton();
