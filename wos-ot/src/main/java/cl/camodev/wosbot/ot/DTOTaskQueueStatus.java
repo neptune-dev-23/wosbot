@@ -80,8 +80,8 @@ public class DTOTaskQueueStatus {
     }
 
     public void setReconnectAt(long reconnectionTime) {
-        this.setDelayUntil(reconnectionTime);
-        this.setReconnectAt(LocalDateTime.now().plusSeconds(reconnectionTime));
+        this.setDelayUntil(reconnectionTime * 60);
+        this.setReconnectAt(LocalDateTime.now().plusMinutes(reconnectionTime));
     }
 
     public void setReconnectAt(LocalDateTime reconnectAt) {

@@ -63,7 +63,7 @@
     <logger name="javax.persistence" level="ERROR"/>
     
     <!-- Root logger configuration -->
-    <root level="INFO">
+    <root level="ALL">
         <appender-ref ref="CONSOLE" />
         <appender-ref ref="FILE" />
     </root>
