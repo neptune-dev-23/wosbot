@@ -40,7 +40,7 @@ public class TaskQueue {
     protected final EmulatorManager emuManager = EmulatorManager.getInstance();
 
     // State flags
-    DTOTaskQueueStatus taskQueueStatus = new DTOTaskQueueStatus();
+     final DTOTaskQueueStatus taskQueueStatus = new DTOTaskQueueStatus();
 
     // Thread that will evaluate and execute tasks
     private Thread schedulerThread;
