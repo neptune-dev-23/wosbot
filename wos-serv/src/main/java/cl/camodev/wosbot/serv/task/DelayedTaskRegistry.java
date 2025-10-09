@@ -86,6 +86,8 @@ public class DelayedTaskRegistry {
         registry.put(TpDailyTaskEnum.EVENT_POLAR_TERROR, profile -> new PolarTerrorHuntingTask(profile, TpDailyTaskEnum.EVENT_POLAR_TERROR));
         registry.put(TpDailyTaskEnum.EVENT_MYRIAD_BAZAAR, profile -> new MyriadBazaarEventTask(profile, TpDailyTaskEnum.EVENT_MYRIAD_BAZAAR));
 
+        registry.put(TpDailyTaskEnum.BEAR_TRAP, profile -> new BearTrapTask(profile, TpDailyTaskEnum.BEAR_TRAP));
+
         // Initialize
         registry.put(TpDailyTaskEnum.INITIALIZE, profile -> new InitializeTask(profile, TpDailyTaskEnum.INITIALIZE));
     }

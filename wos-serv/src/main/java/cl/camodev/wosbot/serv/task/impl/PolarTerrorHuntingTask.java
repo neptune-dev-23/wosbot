@@ -1,6 +1,5 @@
 package cl.camodev.wosbot.serv.task.impl;
 
-import cl.camodev.utiles.UtilRally;
 import cl.camodev.utiles.UtilTime;
 import cl.camodev.wosbot.almac.entity.DailyTask;
 import cl.camodev.wosbot.almac.repo.DailyTaskRepository;
@@ -25,6 +24,12 @@ public class PolarTerrorHuntingTask extends DelayedTask {
     private final ServTaskManager servTaskManager = ServTaskManager.getInstance();
     private Integer currentStamina = null;
 
+    // Configuration (loaded fresh each execution after profile refresh)
+    private int polarTerrorLevel;
+    private boolean limitedHunting;
+    private boolean useFlag;
+    private int flagNumber;
+
     public PolarTerrorHuntingTask(DTOProfiles profile, TpDailyTaskEnum tpTask) {
         super(profile, tpTask);
     }
@@ -33,6 +38,9 @@ public class PolarTerrorHuntingTask extends DelayedTask {
     protected void execute() {
         logInfo("=== Starting Polar Terror Hunting Task ===");
 
+        // Load configuration fresh after profile refresh
+        loadConfiguration();
+
         if (isBearRunning()) {
             LocalDateTime rescheduleTo = LocalDateTime.now().plusMinutes(30);
             logInfo("Bear Hunt is running, rescheduling for " + rescheduleTo);
@@ -40,22 +48,6 @@ public class PolarTerrorHuntingTask extends DelayedTask {
             return;
         }
         logDebug("Bear Hunt is not running, continuing with Polar Terror Hunting Task");
-
-        String flagString = profile.getConfig(EnumConfigurationKey.POLAR_TERROR_FLAG_STRING, String.class);
-        int flagNumber = 0;
-        int polarTerrorLevel = profile.getConfig(EnumConfigurationKey.POLAR_TERROR_LEVEL_INT, Integer.class);
-        boolean limitedHunting = profile.getConfig(EnumConfigurationKey.POLAR_TERROR_MODE_STRING, String.class)
-                .equals("Limited (10)");
-        boolean useFlag = false;
-
-        if (flagString != null) {
-            try {
-                flagNumber = Integer.parseInt(flagString);
-                useFlag = true;
-            } catch (NumberFormatException e) {
-                useFlag = false;
-            }
-        }
 
         if (profile.getConfig(EnumConfigurationKey.INTEL_BOOL, Boolean.class)
                 && useFlag
@@ -69,13 +61,15 @@ public class PolarTerrorHuntingTask extends DelayedTask {
             }
         }
 
+        currentStamina = getCurrentStamina();
+
         logInfo(String.format("Configuration: Level %d | %s Mode | Flag: %s",
                 polarTerrorLevel,
                 limitedHunting ? "Limited (10 hunts)" : "Unlimited",
-                useFlag ? "#" + flagString : "None"));
+                useFlag ? "#" + flagNumber : "None"));
 
         // Verify if there's enough stamina to hunt, if not, reschedule the task
-        if (!hasEnoughStaminaAndMarches(minStaminaLevel, refreshStaminaLevel))
+        if (!checkStaminaAndMarchesOrReschedule(minStaminaLevel, refreshStaminaLevel))
             return;
 
         // Flag mode: Send single rally
@@ -93,7 +87,7 @@ public class PolarTerrorHuntingTask extends DelayedTask {
             // Check marches before each rally
             if (!checkMarchesAvailable()) {
                 logInfo("No marches available after " + ralliesDeployed + " rallies. Waiting for marches to return.");
-                reschedule(LocalDateTime.now().plusMinutes(10));
+                reschedule(LocalDateTime.now().plusMinutes(5));
                 return;
             }
 
@@ -133,6 +127,33 @@ public class PolarTerrorHuntingTask extends DelayedTask {
     }
 
     /**
+     * Load configuration from profile after refresh.
+     * Called at the start of each execution to ensure config is current.
+     */
+    private void loadConfiguration() {
+        this.polarTerrorLevel = profile.getConfig(EnumConfigurationKey.POLAR_TERROR_LEVEL_INT, Integer.class);
+        this.limitedHunting = profile.getConfig(EnumConfigurationKey.POLAR_TERROR_MODE_STRING, String.class)
+                .equals("Limited (10)");
+
+        String flagString = profile.getConfig(EnumConfigurationKey.POLAR_TERROR_FLAG_STRING, String.class);
+        this.useFlag = false;
+        this.flagNumber = 0;
+
+        if (flagString != null && !flagString.trim().isEmpty()) {
+            try {
+                this.flagNumber = Integer.parseInt(flagString.trim());
+                this.useFlag = true;
+            } catch (NumberFormatException e) {
+                logWarning("Invalid flag number in config: " + flagString + ". Flag mode disabled.");
+                this.useFlag = false;
+            }
+        }
+
+        logDebug("Configuration loaded: polarLevel=" + polarTerrorLevel + ", limitedHunting=" + limitedHunting +
+                ", useFlag=" + useFlag + (useFlag ? ", flagNumber=" + flagNumber : ""));
+    }
+
+    /**
      * Launches a single polar rally without recursion
      * 
      * @return -1 if OCR error occurred
@@ -164,8 +185,7 @@ public class PolarTerrorHuntingTask extends DelayedTask {
 
         // Select flag if needed
         if (useFlag) {
-            tapPoint(UtilRally.getMarchFlagPoint(flagNumber));
-            sleepTask(300);
+            selectFlag(flagNumber);
         }
 
         // Parse travel time
@@ -195,6 +215,7 @@ public class PolarTerrorHuntingTask extends DelayedTask {
 
         // Update stamina
         subtractStamina(spentStamina, true);
+        currentStamina = getCurrentStamina();
 
         // Flag mode: reschedule for march return
         if (useFlag) {
