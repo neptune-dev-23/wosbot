@@ -131,7 +131,7 @@ public class DTOTaskQueueStatus {
     }
     public void setPaused(boolean paused) {
         this.paused = paused;
-        this.pausedAt = LocalDateTime.now();
+        if (paused) this.pausedAt = LocalDateTime.now();
     }
 
     public boolean needsReconnect() {
