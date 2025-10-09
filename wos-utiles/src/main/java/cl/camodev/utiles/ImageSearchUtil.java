@@ -385,6 +385,7 @@ public class ImageSearchUtil {
 
             logger.info("=== Template Search Completed === Total: {} ms, Match: {}%, Position: ({},{})",
                 totalTime, String.format("%.2f", matchPercentage), (int)centerX, (int)centerY);
+
             return new DTOImageSearchResult(true, new DTOPoint((int) centerX, (int) centerY), matchPercentage);
 
         } catch (Exception e) {
