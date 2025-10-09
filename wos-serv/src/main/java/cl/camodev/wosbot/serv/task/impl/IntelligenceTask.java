@@ -141,12 +141,12 @@ public class IntelligenceTask extends DelayedTask {
 	 * Check march availability using appropriate method based on configuration
 	 */
 	private MarchesAvailable checkMarchAvailability() {
+        boolean available = checkMarchesAvailable();
+        if (available) {return new MarchesAvailable(true, LocalDateTime.now());}
 		if (useSmartProcessing) {
-			return getMarchesAvailable();
-		} else {
-			boolean available = checkMarchesAvailable();
-			return new MarchesAvailable(available, LocalDateTime.now());
-		}
+            return getMarchesAvailable();
+        }
+        return new MarchesAvailable(false, LocalDateTime.now().plusMinutes(5));
 	}
 
 	/**

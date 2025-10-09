@@ -556,7 +556,7 @@ public class EmulatorManager {
             // Check if this thread already has an active slot
             if (activeSlots.contains(currentThread)) {
                 logger.info("Profile {} already has an active slot, continuing without acquiring a new one.", profile.getName());
-                logger.debug("Current slot holders: " + activeSlots);
+                logger.info("Current slot holders: " + activeSlots.stream().map(Thread::getName).toList() + ". Active: " + activeSlots.size() + ". Remaining: " + MAX_RUNNING_EMULATORS + ".");
                 profile.setQueuePosition(0);
                 return;
             }
@@ -565,10 +565,10 @@ public class EmulatorManager {
             logger.info("Profile " + profile.getName() + " is requesting queue slot.");
             if (MAX_RUNNING_EMULATORS > 0 && waitingQueue.isEmpty()) {
                 logger.info("Profile " + profile.getName() + " acquired slot immediately.");
-                logger.debug("Current slot holders: " + activeSlots);
                 profile.setQueuePosition(0);
                 MAX_RUNNING_EMULATORS--;
                 activeSlots.add(currentThread); // Track this thread as having a slot
+                logger.info("Current slot holders: " + activeSlots.stream().map(Thread::getName).toList() + ". Active: " + activeSlots.size() + ". Remaining: " + MAX_RUNNING_EMULATORS + ".");
                 return;
             }
 
@@ -587,12 +587,12 @@ public class EmulatorManager {
                 callback.onPositionUpdate(currentThread, position);
             }
             logger.info("Profile {} acquired slot", profile.getName());
-            logger.debug("Current slot holders: " + activeSlots);
             // It's the turn and a slot is available.
             waitingQueue.poll(); // Remove the thread from the queue.
             profile.setQueuePosition(0);
             MAX_RUNNING_EMULATORS--; // Acquire the slot.
             activeSlots.add(currentThread); // Track this thread as having a slot
+            logger.info("Current slot holders: " + activeSlots.stream().map(Thread::getName).toList() + ". Active: " + activeSlots.size() + ". Remaining: " + MAX_RUNNING_EMULATORS + ".");
 
             // Notify other threads to re-evaluate the condition.
             permitsAvailable.signalAll();
