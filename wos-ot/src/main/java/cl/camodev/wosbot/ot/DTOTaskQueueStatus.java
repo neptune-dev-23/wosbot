@@ -4,21 +4,21 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 
 public class DTOTaskQueueStatus {
-    private boolean running;
-    private boolean paused;
-    private boolean needsReconnect;
-    private boolean readyToReconnect;
-    private boolean idleTimeExceeded;
+    private volatile boolean running;
+    private volatile boolean paused;
+    private volatile boolean needsReconnect;
+    private volatile boolean readyToReconnect;
+    private volatile boolean idleTimeExceeded;
     private Integer idleTimeLimit;
-    private Integer backgroundChecks = 0;
+    private int backgroundChecks = 0;
     private int backgroundChecksInterval = 60; // every 60 loops
 
-    private LocalDateTime pausedAt;
-    private LocalDateTime delayUntil;
-    private LocalDateTime reconnectAt;
+    private volatile LocalDateTime pausedAt;
+    private volatile LocalDateTime delayUntil;
+    private volatile LocalDateTime reconnectAt;
 
     private LoopState loopState = new LoopState();
-    private Thread reconnectThread;
+    private volatile Thread reconnectThread;
 
     public DTOTaskQueueStatus() {
         this.running = false;
@@ -70,7 +70,7 @@ public class DTOTaskQueueStatus {
     }
 
     @SuppressWarnings(value = { "unused" })
-    public void setBACKGROUND_CHECKS_INTERVAL(Integer BACKGROUND_CHECKS_INTERVAL) {
+    public void setBackgroundChecksInterval(Integer BACKGROUND_CHECKS_INTERVAL) {
         this.backgroundChecksInterval = BACKGROUND_CHECKS_INTERVAL;
     }
 
@@ -92,7 +92,7 @@ public class DTOTaskQueueStatus {
         this.reconnectAt = reconnectAt;
         this.reconnectThread = Thread.startVirtualThread(() -> {
             try {
-                Thread.sleep(Duration.between(LocalDateTime.now(), reconnectAt).toMillis());
+                Thread.sleep(Math.abs(Duration.between(LocalDateTime.now(), (reconnectAt)).toMillis()));
                 this.readyToReconnect = true;
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -102,7 +102,9 @@ public class DTOTaskQueueStatus {
     }
     @SuppressWarnings(value = "unused" )
     public void cancelReconnectThread() {
-        this.reconnectThread.interrupt();
+        if (this.reconnectThread != null) {
+            this.reconnectThread.interrupt();
+        }
     }
 
     @SuppressWarnings(value = { "unused" })
