@@ -1,23 +1,18 @@
 package cl.camodev.wosbot.emulator;
 
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.BufferedReader;
+import java.io.*;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
-
-import javax.imageio.ImageIO;
+import java.util.concurrent.ConcurrentHashMap;
 
 import cl.camodev.utiles.UtilOCR;
 import cl.camodev.wosbot.console.enumerable.GameVersion;
 import cl.camodev.wosbot.ex.ADBConnectionException;
+import cl.camodev.wosbot.ot.DTORawImage;
 import com.android.ddmlib.*;
 
 import cl.camodev.wosbot.ot.DTOPoint;
@@ -50,6 +45,19 @@ public abstract class Emulator {
 	protected AndroidDebugBridge bridge = null;
 
 	private final ThreadLocal<BufferedImage> reusableImage = new ThreadLocal<>();
+
+	// Cache for devices to avoid repeated lookups
+	private final ConcurrentHashMap<String, IDevice> deviceCache = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<String, Long> deviceCacheTimestamp = new ConcurrentHashMap<>();
+	private static final long DEVICE_CACHE_TTL = 30000; // 30 seconds cache TTL
+
+	// Cache for isRunning status to avoid repeated external process calls
+	private final ConcurrentHashMap<String, Boolean> runningStatusCache = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<String, Long> runningStatusTimestamp = new ConcurrentHashMap<>();
+	private static final long RUNNING_STATUS_CACHE_TTL = 5000; // 5 seconds cache TTL (shorter than device cache)
+
+	// Cache for last captured screenshot per emulator
+	private final ConcurrentHashMap<String, DTORawImage> lastScreenshotCache = new ConcurrentHashMap<>();
 
 	public Emulator(String consolePath) {
 		this.consolePath = consolePath;
@@ -333,31 +341,6 @@ public abstract class Emulator {
 	}
 
 	/**
-	 * Converts a RawImage to BufferedImage.
-	 * @param rawImage RawImage from ddmlib
-	 * @param image BufferedImage to fill
-	 */
-	protected void convertRawImageToBufferedImage(RawImage rawImage, BufferedImage image) {
-		int[] pixels = new int[rawImage.width * rawImage.height];
-		int index = 0;
-
-		for (int y = 0; y < rawImage.height; y++) {
-			for (int x = 0; x < rawImage.width; x++) {
-				int offset = index * rawImage.bpp / 8;
-
-				int r = getColorComponent(rawImage, offset, rawImage.red_offset);
-				int g = getColorComponent(rawImage, offset, rawImage.green_offset);
-				int b = getColorComponent(rawImage, offset, rawImage.blue_offset);
-
-				pixels[index] = (r << 16) | (g << 8) | b; // No alpha channel
-				index++;
-			}
-		}
-
-		image.setRGB(0, 0, rawImage.width, rawImage.height, pixels, 0, rawImage.width);
-	}
-
-	/**
 	 * Gets a color component from a RawImage.
 	 * @param rawImage RawImage from ddmlib
 	 * @param baseOffset Base offset in image data
@@ -372,35 +355,102 @@ public abstract class Emulator {
 	}
 
 	/**
-	 * Captures a screenshot using ddmlib.
+	 * Captures a screenshot from the emulator.
 	 * @param emulatorNumber Emulator identifier
-	 * @return PNG image bytes
+	 * @return DTORawImage with raw screenshot data
 	 */
-	protected byte[] captureScreenshotWithDdmlib(String emulatorNumber) {
-		return withRetries(emulatorNumber, device -> {
-			try {
-				RawImage rawImage = device.getScreenshot();
-				if (rawImage == null) {
-					throw new RuntimeException("RawImage is null");
-				}
+    public DTORawImage captureScreenshot(String emulatorNumber)  {
+        long startTime = System.currentTimeMillis();
+        logger.debug("=== Screenshot Capture Started === Emulator: {}", emulatorNumber);
 
-				BufferedImage image = reusableImage.get();
-				if (image == null ||
-						image.getWidth() != rawImage.width ||
-						image.getHeight() != rawImage.height) {
-						image = new BufferedImage(rawImage.width, rawImage.height, BufferedImage.TYPE_INT_RGB);
-					reusableImage.set(image);
-				}
-				convertRawImageToBufferedImage(rawImage, image);
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				ImageIO.write(image, "png", baos);
-				// java.nio.file.Files.write(java.nio.file.Files.createTempFile("img_full-", ".png"), baos.toByteArray());
-				return baos.toByteArray();
-			} catch (Exception e) {
-				throw new RuntimeException("Error capturing screenshot", e);
-			}
-		}, "captureScreenshot");
-	}
+        // Get serial directly
+        long serialStart = System.currentTimeMillis();
+        String serial = getDeviceSerial(emulatorNumber);
+        logger.debug("Serial lookup: {} ms", (System.currentTimeMillis() - serialStart));
+
+        if (serial == null) {
+            logger.error("Cannot get serial for emulator {}", emulatorNumber);
+            throw new ADBConnectionException("Cannot get serial for emulator " + emulatorNumber);
+        }
+
+        // Get device
+        IDevice device = null;
+        try {
+            device = getCachedDevice(emulatorNumber);
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        if (device == null || !device.isOnline()) {
+            throw new ADBConnectionException("Device " + serial + " is not online");
+        }
+
+        try {
+            long captureStartTime = System.currentTimeMillis();
+
+            // Use native screencap command for maximum speed
+            ByteArrayOutputStream imageData = new ByteArrayOutputStream();
+            CollectingOutputReceiver receiver = new CollectingOutputReceiver() {
+                @Override
+                public void addOutput(byte[] data, int offset, int length) {
+                    imageData.write(data, offset, length);
+                }
+            };
+
+            // Execute screencap command (raw format is fastest)
+            device.executeShellCommand("screencap", receiver, 2000, TimeUnit.MILLISECONDS);
+
+            byte[] rawData = imageData.toByteArray();
+            long captureEndTime = System.currentTimeMillis();
+            logger.debug("Screencap command executed: {} ms", (captureEndTime - captureStartTime));
+
+            if (rawData.length < 12) {
+                throw new RuntimeException("Invalid screencap data: too small");
+            }
+
+            // Parse raw screencap header (first 12 bytes)
+            // Format: width(4) height(4) format(4) [pixel data...]
+            int width = (rawData[0] & 0xFF) | ((rawData[1] & 0xFF) << 8) |
+                    ((rawData[2] & 0xFF) << 16) | ((rawData[3] & 0xFF) << 24);
+            int height = (rawData[4] & 0xFF) | ((rawData[5] & 0xFF) << 8) |
+                    ((rawData[6] & 0xFF) << 16) | ((rawData[7] & 0xFF) << 24);
+            int format = (rawData[8] & 0xFF) | ((rawData[9] & 0xFF) << 8) |
+                    ((rawData[10] & 0xFF) << 16) | ((rawData[11] & 0xFF) << 24);
+
+            logger.debug("Screencap header: {}x{}, format: {}", width, height, format);
+
+            // Extract pixel data (skip 12-byte header)
+            byte[] pixelData = new byte[rawData.length - 12];
+            System.arraycopy(rawData, 12, pixelData, 0, pixelData.length);
+
+            // Determine bpp based on format (usually RGBA_8888 = 1)
+            int bpp = (format == 1) ? 32 : 16; // RGBA_8888 or RGB_565
+
+            DTORawImage result = new DTORawImage(
+                    pixelData,
+                    width,
+                    height,
+                    bpp
+            );
+
+            long totalTime = System.currentTimeMillis() - startTime;
+            logger.debug("=== Screenshot Completed === Total: {} ms, {} bytes",
+                    totalTime, pixelData.length);
+
+            // Update cache
+            lastScreenshotCache.put(emulatorNumber, result);
+
+            return result;
+
+        } catch (TimeoutException e) {
+            logger.error("Screencap timeout for {}", emulatorNumber);
+            throw new RuntimeException("Screencap timeout", e);
+        } catch (Exception e) {
+            logger.error("Failed to capture screenshot for {}: {}", emulatorNumber, e.getMessage());
+            throw new RuntimeException("Error capturing screenshot", e);
+        }
+    }
 
 	/**
 	 * Simulates a tap event at a random point within the given area.
@@ -637,12 +687,12 @@ public abstract class Emulator {
 	 * @throws TesseractException if OCR fails
 	 */
 	public String ocrRegionText(String emulatorNumber, DTOPoint p1, DTOPoint p2) throws IOException, TesseractException {
-		BufferedImage image = ImageIO.read(new ByteArrayInputStream(captureScreenshot(emulatorNumber)));
-		if (image == null)
+		DTORawImage rawImage = captureScreenshot(emulatorNumber);
+		if (rawImage == null)
 			throw new IOException("Could not capture image.");
 
         String language = (EmulatorManager.GAME == GameVersion.CHINA) ? "eng+chi_sim" : "eng";
-		return UtilOCR.ocrFromRegion(image, p1, p2, language);
+		return UtilOCR.ocrFromRegion(rawImage, p1, p2, language);
 	}
 
 	/**
@@ -656,20 +706,119 @@ public abstract class Emulator {
 	 * @throws TesseractException if OCR fails
 	 */
 	public String ocrRegionText(String emulatorNumber, DTOPoint p1, DTOPoint p2, DTOTesseractSettings settings) throws IOException, TesseractException {
-		BufferedImage image = ImageIO.read(new ByteArrayInputStream(captureScreenshot(emulatorNumber)));
-		if (image == null)
+		DTORawImage rawImage;
+
+		// Check if we should reuse the last image
+		if (settings != null && settings.isReuseLastImage()) {
+			rawImage = lastScreenshotCache.get(emulatorNumber);
+			if (rawImage != null) {
+				logger.debug("Reusing cached screenshot for OCR on emulator {}", emulatorNumber);
+			} else {
+				logger.debug("No cached screenshot available, capturing new one for emulator {}", emulatorNumber);
+				rawImage = captureScreenshot(emulatorNumber);
+			}
+		} else {
+			// Normal behavior: capture new screenshot
+			rawImage = captureScreenshot(emulatorNumber);
+		}
+
+		if (rawImage == null)
 			throw new IOException("Could not capture image.");
 
-		return UtilOCR.ocrFromRegion(image, p1, p2, settings);
+		return UtilOCR.ocrFromRegion(rawImage, p1, p2, settings);
 	}
 
 	/**
-	 * Captures a screenshot from the emulator.
+	 * Gets a cached device or finds it if not in cache or expired.
+	 * This significantly improves performance by avoiding repeated device lookups.
 	 * @param emulatorNumber Emulator identifier
-	 * @return PNG image bytes
+	 * @return IDevice instance or null if not found
+	 * @throws InterruptedException if interrupted while waiting
 	 */
-	public byte[] captureScreenshot(String emulatorNumber) {
-		return captureScreenshotWithDdmlib(emulatorNumber);
+	protected IDevice getCachedDevice(String emulatorNumber) throws InterruptedException {
+		String serial = getDeviceSerial(emulatorNumber);
+		long currentTime = System.currentTimeMillis();
+
+		// Check if we have a cached device and it's still valid
+		IDevice cachedDevice = deviceCache.get(emulatorNumber);
+		Long cacheTime = deviceCacheTimestamp.get(emulatorNumber);
+
+		if (cachedDevice != null && cacheTime != null) {
+			// Check if cache is still valid (TTL not expired)
+			if ((currentTime - cacheTime) < DEVICE_CACHE_TTL) {
+				// Verify device is still online
+				if (cachedDevice.isOnline()) {
+					logger.trace("Using cached device for emulator {}", emulatorNumber);
+					return cachedDevice;
+				} else {
+					logger.debug("Cached device is offline, refreshing cache for emulator {}", emulatorNumber);
+				}
+			} else {
+				logger.trace("Device cache expired for emulator {}, refreshing", emulatorNumber);
+			}
+		}
+
+		// Cache miss or expired, find device and update cache
+		IDevice device = findDevice(emulatorNumber);
+		if (device != null) {
+			deviceCache.put(emulatorNumber, device);
+			deviceCacheTimestamp.put(emulatorNumber, currentTime);
+			logger.debug("Device cached for emulator {}", emulatorNumber);
+		}
+
+		return device;
+	}
+
+	/**
+	 * Invalidates the device cache for a specific emulator.
+	 * Useful when a device disconnects or needs to be refreshed.
+	 * @param emulatorNumber Emulator identifier
+	 */
+	protected void invalidateDeviceCache(String emulatorNumber) {
+		deviceCache.remove(emulatorNumber);
+		deviceCacheTimestamp.remove(emulatorNumber);
+		logger.debug("Device cache invalidated for emulator {}", emulatorNumber);
+	}
+
+	/**
+	 * Checks if the emulator is running with caching to avoid repeated external process calls.
+	 * This wrapper method provides significant performance improvement for MEmu emulator.
+	 * @param emulatorNumber Emulator identifier
+	 * @return true if running, false otherwise
+	 */
+	protected boolean isRunningCached(String emulatorNumber) {
+		long currentTime = System.currentTimeMillis();
+
+		// Check if we have a cached status and it's still valid
+		Boolean cachedStatus = runningStatusCache.get(emulatorNumber);
+		Long statusTime = runningStatusTimestamp.get(emulatorNumber);
+
+		if (cachedStatus != null && statusTime != null) {
+			// Check if cache is still valid (TTL not expired)
+			if ((currentTime - statusTime) < RUNNING_STATUS_CACHE_TTL) {
+				logger.trace("Using cached running status for emulator {}: {}", emulatorNumber, cachedStatus);
+				return cachedStatus;
+			}
+		}
+
+		// Cache miss or expired, call actual isRunning and update cache
+		boolean status = isRunning(emulatorNumber);
+		runningStatusCache.put(emulatorNumber, status);
+		runningStatusTimestamp.put(emulatorNumber, currentTime);
+		logger.trace("Running status cached for emulator {}: {}", emulatorNumber, status);
+
+		return status;
+	}
+
+	/**
+	 * Invalidates the running status cache for a specific emulator.
+	 * Should be called when launching or closing an emulator.
+	 * @param emulatorNumber Emulator identifier
+	 */
+	protected void invalidateRunningStatusCache(String emulatorNumber) {
+		runningStatusCache.remove(emulatorNumber);
+		runningStatusTimestamp.remove(emulatorNumber);
+		logger.debug("Running status cache invalidated for emulator {}", emulatorNumber);
 	}
 
 	/**

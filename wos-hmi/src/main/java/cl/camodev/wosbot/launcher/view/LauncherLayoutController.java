@@ -14,6 +14,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import cl.camodev.utiles.ImageSearchUtil;
 import cl.camodev.wosbot.alliance.view.AllianceLayoutController;
+import cl.camodev.wosbot.bear.view.BearTrapLayoutController;
 import cl.camodev.wosbot.chieforder.view.ChiefOrderLayoutController;
 import cl.camodev.wosbot.city.view.CityEventsExtraLayoutController;
 import cl.camodev.wosbot.city.view.CityEventsLayoutController;
@@ -376,6 +377,7 @@ public class LauncherLayoutController implements IProfileLoadListener, IStaminaC
 				new ModuleDefinition("AllianceLayout", "Alliance", AllianceLayoutController::new),
                 new ModuleDefinition("AllianceShop", "Alliance Shop", AllianceShopController::new),
                 new ModuleDefinition("AllianceMobilizationLayout", "Alliance Mobilization", MobilizationLayoutController::new),
+                new ModuleDefinition("BearTrapLayout", "Bear Trap", BearTrapLayoutController::new),
 				new ModuleDefinition("TrainingLayout", "Training", TrainingLayoutController::new),
 				new ModuleDefinition("PetsLayout", "Pets", PetsLayoutController::new),
 				new ModuleDefinition("EventsLayout", "Events", EventsLayoutController::new),
