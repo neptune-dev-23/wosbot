@@ -500,7 +500,7 @@ public class TaskQueue {
         if (result.isFound()) {
             logInfo("Bear is running, pausing task running for 30 minutes");
             pause();
-            taskQueueStatus.setDelayUntil(30 * 60);
+            taskQueueStatus.setDelayUntil(LocalDateTime.now().plusMinutes(30));
         }
     }
 
