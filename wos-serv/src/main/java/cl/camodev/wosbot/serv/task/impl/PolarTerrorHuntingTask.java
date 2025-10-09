@@ -316,6 +316,10 @@ public class PolarTerrorHuntingTask extends DelayedTask {
         sleepTask(100);
         if (polarLevel != -1) {
             logInfo(String.format("Adjusting Polar Terror level to %d", polarLevel));
+            if (polarLevel < 1 || polarLevel > levelPoints.length) {
+                logError(String.format("Invalid Polar Terror level configured: %d. Must be between 1 and %d.", polarLevel, levelPoints.length));
+                return false;
+            }
             tapRandomPoint(levelPoints[polarLevel - 1], levelPoints[polarLevel - 1], 3, 100);
         }
         // tap on search button
