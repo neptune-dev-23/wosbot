@@ -64,7 +64,7 @@ public class MercenaryEventTask extends DelayedTask {
         }
 
         // Verify if there's enough stamina to hunt, if not, reschedule the task
-        if (!hasEnoughStaminaAndMarches(minStaminaLevel, refreshStaminaLevel)) return;
+        if (!checkStaminaAndMarchesOrReschedule(minStaminaLevel, refreshStaminaLevel)) return;
 
         int attempt = 0;
         while (attempt < 2) {

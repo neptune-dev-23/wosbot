@@ -1,17 +1,13 @@
 package cl.camodev.wosbot.serv.task.impl;
 
-import java.awt.*;
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import cl.camodev.utiles.UtilRally;
-import cl.camodev.utiles.number.NumberConverters;
-import cl.camodev.utiles.number.NumberValidators;
+import cl.camodev.utiles.UtilTime;
 import cl.camodev.wosbot.almac.repo.DailyTaskRepository;
 import cl.camodev.wosbot.almac.repo.IDailyTaskRepository;
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
@@ -20,7 +16,7 @@ import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
-import cl.camodev.wosbot.ot.DTOTesseractSettings;
+import cl.camodev.wosbot.serv.impl.ServTaskManager;
 import cl.camodev.wosbot.serv.impl.StaminaService;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 import cl.camodev.wosbot.serv.task.EnumStartLocation;
@@ -28,41 +24,172 @@ import net.sourceforge.tess4j.TesseractException;
 
 public class IntelligenceTask extends DelayedTask {
 
-	private final IDailyTaskRepository iDailyTaskRepository = DailyTaskRepository.getRepository();
-	private final boolean fcEra;
-	private final boolean useSmartProcessing;
+	// Constants
+	private static final int MIN_STAMINA_REQUIRED = 30;
+	private static final int SURVIVOR_STAMINA_COST = 12;
+	private static final int JOURNEY_STAMINA_COST = 10;
 
-	private boolean marchQueueLimitReached = false;
-	private boolean beastMarchSent = false;
+	private final IDailyTaskRepository iDailyTaskRepository = DailyTaskRepository.getRepository();
+
+	// Runtime state (reset each execution)
+	private boolean marchQueueLimitReached;
+	private boolean beastMarchSent;
+
+	// Specific configurations
+	private boolean isAutoJoinDisabled;
+
+	// Configuration (loaded fresh each execution after profile refresh)
+	private boolean fcEra;
+	private boolean useSmartProcessing;
+	private boolean useFlag;
+	private Integer flagNumber;
+	private boolean beastsEnabled;
+	private boolean fireBeastsEnabled;
+	private boolean survivorCampsEnabled;
+	private boolean explorationsEnabled;
 
 	public IntelligenceTask(DTOProfiles profile, TpDailyTaskEnum tpTask) {
 		super(profile, tpTask);
-		this.fcEra = profile.getConfig(EnumConfigurationKey.INTEL_FC_ERA_BOOL, Boolean.class);
-		this.useSmartProcessing = profile.getConfig(EnumConfigurationKey.INTEL_SMART_PROCESSING_BOOL, Boolean.class);
 	}
 
 	@Override
 	protected void execute() {
 		logInfo("Starting Intel task.");
 
-		MarchesAvailable marchesAvailable;
-		boolean intelFound = false;
-		boolean nonBeastIntelFound = false;
-		beastMarchSent = false;
-		marchQueueLimitReached = !checkMarchesAvailable();
+		// Load configuration fresh after profile refresh
+		loadConfiguration();
 
-		if (useSmartProcessing) {
-			// Check how many marches are available
-			marchesAvailable = getMarchesAvailable();
-			if (!marchesAvailable.available()) {
-				marchQueueLimitReached = true;
-			}
-		} else {
-			marchesAvailable = new MarchesAvailable(true, LocalDateTime.now());
+		// Reset runtime state
+		beastMarchSent = false;
+		boolean anyIntelProcessed = false;
+		boolean nonBeastIntelProcessed = false;
+
+		// Check march availability once
+		MarchesAvailable marchesAvailable = checkMarchAvailability();
+		marchQueueLimitReached = !marchesAvailable.available();
+
+		isAutoJoinDisabled = disableAutoJoin();
+
+		if (!isAutoJoinDisabled) {
+			logDebug("Failed to disable auto-join, proceeding anyway.");
 		}
 
+		// Claim completed missions
+		claimCompletedMissions();
+
+		// Check stamina
+		if (!hasEnoughStamina()) {
+			return; // Already rescheduled in hasEnoughStamina()
+		}
+
+		// Process beasts
+		if (beastsEnabled && shouldProcessBeasts()) {
+			if (processBeastIntel()) {
+				anyIntelProcessed = true;
+			}
+		}
+
+		// Process survivor camps
+		if (survivorCampsEnabled) {
+			ensureOnIntelScreen();
+			logInfo("Searching for survivor camps using grayscale matching.");
+			EnumTemplates survivorTemplate = fcEra ? EnumTemplates.INTEL_SURVIVOR_GRAYSCALE_FC
+					: EnumTemplates.INTEL_SURVIVOR_GRAYSCALE;
+			if (searchAndProcessGrayscale(survivorTemplate, 5, 90, this::processSurvivor)) {
+				anyIntelProcessed = true;
+				nonBeastIntelProcessed = true;
+			}
+		}
+
+		// Process explorations
+		if (explorationsEnabled) {
+			ensureOnIntelScreen();
+			logInfo("Searching for explorations using grayscale matching.");
+			EnumTemplates journeyTemplate = fcEra ? EnumTemplates.INTEL_JOURNEY_GRAYSCALE_FC
+					: EnumTemplates.INTEL_JOURNEY_GRAYSCALE;
+			if (searchAndProcessGrayscale(journeyTemplate, 5, 90, this::processJourney)) {
+				anyIntelProcessed = true;
+				nonBeastIntelProcessed = true;
+			}
+		}
+
+		// Handle rescheduling
+		handleRescheduling(anyIntelProcessed, nonBeastIntelProcessed, marchesAvailable);
+
+		logInfo("Intel Task finished.");
+	}
+
+	/**
+	 * Load configuration from profile after refresh.
+	 * Called at the start of each execution to ensure config is current.
+	 */
+	private void loadConfiguration() {
+		this.fcEra = profile.getConfig(EnumConfigurationKey.INTEL_FC_ERA_BOOL, Boolean.class);
+		this.useSmartProcessing = profile.getConfig(EnumConfigurationKey.INTEL_SMART_PROCESSING_BOOL, Boolean.class);
+		this.useFlag = profile.getConfig(EnumConfigurationKey.INTEL_USE_FLAG_BOOL, Boolean.class);
+		this.flagNumber = useFlag ? profile.getConfig(EnumConfigurationKey.INTEL_BEASTS_FLAG_INT, Integer.class) : null;
+		this.beastsEnabled = profile.getConfig(EnumConfigurationKey.INTEL_BEASTS_BOOL, Boolean.class);
+		this.fireBeastsEnabled = profile.getConfig(EnumConfigurationKey.INTEL_FIRE_BEAST_BOOL, Boolean.class);
+		this.survivorCampsEnabled = profile.getConfig(EnumConfigurationKey.INTEL_CAMP_BOOL, Boolean.class);
+		this.explorationsEnabled = profile.getConfig(EnumConfigurationKey.INTEL_EXPLORATION_BOOL, Boolean.class);
+
+		logDebug("Configuration loaded: fcEra=" + fcEra + ", useSmartProcessing=" + useSmartProcessing +
+				", useFlag=" + useFlag + ", beastsEnabled=" + beastsEnabled);
+	}
+
+	/**
+	 * Check march availability using appropriate method based on configuration
+	 */
+	private MarchesAvailable checkMarchAvailability() {
+		if (useSmartProcessing) {
+			return getMarchesAvailable();
+		} else {
+			boolean available = checkMarchesAvailable();
+			return new MarchesAvailable(available, LocalDateTime.now());
+		}
+	}
+
+	/**
+	 * Determine if beasts should be processed based on current state
+	 */
+	private boolean shouldProcessBeasts() {
+		if (marchQueueLimitReached) {
+			logInfo("No marches available, skipping beast search.");
+			return false;
+		}
+
+		if (useFlag && beastMarchSent) {
+			logInfo("Beast march already sent (flag mode), skipping beast search.");
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Check if there's enough stamina to continue
+	 */
+	private boolean hasEnoughStamina() {
+		int staminaValue = StaminaService.getServices().getCurrentStamina(profile.getId());
+
+		if (staminaValue < MIN_STAMINA_REQUIRED) {
+			logWarning("Not enough stamina to process intel. Current stamina: " + staminaValue +
+					". Required: " + MIN_STAMINA_REQUIRED + ".");
+			long minutesToRegen = (long) (MIN_STAMINA_REQUIRED - staminaValue) * 5L;
+			LocalDateTime rescheduleTime = LocalDateTime.now().plusMinutes(minutesToRegen);
+			reschedule(rescheduleTime);
+			return false;
+		}
+		return true;
+	}
+
+	/**
+	 * Claim all completed missions
+	 */
+	private void claimCompletedMissions() {
 		ensureOnIntelScreen();
 		logInfo("Searching for completed missions to claim.");
+
 		for (int i = 0; i < 2; i++) {
 			logDebug("Searching for completed missions. Attempt " + (i + 1) + ".");
 			List<DTOImageSearchResult> completed = emuManager.searchTemplates(EMULATOR_NUMBER,
@@ -71,139 +198,111 @@ public class IntelligenceTask extends DelayedTask {
 			if (completed.isEmpty()) {
 				logInfo("No completed missions found on attempt " + (i + 1) + ".");
 				continue;
-			} else {
-				logInfo("Found " + completed.size() + " completed missions. Claiming them now.");
 			}
 
-			// Process all found completed missions
+			logInfo("Found " + completed.size() + " completed missions. Claiming them now.");
+
 			for (DTOImageSearchResult completedMission : completed) {
-				emuManager.tapAtPoint(EMULATOR_NUMBER, completedMission.getPoint());
+				tapPoint(completedMission.getPoint());
 				sleepTask(500);
-				emuManager.tapAtRandomPoint(EMULATOR_NUMBER, new DTOPoint(700, 1270), new DTOPoint(710, 1280), 5,
-						250);
+				tapRandomPoint(new DTOPoint(700, 1270), new DTOPoint(710, 1280), 5, 250);
 				sleepTask(500);
 			}
 		}
+	}
 
-		// check is stamina enough to process any intel
-		int staminaValue = StaminaService.getServices().getCurrentStamina(profile.getId());
+	/**
+	 * Process all beast intel (fire beasts and regular beasts)
+	 */
+	private boolean processBeastIntel() {
+		ensureOnIntelScreen();
+		boolean beastFound = false;
 
-		int minStaminaRequired = 30; // Minimum stamina required to process intel, make it configurable if needed?
-		if (staminaValue < minStaminaRequired) {
-			logWarning("Not enough stamina to process intel. Current stamina: " + staminaValue + ". Required: "
-					+ minStaminaRequired + ".");
-			long minutesToRegen = (long) (minStaminaRequired - staminaValue) * 5L; // 1 stamina every 5 minutes
-			LocalDateTime rescheduleTime = LocalDateTime.now().plusMinutes(minutesToRegen);
-			this.reschedule(rescheduleTime);
+		// Search for fire beasts if enabled
+		if (fireBeastsEnabled && !marchQueueLimitReached && !(useFlag && beastMarchSent)) {
+			logInfo("Searching for fire beasts.");
+			if (searchAndProcess(EnumTemplates.INTEL_FIRE_BEAST, 5, 90, this::processBeast)) {
+				beastFound = true;
+				if (useFlag) {
+					return true; // Only one beast march in flag mode
+				}
+			}
+		}
+
+		// Search for regular beasts
+		if (!marchQueueLimitReached && !(useFlag && beastMarchSent)) {
+			logInfo("Searching for beasts using grayscale matching.");
+			EnumTemplates beastTemplate = fcEra ? EnumTemplates.INTEL_BEAST_GRAYSCALE_FC
+					: EnumTemplates.INTEL_BEAST_GRAYSCALE;
+			if (searchAndProcessGrayscale(beastTemplate, 5, 90, this::processBeast)) {
+				beastFound = true;
+			}
+		}
+
+		return beastFound;
+	}
+
+	/**
+	 * Handle rescheduling logic based on what was processed
+	 */
+	private void handleRescheduling(boolean anyIntelProcessed, boolean nonBeastIntelProcessed,
+			MarchesAvailable marchesAvailable) {
+		sleepTask(500);
+
+		if (!anyIntelProcessed) {
+			// No intel found at all - try to read cooldown timer
+			tryRescheduleFromCooldown();
 			return;
 		}
 
-		if (profile.getConfig(EnumConfigurationKey.INTEL_BEASTS_BOOL, Boolean.class)) {
-			if (!useSmartProcessing || !marchQueueLimitReached) {
-				ensureOnIntelScreen();
-
-				boolean fireBeastsEnabled = profile.getConfig(EnumConfigurationKey.INTEL_FIRE_BEAST_BOOL,
-						Boolean.class);
-				boolean useFlag = profile.getConfig(EnumConfigurationKey.INTEL_USE_FLAG_BOOL, Boolean.class);
-
-				// Search for fire beasts if enabled
-				if (fireBeastsEnabled) {
-					logInfo("Searching for fire beasts.");
-					if (searchAndProcess(EnumTemplates.INTEL_FIRE_BEAST, 5, 90, this::processBeast)) {
-						intelFound = true;
-					}
-				}
-
-				// If flag feature is enabled, only one beast march should be sent per execution
-				if (useFlag) {
-					if (!marchQueueLimitReached && !beastMarchSent) {
-						logInfo("Searching for beasts using grayscale matching (flag mode, only one march allowed).");
-						EnumTemplates beastTemplate = fcEra ? EnumTemplates.INTEL_BEAST_GRAYSCALE_FC
-								: EnumTemplates.INTEL_BEAST_GRAYSCALE;
-						if (searchAndProcessGrayscale(beastTemplate, 5, 90, this::processBeast)) {
-							intelFound = true;
-						}
-					} else if (beastMarchSent) {
-						logInfo("Beast march already sent (flag mode), skipping regular beast search.");
-					}
-				} else {
-					// If flag is disabled, allow both fire and regular beast marches in the same
-					// execution
-					if (!marchQueueLimitReached) {
-						logInfo("Searching for beasts using grayscale matching (multi-march mode).");
-						EnumTemplates beastTemplate = fcEra ? EnumTemplates.INTEL_BEAST_GRAYSCALE_FC
-								: EnumTemplates.INTEL_BEAST_GRAYSCALE;
-						if (searchAndProcessGrayscale(beastTemplate, 5, 90, this::processBeast)) {
-							intelFound = true;
-						}
-					}
-				}
-			} else {
-				logInfo("No marches available, will not run beast search");
-			}
-		}
-
-		if (profile.getConfig(EnumConfigurationKey.INTEL_CAMP_BOOL, Boolean.class)) {
-			ensureOnIntelScreen();
-
-			logInfo("Searching for survivor camps using grayscale matching.");
-			EnumTemplates survivorTemplate = fcEra ? EnumTemplates.INTEL_SURVIVOR_GRAYSCALE_FC
-					: EnumTemplates.INTEL_SURVIVOR_GRAYSCALE;
-			if (searchAndProcessGrayscale(survivorTemplate, 5, 90, this::processSurvivor)) {
-				intelFound = true;
-				nonBeastIntelFound = true;
-			}
-		}
-
-		if (profile.getConfig(EnumConfigurationKey.INTEL_EXPLORATION_BOOL, Boolean.class)) {
-			ensureOnIntelScreen();
-
-			logInfo("Searching for explorations using grayscale matching.");
-			EnumTemplates journeyTemplate = fcEra ? EnumTemplates.INTEL_JOURNEY_GRAYSCALE_FC
-					: EnumTemplates.INTEL_JOURNEY_GRAYSCALE;
-			if (searchAndProcessGrayscale(journeyTemplate, 5, 90, this::processJourney)) {
-				intelFound = true;
-				nonBeastIntelFound = true;
-			}
-		}
-
-		sleepTask(500);
-		if (intelFound == false) {
-			logInfo("No intel items found. Attempting to read the cooldown timer.");
-			try {
-				String rescheduleTimeStr = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(120, 110),
-						new DTOPoint(600, 146));
-				LocalDateTime rescheduleTime = parseAndAddTime(rescheduleTimeStr);
-				this.reschedule(rescheduleTime);
-				tapBackButton();
-				logInfo("No new intel found. Rescheduling task to run at: " + rescheduleTime);
-			} catch (IOException | TesseractException e) {
-				this.reschedule(LocalDateTime.now().plusMinutes(5));
-				logError("Error reading intel cooldown timer: " + e.getMessage(), e);
-			}
-		} else if (marchQueueLimitReached && !nonBeastIntelFound && !beastMarchSent) {
-			if (useSmartProcessing) {
-				this.reschedule(marchesAvailable.rescheduleTo());
+		if (marchQueueLimitReached && !nonBeastIntelProcessed && !beastMarchSent) {
+			// Only beasts found but no marches available
+			if (useSmartProcessing && marchesAvailable.rescheduleTo() != null) {
+				reschedule(marchesAvailable.rescheduleTo());
 				logInfo("March queue is full, and only beasts remain. Rescheduling for when marches will be available at "
 						+ marchesAvailable.rescheduleTo());
 			} else {
 				LocalDateTime rescheduleTime = LocalDateTime.now().plusMinutes(5);
-				this.reschedule(rescheduleTime);
+				reschedule(rescheduleTime);
 				logInfo("March queue is full, and only beasts remain. Rescheduling for 5 minutes at " + rescheduleTime);
 			}
-		} else if (!beastMarchSent) {
-			this.reschedule(LocalDateTime.now());
-			logInfo("Intel tasks processed. Rescheduling immediately to check for more.");
+			return;
 		}
 
-		logInfo("Intel Task finished.");
+		if (!beastMarchSent || marchQueueLimitReached) {
+			// Some intel was processed but might have skipped beasts
+			reschedule(LocalDateTime.now().plusMinutes(2));
+			logInfo("Rescheduling in 2 minutes to check if any intel got skipped. " +
+					"Beast march sent: " + beastMarchSent + ", March queue full: " + marchQueueLimitReached);
+			return;
+		}
+
+		// Beast march was sent successfully - already rescheduled in processBeast()
+		logInfo("Beast march sent successfully. Task already rescheduled for march return.");
 	}
 
 	/**
-	 * Search for a template using grayscale matching and process it with the
-	 * provided method.
-	 * This method is optimized for icons that have the same shape but different
-	 * colors.
+	 * Try to read intel cooldown timer and reschedule accordingly
+	 */
+	private void tryRescheduleFromCooldown() {
+		logInfo("No intel items found. Attempting to read the cooldown timer.");
+		try {
+			String rescheduleTimeStr = OCRWithRetries(new DTOPoint(120, 110), new DTOPoint(600, 146));
+			LocalDateTime rescheduleTime = UtilTime.parseTime(rescheduleTimeStr);
+			reschedule(rescheduleTime);
+			tapBackButton();
+			isAutoJoinDisabled = false;
+			ServTaskManager.getInstance().getTaskState(profile.getId(), TpDailyTaskEnum.ALLIANCE_AUTOJOIN.getId())
+					.setNextExecutionTime(LocalDateTime.now().plusMinutes(5));
+			logInfo("No new intel found. Rescheduling task to run at: " + rescheduleTime);
+		} catch (Exception e) {
+			reschedule(LocalDateTime.now().plusMinutes(5));
+			logError("Error reading intel cooldown timer: " + e.getMessage(), e);
+		}
+	}
+
+	/**
+	 * Search for a template using grayscale matching and process it
 	 */
 	private boolean searchAndProcessGrayscale(EnumTemplates template, int maxAttempts, int confidence,
 			Consumer<DTOImageSearchResult> processMethod) {
@@ -221,8 +320,7 @@ public class IntelligenceTask extends DelayedTask {
 	}
 
 	/**
-	 * Search for a template and process it with the provided method.
-	 * This method is used for non-grayscale templates like fire beasts.
+	 * Search for a template and process it
 	 */
 	private boolean searchAndProcess(EnumTemplates template, int maxAttempts, int confidence,
 			Consumer<DTOImageSearchResult> processMethod) {
@@ -240,47 +338,60 @@ public class IntelligenceTask extends DelayedTask {
 	}
 
 	private void processJourney(DTOImageSearchResult result) {
-		emuManager.tapAtPoint(EMULATOR_NUMBER, result.getPoint());
+		tapPoint(result.getPoint());
 		sleepTask(2000);
 
-		DTOImageSearchResult view = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_VIEW, 90);
-		if (view.isFound()) {
-			emuManager.tapAtPoint(EMULATOR_NUMBER, view.getPoint());
-			sleepTask(500);
-			DTOImageSearchResult explore = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_EXPLORE, 90);
-			if (explore.isFound()) {
-				emuManager.tapAtPoint(EMULATOR_NUMBER, explore.getPoint());
-				sleepTask(500);
-				emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(520, 1200));
-				sleepTask(1000);
-				tapBackButton();
-                StaminaService.getServices().subtractStamina(profile.getId(),10);
-			} else {
-				logWarning("Could not find the 'Explore' button for the journey. Going back.");
-				tapBackButton(); // Back from journey screen
-				return;
-			}
+		DTOImageSearchResult view = searchTemplateWithRetries(EnumTemplates.INTEL_VIEW);
+		if (!view.isFound()) {
+			logWarning("Could not find the 'View' button for the journey. Going back.");
+			tapBackButton();
+			return;
 		}
+
+		tapPoint(view.getPoint());
+		sleepTask(500);
+
+		DTOImageSearchResult explore = searchTemplateWithRetries(EnumTemplates.INTEL_EXPLORE);
+		if (!explore.isFound()) {
+			logWarning("Could not find the 'Explore' button for the journey. Going back.");
+			tapBackButton();
+			tapBackButton(); // Back from view screen
+			return;
+		}
+
+		tapPoint(explore.getPoint());
+		sleepTask(500);
+		tapPoint(new DTOPoint(520, 1200));
+		sleepTask(1000);
+		tapBackButton();
+		StaminaService.getServices().subtractStamina(profile.getId(), JOURNEY_STAMINA_COST);
 	}
 
 	private void processSurvivor(DTOImageSearchResult result) {
-		emuManager.tapAtPoint(EMULATOR_NUMBER, result.getPoint());
+		tapPoint(result.getPoint());
 		sleepTask(2000);
 
-		DTOImageSearchResult view = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_VIEW, 90);
-		if (view.isFound()) {
-			emuManager.tapAtPoint(EMULATOR_NUMBER, view.getPoint());
-			sleepTask(500);
-			DTOImageSearchResult rescue = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_RESCUE, 90);
-			if (rescue.isFound()) {
-				emuManager.tapAtPoint(EMULATOR_NUMBER, rescue.getPoint());
-                StaminaService.getServices().subtractStamina(profile.getId(),12);
-			} else {
-				logWarning("Could not find the 'Rescue' button for the survivor. Going back.");
-				tapBackButton(); // Back from survivor screen
-				return;
-			}
+		DTOImageSearchResult view = searchTemplateWithRetries(EnumTemplates.INTEL_VIEW);
+		if (!view.isFound()) {
+			logWarning("Could not find the 'View' button for the survivor. Going back.");
+			tapBackButton();
+			return;
 		}
+
+		tapPoint(view.getPoint());
+		sleepTask(500);
+
+		DTOImageSearchResult rescue = searchTemplateWithRetries(EnumTemplates.INTEL_RESCUE);
+		if (!rescue.isFound()) {
+			logWarning("Could not find the 'Rescue' button for the survivor. Going back.");
+			tapBackButton();
+			tapBackButton(); // Back from view screen
+			return;
+		}
+
+		tapPoint(rescue.getPoint());
+		sleepTask(500);
+		StaminaService.getServices().subtractStamina(profile.getId(), SURVIVOR_STAMINA_COST);
 	}
 
 	private void processBeast(DTOImageSearchResult beast) {
@@ -288,200 +399,173 @@ public class IntelligenceTask extends DelayedTask {
 			logInfo("March queue is full. Skipping beast hunt.");
 			return;
 		}
-		emuManager.tapAtPoint(EMULATOR_NUMBER, beast.getPoint());
+
+		if (useFlag && beastMarchSent) {
+			logInfo("Beast march already sent with flag. Skipping beast hunt.");
+			return;
+		}
+
+		tapPoint(beast.getPoint());
 		sleepTask(2000);
 
-		DTOImageSearchResult view = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_VIEW, 90);
+		DTOImageSearchResult view = searchTemplateWithRetries(EnumTemplates.INTEL_VIEW);
 		if (!view.isFound()) {
 			logWarning("Could not find the 'View' button for the beast. Going back.");
 			tapBackButton();
 			return;
 		}
-		emuManager.tapAtPoint(EMULATOR_NUMBER, view.getPoint());
+		tapPoint(view.getPoint());
 		sleepTask(500);
 
-		DTOImageSearchResult attack = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.INTEL_ATTACK, 90);
+		DTOImageSearchResult attack = searchTemplateWithRetries(EnumTemplates.INTEL_ATTACK);
 		if (!attack.isFound()) {
 			logWarning("Could not find the 'Attack' button for the beast. Going back.");
 			tapBackButton();
+			tapBackButton(); // Back from view screen
 			return;
 		}
-		emuManager.tapAtPoint(EMULATOR_NUMBER, attack.getPoint());
+		tapPoint(attack.getPoint());
 		sleepTask(500);
 
-		// Check if the march screen is open before proceeding
-		DTOImageSearchResult deployButton = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.DEPLOY_BUTTON, 90);
+		// Check if the march screen is open
+		DTOImageSearchResult deployButton = searchTemplateWithRetries(EnumTemplates.DEPLOY_BUTTON);
 		if (!deployButton.isFound()) {
-			// March queue limit reached, cannot process beast
 			logError("March queue is full. Cannot start a new march.");
 			marchQueueLimitReached = true;
 			return;
 		}
 
-		boolean useFlag = profile.getConfig(EnumConfigurationKey.INTEL_USE_FLAG_BOOL, Boolean.class);
+		// Select flag if needed
 		if (useFlag) {
-			// Select the specified flag
-			int flagToSelect = profile.getConfig(EnumConfigurationKey.INTEL_BEASTS_FLAG_INT, Integer.class);
-			DTOPoint flagPoint = UtilRally.getMarchFlagPoint(flagToSelect);
-			logInfo("Tapping flag " + flagToSelect);
-			emuManager.tapAtPoint(EMULATOR_NUMBER, flagPoint);
-			sleepTask(500);
+			selectFlag(flagNumber);
 		}
 
-		DTOImageSearchResult equalizeButton = emuManager.searchTemplate(EMULATOR_NUMBER,
-				EnumTemplates.RALLY_EQUALIZE_BUTTON, 90);
-
+		// Equalize troops
+		DTOImageSearchResult equalizeButton = searchTemplateWithRetries(EnumTemplates.RALLY_EQUALIZE_BUTTON);
 		if (equalizeButton.isFound()) {
-			emuManager.tapAtPoint(EMULATOR_NUMBER, equalizeButton.getPoint());
+			tapPoint(equalizeButton.getPoint());
+			sleepTask(300);
 		}
 
+		// Parse travel time
+		long travelTimeSeconds = 0;
 		try {
-			String timeStr = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(521, 1141),
-					new DTOPoint(608, 1162));
-			long travelTimeSeconds = parseTimeToSeconds(timeStr);
-            Integer spendedStamina = integerHelper.execute(
-                    new DTOPoint(540, 1215),
-                    new DTOPoint(590, 1245),
-                    5,
-                    200L,
-                    DTOTesseractSettings.builder().setRemoveBackground(true).setTextColor(new Color(255,255,255)).setPageSegMode(DTOTesseractSettings.PageSegMode.SINGLE_WORD).build(),
-                    text -> NumberValidators.matchesPattern(text, Pattern.compile(".*?(\\d+).*")),
-                    text -> NumberConverters.regexToInt(text, Pattern.compile(".*?(\\d+).*"))
-            );
-
-            if (travelTimeSeconds > 0) {
-				emuManager.tapAtPoint(EMULATOR_NUMBER, deployButton.getPoint());
-				sleepTask(1000); // Wait for march to start
-				long returnTimeSeconds = (travelTimeSeconds * 2) + 2;
-				LocalDateTime rescheduleTime = LocalDateTime.now().plusSeconds(returnTimeSeconds);
-				this.reschedule(rescheduleTime);
-				logInfo("Beast march sent. Task will run again at " + rescheduleTime + ".");
-				beastMarchSent = true;
-                if (spendedStamina!=null){
-                    StaminaService.getServices().subtractStamina(profile.getId(),spendedStamina);
-                }else {
-                    // if OCR fails, default to 10 stamina
-                    StaminaService.getServices().subtractStamina(profile.getId(),10);
-                }
-
-			} else {
-				logError("Failed to parse march time. Aborting attack.");
-				tapBackButton(); // Go back from march screen
-				sleepTask(500);
-				tapBackButton(); // Go back from beast screen
-			}
-		} catch (IOException | TesseractException e) {
-			logError("Failed to read march time using OCR. Aborting attack. Error: " + e.getMessage(), e);
-			tapBackButton(); // Go back from march screen
-			sleepTask(500);
-			tapBackButton(); // Go back from beast screen
-		}
-	}
-
-	private long parseTimeToSeconds(String timeString) {
-		if (timeString == null || timeString.trim().isEmpty()) {
-			return 0;
-		}
-		timeString = timeString.replaceAll("[^\\d:]", ""); // Clean non-digit/colon characters
-		String[] parts = timeString.trim().split(":");
-		long seconds = 0;
-		try {
-			if (parts.length == 2) { // mm:ss
-				seconds = Integer.parseInt(parts[0]) * 60L + Integer.parseInt(parts[1]);
-			} else if (parts.length == 3) { // HH:mm:ss
-				seconds = Integer.parseInt(parts[0]) * 3600L + Integer.parseInt(parts[1]) * 60L
-						+ Integer.parseInt(parts[2]);
-			}
-		} catch (NumberFormatException e) {
-			logError("Could not parse time string: " + timeString);
-			return 0;
-		}
-		return seconds;
-	}
-
-	public LocalDateTime parseAndAddTime(String ocrText) {
-		// Regular expression to capture time in HH:mm:ss format
-		Pattern pattern = Pattern.compile("(\\d{1,2}):(\\d{1,2}):(\\d{1,2})");
-		Matcher matcher = pattern.matcher(ocrText);
-
-		if (matcher.find()) {
-			try {
-				int hours = Integer.parseInt(matcher.group(1));
-				int minutes = Integer.parseInt(matcher.group(2));
-				int seconds = Integer.parseInt(matcher.group(3));
-
-				return LocalDateTime.now().plus(hours, ChronoUnit.HOURS).plus(minutes, ChronoUnit.MINUTES).plus(seconds,
-						ChronoUnit.SECONDS);
-			} catch (NumberFormatException e) {
-				logError("Error parsing time from OCR text: '" + ocrText + "'", e);
-			}
+			travelTimeSeconds = parseTravelTime();
+			logInfo("Successfully parsed travel time: " + travelTimeSeconds + "s");
+		} catch (Exception e) {
+			logError("Error parsing travel time: " + e.getMessage());
 		}
 
-		return LocalDateTime.now().plusMinutes(1); // Default to 1 minute if parsing fails
+		// Parse stamina cost
+		Integer spentStamina = getSpentStamina();
+		logDebug("Spent stamina read: " + spentStamina);
+
+		// Deploy march
+		DTOImageSearchResult deploy = searchTemplateWithRetries(EnumTemplates.DEPLOY_BUTTON, 90, 3);
+		if (!deploy.isFound()) {
+			logError("Deploy button not found. Rescheduling to try again in 5 minutes.");
+			reschedule(LocalDateTime.now().plusMinutes(5));
+			return;
+		}
+
+		tapPoint(deploy.getPoint());
+		sleepTask(2000);
+
+		// Verify deployment
+		deploy = searchTemplateWithRetries(EnumTemplates.DEPLOY_BUTTON, 90, 3);
+		if (deploy.isFound()) {
+			logWarning(
+					"Deploy button still present after deployment attempt. March may have failed. Rescheduling in 5 minutes.");
+			reschedule(LocalDateTime.now().plusMinutes(5));
+			return;
+		}
+
+		logInfo("Beast march deployed successfully.");
+		beastMarchSent = true;
+
+		// Update stamina
+		subtractStamina(spentStamina, false); // false = not rally, use 10 stamina default
+
+		// Reschedule for march return
+		if (travelTimeSeconds <= 0) {
+			logError("Failed to parse travel time via OCR. Using 5 minute fallback reschedule.");
+			LocalDateTime rescheduleTime = LocalDateTime.now().plusMinutes(5);
+			reschedule(rescheduleTime);
+			return;
+		}
+
+		LocalDateTime rescheduleTime = LocalDateTime.now().plusSeconds(travelTimeSeconds);
+		reschedule(rescheduleTime);
+		logInfo("Beast march scheduled to return at " + UtilTime.localDateTimeToDDHHMMSS(rescheduleTime));
 	}
 
 	private MarchesAvailable getMarchesAvailable() {
-		// open active marches panel
-		emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(2, 550));
+		// Open active marches panel
+		tapPoint(new DTOPoint(2, 550));
 		sleepTask(500);
-		emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(340, 265));
+		tapPoint(new DTOPoint(340, 265));
 		sleepTask(500);
-		// OCR Search for an empty march
+
+		// Try OCR to find idle marches
 		try {
-			for (int i = 0; i < 10; i++) { // search 10x for the OCR text
-				String ocrSearchResult = emuManager.ocrRegionText(EMULATOR_NUMBER, new DTOPoint(10, 342),
+			for (int i = 0; i < 5; i++) {
+				String ocrSearchResult = emuManager.ocrRegionText(EMULATOR_NUMBER,
+						new DTOPoint(10, 342),
 						new DTOPoint(435, 772));
 				Pattern idleMarchesPattern = Pattern.compile("idle");
 				Matcher m = idleMarchesPattern.matcher(ocrSearchResult.toLowerCase());
 				if (m.find()) {
-					logInfo("Idle marches detected, continuing with intel");
+					logInfo("Idle marches detected via OCR");
 					return new MarchesAvailable(true, null);
 				} else {
-					logInfo("No idle marches detected, trying again (Attempt " + (i + 1) + "/10).");
+					logDebug("No idle marches detected via OCR (Attempt " + (i + 1) + "/5).");
 				}
 			}
 		} catch (IOException | TesseractException e) {
 			logDebug("OCR attempt failed: " + e.getMessage());
 		}
-		logInfo("No idle marches detected. Checking for used march queues...");
 
-		if (checkMarchesAvailable()) {
-			return new MarchesAvailable(true, null);
-		}
+		logInfo("No idle marches detected via OCR. Analyzing gather march queues...");
 
 		// Collect active march queue counts
 		int totalMarchesAvailable = profile.getConfig(EnumConfigurationKey.GATHER_ACTIVE_MARCH_QUEUE_INT,
 				Integer.class);
 		int activeMarchQueues = 0;
-		LocalDateTime earliestAvailableMarch = LocalDateTime.now().plusHours(14); // Set to earliest available march to
-																					// a very long time (impossible for
-																					// gatherer to take so long)
-		for (GatherType gatherType : GatherType.values()) { // iterate over all the gather types
-            DTOImageSearchResult resource = searchTemplateWithRetries(gatherType.getTemplate());
-            if (!resource.isFound()) {
-                logInfo("March queue for " + gatherType.getName()
-                        + " is not used. Checking for next available march queue... (Used: " + activeMarchQueues + "/"
-                        + totalMarchesAvailable + ")");
-                continue;
-            }
-            // march is detected
-            activeMarchQueues++;
-            logInfo("March queue for " + gatherType.getName() + " found. (Used: "
-                    + activeMarchQueues + "/" + totalMarchesAvailable + ")");
-            LocalDateTime task = iDailyTaskRepository
-                    .findByProfileIdAndTaskName(profile.getId(), gatherType.getTask()).getNextSchedule();
-            if (task.isBefore(earliestAvailableMarch)) {
-                earliestAvailableMarch = task;
-                logInfo("Updated earliest available march: " + earliestAvailableMarch);
-            }
+		LocalDateTime earliestAvailableMarch = LocalDateTime.now().plusHours(14); // Very long default time
+
+		for (GatherType gatherType : GatherType.values()) {
+			DTOImageSearchResult resource = searchTemplateWithRetries(gatherType.getTemplate());
+			if (!resource.isFound()) {
+				logDebug("March queue for " + gatherType.getName() + " is not active. (Used: " +
+						activeMarchQueues + "/" + totalMarchesAvailable + ")");
+				continue;
+			}
+
+			// March detected for this resource type
+			activeMarchQueues++;
+			logInfo("March queue for " + gatherType.getName() + " detected. (Used: " +
+					activeMarchQueues + "/" + totalMarchesAvailable + ")");
+
+			// Find when this gather task is scheduled to complete
+			LocalDateTime task = iDailyTaskRepository
+					.findByProfileIdAndTaskName(profile.getId(), gatherType.getTask())
+					.getNextSchedule();
+
+			if (task.isBefore(earliestAvailableMarch)) {
+				earliestAvailableMarch = task;
+				logInfo("Updated earliest available march: " + earliestAvailableMarch);
+			}
 		}
+
 		if (activeMarchQueues >= totalMarchesAvailable) {
 			logInfo("All march queues used. Earliest available march: " + earliestAvailableMarch);
 			return new MarchesAvailable(false, earliestAvailableMarch);
 		}
-		// there MAY be some returning marches, rescheduling for the near future to
-		// check later
-		logInfo("No idle marches detected. Not all marches are used. Suspected auto-rally marches. Setting 5 minute delay for any marches to return. ");
+
+		// Not all march queues are used, but no idle marches detected
+		// Could be auto-rally marches returning soon
+		logInfo("Not all march queues used (" + activeMarchQueues + "/" + totalMarchesAvailable +
+				"), but no idle marches. Suspected auto-rally marches. Rescheduling in 5 minutes.");
 		return new MarchesAvailable(false, LocalDateTime.now().plusMinutes(5));
 	}
 
@@ -490,10 +574,10 @@ public class IntelligenceTask extends DelayedTask {
 		return EnumStartLocation.WORLD;
 	}
 
-    @Override
-    protected boolean consumesStamina() {
-        return true;
-    }
+	@Override
+	protected boolean consumesStamina() {
+		return true;
+	}
 
 	private enum GatherType {
 		MEAT("meat", EnumTemplates.GAME_HOME_SHORTCUTS_MEAT, TpDailyTaskEnum.GATHER_MEAT),

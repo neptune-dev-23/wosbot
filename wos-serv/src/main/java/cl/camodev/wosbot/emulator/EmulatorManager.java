@@ -16,16 +16,14 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.imageio.ImageIO;
 
 import cl.camodev.utiles.ImageSearchUtil;
+import cl.camodev.utiles.UtilOCR;
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.GameVersion;
 import cl.camodev.wosbot.emulator.impl.LDPlayerEmulator;
 import cl.camodev.wosbot.emulator.impl.MEmuEmulator;
 import cl.camodev.wosbot.emulator.impl.MuMuEmulator;
-import cl.camodev.wosbot.ot.DTOImageSearchResult;
-import cl.camodev.wosbot.ot.DTOPoint;
-import cl.camodev.wosbot.ot.DTOProfiles;
-import cl.camodev.wosbot.ot.DTOTesseractSettings;
+import cl.camodev.wosbot.ot.*;
 import cl.camodev.wosbot.serv.impl.ServConfig;
 import cl.camodev.wosbot.serv.impl.ServProfiles;
 import cl.camodev.wosbot.serv.task.WaitingThread;
@@ -120,9 +118,10 @@ public class EmulatorManager {
 	}
 
     /**
-     * Captures a screenshot of the emulator.
+     * Captures a screenshot of the emulator as DTORawImage.
+     * The conversion to BufferedImage is done only when needed by specific operations.
      */
-    public byte[] captureScreenshotViaADB(String emulatorNumber) {
+    public DTORawImage captureScreenshotViaADB(String emulatorNumber) {
         checkEmulatorInitialized();
         return emulator.captureScreenshot(emulatorNumber);
     }
@@ -314,7 +313,7 @@ public class EmulatorManager {
      */
     public DTOImageSearchResult searchTemplate(String emulatorNumber, EnumTemplates templatePath, DTOPoint topLeftCorner, DTOPoint bottomRightCorner , double threshold) {
         checkEmulatorInitialized();
-        byte[] screenshot = captureScreenshotViaADB(emulatorNumber);
+        DTORawImage rawImage = captureScreenshotViaADB(emulatorNumber);
         String bestTemplatePath = getBestTemplatePath(templatePath.getTemplate());
         
         try {
@@ -322,7 +321,8 @@ public class EmulatorManager {
             String profileName = getProfileNameForEmulator(emulatorNumber);
             ImageSearchUtil.setProfileName(profileName);
             
-            return ImageSearchUtil.searchTemplate(screenshot, bestTemplatePath, topLeftCorner, bottomRightCorner, threshold);
+            // Pass the complete DTORawImage object
+            return ImageSearchUtil.searchTemplate(rawImage, bestTemplatePath, topLeftCorner, bottomRightCorner, threshold);
         } finally {
             // Clear profile name after the search is done
             ImageSearchUtil.clearProfileName();
@@ -334,7 +334,7 @@ public class EmulatorManager {
      */
     public DTOImageSearchResult searchTemplate(String emulatorNumber, EnumTemplates templatePath, double threshold) {
         checkEmulatorInitialized();
-        byte[] screenshot = captureScreenshotViaADB(emulatorNumber);
+        DTORawImage rawImage = captureScreenshotViaADB(emulatorNumber);
         String bestTemplatePath = getBestTemplatePath(templatePath.getTemplate());
         
         try {
@@ -342,7 +342,8 @@ public class EmulatorManager {
             String profileName = getProfileNameForEmulator(emulatorNumber);
             ImageSearchUtil.setProfileName(profileName);
             
-            return ImageSearchUtil.searchTemplate(screenshot, bestTemplatePath, new DTOPoint(0,0), new DTOPoint(720,1280), threshold);
+            // Pass the complete DTORawImage object
+            return ImageSearchUtil.searchTemplate(rawImage, bestTemplatePath, new DTOPoint(0,0), new DTOPoint(720,1280), threshold);
         } finally {
             // Clear profile name after the search is done
             ImageSearchUtil.clearProfileName();
@@ -354,7 +355,7 @@ public class EmulatorManager {
      */
     public DTOImageSearchResult searchTemplateGrayscale(String emulatorNumber, EnumTemplates templatePath, DTOPoint topLeftCorner, DTOPoint bottomRightCorner, double threshold) {
         checkEmulatorInitialized();
-        byte[] screenshot = captureScreenshotViaADB(emulatorNumber);
+        DTORawImage rawImage = captureScreenshotViaADB(emulatorNumber);
         String bestTemplatePath = getBestTemplatePath(templatePath.getTemplate());
         
         try {
@@ -362,7 +363,8 @@ public class EmulatorManager {
             String profileName = getProfileNameForEmulator(emulatorNumber);
             ImageSearchUtil.setProfileName(profileName);
             
-            return ImageSearchUtil.searchTemplateGrayscale(screenshot, bestTemplatePath, topLeftCorner, bottomRightCorner, threshold);
+            // Pass the complete DTORawImage object
+            return ImageSearchUtil.searchTemplateGrayscale(rawImage, bestTemplatePath, topLeftCorner, bottomRightCorner, threshold);
         } finally {
             // Clear profile name after the search is done
             ImageSearchUtil.clearProfileName();
@@ -374,15 +376,15 @@ public class EmulatorManager {
      */
     public DTOImageSearchResult searchTemplateGrayscale(String emulatorNumber, EnumTemplates templatePath, double threshold) {
         checkEmulatorInitialized();
-        byte[] screenshot = captureScreenshotViaADB(emulatorNumber);
+        DTORawImage rawImage = captureScreenshotViaADB(emulatorNumber);
         String bestTemplatePath = getBestTemplatePath(templatePath.getTemplate());
         
         try {
             // Set profile name in ImageSearchUtil for logging
             String profileName = getProfileNameForEmulator(emulatorNumber);
             ImageSearchUtil.setProfileName(profileName);
-            
-            return ImageSearchUtil.searchTemplateGrayscale(screenshot, bestTemplatePath, new DTOPoint(0,0), new DTOPoint(720,1280), threshold);
+
+            return ImageSearchUtil.searchTemplateGrayscale(rawImage, bestTemplatePath, new DTOPoint(0,0), new DTOPoint(720,1280), threshold);
         } finally {
             // Clear profile name after the search is done
             ImageSearchUtil.clearProfileName();
@@ -394,15 +396,15 @@ public class EmulatorManager {
      */
     public List<DTOImageSearchResult> searchTemplatesGrayscale(String emulatorNumber, EnumTemplates templatePath, DTOPoint topLeftCorner, DTOPoint bottomRightCorner, double threshold, int maxResults) {
         checkEmulatorInitialized();
-        byte[] screenshot = captureScreenshotViaADB(emulatorNumber);
+        DTORawImage rawImage = captureScreenshotViaADB(emulatorNumber);
         String bestTemplatePath = getBestTemplatePath(templatePath.getTemplate());
         
         try {
             // Set profile name in ImageSearchUtil for logging
             String profileName = getProfileNameForEmulator(emulatorNumber);
             ImageSearchUtil.setProfileName(profileName);
-            
-            return ImageSearchUtil.searchTemplateGrayscaleMultiple(screenshot, bestTemplatePath, topLeftCorner, bottomRightCorner, threshold, maxResults);
+
+            return ImageSearchUtil.searchTemplateGrayscaleMultiple(rawImage, bestTemplatePath, topLeftCorner, bottomRightCorner, threshold, maxResults);
         } finally {
             // Clear profile name after the search is done
             ImageSearchUtil.clearProfileName();
@@ -414,15 +416,15 @@ public class EmulatorManager {
      */
     public List<DTOImageSearchResult> searchTemplatesGrayscale(String emulatorNumber, EnumTemplates templatePath, double threshold, int maxResults) {
         checkEmulatorInitialized();
-        byte[] screenshot = captureScreenshotViaADB(emulatorNumber);
+        DTORawImage rawImage = captureScreenshotViaADB(emulatorNumber);
         String bestTemplatePath = getBestTemplatePath(templatePath.getTemplate());
         
         try {
             // Set profile name in ImageSearchUtil for logging
             String profileName = getProfileNameForEmulator(emulatorNumber);
             ImageSearchUtil.setProfileName(profileName);
-            
-            return ImageSearchUtil.searchTemplateGrayscaleMultiple(screenshot, bestTemplatePath, new DTOPoint(0,0), new DTOPoint(720,1280), threshold, maxResults);
+
+            return ImageSearchUtil.searchTemplateGrayscaleMultiple(rawImage, bestTemplatePath, new DTOPoint(0,0), new DTOPoint(720,1280), threshold, maxResults);
         } finally {
             // Clear profile name after the search is done
             ImageSearchUtil.clearProfileName();
@@ -431,15 +433,15 @@ public class EmulatorManager {
 
     public List<DTOImageSearchResult> searchTemplates(String emulatorNumber, EnumTemplates templatePath, DTOPoint topLeftCorner, DTOPoint bottomRightCorner , double threshold, int maxResults) {
         checkEmulatorInitialized();
-        byte[] screenshot = captureScreenshotViaADB(emulatorNumber);
+        DTORawImage rawImage = captureScreenshotViaADB(emulatorNumber);
         String bestTemplatePath = getBestTemplatePath(templatePath.getTemplate());
         
         try {
             // Set profile name in ImageSearchUtil for logging
             String profileName = getProfileNameForEmulator(emulatorNumber);
             ImageSearchUtil.setProfileName(profileName);
-            
-            return ImageSearchUtil.searchTemplateMultiple(screenshot, bestTemplatePath, topLeftCorner, bottomRightCorner, threshold, maxResults);
+
+            return ImageSearchUtil.searchTemplateMultiple(rawImage, bestTemplatePath, topLeftCorner, bottomRightCorner, threshold, maxResults);
         } finally {
             // Clear profile name after the search is done
             ImageSearchUtil.clearProfileName();
@@ -448,15 +450,15 @@ public class EmulatorManager {
 
     public List<DTOImageSearchResult> searchTemplates(String emulatorNumber, EnumTemplates templatePath, double threshold, int maxResults) {
         checkEmulatorInitialized();
-        byte[] screenshot = captureScreenshotViaADB(emulatorNumber);
+        DTORawImage rawImage = captureScreenshotViaADB(emulatorNumber);
         String bestTemplatePath = getBestTemplatePath(templatePath.getTemplate());
         
         try {
             // Set profile name in ImageSearchUtil for logging
             String profileName = getProfileNameForEmulator(emulatorNumber);
             ImageSearchUtil.setProfileName(profileName);
-            
-            return ImageSearchUtil.searchTemplateMultiple(screenshot, bestTemplatePath, new DTOPoint(0,0), new DTOPoint(720,1280), threshold, maxResults);
+
+            return ImageSearchUtil.searchTemplateMultiple(rawImage, bestTemplatePath, new DTOPoint(0,0), new DTOPoint(720,1280), threshold, maxResults);
         } finally {
             // Clear profile name after the search is done
             ImageSearchUtil.clearProfileName();
@@ -473,10 +475,10 @@ public class EmulatorManager {
      */
     public int[] analyzeRegionColors(String emulatorNumber, DTOPoint topLeft, DTOPoint bottomRight, int stepSize) {
         try {
-            // Take a single screenshot
-            byte[] screenshot = emulator.captureScreenshot(emulatorNumber);
-            BufferedImage image = ImageIO.read(new ByteArrayInputStream(screenshot));
-            
+            // Take a single screenshot as DTORawImage, then convert only when needed
+            DTORawImage rawImage = emulator.captureScreenshot(emulatorNumber);
+            BufferedImage image = UtilOCR.convertRawImageToBufferedImage(rawImage);
+
             int[] counts = new int[3]; // [background, green, red]
             
             // Scan the region

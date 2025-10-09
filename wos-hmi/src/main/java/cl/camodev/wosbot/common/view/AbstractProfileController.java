@@ -1,9 +1,12 @@
 package cl.camodev.wosbot.common.view;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.List;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.console.enumerable.PrioritizableItem;
@@ -113,6 +116,23 @@ public abstract class AbstractProfileController implements IProfileLoadListener,
 			} else {
 				textField.setText(configKey.getDefaultValue());
 			}
+		} else if (configKey.getType() == java.time.LocalDateTime.class) {
+			// For LocalDateTime values, parse the string
+			if (newVal == null || newVal.trim().isEmpty()) {
+				// Empty value means use "NOW" default
+				profileObserver.notifyProfileChange(configKey, "NOW");
+			} else {
+				// Validate and parse the datetime string
+				try {
+					DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
+					LocalDateTime.parse(newVal, formatter);
+					// Valid format, save as string (will be converted to LocalDateTime by config system)
+					profileObserver.notifyProfileChange(configKey, newVal);
+				} catch (DateTimeParseException e) {
+					// Invalid format, reset to default
+					textField.setText(configKey.getDefaultValue());
+				}
+			}
 		} else {
 			// For String values, just pass them through
 			profileObserver.notifyProfileChange(configKey, newVal);
@@ -143,7 +163,13 @@ public abstract class AbstractProfileController implements IProfileLoadListener,
 			textFieldMappings.forEach((textField, key) -> {
 				Object value = profile.getConfiguration(key);
 				if (value != null) {
-					textField.setText(value.toString());
+					// Special handling for LocalDateTime - format it
+					if (value instanceof LocalDateTime) {
+						DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
+						textField.setText(((LocalDateTime) value).format(formatter));
+					} else {
+						textField.setText(value.toString());
+					}
 				} else {
 					textField.setText(key.getDefaultValue());
 				}

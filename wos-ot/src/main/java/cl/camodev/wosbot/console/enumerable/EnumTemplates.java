@@ -48,6 +48,7 @@ public enum EnumTemplates {
 	
 	GAME_HOME_CITY_STATUS_GO_BUTTON("/templates/home/city/status/goButton.png"),
 	GAME_HOME_CITY_STATUS_COOKHOUSE("/templates/home/city/status/cookhouse.png"),
+    GAME_HOME_WAR("/templates/home/war.png"),
 
     // ========================================================================
     // RESOURCES AND GATHERING
@@ -112,8 +113,13 @@ public enum EnumTemplates {
 	RALLY_BUTTON("/templates/rally/rallyButton.png"),
     RALLY_REMOVE_HERO_BUTTON("/templates/rally/removeHeroButton.png"),
 	RALLY_EQUALIZE_BUTTON("/templates/rally/equalizeButton.png"),
-	
+    RALLY_HOLD_BUTTON("/templates/rally/holdButton.png"),
+
 	TRAINING_TROOP_PROMOTE("/templates/training/troopPromote.png"),
+
+    MARCHES_AREA_RECALL_BUTTON("/templates/marches/recallButton.png"),
+    MARCHES_AREA_SPEEDUP_BUTTON("/templates/marches/speedupButton.png"),
+    MARCHES_AREA_VIEW_BUTTON("/templates/marches/viewButton.png"),
 
     // Infantry troop tiers
 	TRAINING_INFANTRY_T11("/templates/training/infantry11.png"),
@@ -166,6 +172,7 @@ public enum EnumTemplates {
 	ALLIANCE_TRIUMPH_WEEKLY("/templates/alliance/triumphWeekly.png"),
 	ALLIANCE_TECH_THUMB_UP("/templates/alliance/techThumbUp.png"),
 	ALLIANCE_WAR_BUTTON("/templates/alliance/warButton.png"),
+    ALLIANCE_TERRITORY_BUTTON("/templates/alliance/territoryButton.png"),
     ALLIANCE_SHOP_BUTTON("/templates/alliance/shopButton.png"),
 	ALLIANCE_HELP_BUTTON("/templates/alliance/helpButton.png"),
 	ALLIANCE_HELP_REQUESTS("/templates/alliance/helpRequests.png"),
@@ -390,7 +397,9 @@ public enum EnumTemplates {
     // BEAR HUNT EVENT
     // ========================================================================
     BEAR_HUNT_IS_RUNNING("/templates/events/bearhunt/bearIsRunning.png"),
-    
+    BEAR_RALLY_BUTTON("/templates/events/bearhunt/bearRallyButton.png"),
+    BEAR_DEPLOY_BUTTON("/templates/events/bearhunt/bearDeployButton.png"),
+    BEAR_JOIN_PLUS_ICON("/templates/events/bearhunt/bearJoinPlusIcon.png"),
     // ========================================================================
     // MYRIAD BAZAAR
     // ========================================================================
