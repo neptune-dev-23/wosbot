@@ -28,3 +28,4 @@ log/bot.log
 .vscode/settings.json
 /log
 /temp
+qodana.yaml
