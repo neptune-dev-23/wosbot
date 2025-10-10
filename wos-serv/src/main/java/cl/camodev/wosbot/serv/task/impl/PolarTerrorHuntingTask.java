@@ -23,6 +23,7 @@ public class PolarTerrorHuntingTask extends DelayedTask {
     private final IDailyTaskRepository iDailyTaskRepository = DailyTaskRepository.getRepository();
     private final ServTaskManager servTaskManager = ServTaskManager.getInstance();
     private Integer currentStamina = null;
+    private static final int MAX_POLAR_LEVEL = 8;
 
     // Configuration (loaded fresh each execution after profile refresh)
     private int polarTerrorLevel;
@@ -317,7 +318,7 @@ public class PolarTerrorHuntingTask extends DelayedTask {
         if (polarLevel != -1) {
             logInfo(String.format("Adjusting Polar Terror level to %d", polarLevel));
             if (polarLevel < 1 || polarLevel > levelPoints.length) {
-                logError(String.format("Invalid Polar Terror level configured: %d. Must be between 1 and %d.", polarLevel, levelPoints.length));
+                logError(String.format("Invalid Polar Terror level configured: %d. Must be between 1 and %d.", polarLevel, MAX_POLAR_LEVEL));
                 return false;
             }
             tapRandomPoint(levelPoints[polarLevel - 1], levelPoints[polarLevel - 1], 3, 100);
