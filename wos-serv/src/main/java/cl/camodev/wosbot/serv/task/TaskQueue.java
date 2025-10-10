@@ -17,7 +17,11 @@ import cl.camodev.wosbot.ex.ADBConnectionException;
 import cl.camodev.wosbot.ex.HomeNotFoundException;
 import cl.camodev.wosbot.ex.ProfileInReconnectStateException;
 import cl.camodev.wosbot.ex.StopExecutionException;
-import cl.camodev.wosbot.ot.*;
+import cl.camodev.wosbot.ot.DTOImageSearchResult;
+import cl.camodev.wosbot.ot.DTOProfileStatus;
+import cl.camodev.wosbot.ot.DTOProfiles;
+import cl.camodev.wosbot.ot.DTOTaskQueueStatus;
+import cl.camodev.wosbot.ot.DTOTaskState;
 import cl.camodev.wosbot.serv.impl.ServLogs;
 import cl.camodev.wosbot.serv.impl.ServProfiles;
 import cl.camodev.wosbot.serv.impl.ServScheduler;
@@ -40,7 +44,7 @@ public class TaskQueue {
     protected final EmulatorManager emuManager = EmulatorManager.getInstance();
 
     // State flags
-    DTOTaskQueueStatus taskQueueStatus = new DTOTaskQueueStatus();
+     final DTOTaskQueueStatus taskQueueStatus = new DTOTaskQueueStatus();
 
     // Thread that will evaluate and execute tasks
     private Thread schedulerThread;
@@ -105,11 +109,10 @@ public class TaskQueue {
      * Starts queue processing.
      */
     public void start() {
-        if (taskQueueStatus != null && taskQueueStatus.isRunning()) {
+        if (taskQueueStatus.isRunning()) {
             return;
         }
 
-        assert taskQueueStatus != null;
         taskQueueStatus.setRunning(true);
 
         schedulerThread = Thread.ofVirtual().unstarted(this::processTaskQueue);
@@ -287,7 +290,7 @@ public class TaskQueue {
             logErrorWithTask(task, "Error executing task: " + e.getMessage());
         }
     }
-
+    @SuppressWarnings(value = { "unused" })
     private void handleReconnectStateException(ProfileInReconnectStateException e) {
         Long reconnectionTime = profile.getReconnectionTime(); // in minutes
         if (reconnectionTime != null && reconnectionTime > 0) {
@@ -497,7 +500,7 @@ public class TaskQueue {
         if (result.isFound()) {
             logInfo("Bear is running, pausing task running for 30 minutes");
             pause();
-            taskQueueStatus.setDelayUntil(30 * 60);
+            taskQueueStatus.setDelayUntil(LocalDateTime.now().plusMinutes(30));
         }
     }
 
@@ -647,7 +650,7 @@ public class TaskQueue {
             }
         }
 
-        taskQueueStatus = new DTOTaskQueueStatus(); // Reset status
+        taskQueueStatus.reset(); // Reset status
         // Remove all pending tasks from the queue
         taskQueue.clear();
         updateProfileStatus("NOT RUNNING");
@@ -678,11 +681,13 @@ public class TaskQueue {
     public void executeTaskNow(TpDailyTaskEnum taskEnum, boolean recurring) {
         // Obtain the task prototype from the registry
         DelayedTask prototype = DelayedTaskRegistry.create(taskEnum, profile);
-        taskQueueStatus.setPaused(false);
         if (prototype == null) {
             logWarning("Task not found: " + taskEnum);
             return;
         }
+
+        taskQueueStatus.setNeedsReconnect(true);
+        taskQueueStatus.setPaused(false);
 
         // Check if the task already exists in the queue
         DelayedTask existing = taskQueue.stream()

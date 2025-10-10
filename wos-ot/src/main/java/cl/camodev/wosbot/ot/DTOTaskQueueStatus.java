@@ -1,29 +1,25 @@
 package cl.camodev.wosbot.ot;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.concurrent.DelayQueue;
-import java.util.concurrent.Delayed;
-import java.util.concurrent.TimeUnit;
-
 
 public class DTOTaskQueueStatus {
-    private boolean running;
-    private boolean paused;
-    private boolean needsReconnect;
-    private boolean readyToReconnect;
-    private boolean idleTimeExceeded;
+    private volatile boolean running;
+    private volatile boolean paused;
+    private volatile boolean needsReconnect;
+    private volatile boolean readyToReconnect;
+    private volatile boolean idleTimeExceeded;
     private Integer idleTimeLimit;
-    private Integer backgroundChecks = 0;
-    private Integer BACKGROUND_CHECKS_INTERVAL = 60; // every 60 loops
+    private int backgroundChecks = 0;
+    private int backgroundChecksInterval = 60; // every 60 loops
 
-    private LocalDateTime pausedAt;
-    private LocalDateTime delayUntil;
-    private LocalDateTime reconnectAt;
-    
-    private final DelayQueue<Delayed> reconnectTimer = new DelayQueue<>();
+    private volatile LocalDateTime pausedAt;
+    private volatile LocalDateTime delayUntil;
+    private volatile LocalDateTime reconnectAt;
 
-    private LoopState loopState;
+    private LoopState loopState = new LoopState();
+    private volatile Thread reconnectThread;
 
     public DTOTaskQueueStatus() {
         this.running = false;
@@ -67,20 +63,27 @@ public class DTOTaskQueueStatus {
      */
     public boolean shouldRunBackgroundChecks() {
         this.backgroundChecks++;
-        if (this.backgroundChecks % this.BACKGROUND_CHECKS_INTERVAL == 0) {
-            this.backgroundChecks = 1;
+        if (this.backgroundChecks >= this.backgroundChecksInterval) {
+            this.backgroundChecks = 0;
             return true;
         }
         return false;
     }
 
     @SuppressWarnings(value = { "unused" })
-    public void setBACKGROUND_CHECKS_INTERVAL(Integer BACKGROUND_CHECKS_INTERVAL) {
-        this.BACKGROUND_CHECKS_INTERVAL = BACKGROUND_CHECKS_INTERVAL;
+    public void setBackgroundChecksInterval(Integer BACKGROUND_CHECKS_INTERVAL) {
+        this.backgroundChecksInterval = BACKGROUND_CHECKS_INTERVAL;
     }
 
+
+    /**
+     * Sets the reconnection time and schedules a delayed reconnection.
+     * Updates both the delay until the next action and the reconnection timestamp.
+     *
+     * @param reconnectionTime The time to wait before reconnecting, in minutes
+     */
     public void setReconnectAt(long reconnectionTime) {
-        this.setDelayUntil(reconnectionTime * 60);
+        this.setDelayUntil(LocalDateTime.now().plusMinutes(reconnectionTime));
         this.setReconnectAt(LocalDateTime.now().plusMinutes(reconnectionTime));
     }
 
@@ -88,15 +91,23 @@ public class DTOTaskQueueStatus {
         this.pause();
         this.setNeedsReconnect(true);
         this.reconnectAt = reconnectAt;
-        this.reconnectTimer.offer(new DelayedReconnect(reconnectAt));
-        Thread.startVirtualThread(() -> {
+        this.reconnectThread = Thread.startVirtualThread(() -> {
             try {
-                this.reconnectTimer.take();
-                this.readyToReconnect = true;
+                if (Duration.between(LocalDateTime.now(), (reconnectAt)).toMillis() > 0) {
+                    Thread.sleep(Duration.between(LocalDateTime.now(), (reconnectAt)).toMillis());
+                    this.readyToReconnect = true;
+                }
             } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
                 throw new RuntimeException(e);
             }
         });
+    }
+    @SuppressWarnings(value = "unused" )
+    public void cancelReconnectThread() {
+        if (this.reconnectThread != null) {
+            this.reconnectThread.interrupt();
+        }
     }
 
     @SuppressWarnings(value = { "unused" })
@@ -104,16 +115,16 @@ public class DTOTaskQueueStatus {
         return this.reconnectAt;
     }
 
-    public void loopStarted () {
+    public void loopStarted() {
         this.loopState = new LoopState();
     }
 
     public void reset() {
+        this.running = false;
         this.paused = false;
         this.needsReconnect = false;
-        this.pausedAt = null;
-        this.delayUntil = null;
-        this.running = false;
+        this.pausedAt = LocalDateTime.MIN;
+        this.delayUntil = LocalDateTime.now();
     }
 
     public boolean isPaused() {
@@ -125,7 +136,7 @@ public class DTOTaskQueueStatus {
     }
     public void setPaused(boolean paused) {
         this.paused = paused;
-        this.pausedAt = paused ? LocalDateTime.now() : null;
+        if (paused) this.pausedAt = LocalDateTime.now();
     }
 
     public boolean needsReconnect() {
@@ -173,27 +184,11 @@ public class DTOTaskQueueStatus {
         return this.readyToReconnect;
     }
 
-    record DelayedReconnect(LocalDateTime reconnectAt) implements Delayed {
-        @Override
-        public long getDelay(TimeUnit unit) {
-            long delay = Duration.between(LocalDateTime.now(), reconnectAt).toMillis();
-            return unit.convert(delay, TimeUnit.MILLISECONDS);
-        }
-        @Override
-        @SuppressWarnings("NullableProblems")
-        public int compareTo(Delayed other) {
-            if (other instanceof DelayedReconnect) {
-                return this.reconnectAt.compareTo(((DelayedReconnect) other).reconnectAt);
-            }
-            return 0;
-        }
-    }
-
     public static class LoopState {
         private final long startTime;
         private long endTime;
 
-        private boolean executedTask;
+        private boolean executedTask = false;
 
         public LoopState() {
             this.startTime = System.currentTimeMillis();
@@ -204,6 +199,10 @@ public class DTOTaskQueueStatus {
         }
 
         public long getDuration() {
+            // If endTime is 0, endLoop() hasn't been called yet, return current duration
+            if (this.endTime == 0) {
+                return System.currentTimeMillis() - this.startTime;
+            }
             return this.endTime - this.startTime;
         }
 
