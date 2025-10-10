@@ -23,6 +23,7 @@ public class PolarTerrorHuntingTask extends DelayedTask {
     private final IDailyTaskRepository iDailyTaskRepository = DailyTaskRepository.getRepository();
     private final ServTaskManager servTaskManager = ServTaskManager.getInstance();
     private Integer currentStamina = null;
+    private static final int MAX_POLAR_LEVEL = 8;
 
     // Configuration (loaded fresh each execution after profile refresh)
     private int polarTerrorLevel;
@@ -48,22 +49,6 @@ public class PolarTerrorHuntingTask extends DelayedTask {
             return;
         }
         logDebug("Bear Hunt is not running, continuing with Polar Terror Hunting Task");
-
-        String flagString = profile.getConfig(EnumConfigurationKey.POLAR_TERROR_FLAG_STRING, String.class);
-        int flagNumber = 0;
-        int polarTerrorLevel = profile.getConfig(EnumConfigurationKey.POLAR_TERROR_LEVEL_INT, Integer.class);
-        boolean limitedHunting = profile.getConfig(EnumConfigurationKey.POLAR_TERROR_MODE_STRING, String.class)
-                .equals("Limited (10)");
-        boolean useFlag = false;
-
-        if (flagString != null) {
-            try {
-                flagNumber = Integer.parseInt(flagString);
-                useFlag = true;
-            } catch (NumberFormatException e) {
-                useFlag = false;
-            }
-        }
 
         if (profile.getConfig(EnumConfigurationKey.INTEL_BOOL, Boolean.class)
                 && useFlag
@@ -295,7 +280,6 @@ public class PolarTerrorHuntingTask extends DelayedTask {
         // Open search (magnifying glass)
         tapRandomPoint(new DTOPoint(25, 850), new DTOPoint(67, 898));
         sleepTask(200);
-//        sleepTask(2000);
 
         // Swipe left to find polar terror icon
         swipe(new DTOPoint(40, 913), new DTOPoint(678, 913));
@@ -306,7 +290,6 @@ public class PolarTerrorHuntingTask extends DelayedTask {
         logDebug("Searching for Polar Terror icon");
         for (int i = 0; i < 3 && !polarTerror.isFound(); i++) {
             swipe(new DTOPoint(40, 913), new DTOPoint(678, 913));
-//            sleepTask(500);
             polarTerror = searchTemplateWithRetries(EnumTemplates.POLAR_TERROR_SEARCH_ICON, 3, 200L);
         }
 
@@ -330,6 +313,10 @@ public class PolarTerrorHuntingTask extends DelayedTask {
         sleepTask(100);
         if (polarLevel != -1) {
             logInfo(String.format("Adjusting Polar Terror level to %d", polarLevel));
+            if (polarLevel < 1 || polarLevel > levelPoints.length) {
+                logError(String.format("Invalid Polar Terror level configured: %d. Must be between 1 and %d.", polarLevel, MAX_POLAR_LEVEL));
+                return false;
+            }
             tapRandomPoint(levelPoints[polarLevel - 1], levelPoints[polarLevel - 1], 3, 100);
         }
         // tap on search button
