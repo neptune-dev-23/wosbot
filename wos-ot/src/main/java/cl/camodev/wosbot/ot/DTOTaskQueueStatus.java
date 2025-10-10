@@ -1,6 +1,7 @@
 package cl.camodev.wosbot.ot;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public class DTOTaskQueueStatus {
@@ -82,7 +83,7 @@ public class DTOTaskQueueStatus {
      * @param reconnectionTime The time to wait before reconnecting, in minutes
      */
     public void setReconnectAt(long reconnectionTime) {
-        this.setDelayUntil(reconnectionTime * 60); // convert minutes to seconds
+        this.setDelayUntil(LocalDateTime.now().plusMinutes(reconnectionTime)); 
         this.setReconnectAt(LocalDateTime.now().plusMinutes(reconnectionTime));
     }
 
@@ -92,8 +93,10 @@ public class DTOTaskQueueStatus {
         this.reconnectAt = reconnectAt;
         this.reconnectThread = Thread.startVirtualThread(() -> {
             try {
-                Thread.sleep(Math.abs(Duration.between(LocalDateTime.now(), (reconnectAt)).toMillis()));
-                this.readyToReconnect = true;
+                if (Duration.between(LocalDateTime.now(), (reconnectAt)).toMillis() > 0) {
+                    Thread.sleep(Duration.between(LocalDateTime.now(), (reconnectAt)).toMillis());
+                    this.readyToReconnect = true;
+                }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 throw new RuntimeException(e);
