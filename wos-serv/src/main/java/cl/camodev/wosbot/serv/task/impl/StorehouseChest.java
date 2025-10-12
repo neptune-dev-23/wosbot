@@ -223,7 +223,7 @@ public class StorehouseChest extends DelayedTask {
             reschedule(LocalDateTime.now().plusMinutes(5));
         }
 
-        tapBackButton();
+//        tapBackButton();
     }
 
     /**
