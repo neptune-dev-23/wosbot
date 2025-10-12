@@ -290,6 +290,7 @@ public class PolarTerrorHuntingTask extends DelayedTask {
         logDebug("Searching for Polar Terror icon");
         for (int i = 0; i < 3 && !polarTerror.isFound(); i++) {
             swipe(new DTOPoint(40, 913), new DTOPoint(678, 913));
+            sleepTask(200);
             polarTerror = searchTemplateWithRetries(EnumTemplates.POLAR_TERROR_SEARCH_ICON, 3, 200L);
         }
 
