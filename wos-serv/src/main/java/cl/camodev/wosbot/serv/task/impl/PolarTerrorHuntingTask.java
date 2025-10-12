@@ -376,4 +376,9 @@ public class PolarTerrorHuntingTask extends DelayedTask {
         return EnumStartLocation.WORLD;
     }
 
+    @Override
+	protected boolean consumesStamina() {
+		return true;
+	}
+
 }
