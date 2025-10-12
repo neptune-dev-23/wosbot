@@ -28,4 +28,5 @@ log/bot.log
 .vscode/settings.json
 /log
 /temp
+AGENTS.md
 qodana.yaml
