@@ -1,0 +1,158 @@
+.hamburger-menu {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1000;
+}
+
+.hamburger-icon {
+    width: 30px;
+    height: 25px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.hamburger-icon span {
+    display: block;
+    height: 3px;
+    background: #ffffff;
+    border-radius: 3px;
+    transition: all 0.3s ease;
+}
+
+.hamburger-icon.active span:nth-child(1) {
+    transform: rotate(45deg) translate(8px, 8px);
+}
+
+.hamburger-icon.active span:nth-child(2) {
+    opacity: 0;
+}
+
+.hamburger-icon.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(7px, -7px);
+}
+
+.sidenav {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 72px;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(10px);
+    transition: width 0.3s ease;
+    z-index: 999;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+}
+
+.sidenav.open {
+    width: 280px;
+}
+
+.sidenav-header {
+    padding: 16px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidenav-header h2 {
+    font-size: 18px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    line-height: 1;
+    color: #ffffff;
+}
+
+.sidenav-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: inherit;
+}
+
+.sidenav-title-text {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.sidenav-menu {
+    list-style: none;
+    padding: 20px 0;
+    margin: 0;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px 25px;
+    justify-content: flex-start;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-left: 4px solid transparent;
+    text-decoration: none;
+    color: inherit;
+}
+
+.nav-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.nav-item.active {
+    background: rgba(255, 255, 255, 0.15);
+    border-left-color: #4CAF50;
+}
+
+.nav-icon {
+    width: 25px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    color: inherit;
+}
+
+.nav-text {
+    font-size: 16px;
+    font-weight: 500;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.sidenav:not(.open) .sidenav-header {
+    padding: 16px 12px;
+}
+
+.sidenav:not(.open) .header-icon {
+    opacity: 0;
+    transform: translateX(-10px);
+    visibility: hidden;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.sidenav:not(.open) .sidenav-title-text {
+    opacity: 0;
+    transform: translateX(-10px);
+    visibility: hidden;
+    width: 0;
+}
+
+.sidenav:not(.open) .nav-item {
+    justify-content: center;
+    padding: 15px 0;
+    gap: 0;
+}
+
+.sidenav:not(.open) .nav-text {
+    opacity: 0;
+    transform: translateX(-10px);
+    visibility: hidden;
+    width: 0;
+}

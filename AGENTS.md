@@ -1,0 +1,51 @@
+# Repository Guidelines
+
+## Project Structure & Module Organization
+- Root Maven multi-module project (`pom.xml`). Requires JDK 21.
+- Modules:
+  - `wos-hmi`: JavaFX UI and app launcher (`cl.camodev.wosbot.main.Main`). Resources under `src/main/resources`.
+  - `wos-serv`: Services/business logic shared by UI.
+  - `wos-persitence`: Persistence layer (data access, storage).
+  - `wos-utiles`: Reusable utilities and helpers.
+  - `wos-ot`: Automation/recognition assets and routines.
+  - `wos-web`: Spring Boot web module (REST + SSE endpoints, serves dashboard bundle).
+  - `wos-web-ui`: React + TypeScript web dashboard (Bun + Vite). See `wos-web-ui/README.md` for feature overview and workflows.
+- Supporting folders: `lib/` (e.g., `tesseract`, `adb`), `images/`, `log/`, `out/`, `temp/`.
+
+## Build, Test, and Development Commands
+- Frontend dependencies: `bun install` (run inside `wos-web-ui/`)
+- Build all modules: `mvn clean install`
+  - Outputs jar and ZIP in `wos-hmi/target/` (e.g., `wos-bot-<version>.zip`).
+- Build only UI (with dependencies): `mvn -pl wos-hmi -am package`
+- Build web dashboard bundle: `bun run build` (from `wos-web-ui/`) - automatically copies into `wos-web/src/main/resources/static`
+- Run web dashboard backend with live reload: `mvn -pl wos-web spring-boot:run` (requires prior `bun run build`; use `bun run dev` from `wos-web-ui/` for hot reload on port 8000; proxy auto-configures for the backend)
+- Run locally: `java -jar wos-hmi/target/wos-bot-<version>.jar`
+- Skip tests when building: `mvn -DskipTests=true clean package`
+- CI: GitHub Actions builds on release and uploads `wos-hmi/target/*.zip`.
+
+## Coding Style & Naming Conventions
+- Language: Java 21. Indentation: 4 spaces. UTF-8 encoding.
+- Packages: lowercase (`cl.camodev.wosbot.*`). Classes: `PascalCase`. Methods/fields: `lowerCamelCase`. Constants: `UPPER_SNAKE_CASE`.
+- Logging: use SLF4J (`org.slf4j.Logger`) with Logback; avoid `System.out`.
+- Module boundaries: UI in `wos-hmi`; business logic in `wos-serv`; utilities in `wos-utiles`; persistence in `wos-persitence`; automation in `wos-ot`.
+
+## Testing Guidelines
+- Current repo has limited/no tests. Add JUnit 5 tests under `src/test/java`.
+- Test class naming: `*Test`. One behavior per test; prefer fast, deterministic tests.
+- Run tests: `mvn test`. Consider adding coverage later; keep flakiness out of CI.
+
+## Logs
+- Bot runtime log: `log/bot.log`
+
+## Commit & Pull Request Guidelines
+- Use Conventional Commits: `feat:`, `fix:`, `refactor:`, `chore:` with optional scope (`feat(hmi): ...`).
+- Main flow: `dev` is the primary development branch. Ensure `upstream` points to the canonical repo.
+- Start of session sync: `git fetch upstream && git checkout dev && git merge --no-commit upstream/dev` then review diffs before committing.
+- New feature: create from latest upstream `dev`: `git fetch upstream && git switch -c feature/<name> upstream/dev`. Cherry-pick only the commits you intend to include: `git cherry-pick <sha> ...`.
+- Prefer multiple small PRs per feature over a single large one; keep PRs narrowly scoped, with clear descriptions, linked issues, and screenshots for UI changes.
+- After merge to `dev`: delete the feature branch locally and remotely: `git branch -d feature/<name>` and `git push origin --delete feature/<name>`.
+- Keep changes atomic; update docs if commands or behavior change.
+
+## Security & Configuration Tips
+- Do not commit secrets or personal data. Local artifacts (e.g., `database.db`, logs) are ignored; keep them out of PRs.
+- JavaFX/runtime libs are copied to `wos-hmi/target/lib` during build; ensure JDK 21 is installed.

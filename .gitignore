@@ -28,10 +28,24 @@ log/bot.log
 .vscode/settings.json
 /log
 /temp
-AGENTS.md
+
+./**/target
+/wos-web/.settings
+/wos-web/.classpath
+/wos-web/.project
+/wos-web/bin
+/wos-web/log
+/wos-web/target
+
+/target/
+/web-ui/node_modules
+/wos-web/src/main/resources/static
+
 qodana.yaml
 
 .python-version
 pyproject.toml
 fix.ps1
 temp-python
+# Local environment overrides
+/wos-web-ui/.env

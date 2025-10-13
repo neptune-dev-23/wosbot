@@ -1,0 +1,131 @@
+.tasks-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.profile-tasks-section {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 10px;
+    padding: 20px;
+    animation: slideIn 0.3s ease;
+}
+
+.profile-tasks-header {
+    display: flex;
+    justify-content: space-between;
+    align-items:	center;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.profile-tasks-name {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.tasks-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.task-card {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 3px solid #2196F3;
+    transition: all 0.3s ease;
+}
+
+.task-card:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.task-card.scheduled {
+    border-left-color: #4CAF50;
+}
+
+.task-card.executing {
+    border-left-color: #ff9800;
+}
+
+.task-card.disabled {
+    border-left-color: #9E9E9E;
+    opacity: 0.6;
+}
+
+.task-name {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 10px;
+}
+
+.task-details {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 13px;
+}
+
+.task-detail {
+    display: flex;
+    justify-content: space-between;
+}
+
+.task-detail-label {
+    opacity: 0.8;
+}
+
+.task-detail-value {
+    font-weight: 500;
+}
+
+.task-status-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    background: #2196F3;
+}
+
+.task-status-badge.scheduled {
+    background: #4CAF50;
+}
+
+.task-status-badge.executing {
+    background: #ff9800;
+}
+
+.task-status-badge.disabled {
+    background: #9E9E9E;
+}
+
+.task-card.task-card-ready {
+    border-left-color: #4CAF50;
+    background: rgba(76, 175, 80, 0.12);
+}
+
+.task-card.task-card-soon {
+    border-left-color: #29B6F6;
+    background: rgba(41, 182, 246, 0.15);
+}
+
+.next-execution-value {
+    font-weight: 600;
+}
+
+.next-execution-ready {
+    color: #4CAF50;
+}
+
+.next-execution-soon {
+    color: #4FC3F7;
+}
+
+.next-execution-late {
+    color: #FFB74D;
+}

@@ -8,5 +8,6 @@ cl\camodev\wosbot\web\config\WebConfig.class
 cl\camodev\wosbot\web\server\WebDashboardServer.class
 cl\camodev\wosbot\web\api\VersionApi.class
 cl\camodev\wosbot\web\streaming\LogStreamingService.class
+cl\camodev\wosbot\web\config\WebConfig$SpaFallbackResourceResolver.class
 cl\camodev\wosbot\web\server\SpringBootApp.class
 cl\camodev\wosbot\web\api\BotControlApi.class
