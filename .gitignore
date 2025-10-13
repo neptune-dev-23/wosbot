@@ -27,3 +27,11 @@ database.db
 log/bot.log
 .vscode/settings.json
 /log
+/temp
+AGENTS.md
+qodana.yaml
+
+.python-version
+pyproject.toml
+fix.ps1
+temp-python
