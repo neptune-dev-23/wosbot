@@ -15,6 +15,8 @@ const hamburgerIcon = document.getElementById('hamburgerIcon');
 const sideNav = document.getElementById('sideNav');
 const mainContent = document.getElementById('mainContent');
 const navItems = document.querySelectorAll('.nav-item');
+const bottomBar = document.getElementById('bottomBar');
+const AUTO_SCROLL_THRESHOLD = 5;
 
 // Logs View Elements
 const logsTableBody = document.getElementById('logsTableBody');
@@ -48,6 +50,7 @@ function toggleMenu() {
     hamburgerIcon.classList.toggle('active');
     sideNav.classList.toggle('open');
     mainContent.classList.toggle('shifted');
+    bottomBar.classList.toggle('shifted');
 }
 
 function switchView(viewName) {
@@ -162,7 +165,16 @@ function formatTimestamp(timestamp) {
     return `${month}/${day}/${year} ${hours}:${minutes}:${seconds}`;
 }
 
+function updateAutoScrollState() {
+    const atTop = logContainer.scrollTop <= AUTO_SCROLL_THRESHOLD;
+    autoScroll = currentPage === 1 && atTop;
+}
+
 function renderLogs() {
+    const previousScrollTop = logContainer.scrollTop;
+    const previousScrollHeight = logContainer.scrollHeight;
+    const shouldAutoScroll = autoScroll && currentPage === 1;
+
     const searchText = searchLogs.value.toLowerCase();
     const profileFilter = filterProfile.value;
     const severityFilter = filterSeverity.value;
@@ -219,25 +231,29 @@ function renderLogs() {
     
     if (paginatedLogs.length === 0) {
         logsTableBody.innerHTML = '<tr class="no-logs-row"><td colspan="5">No logs match the current filters.</td></tr>';
-        return;
+    } else {
+        const html = paginatedLogs.map(log => `
+            <tr>
+                <td>${formatTimestamp(log.timestamp)}</td>
+                <td><span class="log-level ${log.severity}">${log.severity}</span></td>
+                <td>${escapeHtml(log.profile)}</td>
+                <td>${escapeHtml(log.task)}</td>
+                <td>${escapeHtml(log.message)}</td>
+            </tr>
+        `).join('');
+        
+        logsTableBody.innerHTML = html;
     }
-    
-    const html = paginatedLogs.map(log => `
-        <tr>
-            <td>${formatTimestamp(log.timestamp)}</td>
-            <td><span class="log-level ${log.severity}">${log.severity}</span></td>
-            <td>${escapeHtml(log.profile)}</td>
-            <td>${escapeHtml(log.task)}</td>
-            <td>${escapeHtml(log.message)}</td>
-        </tr>
-    `).join('');
-    
-    logsTableBody.innerHTML = html;
-    
-    // With reversed order, auto-scroll should go to top to see most recent
-    if (autoScroll) {
+
+    const newScrollHeight = logContainer.scrollHeight;
+    if (shouldAutoScroll) {
         logContainer.scrollTop = 0;
+    } else {
+        const scrollDelta = newScrollHeight - previousScrollHeight;
+        logContainer.scrollTop = Math.max(0, previousScrollTop + scrollDelta);
     }
+
+    updateAutoScrollState();
 }
 
 function escapeHtml(text) {
@@ -308,6 +324,15 @@ prevPageBtn.addEventListener('click', () => {
 nextPageBtn.addEventListener('click', () => {
     currentPage++;
     renderLogs();
+});
+
+logContainer.addEventListener('scroll', () => {
+    const atTop = logContainer.scrollTop <= AUTO_SCROLL_THRESHOLD;
+    if (!atTop && autoScroll) {
+        autoScroll = false;
+    } else if (atTop && currentPage === 1 && !autoScroll) {
+        autoScroll = true;
+    }
 });
 
 // Initialize page size selector from localStorage

@@ -6,6 +6,7 @@ public class DTOTaskState {
 
 	private Long profileId;
 	private Integer taskId;
+    private String taskName;
 	private boolean scheduled;
 	private boolean executing;
 	private LocalDateTime lastExecutionTime;
@@ -29,6 +30,10 @@ public class DTOTaskState {
 	public void setTaskId(Integer taskId) {
 		this.taskId = taskId;
 	}
+
+    public String getTaskName() { return taskName; }
+
+    public void setTaskName(String taskName) { this.taskName = taskName; }
 
 	public boolean isScheduled() {
 		return scheduled;
