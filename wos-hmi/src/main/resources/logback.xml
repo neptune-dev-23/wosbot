@@ -46,7 +46,7 @@
 
     <!-- Package-specific logger levels -->
     <logger name="cl.camodev.wosbot.main" level="INFO"/>
-    <logger name="cl.camodev.wosbot.emulator" level="INFO"/>
+    <logger name="cl.camodev.wosbot.emulator" level="DEBUG"/>
     <logger name="cl.camodev.wosbot.serv.task" level="INFO"/>
     <logger name="cl.camodev.wosbot.launcher" level="INFO"/>
 
