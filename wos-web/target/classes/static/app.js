@@ -343,8 +343,8 @@ function renderProfiles() {
         <div class="profile-card">
             <div class="profile-card-header">
                 <div class="profile-name">${escapeHtml(profile.name || 'Unnamed')}</div>
-                <div class="profile-status ${profile.status ? '' : 'inactive'}">
-                    ${profile.status || 'Inactive'}
+                <div class="profile-status ${profile.running ? '' : 'inactive'}">
+                    ${profile.running ? 'Running' : profile.paused ? 'Paused' : 'Inactive'}
                 </div>
             </div>
             <div class="profile-info">

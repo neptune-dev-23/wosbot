@@ -71,35 +71,5 @@
  		<scope>runtime</scope>
  	</dependency>
 
- 	<!-- Spring Boot Web (includes Tomcat embedded server) -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
-			<version>3.2.0</version>
-		</dependency>
-
-		<!-- Spring Boot WebFlux for SSE (Server-Sent Events) -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-webflux</artifactId>
-			<version>3.2.0</version>
-		</dependency>
-
-		<!-- Gson for JSON serialization -->
-		<dependency>
-			<groupId>com.google.code.gson</groupId>
-			<artifactId>gson</artifactId>
-			<version>2.11.0</version>
-		</dependency>
-
     </dependencies>
-
-    <build>
-    	<resources>
-    		<resource>
-    			<directory>src/main/resources</directory>
-    			<filtering>true</filtering>
-    		</resource>
-    	</resources>
-    </build>
 </project>

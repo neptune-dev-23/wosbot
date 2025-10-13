@@ -1,0 +1,12 @@
+cl\camodev\wosbot\web\api\ProfileApi.class
+cl\camodev\wosbot\web\streaming\BotStateStreamingService.class
+cl\camodev\wosbot\web\api\TaskApi.class
+cl\camodev\wosbot\web\api\IndexController.class
+cl\camodev\wosbot\web\config\JsonSerializerConfig$LocalDateTimeAdapter.class
+cl\camodev\wosbot\web\config\JsonSerializerConfig.class
+cl\camodev\wosbot\web\config\WebConfig.class
+cl\camodev\wosbot\web\server\WebDashboardServer.class
+cl\camodev\wosbot\web\api\VersionApi.class
+cl\camodev\wosbot\web\streaming\LogStreamingService.class
+cl\camodev\wosbot\web\server\SpringBootApp.class
+cl\camodev\wosbot\web\api\BotControlApi.class

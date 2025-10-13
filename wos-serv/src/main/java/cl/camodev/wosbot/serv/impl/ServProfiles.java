@@ -18,6 +18,8 @@ import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.serv.IProfileDataChangeListener;
 import cl.camodev.wosbot.serv.IProfileStatusChangeListener;
 import cl.camodev.wosbot.serv.IServProfile;
+import cl.camodev.wosbot.serv.task.TaskQueue;
+import cl.camodev.wosbot.serv.task.TaskQueueManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +52,18 @@ public class ServProfiles implements IServProfile {
 
 	@Override
 	public List<DTOProfiles> getProfiles() {
-		return iProfileRepository.getProfiles();
+		List<DTOProfiles> profiles = iProfileRepository.getProfiles();
+		TaskQueueManager queueManager = ServScheduler.getServices().getQueueManager();
+
+		profiles.forEach(profile -> {
+			TaskQueue queue = queueManager.getQueue(profile.getId());
+			boolean running = queue != null && queue.isRunning();
+			profile.setRunning(running);
+			if (profile.getStatus() == null || profile.getStatus().isBlank()) {
+				profile.setStatus(running ? "RUNNING" : "NOT RUNNING");
+			}
+		});
+		return profiles;
 	}
 
 	public HashMap<EnumConfigurationKey, String> getGlobalSettings() {

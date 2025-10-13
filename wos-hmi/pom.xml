@@ -49,6 +49,12 @@
 		</dependency>
 		<dependency>
 			<groupId>cl.camodev</groupId>
+			<artifactId>wos-web</artifactId>
+			<version>${revision}</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>cl.camodev</groupId>
 			<artifactId>wos-utiles</artifactId>
 			<version>${revision}</version>
 			<scope>compile</scope>
@@ -62,7 +68,6 @@
  	<dependency>
  		<groupId>ch.qos.logback</groupId>
  		<artifactId>logback-classic</artifactId>
-        <version>1.5.13</version>
         <scope>runtime</scope>
  	</dependency>
  	<!-- Janino for Logback conditional processing (JaninoEventEvaluator) -->
