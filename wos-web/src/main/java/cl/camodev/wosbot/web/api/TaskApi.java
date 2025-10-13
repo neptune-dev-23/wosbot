@@ -51,13 +51,13 @@ public class TaskApi {
                         }
                         
 
-//                        // Set task name from enum
-//                        try {
-//                            TpDailyTaskEnum taskEnum = TpDailyTaskEnum.fromId(taskState.getTaskId());
-//                            taskState.setTaskName(taskEnum.getName());
-//                        } catch (Exception e) {
-//                            taskState.setTaskName("Unknown Task");
-//                        }
+                        // Set task name from enum
+                        try {
+                            TpDailyTaskEnum taskEnum = TpDailyTaskEnum.fromId(taskState.getTaskId());
+                            taskState.setTaskName(taskEnum.getName());
+                        } catch (Exception e) {
+                            taskState.setTaskName("Unknown Task");
+                        }
                         taskStates.add(taskState);
                     }
                     if (!taskStates.isEmpty()) {

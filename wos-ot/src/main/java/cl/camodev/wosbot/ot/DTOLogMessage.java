@@ -2,18 +2,26 @@ package cl.camodev.wosbot.ot;
 
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 
+import java.time.LocalDateTime;
+
 public class DTOLogMessage {
 
 	private EnumTpMessageSeverity severity;
 	private String message;
 	private String task;
 	private String profile;
+	private LocalDateTime timestamp;
 
 	public DTOLogMessage(EnumTpMessageSeverity severity, String message, String task, String profile) {
+		this(severity, message, task, profile, LocalDateTime.now());
+	}
+
+	public DTOLogMessage(EnumTpMessageSeverity severity, String message, String task, String profile, LocalDateTime timestamp) {
 		this.severity = severity;
 		this.message = message;
 		this.task = task;
 		this.profile = profile;
+		this.timestamp = timestamp != null ? timestamp : LocalDateTime.now();
 	}
 
 	public EnumTpMessageSeverity getSeverity() {
@@ -46,6 +54,14 @@ public class DTOLogMessage {
 
 	public void setProfile(String profile) {
 		this.profile = profile;
+	}
+
+	public LocalDateTime getTimestamp() {
+		return timestamp;
+	}
+
+	public void setTimestamp(LocalDateTime timestamp) {
+		this.timestamp = timestamp;
 	}
 
 }
