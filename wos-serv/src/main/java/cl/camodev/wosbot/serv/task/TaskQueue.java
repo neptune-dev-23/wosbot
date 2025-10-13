@@ -578,6 +578,10 @@ public class TaskQueue {
                 });
     }
 
+
+    public boolean isRunning() {
+        return taskQueueStatus.isRunning();
+    }
     // Logging helper methods
     @SuppressWarnings(value = { "unused" })
     private void logDebug(String message) {

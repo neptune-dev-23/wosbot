@@ -17,7 +17,7 @@ public class VersionApi {
 
     private static final Logger logger = LoggerFactory.getLogger(VersionApi.class);
     
-    @Value("${project.version:1.5.4}")
+    @Value(value = "${project.version:1.5.4}")
     private String version;
 
     @GetMapping("/version")

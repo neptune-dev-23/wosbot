@@ -2,6 +2,8 @@ package cl.camodev.wosbot.web.api;
 
 import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.serv.impl.ServProfiles;
+import cl.camodev.wosbot.serv.task.TaskQueue;
+import cl.camodev.wosbot.serv.task.TaskQueueManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;

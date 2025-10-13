@@ -9,6 +9,7 @@ import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.ot.DTOTaskState;
 import cl.camodev.wosbot.serv.impl.ServLogs;
+import cl.camodev.wosbot.serv.impl.ServProfiles;
 import cl.camodev.wosbot.serv.impl.ServTaskManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +17,7 @@ import org.slf4j.LoggerFactory;
 public class TaskQueueManager {
 	private final static Logger logger = LoggerFactory.getLogger(TaskQueueManager.class);
 	private final Map<Long, TaskQueue> taskQueues = new HashMap<>();
+    private TaskQueueManager instance;
 
 	public void createQueue(DTOProfiles profile) {
 		if (!taskQueues.containsKey(profile.getId())) {
@@ -28,6 +30,7 @@ public class TaskQueueManager {
 	}
 
 	public void startQueues() {
+        if (instance == null) { instance = new TaskQueueManager(); }
 		ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueueManager", "-", "Starting queues");
 		logger.info("Starting queues ");
 		taskQueues.entrySet().stream()
@@ -100,4 +103,22 @@ public class TaskQueueManager {
 		});
 	}
 
+    public boolean hasRunningQueues() {
+        return taskQueues.values().stream().anyMatch(TaskQueue::isRunning);
+    }
+    public Map<Long, Boolean> getRunningQueues() {
+        Map<Long, Boolean> runningQueues = new HashMap<>();
+        taskQueues.forEach((k, v) -> {
+            runningQueues.put(v.getProfile().getId(), v.isRunning());
+        });
+        return runningQueues;
+    }
+//    public TaskQueueManager getInstance() {
+//        if (instance == null) {
+//            instance = new TaskQueueManager();
+//        }
+//        return instance;
+//    }
+
 }
+
