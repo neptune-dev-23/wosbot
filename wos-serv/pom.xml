@@ -70,21 +70,21 @@
  		<artifactId>janino</artifactId>
  		<scope>runtime</scope>
  	</dependency>
-	
+
  	<!-- Spring Boot Web (includes Tomcat embedded server) -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 			<version>3.2.0</version>
 		</dependency>
-		
+
 		<!-- Spring Boot WebFlux for SSE (Server-Sent Events) -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webflux</artifactId>
 			<version>3.2.0</version>
 		</dependency>
-		
+
 		<!-- Gson for JSON serialization -->
 		<dependency>
 			<groupId>com.google.code.gson</groupId>
@@ -93,7 +93,7 @@
 		</dependency>
 
     </dependencies>
-    
+
     <build>
     	<resources>
     		<resource>

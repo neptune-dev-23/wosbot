@@ -1,5 +1,10 @@
 package cl.camodev.wosbot.console.enumerable;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+
 /**
  * Configuration keys for the application.
  * Keys are organized by functional categories for easier management.
@@ -14,6 +19,7 @@ public enum EnumConfigurationKey {
 	GAME_VERSION_STRING("GLOBAL", String.class),
 	MAX_RUNNING_EMULATORS_INT("1", Integer.class),
 	MAX_IDLE_TIME_INT("1", Integer.class),
+	IDLE_BEHAVIOR_SEND_TO_BACKGROUND_BOOL("false", Boolean.class),
 	MUMU_PATH_STRING("", String.class),
 	MEMU_PATH_STRING("", String.class),
 	LDPLAYER_PATH_STRING("", String.class),
@@ -84,12 +90,36 @@ public enum EnumConfigurationKey {
 	ALLIANCE_TRIUMPH_OFFSET_INT("60", Integer.class),
 	ALLIANCE_LIFE_ESSENCE_BOOL("false", Boolean.class),
 	ALLIANCE_LIFE_ESSENCE_OFFSET_INT("60", Integer.class),
+	ALLIANCE_MOBILIZATION_BOOL("false", Boolean.class),
+	ALLIANCE_MOBILIZATION_REWARDS_PERCENTAGE_STRING("Any", String.class),
+	ALLIANCE_MOBILIZATION_BUILD_SPEEDUPS_BOOL("false", Boolean.class),
+	ALLIANCE_MOBILIZATION_BUY_PACKAGE_BOOL("false", Boolean.class),
+	ALLIANCE_MOBILIZATION_CHIEF_GEAR_CHARM_BOOL("false", Boolean.class),
+	ALLIANCE_MOBILIZATION_CHIEF_GEAR_SCORE_BOOL("false", Boolean.class),
+	ALLIANCE_MOBILIZATION_DEFEAT_BEASTS_BOOL("false", Boolean.class),
+	ALLIANCE_MOBILIZATION_FIRE_CRYSTAL_BOOL("false", Boolean.class),
+	ALLIANCE_MOBILIZATION_GATHER_RESOURCES_BOOL("false", Boolean.class),
+	ALLIANCE_MOBILIZATION_HERO_GEAR_STONE_BOOL("false", Boolean.class),
+	ALLIANCE_MOBILIZATION_MYTHIC_SHARD_BOOL("false", Boolean.class),
+	ALLIANCE_MOBILIZATION_RALLY_BOOL("false", Boolean.class),
+	ALLIANCE_MOBILIZATION_TRAIN_TROOPS_BOOL("false", Boolean.class),
+	ALLIANCE_MOBILIZATION_TRAINING_SPEEDUPS_BOOL("false", Boolean.class),
+	ALLIANCE_MOBILIZATION_USE_GEMS_BOOL("false", Boolean.class),
+	ALLIANCE_MOBILIZATION_USE_SPEEDUPS_BOOL("false", Boolean.class),
+	ALLIANCE_MOBILIZATION_MINIMUM_POINTS_200_INT("800", Integer.class),
+	ALLIANCE_MOBILIZATION_MINIMUM_POINTS_120_INT("520", Integer.class),
+	ALLIANCE_MOBILIZATION_MINIMUM_POINTS_INT("520", Integer.class),
+	ALLIANCE_MOBILIZATION_AUTO_ACCEPT_BOOL("true", Boolean.class),
+	ALLIANCE_MOBILIZATION_USE_GEMS_FOR_ACCEPT_BOOL("false", Boolean.class),
 	
     // ========================================================================
     // LIFE ESSENCE AND PETS
     // ========================================================================
 	LIFE_ESSENCE_BOOL("false", Boolean.class),
 	LIFE_ESSENCE_OFFSET_INT("60", Integer.class),
+	LIFE_ESSENCE_BUY_WEEKLY_SCROLL_BOOL("true", Boolean.class),
+	LIFE_ESSENCE_CONSECUTIVE_FAILURES_INT("0", Integer.class),
+	LIFE_ESSENCE_NEXT_SCROLL_TIME_STRING("", String.class),
 	PET_SKILL_STAMINA_BOOL("false", Boolean.class),
 	PET_SKILL_FOOD_BOOL("false", Boolean.class),
 	PET_SKILL_TRESURE_BOOL("false", Boolean.class),
@@ -106,7 +136,7 @@ public enum EnumConfigurationKey {
 	DAILY_MISSION_AUTO_SCHEDULE_BOOL("false", Boolean.class),
 	STOREHOUSE_CHEST_BOOL("false", Boolean.class),
 	DAILY_LABYRINTH_BOOL("false", Boolean.class),
-	ARENA_TASK_ACTIVATION_HOUR_STRING("0", String.class),
+	ARENA_TASK_ACTIVATION_TIME_STRING("23:50", String.class),
 	ARENA_TASK_BOOL("false", Boolean.class),
 	ARENA_TASK_EXTRA_ATTEMPTS_INT("0", Integer.class),
 	ARENA_TASK_REFRESH_WITH_GEMS_BOOL("false", Boolean.class),
@@ -124,7 +154,8 @@ public enum EnumConfigurationKey {
 	INT_EXPLORATION_CHEST_OFFSET("60", Integer.class),
 	BOOL_HERO_RECRUITMENT("false", Boolean.class),
 	BOOL_VIP_POINTS("false", Boolean.class),
-	VIP_BUY_MONTHLY("false", Boolean.class),
+	VIP_MONTHLY_BUY_BOOL("false", Boolean.class),
+	VIP_NEXT_MONTHLY_BUY_TIME_STRING("false", String.class),
 	BOOL_MYSTERY_SHOP("false", Boolean.class),
 	BOOL_MYSTERY_SHOP_250_HERO_WIDGET("false", Boolean.class),
 
@@ -145,9 +176,10 @@ public enum EnumConfigurationKey {
 	
 	// Tundra events
 	TUNDRA_TRUCK_EVENT_BOOL("false", Boolean.class),
+	TUNDRA_TRUCK_ACTIVATION_TIME_BOOL("false", Boolean.class),
 	TUNDRA_TRUCK_USE_GEMS_BOOL("false", Boolean.class),
 	TUNDRA_TRUCK_SSR_BOOL("false", Boolean.class),
-	TUNDRA_TRUCK_ACTIVATION_HOUR_INT("0", Integer.class),
+	TUNDRA_TRUCK_ACTIVATION_TIME_STRING("14:00", String.class),
 	TUNDRA_TREK_SUPPLIES_BOOL("false", Boolean.class),
 	TUNDRA_TREK_AUTOMATION_BOOL("false", Boolean.class),
 	
@@ -159,11 +191,12 @@ public enum EnumConfigurationKey {
 
 	// Mercenary event
 	MERCENARY_EVENT_BOOL("false", Boolean.class),
-	MERCENARY_USE_FLAG_BOOL("false", Boolean.class),
-	MERCENARY_FLAG_INT("1", Integer.class),
+	MERCENARY_FLAG_INT("0", Integer.class),
 	
 	// Hero mission event
 	HERO_MISSION_EVENT_BOOL("false", Boolean.class),
+	HERO_MISSION_FLAG_INT("0", Integer.class),
+	HERO_MISSION_MODE_STRING("Limited (10)", String.class),
 
     // Journey of Light event
     JOURNEY_OF_LIGHT_BOOL("false", Boolean.class),
@@ -171,13 +204,37 @@ public enum EnumConfigurationKey {
     // Myriad Bazaar event
     MYRIAD_BAZAAR_EVENT_BOOL("false", Boolean.class),
 
+    // Bear trap event
+    BEAR_TRAP_EVENT_BOOL("false", Boolean.class),
+    BEAR_TRAP_RALLY_FLAG_INT("1", Integer.class),
+    BEAR_TRAP_SCHEDULE_DATETIME_STRING("", LocalDateTime.class),
+    BEAR_TRAP_PREPARATION_TIME_INT("5", Integer.class),
+    BEAR_TRAP_ACTIVE_PETS_BOOL("false", Boolean.class),
+    BEAR_TRAP_NUMBER_INT("1", Integer.class),
+    BEAR_TRAP_RECALL_TROOPS_BOOL("false", Boolean.class),
+    BEAR_TRAP_CALL_RALLY_BOOL("false", Boolean.class),
+    BEAR_TRAP_JOIN_RALLY_BOOL("false", Boolean.class),
+    BEAR_TRAP_JOIN_FLAG_INT("1", Integer.class),
+
     // ========================================================================
     // EXPERT SETTINGS
     // ========================================================================
 	EXPERT_AGNES_INTEL_BOOL("false", Boolean.class),
 	EXPERT_ROMULUS_TAG_BOOL("false", Boolean.class),
 	EXPERT_ROMULUS_TROOPS_BOOL("false", Boolean.class),
-	EXPERT_ROMULUS_TROOPS_TYPE_STRING("Infantry", String.class);
+	EXPERT_ROMULUS_TROOPS_TYPE_STRING("Infantry", String.class),
+	EXPERT_SKILL_TRAINING_ENABLED_BOOL("false", Boolean.class),
+	EXPERT_SKILL_TRAINING_PRIORITIES_STRING("", String.class),
+
+    // ========================================================================
+    // PRIORITIZED LIST SETTINGS
+    // ========================================================================
+	// Stored format: "name:priority:enabled|name:priority:enabled|..."
+	// Example: "Fire Crystals:1:true|VIP Points:2:true|Hero Shards:3:false|Speedups:4:true"
+    ALLIANCE_SHOP_ENABLED_BOOL("false", Boolean.class),
+	ALLIANCE_SHOP_PRIORITIES_STRING("", String.class),
+	ALLIANCE_SHOP_MIN_COINS_TO_ACTIVATE_INT("0", Integer.class),
+	ALLIANCE_SHOP_MIN_COINS_INT("0", Integer.class);
 
 	// @formatter:on
     private final String defaultValue;
@@ -209,7 +266,21 @@ public enum EnumConfigurationKey {
             return (T) Double.valueOf(value);
         } else if (type.equals(String.class)) {
             return (T) value;
+        } else if (type.equals(LocalDateTime.class)) {
+            if (value == null || value.isBlank()) {
+                LocalDateTime nowUtc = LocalDateTime.now(ZoneOffset.UTC);
+                return (T) nowUtc.truncatedTo(ChronoUnit.HOURS).plusHours(1);
+            }
+            try {
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
+                return (T) LocalDateTime.parse(value, formatter);
+            } catch (Exception e) {
+                // Si el formato no coincide o hay error, devuelve la siguiente hora UTC exacta
+                LocalDateTime nowUtc = LocalDateTime.now(ZoneOffset.UTC);
+                return (T) nowUtc.truncatedTo(ChronoUnit.HOURS).plusHours(1);
+            }
         }
+
         // Add other if/else according to the supported types
         throw new UnsupportedOperationException("Type " + type.getSimpleName() + " not supported for casting.");
     }

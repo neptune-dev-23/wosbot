@@ -44,13 +44,16 @@ public class DelayedTaskRegistry {
         registry.put(TpDailyTaskEnum.EXPERT_AGNES_INTEL, profile -> new ExpertsAgnesIntelTask(profile, TpDailyTaskEnum.EXPERT_AGNES_INTEL));
         registry.put(TpDailyTaskEnum.EXPERT_ROMULUS_TAG, profile -> new ExpertsRomulusTagTask(profile, TpDailyTaskEnum.EXPERT_ROMULUS_TAG));
         registry.put(TpDailyTaskEnum.EXPERT_ROMULUS_TROOPS, profile -> new ExpertsRomulusTroopsTask(profile, TpDailyTaskEnum.EXPERT_ROMULUS_TROOPS));
+        registry.put(TpDailyTaskEnum.EXPERT_SKILL_TRAINING, profile -> new ExpertSkillTrainingTask(profile, TpDailyTaskEnum.EXPERT_SKILL_TRAINING));
 
         // Alliance tasks
         registry.put(TpDailyTaskEnum.ALLIANCE_AUTOJOIN, profile -> new AllianceAutojoinTask(profile, TpDailyTaskEnum.ALLIANCE_AUTOJOIN));
         registry.put(TpDailyTaskEnum.ALLIANCE_TECH, profile -> new AllianceTechTask(profile, TpDailyTaskEnum.ALLIANCE_TECH));
+        registry.put(TpDailyTaskEnum.ALLIANCE_SHOP, profile -> new AllianceShopTask(profile, TpDailyTaskEnum.ALLIANCE_SHOP));
         registry.put(TpDailyTaskEnum.ALLIANCE_PET_TREASURE, profile -> new PetAllianceTreasuresTask(profile, TpDailyTaskEnum.ALLIANCE_PET_TREASURE));
         registry.put(TpDailyTaskEnum.ALLIANCE_CHESTS, profile -> new AllianceChestTask(profile, TpDailyTaskEnum.ALLIANCE_CHESTS));
         registry.put(TpDailyTaskEnum.ALLIANCE_TRIUMPH, profile -> new TriumphTask(profile, TpDailyTaskEnum.ALLIANCE_TRIUMPH));
+        registry.put(TpDailyTaskEnum.ALLIANCE_MOBILIZATION, profile -> new AllianceMobilizationTask(profile, TpDailyTaskEnum.ALLIANCE_MOBILIZATION));
 
         // Pet skills tasks
         registry.put(TpDailyTaskEnum.PET_SKILL_STAMINA, profile -> new PetSkillsTask(profile, TpDailyTaskEnum.PET_SKILL_STAMINA, PetSkillsTask.PetSkill.STAMINA));
@@ -82,6 +85,8 @@ public class DelayedTaskRegistry {
         registry.put(TpDailyTaskEnum.EVENT_JOURNEY_OF_LIGHT, profile -> new JourneyofLightTask(profile, TpDailyTaskEnum.EVENT_JOURNEY_OF_LIGHT));
         registry.put(TpDailyTaskEnum.EVENT_POLAR_TERROR, profile -> new PolarTerrorHuntingTask(profile, TpDailyTaskEnum.EVENT_POLAR_TERROR));
         registry.put(TpDailyTaskEnum.EVENT_MYRIAD_BAZAAR, profile -> new MyriadBazaarEventTask(profile, TpDailyTaskEnum.EVENT_MYRIAD_BAZAAR));
+
+        registry.put(TpDailyTaskEnum.BEAR_TRAP, profile -> new BearTrapTask(profile, TpDailyTaskEnum.BEAR_TRAP));
 
         // Initialize
         registry.put(TpDailyTaskEnum.INITIALIZE, profile -> new InitializeTask(profile, TpDailyTaskEnum.INITIALIZE));

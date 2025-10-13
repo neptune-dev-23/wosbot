@@ -1,7 +1,9 @@
 package cl.camodev.wosbot.experts.view;
 
 import cl.camodev.wosbot.common.view.AbstractProfileController;
+import cl.camodev.wosbot.common.view.PriorityListView;
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
+import cl.camodev.wosbot.console.enumerable.ExpertSkillItem;
 import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
@@ -24,9 +26,25 @@ public class ExpertsLayoutController extends AbstractProfileController {
     @FXML
     private ComboBox<String> troopTypeComboBox;
 
+    @FXML
+    private CheckBox enableExpertSkillTrainingCheckBox;
+
+    @FXML
+    private VBox expertSkillTrainingVBox;
+
+    @FXML
+    private PriorityListView expertSkillPriorities;
+
 
     @FXML
     public void initialize() {
+        setupMappings();
+        setupVisibilityListeners();
+        initializeChangeEvents();
+    }
+
+    private void setupMappings() {
+        // Existing mappings
         troopTypeComboBox.getItems().addAll("Infantry", "Lancer", "Marksman");
 
         checkBoxMappings.put(claimIntelCheckBox, EnumConfigurationKey.EXPERT_AGNES_INTEL_BOOL);
@@ -35,10 +53,20 @@ public class ExpertsLayoutController extends AbstractProfileController {
 
         comboBoxMappings.put(troopTypeComboBox, EnumConfigurationKey.EXPERT_ROMULUS_TROOPS_TYPE_STRING);
 
+        // New expert skill training mappings
+        checkBoxMappings.put(enableExpertSkillTrainingCheckBox, EnumConfigurationKey.EXPERT_SKILL_TRAINING_ENABLED_BOOL);
+        registerPriorityList(expertSkillPriorities, EnumConfigurationKey.EXPERT_SKILL_TRAINING_PRIORITIES_STRING, ExpertSkillItem.class);
+    }
+
+    private void setupVisibilityListeners() {
+        // Existing listener for troop options
         claimTroopsCheckBox.selectedProperty().addListener((observable, oldValue, newValue) -> {
             troopOptionsVBox.setVisible(newValue);
         });
 
-        initializeChangeEvents();
+        // New listener for expert skill training
+        enableExpertSkillTrainingCheckBox.selectedProperty().addListener((observable, oldValue, newValue) -> {
+            expertSkillTrainingVBox.setVisible(newValue);
+        });
     }
 }

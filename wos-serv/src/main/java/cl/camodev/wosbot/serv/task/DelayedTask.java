@@ -1,5 +1,10 @@
 package cl.camodev.wosbot.serv.task;
 
+import cl.camodev.utiles.UtilRally;
+import cl.camodev.utiles.UtilTime;
+import cl.camodev.utiles.number.NumberConverters;
+import cl.camodev.utiles.number.NumberValidators;
+import cl.camodev.utiles.ocr.TextRecognitionRetrier;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
@@ -10,9 +15,18 @@ import cl.camodev.wosbot.logging.ProfileLogger;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
+import cl.camodev.wosbot.ot.DTOTesseractSettings;
 import cl.camodev.wosbot.serv.impl.ServLogs;
+import cl.camodev.wosbot.serv.impl.ServProfiles;
 import cl.camodev.wosbot.serv.impl.ServScheduler;
+import cl.camodev.wosbot.serv.impl.StaminaService;
+import cl.camodev.wosbot.serv.ocr.BotTextRecognitionProvider;
+import cl.camodev.wosbot.serv.task.impl.ArenaTask;
+import cl.camodev.wosbot.serv.task.impl.BearTrapTask;
 import cl.camodev.wosbot.serv.task.impl.InitializeTask;
+import java.awt.Color;
+import java.util.List;
+
 import cl.camodev.wosbot.almac.repo.ProfileRepository;
 import net.sourceforge.tess4j.TesseractException;
 
@@ -20,11 +34,9 @@ import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public abstract class DelayedTask implements Runnable, Delayed {
@@ -40,6 +52,12 @@ public abstract class DelayedTask implements Runnable, Delayed {
     protected ServScheduler servScheduler = ServScheduler.getServices();
     protected ServLogs servLogs = ServLogs.getServices();
     private ProfileLogger logger; // Will be initialized in the constructor
+    protected BotTextRecognitionProvider provider;
+    protected TextRecognitionRetrier<Integer> integerHelper;
+    protected TextRecognitionRetrier<Duration> durationHelper;
+    protected boolean shouldUpdateConfig;
+
+    private static final int DEFAULT_RETRIES = 3;
 
     public DelayedTask(DTOProfiles profile, TpDailyTaskEnum tpTask) {
         this.profile = profile;
@@ -48,6 +66,9 @@ public abstract class DelayedTask implements Runnable, Delayed {
         this.EMULATOR_NUMBER = profile.getEmulatorNumber();
         this.tpTask = tpTask;
         this.logger = new ProfileLogger(this.getClass(), profile);
+        this.provider = new BotTextRecognitionProvider(emuManager, EMULATOR_NUMBER);
+        this.integerHelper = new TextRecognitionRetrier<>(provider);
+        this.durationHelper = new TextRecognitionRetrier<>(provider);
     }
 
     protected Object getDistinctKey() {
@@ -65,7 +86,8 @@ public abstract class DelayedTask implements Runnable, Delayed {
 
     @Override
     public void run() {
-        // Before executing, refresh the profile from the database to ensure current configurations
+        // Before executing, refresh the profile from the database to ensure current
+        // configurations
         try {
             if (profile != null && profile.getId() != null) {
                 DTOProfiles updated = ProfileRepository.getRepository().getProfileWithConfigsById(profile.getId());
@@ -88,15 +110,32 @@ public abstract class DelayedTask implements Runnable, Delayed {
         }
 
         ensureCorrectScreenLocation(getRequiredStartLocation());
+        // Validate stamina before executing the task
+        if (consumesStamina()) {
+            if (StaminaService.getServices().requiresUpdate(profile.getId())) {
+                updateStaminaFromProfile();
+            }
+
+        }
         execute();
+
+        // Update task configuration after running
+        if (shouldUpdateConfig) {
+            ServProfiles.getServices().saveProfile(profile);
+            shouldUpdateConfig = false;
+        }
+
+        sleepTask(2000);
         ensureCorrectScreenLocation(EnumStartLocation.ANY);
     }
 
     protected abstract void execute();
 
     /**
-     * Ensures the emulator is on the correct screen (Home or World) before continuing.
-     * It will attempt to navigate if it's on the wrong screen or press back if it's lost.
+     * Ensures the emulator is on the correct screen (Home or World) before
+     * continuing.
+     * It will attempt to navigate if it's on the wrong screen or press back if it's
+     * lost.
      * 
      * @param requiredLocation The desired screen (HOME, WORLD or ANY).
      */
@@ -255,89 +294,336 @@ public abstract class DelayedTask implements Runnable, Delayed {
         return staminaNeeded * 5; // 1 stamina every 5 minutes
     }
 
-    protected Integer getStaminaValueFromIntelScreen() {
-        ensureOnIntelScreen();
-        Integer currentStamina = readNumberValue(new DTOPoint(582, 23), new DTOPoint(672, 55));
-        ensureCorrectScreenLocation(getRequiredStartLocation());
-        logInfo("Current stamina: " + currentStamina);
-        return currentStamina;
+    protected void updateStaminaFromProfile() {
+        // i need to update stamina on profile (maybe most reliable than intel screen)
+        // go to profile
+        tapRandomPoint(new DTOPoint(24, 24), new DTOPoint(61, 61), 1, 500);
+        // go to stamina
+        tapRandomPoint(new DTOPoint(223, 1101), new DTOPoint(244, 1123), 1, 500);
+
+        DTOTesseractSettings settings = DTOTesseractSettings.builder()
+                .setAllowedChars("0123456789/")
+                .setRemoveBackground(true)
+                .setTextColor(new Color(255, 255, 255)) // White text
+                .setPageSegMode(DTOTesseractSettings.PageSegMode.SINGLE_LINE)
+                // .setReuseLastImage(true)
+                .build();
+
+        Integer stamina = integerHelper.execute(
+                new DTOPoint(324, 255), new DTOPoint(477, 283), 5, 200L,
+                settings,
+                NumberValidators::isFractionFormat,
+                NumberConverters::fractionToFirstInt);
+
+        if (stamina != null) {
+            logInfo("Stamina parsed and stored: " + stamina);
+            StaminaService.getServices().setStamina(profile.getId(), stamina);
+        }
+        tapBackButton();
+        tapBackButton();
     }
 
-    protected Integer readNumberValue(DTOPoint topLeft, DTOPoint bottomRight) {
-        Integer numberValue = null;
-        Pattern numberPattern = Pattern.compile("(\\d{1,3}(?:[.,]\\d{3})*|\\d+)");
+    protected Integer getSpentStamina() {
+        DTOTesseractSettings settings = DTOTesseractSettings.builder()
+                .setPageSegMode(DTOTesseractSettings.PageSegMode.SINGLE_LINE)
+                .setOcrEngineMode(DTOTesseractSettings.OcrEngineMode.LSTM)
+                .setRemoveBackground(true)
+                .setTextColor(new Color(254, 254, 254))
+                .setAllowedChars("0123456789")
+                .build();
 
-        // Map for truly special OCR quirks (not fixable by normalization)
-        Map<String, Integer> specialCases = Map.of(
-                "(°)", 0,
-                "il}", 1,
-                "7400)", 400,
-                "SEM)", 800,
-                "1800)", 800,
-                "2n", 211,
-                "1/300", 1300,
-                "Ti", 111,
-                "|", 121);
+        Integer spentStamina = readNumberValue(new DTOPoint(540, 1215), new DTOPoint(590, 1245), settings);
 
-        for (int attempt = 0; attempt < 5 && numberValue == null; attempt++) {
-            try {
-                String ocr = emuManager.ocrRegionText(EMULATOR_NUMBER, topLeft, bottomRight);
-                logDebug(ocr != null ? "OCR Result: '" + ocr + "'" : "OCR Result: null");
+        return spentStamina;
+    }
 
-                if (ocr != null && !ocr.trim().isEmpty()) {
-                    // 1) Handle hard-coded weird cases
-                    for (Map.Entry<String, Integer> entry : specialCases.entrySet()) {
-                        if (ocr.contains(entry.getKey())) {
-                            numberValue = entry.getValue();
-                            logDebug("Detected special pattern '" + entry.getKey() + "', setting value to "
-                                    + numberValue);
-                            break;
-                        }
+    protected void subtractStamina(Integer spentStamina, boolean rally) {
+        if (spentStamina != null) {
+            logInfo("Stamina decreased by " + spentStamina + ". Current stamina: "
+                    + (getCurrentStamina() - spentStamina));
+            StaminaService.getServices().subtractStamina(profile.getId(), spentStamina);
+            return;
+        }
+
+        // If we couldn't parse stamina, use defaults
+        int defaultStamina = rally ? 25 : 10;
+        logWarning("No stamina value found on deployment. Default spending to " + defaultStamina + " stamina.");
+        StaminaService.getServices().subtractStamina(profile.getId(), defaultStamina);
+    }
+
+    protected void addStamina(Integer stamina) {
+        if (stamina == null) {
+            return;
+        }
+        StaminaService.getServices().addStamina(profile.getId(), stamina);
+    }
+
+    protected long parseTravelTime() {
+        DTOTesseractSettings timeSettings = new DTOTesseractSettings.Builder()
+                .setPageSegMode(DTOTesseractSettings.PageSegMode.SINGLE_LINE)
+                .setOcrEngineMode(DTOTesseractSettings.OcrEngineMode.LSTM)
+                .setAllowedChars("0123456789:")
+                .build();
+
+        try {
+            String timeStr = OCRWithRetries(new DTOPoint(521, 1141), new DTOPoint(608, 1162), 5, timeSettings);
+            if (timeStr != null && !timeStr.isEmpty()) {
+                long travelTimeSeconds = UtilTime.parseTimeToSeconds(timeStr);
+                if (travelTimeSeconds > 0) {
+                    logInfo("Successfully parsed travel time: " + timeStr + " (" + travelTimeSeconds + "s)");
+                    return travelTimeSeconds * 2 + 2;
+                }
+            }
+            logWarning("OCR returned null, empty, or invalid travel time");
+        } catch (Exception e) {
+            logError("Error parsing travel time: " + e.getMessage());
+        }
+
+        return 0; // Explicit failure - caller must check
+    }
+
+    protected int getCurrentStamina() {
+        return StaminaService.getServices().getCurrentStamina(profile.getId());
+    }
+
+    protected boolean checkStaminaAndMarchesOrReschedule(int minStaminaLevel, int refreshStaminaLevel) {
+        int currentStamina = getCurrentStamina();
+        logInfo("Current stamina: " + currentStamina);
+
+        if (currentStamina < minStaminaLevel) {
+            LocalDateTime rescheduleTime = LocalDateTime.now()
+                    .plusMinutes(staminaRegenerationTime(currentStamina, refreshStaminaLevel));
+            reschedule(rescheduleTime);
+            logWarning("Not enough stamina for expedition. (Current: " + currentStamina + "/" + minStaminaLevel
+                    + "). Rescheduling task to run in "
+                    + UtilTime.localDateTimeToDDHHMMSS(rescheduleTime));
+            return false;
+        }
+
+        if (!checkMarchesAvailable()) {
+            logWarning("No marches available, rescheduling for in 1 minute.");
+            reschedule(LocalDateTime.now().plusMinutes(1));
+            return false;
+        }
+        return true;
+    }
+
+    protected void selectFlag(Integer flagNumber) {
+        tapPoint(UtilRally.getMarchFlagPoint(flagNumber));
+        sleepTask(300);
+        String str = OCRWithRetries("unlock", new DTOPoint(297, 126), new DTOPoint(424, 168));
+        if (str != null && str.toLowerCase().equals("unlock")) {
+            // Why would you select a flag that you don't have available..........
+            logWarning("This flag is not unlocked, proceeding without selecting a flag.");
+            tapBackButton();
+        }
+    }
+
+    protected boolean checkMarchesAvailable() {
+        // Open active marches panel
+        tapPoint(new DTOPoint(2, 550));
+        sleepTask(200);
+        tapRandomPoint(new DTOPoint(340, 265), new DTOPoint(340, 265), 3, 100);
+
+        // Define march slot coordinates
+        DTOPoint[] marchTopLeft = {
+                new DTOPoint(189, 740), // March 6
+                new DTOPoint(189, 667), // March 5
+                new DTOPoint(189, 594), // March 4
+                new DTOPoint(189, 521), // March 3
+                new DTOPoint(189, 448), // March 2
+                new DTOPoint(189, 375), // March 1
+        };
+        DTOPoint[] marchBottomRight = {
+                new DTOPoint(258, 768), // March 6
+                new DTOPoint(258, 695), // March 5
+                new DTOPoint(258, 622), // March 4
+                new DTOPoint(258, 549), // March 3
+                new DTOPoint(258, 476), // March 2
+                new DTOPoint(258, 403), // March 1
+        };
+
+        // Check each march slot for "idle" status
+        try {
+            for (int marchSlot = 0; marchSlot < 6; marchSlot++) {
+                for (int attempt = 0; attempt < 3; attempt++) {
+                    String ocrResult = emuManager.ocrRegionText(EMULATOR_NUMBER,
+                            marchTopLeft[marchSlot],
+                            marchBottomRight[marchSlot]);
+
+                    if (ocrResult.toLowerCase().contains("idle")) {
+                        logInfo("Idle march detected in slot " + (6 - marchSlot));
+                        closeLeftMenu();
+                        return true;
                     }
 
-                    // 2) If not matched, normalize OCR text
-                    if (numberValue == null) {
-                        String cleaned = ocr
-                                .replace(';', ',') // interpret ; as comma
-                                .replaceAll("[){}\\s]", "") // remove junk like ) or }
-                                .trim();
-
-                        Matcher m = numberPattern.matcher(cleaned);
-                        if (m.find()) {
-                            String raw = m.group(1);
-                            // Remove valid separators before parsing
-                            String normalized = raw.replaceAll("[.,]", "");
-                            try {
-                                numberValue = Integer.valueOf(normalized);
-                                logDebug("Parsed number value: " + numberValue);
-                            } catch (NumberFormatException nfe) {
-                                logDebug("Parsed number not a valid integer: '" + raw + "'");
-                            }
-                        }
+                    if (attempt < 2) {
+                        sleepTask(100);
                     }
                 }
-            } catch (IOException | TesseractException ex) {
-                logDebug("OCR attempt " + (attempt + 1) + " failed: " + ex.getMessage());
+                logDebug("March slot " + (6 - marchSlot) + " is not idle");
             }
-            if (numberValue == null) {
-                sleepTask(100);
-            }
+        } catch (IOException | TesseractException e) {
+            logError("OCR attempt failed while checking marches: " + e.getMessage());
+            closeLeftMenu();
+            return false;
         }
-        return numberValue;
+
+        logInfo("No idle marches detected in any of the 6 slots.");
+        closeLeftMenu();
+        return false;
+    }
+
+    protected void closeLeftMenu() {
+        tapPoint(new DTOPoint(110, 270));
+        sleepTask(500);
+        tapPoint(new DTOPoint(463, 548));
+        sleepTask(500);
+    }
+
+    protected boolean disableAutoJoin() {
+        ensureCorrectScreenLocation(EnumStartLocation.ANY);
+        // Navigate to the alliance screen
+        logDebug("Navigating to Alliance screen");
+
+        // Tap on Alliance button at bottom of screen
+        tapRandomPoint(new DTOPoint(493, 1187), new DTOPoint(561, 1240));
+        sleepTask(3000);
+
+        // Locate the Alliance War button
+        DTOImageSearchResult menuResult = searchTemplateWithRetries(EnumTemplates.ALLIANCE_WAR_BUTTON);
+        if (!menuResult.isFound()) {
+            logError("Alliance War button not found");
+            return false;
+        }
+
+        // Open the Alliance War menu
+        logDebug("Opening Alliance War menu");
+        tapPoint(menuResult.getPoint());
+        sleepTask(500);
+
+        // Open rally section
+        tapRandomPoint(new DTOPoint(81, 114), new DTOPoint(195, 152));
+        sleepTask(500);
+
+        // Open the auto-join menu
+        logDebug("Opening auto-join settings");
+        tapRandomPoint(new DTOPoint(260, 1200), new DTOPoint(450, 1240));
+        sleepTask(1000);
+
+        // Disabling auto-join
+        tapRandomPoint(new DTOPoint(120, 1069), new DTOPoint(249, 1122));
+        sleepTask(300);
+
+        // Return to home screen
+        logDebug("Returning to home screen");
+        tapBackButton();
+        sleepTask(300);
+        tapBackButton();
+        sleepTask(300);
+        tapBackButton();
+        sleepTask(300);
+
+        return true;
+    }
+
+    protected Integer readNumberValue(DTOPoint topLeft, DTOPoint bottomRight, DTOTesseractSettings settings) {
+        Integer result = integerHelper.execute(topLeft,
+                bottomRight,
+                5,
+                200L,
+                settings,
+                text -> NumberValidators.matchesPattern(text, Pattern.compile(".*?(\\d+).*")),
+                text -> NumberConverters.regexToInt(text, Pattern.compile(".*?(\\d+).*")));
+        logDebug("Number value read: " + (result != null ? result : "null"));
+        return result;
     }
 
     protected DTOImageSearchResult searchTemplateWithRetries(EnumTemplates template) {
-        return searchTemplateWithRetries(template, 90, 5);
+        return searchTemplateWithRetries(template, 90, DEFAULT_RETRIES);
+    }
+
+    protected DTOImageSearchResult searchTemplateWithRetries(EnumTemplates template, int maxRetries) {
+        return searchTemplateWithRetries(template, 90, maxRetries, 200);
+    }
+
+    protected DTOImageSearchResult searchTemplateWithRetries(EnumTemplates template, int maxRetries, long delayMs) {
+        return searchTemplateWithRetries(template, 90, maxRetries, delayMs);
     }
 
     protected DTOImageSearchResult searchTemplateWithRetries(EnumTemplates template, int threshold, int maxRetries) {
+        return searchTemplateWithRetries(template, threshold, maxRetries, 200);
+    }
+
+    protected DTOImageSearchResult searchTemplateWithRetries(EnumTemplates template, int threshold, int maxRetries,
+            long delayMs) {
         DTOImageSearchResult result = null;
         for (int i = 0; i < maxRetries && (result == null || !result.isFound()); i++) {
             logDebug("Searching template " + template + ", (attempt " + (i + 1) + "/" + maxRetries + ")");
             result = emuManager.searchTemplate(EMULATOR_NUMBER, template, threshold);
-            sleepTask(200);
+            sleepTask(delayMs);
         }
         logDebug(result.isFound() ? "Template " + template + " found." : "Template " + template + " not found.");
+        return result;
+    }
+
+    protected String OCRWithRetries(String searchStringLower, DTOPoint p1, DTOPoint p2) {
+        return OCRWithRetries(searchStringLower, p1, p2, DEFAULT_RETRIES);
+    }
+
+    protected DTOImageSearchResult searchTemplateRegionWithRetries(
+            EnumTemplates template, DTOPoint topLeft, DTOPoint bottomRight) {
+        return searchTemplateRegionWithRetries(
+                template, topLeft, bottomRight,
+                90, DEFAULT_RETRIES, 200L);
+    }
+
+    protected DTOImageSearchResult searchTemplateRegionWithRetries(
+            EnumTemplates template, DTOPoint topLeft, DTOPoint bottomRight, int retries, long delayMs) {
+        return searchTemplateRegionWithRetries(
+                template, topLeft, bottomRight,
+                90, retries, delayMs);
+    }
+
+    protected DTOImageSearchResult searchTemplateRegionWithRetries(
+            EnumTemplates template, DTOPoint topLeft, DTOPoint bottomRight,
+            int threshold, int maxRetries, long delayMs) {
+        DTOImageSearchResult result = null;
+        for (int i = 0; i < maxRetries && (result == null || !result.isFound()); i++) {
+            logDebug("Searching template " + template + ", (attempt " + (i + 1) + "/" + maxRetries + ")");
+            result = emuManager.searchTemplate(EMULATOR_NUMBER, template, topLeft, bottomRight, threshold);
+            sleepTask(delayMs);
+        }
+        if (result == null) {
+            throw new IllegalStateException("Template search did not return a result for template: " + template);
+        }
+        logDebug(result.isFound() ? "Template " + template + " found." : "Template " + template + " not found.");
+        return result;
+    }
+
+    protected List<DTOImageSearchResult> searchTemplatesWithRetries(EnumTemplates template, int threshold,
+            int maxRetries, int maxResults) {
+        List<DTOImageSearchResult> result = null;
+        for (int i = 0; i < maxRetries && (result == null || result.isEmpty()); i++) {
+            logDebug("Searching template " + template + ", (attempt " + (i + 1) + "/" + maxRetries + ")");
+            result = emuManager.searchTemplates(EMULATOR_NUMBER, template, threshold, maxResults);
+            sleepTask(200);
+        }
+        logDebug(!result.isEmpty() ? "Template " + template + " found " + result.size() + " times."
+                : "Template " + template + " not found.");
+        return result;
+    }
+
+    protected List<DTOImageSearchResult> searchTemplatesWithRetries(EnumTemplates template, DTOPoint topLeft,
+            DTOPoint bottomRight, int threshold, int maxRetries, int maxResults) {
+        List<DTOImageSearchResult> result = null;
+        for (int i = 0; i < maxRetries && (result == null || result.isEmpty()); i++) {
+            logDebug("Searching template " + template + ", (attempt " + (i + 1) + "/" + maxRetries + ")");
+            result = emuManager.searchTemplates(EMULATOR_NUMBER, template, topLeft, bottomRight, threshold, maxResults);
+            sleepTask(200);
+        }
+        logDebug(!result.isEmpty() ? "Template " + template + " found " + result.size() + " times."
+                : "Template " + template + " not found.");
         return result;
     }
 
@@ -349,6 +635,7 @@ public abstract class DelayedTask implements Runnable, Delayed {
             try {
                 result = emuManager.ocrRegionText(EMULATOR_NUMBER, p1, p2);
                 if (result != null && result.toLowerCase().contains(searchString.toLowerCase())) {
+                    logDebug("OCRWithRetries result: " + result);
                     return result;
                 }
             } catch (IOException | TesseractException e) {
@@ -357,6 +644,10 @@ public abstract class DelayedTask implements Runnable, Delayed {
             sleepTask(200);
         }
         return null;
+    }
+
+    protected String OCRWithRetries(DTOPoint p1, DTOPoint p2) {
+        return OCRWithRetries(p1, p2, DEFAULT_RETRIES);
     }
 
     protected String OCRWithRetries(DTOPoint p1, DTOPoint p2, int maxRetries) {
@@ -369,60 +660,51 @@ public abstract class DelayedTask implements Runnable, Delayed {
             }
             sleepTask(200);
         }
+        logDebug("OCRWithRetries result: " + result);
         return result;
     }
 
-    protected boolean checkMarchesAvailable() {
-        // Open active marches panel
-        emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(2, 550));
-        sleepTask(500);
-        emuManager.tapAtPoint(EMULATOR_NUMBER, new DTOPoint(340, 265));
-        sleepTask(500);
-
-        // Define march slot coordinates
-        DTOPoint[] marchTopLeft = {
-                new DTOPoint(189, 375), // March 1
-                new DTOPoint(189, 448), // March 2
-                new DTOPoint(189, 521), // March 3
-                new DTOPoint(189, 594), // March 4
-                new DTOPoint(189, 667), // March 5
-                new DTOPoint(189, 740), // March 6
-        };
-        DTOPoint[] marchBottomRight = {
-                new DTOPoint(258, 403), // March 1
-                new DTOPoint(258, 476), // March 2
-                new DTOPoint(258, 549), // March 3
-                new DTOPoint(258, 622), // March 4
-                new DTOPoint(258, 695), // March 5
-                new DTOPoint(258, 768), // March 6
-        };
-
-        // Check each march slot for "idle" status
-        try {
-            for (int marchSlot = 0; marchSlot < 6; marchSlot++) {
-                for (int attempt = 0; attempt < 3; attempt++) {
-                    String ocrResult = emuManager.ocrRegionText(EMULATOR_NUMBER,
-                            marchTopLeft[marchSlot],
-                            marchBottomRight[marchSlot]);
-
-                    if (ocrResult.toLowerCase().contains("idle")) {
-                        logInfo("Idle march detected in slot " + (marchSlot + 1));
-                        return true;
-                    }
-
-                    if (attempt < 2) {
-                        sleepTask(100);
-                    }
+    protected String OCRWithRetries(String searchString, DTOPoint p1, DTOPoint p2, int maxRetries,
+            DTOTesseractSettings settings) {
+        String result = null;
+        for (int attempt = 0; attempt < maxRetries; attempt++) {
+            logDebug(
+                    "Performing OCR to find '" + searchString + "' (attempt " + (attempt + 1) + "/" + maxRetries + ")");
+            try {
+                result = emuManager.ocrRegionText(EMULATOR_NUMBER, p1, p2, settings);
+                if (result != null && result.toLowerCase().contains(searchString.toLowerCase())) {
+                    logDebug("OCRWithRetries result: " + result);
+                    return result;
                 }
-                logDebug("March slot " + (marchSlot + 1) + " is not idle");
+            } catch (IOException | TesseractException e) {
+                logWarning("OCR attempt " + (attempt + 1) + " threw an exception: " + e.getMessage());
             }
-        } catch (IOException | TesseractException e) {
-            logError("OCR attempt failed while checking marches: " + e.getMessage());
-            return false;
+            sleepTask(200);
         }
+        return null;
+    }
 
-        logInfo("No idle marches detected in any of the 6 slots.");
-        return false;
+    protected String OCRWithRetries(DTOPoint p1, DTOPoint p2, int maxRetries, DTOTesseractSettings settings) {
+        String result = null;
+        for (int attempt = 0; attempt < maxRetries && (result == null || result.isEmpty()); attempt++) {
+            try {
+                result = emuManager.ocrRegionText(EMULATOR_NUMBER, p1, p2, settings);
+            } catch (IOException | TesseractException e) {
+                logWarning("OCR attempt " + attempt + " threw an exception: " + e.getMessage());
+            }
+            sleepTask(200);
+        }
+        logDebug("OCRWithRetries result: " + result);
+        return result;
+    }
+
+    public void setShouldUpdateConfig(boolean shouldUpdateConfig) {
+        this.shouldUpdateConfig = shouldUpdateConfig;
+    }
+
+    public boolean isBearRunning() {
+        DTOImageSearchResult result = searchTemplateWithRetries(EnumTemplates.BEAR_HUNT_IS_RUNNING, 3, 500L);
+        return result.isFound();
     }
 
     public boolean isRecurring() {
@@ -479,6 +761,7 @@ public abstract class DelayedTask implements Runnable, Delayed {
         if (this == o)
             return 0;
 
+        // Priority 1: InitializeTask has highest priority
         boolean thisInit = this instanceof InitializeTask;
         boolean otherInit = o instanceof InitializeTask;
         if (thisInit && !otherInit)
@@ -486,6 +769,29 @@ public abstract class DelayedTask implements Runnable, Delayed {
         if (!thisInit && otherInit)
             return 1;
 
+        // Priority 2: BearTrapTask
+        boolean thisBearTrap = this instanceof BearTrapTask;
+        boolean otherBearTrap = o instanceof BearTrapTask;
+
+        if (thisBearTrap && !otherBearTrap && this.getDelay(TimeUnit.NANOSECONDS) <= 0) {
+            return -1;
+        }
+
+        if (!thisBearTrap && otherBearTrap && o.getDelay(TimeUnit.NANOSECONDS) <= 0) {
+            return 1;
+        }
+
+        // Priority 3: ArenaTask
+        boolean thisArena = this instanceof ArenaTask;
+        boolean otherArena = o instanceof ArenaTask;
+
+        if (thisArena && !otherArena && this.getDelay(TimeUnit.NANOSECONDS) <= 0)
+            return -1;
+
+        if (!thisArena && otherArena && o.getDelay(TimeUnit.NANOSECONDS) <= 0)
+            return 1;
+
+        // For tasks of same priority, compare by scheduled time
         long diff = this.getDelay(TimeUnit.NANOSECONDS)
                 - o.getDelay(TimeUnit.NANOSECONDS);
         return Long.compare(diff, 0);
@@ -535,6 +841,10 @@ public abstract class DelayedTask implements Runnable, Delayed {
     }
 
     public boolean provideTriumphProgress() {
+        return false;
+    }
+
+    protected boolean consumesStamina() {
         return false;
     }
 

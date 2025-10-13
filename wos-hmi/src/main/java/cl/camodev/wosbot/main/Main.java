@@ -23,7 +23,7 @@ public class Main {
 			
 			// Start the log web server
 			startLogWebServer();
-			
+
  		// Add shutdown hook to close log files and web server
  		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
  			logger.info("Application shutting down, closing log files...");

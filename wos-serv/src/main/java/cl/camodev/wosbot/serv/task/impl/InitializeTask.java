@@ -40,9 +40,13 @@ public class InitializeTask extends DelayedTask {
 			throw new StopExecutionException("Game not installed");
 		} else {
 
-			logInfo("Whiteout Survival is installed. Launching the game...");
-			emuManager.launchApp(EMULATOR_NUMBER, EmulatorManager. GAME.getPackageName());
-			sleepTask(10000);
+            if (!emuManager.isPackageRunning(EMULATOR_NUMBER, EmulatorManager.GAME.getPackageName())) {
+                logInfo("Whiteout Survival is not running. Launching the game...");
+                emuManager.launchApp(EMULATOR_NUMBER, EmulatorManager.GAME.getPackageName());
+                sleepTask(10000);
+            } else {
+                logInfo("Whiteout Survival is already running.");
+            }
 
 			final int MAX_ATTEMPTS = 10;
 			final int WAIT_TIME = 5000;
@@ -75,7 +79,10 @@ public class InitializeTask extends DelayedTask {
 				emuManager.closeEmulator(EMULATOR_NUMBER);
 				isStarted = false;
 				this.setRecurring(true);
-			}
+			}else {
+                // Successfully reached home screen, reading stamina
+                updateStaminaFromProfile();
+            }
 
 		}
 	}

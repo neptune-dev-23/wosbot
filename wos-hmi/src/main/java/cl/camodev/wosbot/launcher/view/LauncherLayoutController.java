@@ -14,6 +14,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import cl.camodev.utiles.ImageSearchUtil;
 import cl.camodev.wosbot.alliance.view.AllianceLayoutController;
+import cl.camodev.wosbot.bear.view.BearTrapLayoutController;
 import cl.camodev.wosbot.chieforder.view.ChiefOrderLayoutController;
 import cl.camodev.wosbot.city.view.CityEventsExtraLayoutController;
 import cl.camodev.wosbot.city.view.CityEventsLayoutController;
@@ -27,6 +28,7 @@ import cl.camodev.wosbot.events.view.EventsLayoutController;
 import cl.camodev.wosbot.experts.view.ExpertsLayoutController;
 import cl.camodev.wosbot.gather.view.GatherLayoutController;
 import cl.camodev.wosbot.intel.view.IntelLayoutController;
+import cl.camodev.wosbot.mobilization.view.MobilizationLayoutController;
 import cl.camodev.wosbot.ot.DTOBotState;
 import cl.camodev.wosbot.ot.DTOLogMessage;
 import cl.camodev.wosbot.pets.view.PetsLayoutController;
@@ -36,8 +38,10 @@ import cl.camodev.wosbot.profile.model.IProfileLoadListener;
 import cl.camodev.wosbot.profile.model.IProfileObserverInjectable;
 import cl.camodev.wosbot.profile.model.ProfileAux;
 import cl.camodev.wosbot.profile.view.ProfileManagerLayoutController;
+import cl.camodev.wosbot.serv.IStaminaChangeListener;
 import cl.camodev.wosbot.serv.impl.ServConfig;
 import cl.camodev.wosbot.serv.impl.ServScheduler;
+import cl.camodev.wosbot.serv.impl.StaminaService;
 import cl.camodev.wosbot.shop.view.ShopLayoutController;
 import cl.camodev.wosbot.taskmanager.view.TaskManagerLayoutController;
 import cl.camodev.wosbot.training.view.TrainingLayoutController;
@@ -54,8 +58,9 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import cl.camodev.wosbot.alliance.view.AllianceShopController;
 
-public class LauncherLayoutController implements IProfileLoadListener {
+public class LauncherLayoutController implements IProfileLoadListener, IStaminaChangeListener {
 
     private final Map<String, Object> moduleControllers = new HashMap<>();
     @FXML
@@ -77,10 +82,12 @@ public class LauncherLayoutController implements IProfileLoadListener {
     private ConsoleLogLayoutController consoleLogLayoutController;
     private ProfileManagerLayoutController profileManagerLayoutController;
     private boolean estado = false;
-    private boolean updatingComboBox = false; // Bandera para evitar eventos durante actualizaciones programáticas
+    private boolean updatingComboBox = false;
+    private ProfileAux currentProfile = null; // Perfil actualmente cargado
 
     public LauncherLayoutController(Stage stage) {
         this.stage = stage;
+        StaminaService.getServices().addStaminaChangeListener(this);
     }
 
     @FXML
@@ -92,8 +99,9 @@ public class LauncherLayoutController implements IProfileLoadListener {
         initializeProfileComboBox();
         initializeModules();
         initializeExternalLibraries();
-        initializeEmulatorManager();
         showVersion();
+        buttonStartStop.setDisable(false);
+        buttonPauseResume.setDisable(true);
 
     }
 
@@ -367,6 +375,9 @@ public class LauncherLayoutController implements IProfileLoadListener {
 				new ModuleDefinition("GatherLayout", "Gather", GatherLayoutController::new),
 				new ModuleDefinition("IntelLayout", "Intel", IntelLayoutController::new),
 				new ModuleDefinition("AllianceLayout", "Alliance", AllianceLayoutController::new),
+                new ModuleDefinition("AllianceShop", "Alliance Shop", AllianceShopController::new),
+                new ModuleDefinition("AllianceMobilizationLayout", "Alliance Mobilization", MobilizationLayoutController::new),
+                new ModuleDefinition("BearTrapLayout", "Bear Trap", BearTrapLayoutController::new),
 				new ModuleDefinition("TrainingLayout", "Training", TrainingLayoutController::new),
 				new ModuleDefinition("PetsLayout", "Pets", PetsLayoutController::new),
 				new ModuleDefinition("EventsLayout", "Events", EventsLayoutController::new),
@@ -394,51 +405,79 @@ public class LauncherLayoutController implements IProfileLoadListener {
 
     @Override
     public void onProfileLoad(ProfileAux profile) {
-        String version = getVersion();
-        stage.setTitle("Whiteout Survival Bot v" + version + " - " + profile.getName());
+        this.currentProfile = profile;
+        updateWindowTitle();
         selectProfileInComboBox(profile);
     }
 
+    @Override
+    public void onStaminaChanged(Long profileId, int newStamina) {
+        // Solo actualizar si el perfil que cambió es el perfil actual
+        if (currentProfile != null && currentProfile.getId().equals(profileId)) {
+            updateWindowTitle();
+        }
+    }
+
+    /**
+     * Actualiza el título de la ventana con la información del perfil y stamina actual
+     */
+    private void updateWindowTitle() {
+        if (currentProfile == null) {
+            return;
+        }
+
+        String version = getVersion();
+        int stamina = StaminaService.getServices().getCurrentStamina(currentProfile.getId());
+        String title = String.format("Whiteout Survival Bot v%s - %s [Stamina: %d]",
+                                    version,
+                                    currentProfile.getName(),
+                                    stamina);
+
+        Platform.runLater(() -> stage.setTitle(title));
+    }
+
     public void onBotStateChange(DTOBotState botState) {
-        Platform.runLater(()->{
-            if (botState != null) {
-                if (botState.getRunning()) {
-                    if (botState.getPaused() != null && botState.getPaused()) {
-                        // Bot is running but paused
-                        buttonStartStop.setText("Stop");
-                        buttonStartStop.setDisable(false);
-                        buttonPauseResume.setText("Resume Bot");
-                        buttonPauseResume.setDisable(false);
-                        estado = true;
-                    } else {
-                        // Bot is running and active
-                        buttonStartStop.setText("Stop");
-                        buttonStartStop.setDisable(false);
-                        buttonPauseResume.setText("Pause Bot");
-                        buttonPauseResume.setDisable(false);
-                        estado = true;
-                    }
+        if (botState != null) {
+            if (botState.getRunning()) {
+                if (botState.getPaused() != null && botState.getPaused()) {
+                    // Bot is running but paused
+                    buttonStartStop.setText("Stop");
+                    buttonStartStop.setDisable(false);
+                    buttonPauseResume.setText("Resume Bot");
+                    buttonPauseResume.setDisable(false);
+                    estado = true;
                 } else {
-                    // Bot is stopped
-                    buttonStartStop.setText("Start Bot");
+                    // Bot is running and active
+                    buttonStartStop.setText("Stop");
                     buttonStartStop.setDisable(false);
                     buttonPauseResume.setText("Pause Bot");
-                    buttonPauseResume.setDisable(true);
-                    estado = false;
+                    buttonPauseResume.setDisable(false);
+                    estado = true;
                 }
+            } else {
+                // Bot is stopped
+                buttonStartStop.setText("Start Bot");
+                buttonStartStop.setDisable(false);
+                buttonPauseResume.setText("Pause Bot");
+                buttonPauseResume.setDisable(true);
+                estado = false;
             }
-        });
-
-
+        }
     }
 
     @FXML
     public void handleButtonStartStop(ActionEvent event) {
-        if (!estado) {
-            actionController.startBot();
-        } else {
-            actionController.stopBot();
-        }
+        Thread startStopThread = Thread.ofVirtual().unstarted(() -> {
+            if (!estado) {
+                Platform.runLater(() -> {buttonStartStop.setText("Starting..."); buttonStartStop.setDisable(true);});
+                actionController.startBot();
+            } else {
+                Platform.runLater(() -> {buttonStartStop.setText("Stopping..."); buttonStartStop.setDisable(true); buttonPauseResume.setDisable(true);});
+                actionController.stopBot();
+            }
+        });
+        startStopThread.setName( "Start-Stop-Thread");
+        startStopThread.start();
     }
 
     @FXML

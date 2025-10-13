@@ -17,7 +17,7 @@
 			<property name="jakarta.persistence.jdbc.driver"
 				value="org.sqlite.JDBC" />
 			<property name="jakarta.persistence.jdbc.url"
-				value="jdbc:sqlite:database.db" />
+				value="jdbc:sqlite:database.db?busy_timeout=1000&amp;journal_mode=WAL" />
 
 			<!-- Hibernate settings -->
 			<property name="hibernate.dialect"
@@ -27,8 +27,8 @@
 			<!-- <property name="hibernate.format_sql" value="true" /> -->
 			<property name="hibernate.connection.provider_class"
 				value="com.zaxxer.hikari.hibernate.HikariConnectionProvider" />
-			<property name="hibernate.hikari.minimumIdle" value="5" />
-			<property name="hibernate.hikari.maximumPoolSize" value="20" />
+			<property name="hibernate.hikari.minimumIdle" value="1" />
+			<property name="hibernate.hikari.maximumPoolSize" value="1" />
 			<property name="hibernate.hikari.idleTimeout" value="300000" />
 			<property name="hibernate.hikari.connectionTimeout" value="20000" />
 		</properties>

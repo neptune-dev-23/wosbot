@@ -20,6 +20,7 @@ import cl.camodev.wosbot.ex.StopExecutionException;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOProfileStatus;
 import cl.camodev.wosbot.ot.DTOProfiles;
+import cl.camodev.wosbot.ot.DTOTaskQueueStatus;
 import cl.camodev.wosbot.ot.DTOTaskState;
 import cl.camodev.wosbot.serv.impl.ServLogs;
 import cl.camodev.wosbot.serv.impl.ServProfiles;
@@ -37,21 +38,17 @@ import org.slf4j.LoggerFactory;
 public class TaskQueue {
 
     private static final Logger logger = LoggerFactory.getLogger(TaskQueue.class);
-    private static final long IDLE_WAIT_TIME = 1000; // milliseconds to wait between task checking cycles
+    private static final long IDLE_WAIT_TIME = 999; // milliseconds to wait between task checking cycles
 
     private final PriorityBlockingQueue<DelayedTask> taskQueue = new PriorityBlockingQueue<>();
-    protected EmulatorManager emuManager = EmulatorManager.getInstance();
+    protected final EmulatorManager emuManager = EmulatorManager.getInstance();
 
     // State flags
-    private volatile boolean running = false;
-    private volatile LocalDateTime paused = LocalDateTime.MIN;
-    private volatile boolean needsReconnect = false;
+     final DTOTaskQueueStatus taskQueueStatus = new DTOTaskQueueStatus();
 
     // Thread that will evaluate and execute tasks
     private Thread schedulerThread;
     private final DTOProfiles profile;
-    private int helpAlliesCount = 0;
-    private LocalDateTime delayUntil = LocalDateTime.MAX;
 
     public TaskQueue(DTOProfiles profile) {
         this.profile = profile;
@@ -66,6 +63,7 @@ public class TaskQueue {
 
     /**
      * Removes a specific task from the queue based on task type
+     * 
      * @param taskEnum The type of task to remove
      * @return true if a task was removed, false if no matching task was found
      */
@@ -90,10 +88,12 @@ public class TaskQueue {
     }
 
     public LocalDateTime getDelay() {
-        return delayUntil;
+        return taskQueueStatus.getDelayUntil();
     }
+
     /**
      * Checks if a specific task type is currently scheduled in the queue
+     * 
      * @param taskEnum The type of task to check
      * @return true if the task is in the queue, false otherwise
      */
@@ -109,12 +109,13 @@ public class TaskQueue {
      * Starts queue processing.
      */
     public void start() {
-        if (running) {
+        if (taskQueueStatus.isRunning()) {
             return;
         }
-        running = true;
 
-        schedulerThread = new Thread(this::processTaskQueue);
+        taskQueueStatus.setRunning(true);
+
+        schedulerThread = Thread.ofVirtual().unstarted(this::processTaskQueue);
         schedulerThread.setName("TaskQueue-" + profile.getName());
         schedulerThread.start();
     }
@@ -123,47 +124,58 @@ public class TaskQueue {
      * Main task processing loop
      */
     private void processTaskQueue() {
-        boolean idlingTimeExceeded = false;
         acquireEmulatorSlot();
 
-        while (running) {
-            if (paused != LocalDateTime.MIN) {
+        while (taskQueueStatus.isRunning()) {
+            taskQueueStatus.loopStarted();
+
+            if (taskQueueStatus.isPaused()) {
                 handlePausedState();
                 continue;
+            } else if (taskQueueStatus.isReadyToReconnect() && !emuManager.isRunning(profile.getEmulatorNumber())) {
+                logInfo("Emulator is not running, acquiring emulator slot now");
+                acquireEmulatorSlot();
             }
 
-            boolean executedTask = false;
-            delayUntil = LocalDateTime.MAX;
-
-            // Process tasks that are ready to run
             DelayedTask task = taskQueue.peek();
 
             if (task != null && task.getDelay(TimeUnit.SECONDS) <= 0) {
-                taskQueue.poll(); // Remove the task from the queue
-                executedTask = executeTask(task);
-                if (paused == LocalDateTime.MIN) delayUntil = LocalDateTime.MIN;
+                taskQueue.poll();
+                taskQueueStatus.getLoopState().setExecutedTask(executeTask(task));
             } else if (task != null) {
-                delayUntil = LocalDateTime.now().plusSeconds(task.getDelay(TimeUnit.SECONDS));
+                taskQueueStatus.setDelayUntil(task.getScheduled());
             }
 
-            // Handle background help actions
             runBackgroundChecks();
+            handleIdleTime();
 
-            // Handle idle time logic
-            idlingTimeExceeded = handleIdleTime(delayUntil, idlingTimeExceeded);
+            // Waits for the next task to be ready, displaying status information
+            if (!taskQueueStatus.getLoopState().isExecutedTask() && !taskQueueStatus.isPaused()) {
+                String nextTaskName = taskQueue.isEmpty() ? "None" : taskQueue.peek().getTaskName();
+                String timeFormatted = formatTimeUntil(taskQueueStatus.getDelayUntil());
+                updateProfileStatus("Idling for " + timeFormatted + "\nNext task: " + nextTaskName);
 
-            // Always wait before checking again to ensure consistent timing
-            waitForNextTask(delayUntil);
+                // Sleep for remaining time to maintain consistent 1-second intervals
+                taskQueueStatus.getLoopState().endLoop();
+                long sleepTime = Math.max(0, IDLE_WAIT_TIME - taskQueueStatus.getLoopState().getDuration());
+                try {
+                    Thread.sleep(sleepTime);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
         }
     }
 
     /**
      * Executes a task and handles any exceptions
+     * 
      * @param task The task to execute
      * @return true if the task was executed, false if it wasn't
      */
     private boolean executeTask(DelayedTask task) {
-        // Special handling for Initialize tasks - check if next task has acceptable delay
+        // Special handling for Initialize tasks - check if next task has acceptable
+        // delay
         if (task.getTpTask() == TpDailyTaskEnum.INITIALIZE && !shouldExecuteInitializeTask()) {
             logInfoWithTask(task, "Skipping Initialize task - no upcoming tasks within acceptable idle time");
             return false;
@@ -171,7 +183,7 @@ public class TaskQueue {
 
         LocalDateTime scheduledBefore = task.getScheduled();
         DTOTaskState taskState = createInitialTaskState(task);
-        boolean executionSuccessful = false;
+        boolean executionSuccessful;
 
         try {
             logInfoWithTask(task, "Starting task execution: " + task.getTaskName());
@@ -205,15 +217,18 @@ public class TaskQueue {
     /**
      * Determines if an Initialize task should be executed by checking if there are
      * upcoming tasks within the acceptable idle time window
+     * 
      * @return true if the Initialize task should proceed, false otherwise
      */
     private boolean shouldExecuteInitializeTask() {
         // Get the maximum idle time configuration
-        long maxIdleMinutes = Optional.ofNullable(profile.getGlobalsettings().get(EnumConfigurationKey.MAX_IDLE_TIME_INT.name()))
-            .map(Integer::parseInt)
-            .orElse(Integer.parseInt(EnumConfigurationKey.MAX_IDLE_TIME_INT.getDefaultValue()));
+        long maxIdleMinutes = Optional
+                .ofNullable(profile.getGlobalsettings().get(EnumConfigurationKey.MAX_IDLE_TIME_INT.name()))
+                .map(Integer::parseInt)
+                .orElse(Integer.parseInt(EnumConfigurationKey.MAX_IDLE_TIME_INT.getDefaultValue()));
 
-        // Check if there are tasks with acceptable idle time (excluding Initialize tasks)
+        // Check if there are tasks with acceptable idle time (excluding Initialize
+        // tasks)
         return hasTasksWithAcceptableIdleTime((int) maxIdleMinutes);
     }
 
@@ -245,12 +260,15 @@ public class TaskQueue {
 
         // Prevent infinite loop by ensuring the scheduled time has changed
         if (scheduledBefore.equals(scheduledAfter)) {
-            logInfoWithTask(task, "Task " + task.getTaskName() + " executed without rescheduling, changing scheduled time to now to avoid infinite loop");
-            task.reschedule(LocalDateTime.now());
+            if (task.isRecurring()) {
+                logInfoWithTask(task, "Task " + task.getTaskName()
+                        + " executed without rescheduling, changing scheduled time to now to avoid infinite loop");
+                task.reschedule(LocalDateTime.now());
+            }
         }
 
         if (task.isRecurring()) {
-            logInfoWithTask(task, "Next schedule: " + UtilTime.localDateTimeToDDHHMMSS(task.getScheduled()));
+            logInfoWithTask(task, "Next task scheduled to run in: " + UtilTime.localDateTimeToDDHHMMSS(task.getScheduled()));
             addTask(task);
         } else {
             logInfoWithTask(task, "Task removed from schedule");
@@ -272,14 +290,12 @@ public class TaskQueue {
             logErrorWithTask(task, "Error executing task: " + e.getMessage());
         }
     }
-
+    @SuppressWarnings(value = { "unused" })
     private void handleReconnectStateException(ProfileInReconnectStateException e) {
-        Long reconnectionTime = profile.getReconnectionTime();
+        Long reconnectionTime = profile.getReconnectionTime(); // in minutes
         if (reconnectionTime != null && reconnectionTime > 0) {
             logInfo("Profile in reconnect state, pausing queue for " + reconnectionTime + " minutes");
-            paused = LocalDateTime.now();
-            delayUntil = paused.plusMinutes(reconnectionTime);
-            needsReconnect = true;
+            taskQueueStatus.setReconnectAt(reconnectionTime);
         } else {
             logError("Profile in reconnect state, but no reconnection time set");
             attemptReconnectAndInitialize();
@@ -287,11 +303,11 @@ public class TaskQueue {
     }
 
     private void resumeAfterReconnectionDelay() {
-        needsReconnect = false;
+        taskQueueStatus.setNeedsReconnect(false);
         updateProfileStatus("RESUMING AFTER PAUSE");
-        logInfo("TaskQueue resuming after " + Duration.between(paused, LocalDateTime.now()).toMinutes() + " minutes pause");
-        paused = LocalDateTime.MIN;
-        delayUntil = LocalDateTime.MAX;
+        logInfo("TaskQueue resuming after " + Duration.between(taskQueueStatus.getPausedAt(), LocalDateTime.now()).toMinutes()
+                + " minutes pause");
+        taskQueueStatus.setPaused(false);
 
         if (!emuManager.isRunning(profile.getEmulatorNumber())) {
             logInfo("While resuming, found instance closed. Acquiring a slot now.");
@@ -303,7 +319,8 @@ public class TaskQueue {
     private void attemptReconnectAndInitialize() {
         try {
             // Click reconnect button if found
-            DTOImageSearchResult reconnect = emuManager.searchTemplate(profile.getEmulatorNumber(), EnumTemplates.GAME_HOME_RECONNECT, 90);
+            DTOImageSearchResult reconnect = emuManager.searchTemplate(profile.getEmulatorNumber(),
+                    EnumTemplates.GAME_HOME_RECONNECT, 90);
             if (reconnect.isFound()) {
                 emuManager.tapAtPoint(profile.getEmulatorNumber(), reconnect.getPoint());
             }
@@ -315,12 +332,14 @@ public class TaskQueue {
     }
 
     private void checkAndScheduleDailyMissions(DelayedTask task) {
-        boolean dailyAutoSchedule = profile.getConfig(EnumConfigurationKey.DAILY_MISSION_AUTO_SCHEDULE_BOOL, Boolean.class);
+        boolean dailyAutoSchedule = profile.getConfig(EnumConfigurationKey.DAILY_MISSION_AUTO_SCHEDULE_BOOL,
+                Boolean.class);
         if (!dailyAutoSchedule || !task.provideDailyMissionProgress()) {
             return;
         }
 
-        DTOTaskState state = ServTaskManager.getInstance().getTaskState(profile.getId(), TpDailyTaskEnum.DAILY_MISSIONS.getId());
+        DTOTaskState state = ServTaskManager.getInstance().getTaskState(profile.getId(),
+                TpDailyTaskEnum.DAILY_MISSIONS.getId());
         LocalDateTime next = (state != null) ? state.getNextExecutionTime() : null;
         LocalDateTime now = LocalDateTime.now();
 
@@ -334,9 +353,9 @@ public class TaskQueue {
 
         // Check if task already exists in the queue
         DelayedTask existing = taskQueue.stream()
-            .filter(prototype::equals)
-            .findFirst()
-            .orElse(null);
+                .filter(prototype::equals)
+                .findFirst()
+                .orElse(null);
 
         if (existing != null) {
             // Task already exists, reschedule it to run now
@@ -357,18 +376,35 @@ public class TaskQueue {
 
     // Idle time management methods
     private void idlingEmulator(LocalDateTime delayUntil) {
-        emuManager.closeEmulator(profile.getEmulatorNumber());
-        logInfo("Closing game due to large inactivity. Next task: " + delayUntil);
+        boolean sendToBackground = Boolean.parseBoolean(
+                profile.getGlobalsettings().getOrDefault(
+                        EnumConfigurationKey.IDLE_BEHAVIOR_SEND_TO_BACKGROUND_BOOL.name(),
+                        EnumConfigurationKey.IDLE_BEHAVIOR_SEND_TO_BACKGROUND_BOOL.getDefaultValue()));
+
+        if (sendToBackground) {
+            // Send game to background (home screen), keep emulator and game running
+            emuManager.sendGameToBackground(profile.getEmulatorNumber());
+            logInfo("Sending game to background due to large inactivity. Next task: " + delayUntil);
+        } else {
+            // Close the entire emulator (original behavior)
+            emuManager.closeEmulator(profile.getEmulatorNumber());
+            logInfo("Closing emulator due to large inactivity. Next task: " + delayUntil);
+            emuManager.releaseEmulatorSlot(profile);
+        }
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         updateProfileStatus("Idling till " + formatter.format(delayUntil));
-
-        emuManager.releaseEmulatorSlot(profile);
     }
 
     private void enqueueNewTask() {
         logInfo("Scheduled task will start soon");
-        acquireEmulatorSlot();
+
+        // Only acquire a new emulator slot if the emulator is not running
+        // (i.e., if we closed the entire emulator rather than just the game)
+        if (!emuManager.isRunning(profile.getEmulatorNumber())) {
+            acquireEmulatorSlot();
+        }
+
         addTask(new InitializeTask(profile, TpDailyTaskEnum.INITIALIZE));
     }
 
@@ -378,9 +414,8 @@ public class TaskQueue {
     private void acquireEmulatorSlot() {
         updateProfileStatus("Getting queue slot");
         try {
-            emuManager.adquireEmulatorSlot(profile, (thread, position) -> {
-                updateProfileStatus("Waiting for slot, position: " + position);
-            });
+            emuManager.adquireEmulatorSlot(profile,
+                    (thread, position) -> updateProfileStatus("Waiting for slot, position: " + position));
         } catch (InterruptedException e) {
             logError("Interrupted while acquiring emulator slot: " + e.getMessage());
             Thread.currentThread().interrupt();
@@ -391,41 +426,24 @@ public class TaskQueue {
      * Handles the paused state of the task queue
      */
     private void handlePausedState() {
-        // Check if this is a timed pause (delayUntil is set to a specific time in the future)
-        if (delayUntil != LocalDateTime.MAX && delayUntil.isBefore(LocalDateTime.now())) {
-            if (needsReconnect) {
+        if (taskQueueStatus.getDelayUntil().isBefore(LocalDateTime.now())) {
+            if (taskQueueStatus.needsReconnect()) {
                 resumeAfterReconnectionDelay();
             } else {
-                paused = LocalDateTime.MIN;
-                delayUntil = LocalDateTime.MAX;
+                taskQueueStatus.setPaused(false);
                 updateProfileStatus("RESUMING");
+                if (!emuManager.isRunning(profile.getEmulatorNumber())) {
+                    logInfo("While resuming, found instance closed. Acquiring a slot now.");
+                    acquireEmulatorSlot();
+                }
             }
             return;
         }
-        
         try {
-            // If delayUntil is MAX, this is an indefinite pause (user-initiated)
-            if (delayUntil == LocalDateTime.MAX) {
-                updateProfileStatus("Paused (indefinite)");
-            } else {
-                String timeFormatted = formatTimeUntil(delayUntil);
-                updateProfileStatus("Paused for " + timeFormatted);
-            }
+            updateProfileStatus("PAUSED");
+            if (LocalDateTime.now().getSecond() % 10 == 0)
+                logInfo("Profile is paused");
             Thread.sleep(1000); // Wait while paused
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-    }
-
-    /**
-     * Waits for the next task to be ready, displaying status information
-     */
-    private void waitForNextTask(LocalDateTime delayUntil) {
-        try {
-            String nextTaskName = taskQueue.isEmpty() ? "None" : taskQueue.peek().getTaskName();
-            String timeFormatted = formatTimeUntil(delayUntil);
-            updateProfileStatus("Idling for " + timeFormatted + "\nNext task: " + nextTaskName);
-            Thread.sleep(IDLE_WAIT_TIME);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
@@ -435,9 +453,7 @@ public class TaskQueue {
      * Formats the duration until the target time as HH:mm:ss
      */
     private String formatTimeUntil(LocalDateTime targetTime) {
-        LocalDateTime now = LocalDateTime.now().withNano(0);
-        LocalDateTime truncatedTarget = targetTime.withNano(0);
-        Duration timeUntilNext = Duration.between(now, truncatedTarget);
+        Duration timeUntilNext = Duration.between(LocalDateTime.now(), targetTime);
 
         long hours = timeUntilNext.toHours();
         long minutes = timeUntilNext.toMinutesPart();
@@ -447,92 +463,101 @@ public class TaskQueue {
 
     /**
      * Handles idle time logic
-     * @return updated idling state
      */
-    private boolean handleIdleTime(LocalDateTime delayUntil, boolean idlingTimeExceeded) {
-        if (delayUntil == LocalDateTime.MAX || delayUntil.isBefore(LocalDateTime.now())) {
-            return idlingTimeExceeded; // No change if no tasks in queue
+    private void handleIdleTime() {
+        if (taskQueueStatus.getLoopState().isExecutedTask() || taskQueue.isEmpty()) {
+            return;
         }
 
-        long maxIdleMinutes = Optional.ofNullable(profile.getGlobalsettings().get(EnumConfigurationKey.MAX_IDLE_TIME_INT.name()))
-            .map(Integer::parseInt)
-            .orElse(Integer.parseInt(EnumConfigurationKey.MAX_IDLE_TIME_INT.getDefaultValue()));
+        taskQueueStatus.setIdleTimeLimit(Optional
+                .ofNullable(profile.getGlobalsettings().get(EnumConfigurationKey.MAX_IDLE_TIME_INT.name()))
+                .map(Integer::parseInt)
+                .orElse(Integer.parseInt(EnumConfigurationKey.MAX_IDLE_TIME_INT.getDefaultValue())));
 
-        // If delay exceeds max idle time and we haven't already handled it
-        if (!idlingTimeExceeded && LocalDateTime.now().plusMinutes(maxIdleMinutes).isBefore(delayUntil)) {
-            idlingEmulator(delayUntil);
-            return true;
+        // If delay exceeds max idle time, and we haven't yet handled it
+        if (!taskQueueStatus.isIdleTimeExceeded() && taskQueueStatus.checkIdleTimeExceeded()) {
+            idlingEmulator(taskQueueStatus.getDelayUntil());
+            taskQueueStatus.setIdleTimeExceeded(true);
+            return;
         }
 
         // If we're idling but the next task is coming soon, re-acquire the emulator
-        if (idlingTimeExceeded && LocalDateTime.now().plusMinutes(1).isAfter(delayUntil)) {
+        if (taskQueueStatus.isIdleTimeExceeded() && LocalDateTime.now().plusMinutes(1).isAfter(taskQueueStatus.getDelayUntil())) {
             enqueueNewTask();
-            return false;
+            taskQueueStatus.setIdleTimeExceeded(false);
+            return;
         }
-
-        return idlingTimeExceeded;
     }
 
     /**
-    * Checks if the bear hunt is running
-    */
+     * Checks if the bear hunt is running
+     */
     private void isBearRunning() {
-        new Thread(() -> {
-            DTOImageSearchResult result = emuManager.searchTemplate(
-                    profile.getEmulatorNumber(),
-                    EnumTemplates.BEAR_HUNT_IS_RUNNING,
-                    90);
-            if (result.isFound()) {
-                logInfo("Bear is running, pausing task running for 30 minutes");
-                pause();
-                delayUntil = LocalDateTime.now().plusMinutes(30); // 30 minutes
-            }
-        }, "BearCheckThread-" + profile.getName()).start();
+        DTOImageSearchResult result = emuManager.searchTemplate(
+                profile.getEmulatorNumber(),
+                EnumTemplates.BEAR_HUNT_IS_RUNNING,
+                90);
+        if (result.isFound()) {
+            logInfo("Bear is running, pausing task running for 30 minutes");
+            pause();
+            taskQueueStatus.setDelayUntil(LocalDateTime.now().plusMinutes(30));
+        }
     }
 
     private void runBackgroundChecks() {
-        if (!emuManager.isRunning(profile.getEmulatorNumber()) || paused != LocalDateTime.MIN) {
-            return; // emulator isn't running or the queue should be paused, just leave.
-        }
-        // help allies checks
-        boolean runBackgroundTasks = false;
-        helpAlliesCount++;
-        if (helpAlliesCount % 10 == 0) {
-            runBackgroundTasks = true;
-            helpAlliesCount = 0;
+        // Counter logic for periodic checks
+        if (!taskQueueStatus.shouldRunBackgroundChecks()) return;
+
+        // Early check with detailed logging
+        synchronized (emuManager) {
+            boolean emulatorRunning = emuManager.isRunning(profile.getEmulatorNumber());
+            boolean notPaused = !taskQueueStatus.isPaused();
+
+            if (!emulatorRunning || !notPaused) {
+                logInfo(String.format("Skipping background checks - Emulator running: %s, Not paused: %s",
+                        emulatorRunning, notPaused));
+                return;
+            }
         }
 
-        if (!runBackgroundTasks) {
-            return; // Only check every 10 cycles
-        }
 
-        try {
+        boolean runHelpAllies = profile.getConfig(EnumConfigurationKey.ALLIANCE_HELP_BOOL, Boolean.class);
+
+        // Now do the actual work with synchronization
+        synchronized (emuManager) {
+            // Double-check in case state changed
+            if (!emuManager.isRunning(profile.getEmulatorNumber()) || taskQueueStatus.isPaused()) {
+                logInfo("State changed during wait, skipping background checks");
+                return;
+            }
+
+            logInfo("Running background checks...");
+            try {
                 isBearRunning();
-                if (profile.getConfig(EnumConfigurationKey.ALLIANCE_HELP_BOOL, Boolean.class)) {
+                if (runHelpAllies) {
                     checkHelpAllies();
                 }
-        } catch (Exception e) {
-            logError("Error running background tasks: " + e.getMessage());
+            } catch (Exception e) {
+                logError("Error running background tasks: " + e.getMessage());
+            }
         }
-
     }
 
     private void checkHelpAllies() {
-        new Thread(() -> {
-            DTOImageSearchResult helpRequest = emuManager.searchTemplate(
-                    profile.getEmulatorNumber(),
-                    EnumTemplates.GAME_HOME_SHORTCUTS_HELP_REQUEST2,
-                    90
-            );
-            if (helpRequest.isFound()) {
-                emuManager.tapAtPoint(profile.getEmulatorNumber(), helpRequest.getPoint());
-                logInfo("Help request found and tapped");
-            }
-        }, "HelpRequestThread-" + profile.getName()).start();
+        DTOImageSearchResult helpRequest = emuManager.searchTemplate(
+                profile.getEmulatorNumber(),
+                EnumTemplates.GAME_HOME_SHORTCUTS_HELP_REQUEST2,
+                90);
+        if (helpRequest.isFound()) {
+            emuManager.tapAtPoint(profile.getEmulatorNumber(), helpRequest.getPoint());
+            logInfo("Help request found and tapped");
+        }
     }
 
     /**
-     * Checks if there are queued tasks (excluding Initialize tasks) with idle time less than the specified delay
+     * Checks if there are queued tasks (excluding Initialize tasks) with idle time
+     * less than the specified delay
+     * 
      * @param maxIdleMinutes Maximum idle time allowed in minutes
      * @return true if there are tasks with acceptable idle time, false otherwise
      */
@@ -544,16 +569,29 @@ public class TaskQueue {
         long maxIdleSeconds = TimeUnit.MINUTES.toSeconds(maxIdleMinutes);
 
         return taskQueue.stream()
-            .filter(task -> task.getTpTask() != TpDailyTaskEnum.INITIALIZE) // Exclude Initialize tasks
-            .anyMatch(task -> {
-                long taskDelay = task.getDelay(TimeUnit.SECONDS);
-//                return taskDelay >= 0 && taskDelay < maxIdleSeconds;
-                return taskDelay < maxIdleSeconds;
+                .filter(task -> task.getTpTask() != TpDailyTaskEnum.INITIALIZE) // Exclude Initialize tasks
+                .anyMatch(task -> {
+                    long taskDelay = task.getDelay(TimeUnit.SECONDS);
+                    // return taskDelay >= 0 && taskDelay < maxIdleSeconds;
+                    return taskDelay < maxIdleSeconds;
 
-            });
+                });
     }
 
     // Logging helper methods
+    @SuppressWarnings(value = { "unused" })
+    private void logDebug(String message) {
+        String prefixedMessage = profile.getName() + " - " + message;
+        logger.info(prefixedMessage);
+        ServLogs.getServices().appendLog(EnumTpMessageSeverity.DEBUG, "TaskQueue", profile.getName(), message);
+    }
+    @SuppressWarnings(value = { "unused" })
+    private void logDebugWithTask(DelayedTask task, String message) {
+        String prefixedMessage = profile.getName() + " - " + message;
+        logger.info(prefixedMessage);
+        ServLogs.getServices().appendLog(EnumTpMessageSeverity.DEBUG, task.getTaskName(), profile.getName(), message);
+    }
+
     private void logInfo(String message) {
         String prefixedMessage = profile.getName() + " - " + message;
         logger.info(prefixedMessage);
@@ -572,6 +610,7 @@ public class TaskQueue {
         ServLogs.getServices().appendLog(EnumTpMessageSeverity.WARNING, "TaskQueue", profile.getName(), message);
     }
 
+    @SuppressWarnings(value = { "unused" })
     private void logWarningWithTask(DelayedTask task, String message) {
         String prefixedMessage = profile.getName() + " - " + message;
         logger.warn(prefixedMessage);
@@ -598,7 +637,7 @@ public class TaskQueue {
      * Immediately stops queue processing, regardless of its state.
      */
     public void stop() {
-        running = false; // Stop the main loop
+        taskQueueStatus.setRunning(false); // Stop the main loop
 
         if (schedulerThread != null) {
             schedulerThread.interrupt(); // Interrupt the thread to force an immediate exit
@@ -611,6 +650,7 @@ public class TaskQueue {
             }
         }
 
+        taskQueueStatus.reset(); // Reset status
         // Remove all pending tasks from the queue
         taskQueue.clear();
         updateProfileStatus("NOT RUNNING");
@@ -618,22 +658,19 @@ public class TaskQueue {
     }
 
     /**
-     * Pauses queue processing indefinitely, keeping tasks in the queue.
-     * User must call resume() to continue.
+     * Pauses queue processing, keeping tasks in the queue.
      */
     public void pause() {
-        paused = LocalDateTime.now();
-        delayUntil = LocalDateTime.MAX; // Indefinite pause
+        taskQueueStatus.pause();
         updateProfileStatus("PAUSE REQUESTED");
-        logInfo("TaskQueue paused (indefinite)");
+        logInfo("TaskQueue paused");
     }
 
     /**
-     * Resumes queue processing from paused state.
+     * Resumes queue processing.
      */
     public void resume() {
-        paused = LocalDateTime.MIN;
-        delayUntil = LocalDateTime.MAX;
+        taskQueueStatus.setPaused(false);
         updateProfileStatus("RESUMING");
         logInfo("TaskQueue resumed");
     }
@@ -649,11 +686,14 @@ public class TaskQueue {
             return;
         }
 
+        taskQueueStatus.setNeedsReconnect(true);
+        taskQueueStatus.setPaused(false);
+
         // Check if the task already exists in the queue
         DelayedTask existing = taskQueue.stream()
-            .filter(prototype::equals)
-            .findFirst()
-            .orElse(null);
+                .filter(prototype::equals)
+                .findFirst()
+                .orElse(null);
 
         if (existing != null) {
             // Task already exists, reschedule it to run now
@@ -686,4 +726,3 @@ public class TaskQueue {
         return profile;
     }
 }
-

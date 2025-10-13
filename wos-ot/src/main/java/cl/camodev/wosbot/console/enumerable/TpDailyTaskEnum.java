@@ -25,12 +25,16 @@ public enum TpDailyTaskEnum {
 	EXPERT_AGNES_INTEL(34, "Expert Agnes Intel", 	EnumConfigurationKey.EXPERT_AGNES_INTEL_BOOL),
 	EXPERT_ROMULUS_TAG(35, "Expert Romulus Tag", 	EnumConfigurationKey.EXPERT_ROMULUS_TAG_BOOL),
 	EXPERT_ROMULUS_TROOPS(36, "Expert Romulus Troops", EnumConfigurationKey.EXPERT_ROMULUS_TROOPS_BOOL),
+	EXPERT_SKILL_TRAINING(37, "Expert Skill Training", EnumConfigurationKey.EXPERT_SKILL_TRAINING_ENABLED_BOOL),
 
 	ALLIANCE_AUTOJOIN(40, "Alliance Autojoin",     	EnumConfigurationKey.ALLIANCE_AUTOJOIN_BOOL),
 	ALLIANCE_TECH(42, "Alliance Tech",             	EnumConfigurationKey.ALLIANCE_TECH_BOOL),
 	ALLIANCE_PET_TREASURE(43, "Alliance Pet Treasure", EnumConfigurationKey.ALLIANCE_PET_TREASURE_BOOL),
 	ALLIANCE_CHESTS(44, "Alliance Chests",         EnumConfigurationKey.ALLIANCE_CHESTS_BOOL),
 	ALLIANCE_TRIUMPH(45, "Alliance Triumph",       EnumConfigurationKey.ALLIANCE_TRIUMPH_BOOL),
+	ALLIANCE_MOBILIZATION(46, "Alliance Mobilization", EnumConfigurationKey.ALLIANCE_MOBILIZATION_BOOL),
+    ALLIANCE_SHOP(47, "Alliance Shop",             	null),
+    BEAR_TRAP(48, "Bear Trap Event",          EnumConfigurationKey.BEAR_TRAP_EVENT_BOOL),
 
 	PET_SKILL_STAMINA(51, "Pet Skill Stamina",     EnumConfigurationKey.PET_SKILL_STAMINA_BOOL),
 	PET_SKILL_FOOD(52, "Pet Skill Food",           EnumConfigurationKey.PET_SKILL_FOOD_BOOL),

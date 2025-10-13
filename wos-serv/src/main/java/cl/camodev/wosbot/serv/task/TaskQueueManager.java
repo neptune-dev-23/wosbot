@@ -100,8 +100,4 @@ public class TaskQueueManager {
 		});
 	}
 
-	public boolean hasRunningQueues() {
-		return !taskQueues.isEmpty();
-	}
-
 }

@@ -1,7 +1,8 @@
 package cl.camodev.wosbot.console.enumerable;
 
 /**
- * Enum containing all image template paths used for image recognition in the game.
+ * Enum containing all image template paths used for image recognition in the
+ * game.
  * Templates are organized by functional categories for easier maintenance.
  */
 public enum EnumTemplates {
@@ -31,6 +32,7 @@ public enum EnumTemplates {
 	LEFT_MENU_CITY_TAB("/templates/leftmenu/cityTab.png"),
 	LEFT_MENU_LABYRINTH_BUTTON("/templates/leftmenu/labyrinth.png"),
 	LEFT_MENU_TUNDRA_TREK_BUTTON("/templates/leftmenu/tundraTrek.png"),
+    LEFT_MENU_EXPERT_TRAINING_BUTTON("/templates/leftmenu/expertTraining.png"),
 
     // ========================================================================
     // SHORTCUTS AND BUILDING ACCESS
@@ -46,6 +48,7 @@ public enum EnumTemplates {
 	
 	GAME_HOME_CITY_STATUS_GO_BUTTON("/templates/home/city/status/goButton.png"),
 	GAME_HOME_CITY_STATUS_COOKHOUSE("/templates/home/city/status/cookhouse.png"),
+    GAME_HOME_WAR("/templates/home/war.png"),
 
     // ========================================================================
     // RESOURCES AND GATHERING
@@ -92,8 +95,10 @@ public enum EnumTemplates {
 	STOREHOUSE_CHEST("/templates/storehouse/chest.png"),
 	STOREHOUSE_CHEST_2("/templates/storehouse/chest2.png"),
 	STOREHOUSE_STAMINA("/templates/storehouse/stamina.png"),
-	
-	MAIL_UNCLAIMED_REWARDS("/templates/mail/unclaimedRewards.png"),
+
+    MAIL_UNCLAIMED_REWARDS("/templates/mail/unclaimedRewards.png"),
+    MAIL_MENU_OPEN("/templates/mail/inMailMenu.png"),
+    MAIL_MENU("/templates/mail/mailMenu.png"),
 
 	ARENA_CHALLENGE_BUTTON("/templates/arena/arenaChallengeButton.png"),
 	ARENA_FREE_REFRESH_BUTTON("/templates/arena/arenaFreeRefreshButton.png"),
@@ -110,8 +115,13 @@ public enum EnumTemplates {
 	RALLY_BUTTON("/templates/rally/rallyButton.png"),
     RALLY_REMOVE_HERO_BUTTON("/templates/rally/removeHeroButton.png"),
 	RALLY_EQUALIZE_BUTTON("/templates/rally/equalizeButton.png"),
-	
+    RALLY_HOLD_BUTTON("/templates/rally/holdButton.png"),
+
 	TRAINING_TROOP_PROMOTE("/templates/training/troopPromote.png"),
+
+    MARCHES_AREA_RECALL_BUTTON("/templates/marches/recallButton.png"),
+    MARCHES_AREA_SPEEDUP_BUTTON("/templates/marches/speedupButton.png"),
+    MARCHES_AREA_VIEW_BUTTON("/templates/marches/viewButton.png"),
 
     // Infantry troop tiers
 	TRAINING_INFANTRY_T11("/templates/training/infantry11.png"),
@@ -164,8 +174,39 @@ public enum EnumTemplates {
 	ALLIANCE_TRIUMPH_WEEKLY("/templates/alliance/triumphWeekly.png"),
 	ALLIANCE_TECH_THUMB_UP("/templates/alliance/techThumbUp.png"),
 	ALLIANCE_WAR_BUTTON("/templates/alliance/warButton.png"),
+    ALLIANCE_TERRITORY_BUTTON("/templates/alliance/territoryButton.png"),
+    ALLIANCE_SHOP_BUTTON("/templates/alliance/shopButton.png"),
 	ALLIANCE_HELP_BUTTON("/templates/alliance/helpButton.png"),
 	ALLIANCE_HELP_REQUESTS("/templates/alliance/helpRequests.png"),
+
+    ALLIANCE_SHOP_SOLD_OUT("/templates/alliance/shopSoldOut.png"),
+
+    // ========================================================================
+    // ALLIANCE MOBILIZATION
+    // ========================================================================
+    ALLIANCE_MOBILIZATION_TAB("/templates/events/mobilization/allianzMobilizationTab.png"),
+    ALLIANCE_MOBILIZATION_UNSELECTED_TAB("/templates/events/mobilization/allianzMobilizationUnselected.png"),
+    AM_120_PERCENT("/templates/events/mobilization/AM_120%.png"),
+    AM_200_PERCENT("/templates/events/mobilization/AM_200%.png"),
+    AM_BAR_X("/templates/events/mobilization/AM_Bar_X.png"),
+    AM_COMPLETED("/templates/events/mobilization/AM_Completed.png"),
+    AM_PLUS_1_FREE_MISSION("/templates/events/mobilization/AM_+_1_Free_Mission.png"),
+    AM_ALLIANCE_MONUMENTS("/templates/events/mobilization/AM_Alliance_Monuments.png"),
+    AM_BUILD_SPEEDUPS("/templates/events/mobilization/AM_Build_Speedups.png"),
+    AM_BUY_PACKAGE("/templates/events/mobilization/AM_Buy_Package.png"),
+    AM_CHIEF_GEAR_CHARM("/templates/events/mobilization/AM_Chief_Gear_Charm.png"),
+    AM_CHIEF_GEAR_SCORE("/templates/events/mobilization/AM_Chief_Gear_Score.png"),
+    AM_DEFEAT_BEASTS("/templates/events/mobilization/AM_Defeat_Beasts.png"),
+    AM_FIRE_CRYSTAL("/templates/events/mobilization/AM_Fire_Crystal.png"),
+    AM_GATHER_RESOURCES("/templates/events/mobilization/AM_Gather_Resources.png"),
+    AM_HERO_GEAR_STONE("/templates/events/mobilization/AM_Hero_Gear_Stone.png"),
+    AM_MYTHIC_SHARD("/templates/events/mobilization/AM_Mythic_Shard.png"),
+    AM_RALLY("/templates/events/mobilization/AM_Rally.png"),
+    AM_TRAIN_TROOPS("/templates/events/mobilization/AM_Train_Troops.png"),
+    AM_TRAINING_SPEEDUPS("/templates/events/mobilization/AM_Training_Speedups.png"),
+    AM_USE_GEMS("/templates/events/mobilization/AM_Use_Gems.png"),
+    AM_USE_SPEEDUPS("/templates/events/mobilization/AM_Use_Speedups.png"),
+
 
     // ========================================================================
     // CRYSTAL LAB AND UPGRADES
@@ -175,7 +216,8 @@ public enum EnumTemplates {
     CRYSTAL_LAB_DAILY_DISCOUNTED_RFC("/templates/crystallab/dailyDiscountedRFC.png"),
     CRYSTAL_LAB_RFC_REFINE_BUTTON("/templates/crystallab/rfcRefineButton.png"),
 	
-	VIP_UNLOCK_BUTTON("/templates/vip/unlockButton.png"),
+	VIP_UNLOCK_BUTTON("/templates/vip/vipUnlockButton.png"),
+	VIP_MENU("/templates/vip/vipMenu.png"),
 
     // ========================================================================
     // INTELLIGENCE AND MISSIONS
@@ -188,6 +230,7 @@ public enum EnumTemplates {
 	INTEL_FIRE_BEAST("/templates/intel/beastFire.png"),
 	INTEL_SCREEN_1("/templates/intel/intelScreen1.png"),
 	INTEL_SCREEN_2("/templates/intel/intelScreen2.png"),
+	INTEL_AGNES("/templates/experts/intelAgnes.png"),
 	
 	DEPLOY_BUTTON("/templates/intel/deploy.png"),
 	
@@ -290,6 +333,7 @@ public enum EnumTemplates {
 	TUNDRA_TRUCK_GREEN("/templates/tundratruck/tundraTruckNormal.png"),
 	TUNDRA_TRUCK_REFRESH("/templates/tundratruck/tundraTruckRefresh.png"),
 	TUNDRA_TRUCK_REFRESH_GEMS("/templates/tundratruck/tundraTruckRefreshGems.png"),
+	TUNDRA_TRUCK_TIPS_POPUP("/templates/tundratruck/tundraTruckTipsPopup.png"),
 	TUNDRA_TRUCK_YELLOW_RAID("/templates/tundratruck/tundraTruckLegendaryRaid.png"),
 	TUNDRA_TRUCK_ESCORT("/templates/tundratruck/tundraTruckEscort.png"),
 	TUNDRA_TRUCK_DEPARTED("/templates/tundratruck/tundraTruckDeparted.png"),
@@ -318,6 +362,13 @@ public enum EnumTemplates {
 	ROMULUS_CLAIM_TROOPS_BUTTON("/templates/experts/romulusClaimTroopsButton.png"),
 	ROMULUS_CLAIM_TAG_BUTTON("/templates/experts/romulusClaimTagButton.png"),
 	AGNES_CLAIM_INTEL("/templates/experts/intelAgnes.png"),
+
+    EXPERT_TRAINING_SPEEDUP_ICON("/templates/experts/expertTrainingSpeedupIcon.png"),
+    EXPERT_TRAINING_CYRILLE_BADGE("/templates/experts/cyrilleBadge.png"),
+    EXPERT_TRAINING_AGNES_BADGE("/templates/experts/agnesBadge.png"),
+    EXPERT_TRAINING_ROMULUS_BADGE("/templates/experts/romulusBadge.png"),
+    EXPERT_TRAINING_HOLGER_BADGE("/templates/experts/holgerBadge.png"),
+    EXPERT_TRAINING_LEARN_BUTTON("/templates/experts/learnButton.png"),
 	
 	MERCENARY_EVENT_TAB("/templates/mercenary/mercenaryEventTab.png"),
 	MERCENARY_SCOUT_BUTTON("/templates/mercenary/mercenaryEventScout.png"),
@@ -325,11 +376,20 @@ public enum EnumTemplates {
 	MERCENARY_ATTACK_BUTTON("/templates/mercenary/mercenaryEventAttack.png"),
 	MERCENARY_DEPLOY_BUTTON("/templates/mercenary/mercenaryEventDeploy.png"),
 	MERCENARY_DIFFICULTY_CHALLENGE("/templates/mercenary/mercenaryEventDifficultyChallenge.png"),
-	
+
+	// ========================================================================
+    // HERO'S MISSION EVENT
+    // ========================================================================
+	HERO_MISSION_EVENT_TAB("/templates/events/heromission/heroMissionEventTab.png"),
+	HERO_MISSION_EVENT_TRACE_BUTTON("/templates/events/heromission/heroMissionEventTraceButton.png"),
+	HERO_MISSION_EVENT_CAPTURE_BUTTON("/templates/events/heromission/heroMissionEventCaptureButton.png"),
+	HERO_MISSION_EVENT_CHEST("/templates/events/heromission/heroMissionEventChest.png"),
+
     // ========================================================================
     // POLAR TERROR HUNTING
     // ========================================================================
     POLAR_TERROR_SEARCH_ICON("/templates/polarterror/polarTerror.png"),
+    POLAR_TERROR_LEVEL_SLIDER("/templates/polarterror/slider.png"),
     POLAR_TERROR_TAB_MAGNIFYING_GLASS_ICON("/templates/polarterror/polarTerrorTabMagnifyingGlass.png"),
     POLAR_TERROR_TAB_SPECIAL_REWARDS("/templates/polarterror/polarTerrorTabSpecialRewards.png"),
     POLAR_TERROR_LEVEL_SELECTOR("/templates/polarterror/polarTerrorLevelSelector.png"),
@@ -341,7 +401,9 @@ public enum EnumTemplates {
     // BEAR HUNT EVENT
     // ========================================================================
     BEAR_HUNT_IS_RUNNING("/templates/events/bearhunt/bearIsRunning.png"),
-    
+    BEAR_RALLY_BUTTON("/templates/events/bearhunt/bearRallyButton.png"),
+    BEAR_DEPLOY_BUTTON("/templates/events/bearhunt/bearDeployButton.png"),
+    BEAR_JOIN_PLUS_ICON("/templates/events/bearhunt/bearJoinPlusIcon.png"),
     // ========================================================================
     // MYRIAD BAZAAR
     // ========================================================================
@@ -357,13 +419,13 @@ public enum EnumTemplates {
 	CHIEF_ORDER_ENACT_BUTTON("/templates/chieforder/chiefOrderEnactButton.png");
 
 	// @formatter:on
-    private String template;
+	private String template;
 
-    private EnumTemplates(String template) {
-        this.template = template;
-    }
+	private EnumTemplates(String template) {
+		this.template = template;
+	}
 
-    public String getTemplate() {
-        return template;
-    }
+	public String getTemplate() {
+		return template;
+	}
 }
