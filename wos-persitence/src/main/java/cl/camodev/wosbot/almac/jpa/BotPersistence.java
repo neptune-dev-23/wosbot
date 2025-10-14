@@ -121,6 +121,32 @@ public final class BotPersistence {
 		}
 	}
 
+    public int executeUpdate(String queryString, Map<String, Object> parameters) {
+        EntityManager entityManager = getEntityManager();
+        try {
+            entityManager.getTransaction().begin();
+            Query query = entityManager.createQuery(queryString);
+
+            if (parameters != null) {
+                for (Map.Entry<String, Object> param : parameters.entrySet()) {
+                    query.setParameter(param.getKey(), param.getValue());
+                }
+            }
+
+            int result = query.executeUpdate();
+            entityManager.getTransaction().commit();
+            return result;
+        } catch (Exception e) {
+            e.printStackTrace();
+            if (entityManager.getTransaction().isActive()) {
+                entityManager.getTransaction().rollback();
+            }
+            return 0;
+        } finally {
+            entityManager.close();
+        }
+    }
+
 	public void close() {
 		if (entityManagerFactory != null && entityManagerFactory.isOpen()) {
 			entityManagerFactory.close();

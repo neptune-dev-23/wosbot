@@ -78,7 +78,7 @@ const DashboardLayout = () => {
         }
         const data = (await response.json()) as { version?: string };
         if (data.version) {
-          setVersionLabel(`Whiteout Survival Bot v${data.version}`);
+          setVersionLabel(`WosBot v${data.version}`);
         }
       } catch (error) {
         console.warn("Failed to load version", error);

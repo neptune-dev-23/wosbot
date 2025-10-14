@@ -115,10 +115,10 @@ export const PROFILE_STATUS_ORDER: Record<ProfileStatusKey, number> = {
 };
 
 const PROFILE_STATUS_LABEL: Record<ProfileStatusKey, string> = {
-  "idle-running": "Idle (Emulator Ready)",
+  "idle-running": "Waiting for Task",
   "running-task": "Running Task",
-  "waiting-slot": "Waiting for Slot",
-  "idle-not-queued": "Idle (Not Queued)",
+  "waiting-slot": "In Queue",
+  "idle-not-queued": "Idle",
   disabled: "Disabled",
   stopped: "Stopped",
   paused: "Paused",
@@ -250,7 +250,7 @@ export const getProfileSummaryMeta = (
 
   let statusText = PROFILE_STATUS_LABEL[statusKey];
   if (statusKey === "waiting-slot" && queuePosition !== null && queuePosition > 0 && queuePosition !== 2147483647) {
-    statusText = `Waiting for Slot (#${queuePosition})`;
+    statusText = `In Queue (#${queuePosition})`;
   }
 
   return {

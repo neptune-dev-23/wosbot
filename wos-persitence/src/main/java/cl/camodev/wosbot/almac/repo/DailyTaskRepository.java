@@ -90,6 +90,17 @@ public class DailyTaskRepository implements IDailyTaskRepository {
 		return results.stream().collect(Collectors.toMap(DTODailyTaskStatus::getIdTpDailyTask, dto -> dto));
 	}
 
+    public void updateSchedule(Long profileId, int taskId, String newSchedule) {
+        String query = "UPDATE DailyTask d SET d.nextSchedule = :newSchedule WHERE d.profile.id = :profileId AND d.task.id = :taskId";
+
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("newSchedule", newSchedule);
+        parameters.put("profileId", profileId);
+        parameters.put("taskId", taskId);
+
+        persistence.executeUpdate(query, parameters);
+    }
+
 	@Override
 	public TpDailyTask findTpDailyTaskById(Integer id) {
 		return persistence.findEntityById(TpDailyTask.class, id);

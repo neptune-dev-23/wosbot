@@ -53,6 +53,16 @@ public class ServTaskManager {
 		}
 	}
 
+    public void rescheduleTask(Long profileId, int taskId, String newSchedule) {
+        DailyTaskRepository.getRepository().updateSchedule(profileId, taskId, newSchedule);
+
+        DTOTaskState taskState = getTaskState(profileId, taskId);
+        if (taskState != null) {
+            taskState.setNextExecutionTime(java.time.LocalDateTime.parse(newSchedule));
+            notifyListeners(profileId, taskId, taskState);
+        }
+    }
+
 	public List<DTODailyTaskStatus> getDailyTaskStatusPersistence(Long profileId) {
 		Map<Integer, DTODailyTaskStatus> taskSchedules = DailyTaskRepository.getRepository().findDailyTasksStatusByProfile(profileId);
 		if (taskSchedules != null && !taskSchedules.isEmpty()) {

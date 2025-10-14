@@ -63,6 +63,18 @@ public class TaskDataService {
         return tasksMap;
     }
 
+    public void rescheduleTask(DTOTaskState task) {
+        if (task == null || task.getProfileId() == null || task.getTaskId() == null) {
+            throw new IllegalArgumentException("Task, profile ID, and task ID must not be null");
+        }
+        if (task.getNextExecutionTime() == null) {
+            throw new IllegalArgumentException("Next execution time must not be null");
+        }
+
+        String schedule = task.getNextExecutionTime().toString();
+        ServTaskManager.getInstance().rescheduleTask(task.getProfileId(), task.getTaskId(), schedule);
+    }
+
     public void decorateTaskName(DTOTaskState taskState) {
         if (taskState == null) {
             return;
