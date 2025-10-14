@@ -12,7 +12,8 @@ import {
   subscribeProfilesStore,
 } from "../services/profilesStore";
 import { getTasksSnapshot, hasTasksSnapshot, subscribeTasksStore } from "../services/tasksStore";
-import { getProfileSummaryMeta, parseDateToMs, PROFILE_STATUS_ORDER, sortTasksForDisplay } from "./TasksPage";
+import { useCurrentTime } from "../hooks/useCurrentTime";
+import { getProfileSummaryMeta, parseDateToMs, PROFILE_STATUS_ORDER, sortTasksForDisplay } from "../utils/tasks";
 
 const ProfilesPage = () => {
   const navigate = useNavigate();
@@ -60,16 +61,17 @@ const ProfilesPage = () => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  const now = useCurrentTime();
+
   const profileSummaries = useMemo(() => {
-    const currentTime = Date.now();
     const entries = profiles.map((profile) => {
       const profileId = String(profile.id);
       const tasks = tasksByProfile[profileId] ?? [];
-      const sortedTasks = sortTasksForDisplay(tasks, currentTime);
-      const summaryMeta = getProfileSummaryMeta(profile, sortedTasks, currentTime);
+      const sortedTasks = sortTasksForDisplay(tasks, now);
+      const summaryMeta = getProfileSummaryMeta(profile, sortedTasks, now);
       const nextExecutionCountdown =
         Number.isFinite(summaryMeta.nextExecutionSort) && summaryMeta.nextExecutionSort !== Number.POSITIVE_INFINITY
-          ? formatDuration(Math.max(summaryMeta.nextExecutionSort - currentTime, 0))
+          ? formatDuration(Math.max(summaryMeta.nextExecutionSort - now, 0))
           : "";
       return {
         profile,
@@ -86,6 +88,15 @@ const ProfilesPage = () => {
       const rankDiff = entryA.summaryMeta.orderRank - entryB.summaryMeta.orderRank;
       if (rankDiff !== 0) {
         return rankDiff;
+      }
+
+      if (entryA.summaryMeta.orderRank === PROFILE_STATUS_ORDER["waiting-slot"]) {
+        const posA = entryA.profile?.queuePosition ?? Number.MAX_SAFE_INTEGER;
+        const posB = entryB.profile?.queuePosition ?? Number.MAX_SAFE_INTEGER;
+        const posDiff = posA - posB;
+        if (posDiff !== 0) {
+          return posDiff;
+        }
       }
 
       if (entryA.summaryMeta.orderRank === PROFILE_STATUS_ORDER.disabled) {
@@ -119,7 +130,7 @@ const ProfilesPage = () => {
     });
 
     return entries;
-  }, [profiles, tasksByProfile]);
+  }, [profiles, tasksByProfile, now]);
 
   const selectedProfile = useMemo(
     () => profiles.find((profile) => String(profile.id) === selectedProfileId) ?? null,
@@ -133,7 +144,7 @@ const ProfilesPage = () => {
 
   const selectedTasks = selectedProfileEntry?.sortedTasks ?? [];
   const selectedSummaryMeta = selectedProfileEntry?.summaryMeta ?? null;
-  const nowForCountdown = Date.now();
+
 
   type DetailValue = string | number | boolean | Record<string, unknown> | ProfileConfig[] | null | undefined;
 
@@ -172,10 +183,6 @@ const ProfilesPage = () => {
 
     if (selectedProfile.globalsettings && Object.keys(selectedProfile.globalsettings).length > 0) {
       baseDetails.push({ label: "Global Settings", value: selectedProfile.globalsettings });
-    }
-
-    if (selectedProfile.configs && selectedProfile.configs.length > 0) {
-      baseDetails.push({ label: "Profile Configs", value: selectedProfile.configs });
     }
 
     return baseDetails;
@@ -353,7 +360,7 @@ const ProfilesPage = () => {
                       {selectedTasks.map((task, index) => {
                         const nextExecutionMs = parseDateToMs(task.nextExecutionTime);
                         const nextExecutionCountdown =
-                          nextExecutionMs !== null ? formatDuration(Math.max(nextExecutionMs - nowForCountdown, 0)) : null;
+                          nextExecutionMs !== null ? formatDuration(Math.max(nextExecutionMs - now, 0)) : null;
                         const nextExecutionTitle = task.nextExecutionTime ? formatDateTime(task.nextExecutionTime) : undefined;
                         return (
                           <tr key={`${task.taskId ?? task.taskName ?? "task"}-${index}`}>
@@ -361,7 +368,15 @@ const ProfilesPage = () => {
                             <td>{task.executing ? "Executing" : task.scheduled ? "Scheduled" : "Disabled"}</td>
                             <td>{task.scheduled ? "Yes" : "No"}</td>
                             <td>{task.lastExecutionTime ? formatDateTime(task.lastExecutionTime) : "N/A"}</td>
-                            <td title={nextExecutionTitle}>{nextExecutionCountdown ?? "N/A"}</td>
+                                                        <td title={nextExecutionTitle}>
+                              {task.executing ? (
+                                <span className="next-execution-executing">Executing</span>
+                              ) : nextExecutionCountdown === "0s" ? (
+                                <span className="next-execution-ready">Ready</span>
+                              ) : (
+                                nextExecutionCountdown ?? "N/A"
+                              )}
+                            </td>
                           </tr>
                         );
                       })}

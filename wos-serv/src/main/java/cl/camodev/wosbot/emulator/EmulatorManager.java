@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.imageio.ImageIO;
 
@@ -43,6 +44,11 @@ public class EmulatorManager {
     private Emulator emulator;
     private int MAX_RUNNING_EMULATORS = 3;
     private final Set<Thread> activeSlots = new HashSet<>();
+
+    // Cache for isRunning status to avoid repeated external process calls
+	private final ConcurrentHashMap<String, Boolean> runningStatusCache = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<String, Long> runningStatusTimestamp = new ConcurrentHashMap<>();
+	private static final long RUNNING_STATUS_CACHE_TTL = 5000; // 5 seconds cache TTL
 
     private EmulatorManager() {
 
@@ -513,6 +519,7 @@ public class EmulatorManager {
 
     public void launchEmulator(String emulatorNumber) {
         checkEmulatorInitialized();
+        invalidateRunningStatusCache(emulatorNumber);
         emulator.launchEmulator(emulatorNumber);
     }
 
@@ -521,6 +528,7 @@ public class EmulatorManager {
      */
     public void closeEmulator(String emulatorNumber) {
         checkEmulatorInitialized();
+        invalidateRunningStatusCache(emulatorNumber);
         emulator.closeEmulator(emulatorNumber);
     }
 
@@ -536,7 +544,27 @@ public class EmulatorManager {
     
     public boolean isRunning(String emulatorNumber) {
         checkEmulatorInitialized();
-        return emulator.isRunning(emulatorNumber);
+        long currentTime = System.currentTimeMillis();
+
+		// Check if we have a cached status and it's still valid
+		Boolean cachedStatus = runningStatusCache.get(emulatorNumber);
+		Long statusTime = runningStatusTimestamp.get(emulatorNumber);
+
+		if (cachedStatus != null && statusTime != null) {
+			// Check if cache is still valid (TTL not expired)
+			if ((currentTime - statusTime) < RUNNING_STATUS_CACHE_TTL) {
+				logger.trace("Using cached running status for emulator {}: {}", emulatorNumber, cachedStatus);
+				return cachedStatus;
+			}
+		}
+
+		// Cache miss or expired, call actual isRunning and update cache
+		boolean status = emulator.isRunning(emulatorNumber);
+		runningStatusCache.put(emulatorNumber, status);
+		runningStatusTimestamp.put(emulatorNumber, currentTime);
+		logger.trace("Running status cached for emulator {}: {}", emulatorNumber, status);
+
+		return status;
     }
 
     public boolean isPackageRunning(String emulatorNumber, String packageName) {
@@ -632,6 +660,12 @@ public class EmulatorManager {
         }
         return 0;
     }
+
+    private void invalidateRunningStatusCache(String emulatorNumber) {
+		runningStatusCache.remove(emulatorNumber);
+		runningStatusTimestamp.remove(emulatorNumber);
+		logger.debug("Running status cache invalidated for emulator {}", emulatorNumber);
+	}
 
     public void resetQueueState() {
         lock.lock();

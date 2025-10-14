@@ -1,4 +1,4 @@
-/* eslint-disable react-refresh/only-export-components */
+
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FiCheckSquare, FiChevronDown } from "react-icons/fi";
@@ -12,265 +12,17 @@ import {
   hasProfilesSnapshot,
   subscribeProfilesStore,
 } from "../services/profilesStore";
+import { useCurrentTime } from "../hooks/useCurrentTime";
 import { getTasksSnapshot, hasTasksSnapshot, subscribeTasksStore } from "../services/tasksStore";
 
-const FIVE_MINUTES_MS = 5 * 60 * 1000;
-const ONE_MINUTE_MS = 60 * 1000;
-
-export const parseDateToMs = (value?: string | null): number | null => {
-  if (!value) {
-    return null;
-  }
-  const time = new Date(value).getTime();
-  return Number.isFinite(time) ? time : null;
-};
-
-const getTaskCategory = (task: TaskState, now: number): number => {
-  if (task.executing) {
-    return 0;
-  }
-  if (!task.scheduled) {
-    return 3;
-  }
-  const nextMs = parseDateToMs(task.nextExecutionTime);
-  if (nextMs !== null && nextMs <= now) {
-    return 1;
-  }
-  return 2;
-};
-
-const getNextExecutionForSort = (task: TaskState): number => {
-  const nextMs = parseDateToMs(task.nextExecutionTime);
-  return nextMs ?? Number.POSITIVE_INFINITY;
-};
-
-export const sortTasksForDisplay = (taskList: TaskState[], now: number): TaskState[] =>
-  [...taskList].sort((taskA, taskB) => {
-    const catDiff = getTaskCategory(taskA, now) - getTaskCategory(taskB, now);
-    if (catDiff !== 0) {
-      return catDiff;
-    }
-    const timeDiff = getNextExecutionForSort(taskA) - getNextExecutionForSort(taskB);
-    if (timeDiff !== 0) {
-      return timeDiff;
-    }
-    return (taskA.taskName ?? "").localeCompare(taskB.taskName ?? "", undefined, { sensitivity: "base" });
-  });
-
-const getTaskStatusMeta = (task: TaskState): { statusClass: string; statusText: string } => {
-  if (task.executing) {
-    return { statusClass: "executing", statusText: "Executing" };
-  }
-  if (task.scheduled) {
-    return { statusClass: "scheduled", statusText: "Scheduled" };
-  }
-  return { statusClass: "disabled", statusText: "Disabled" };
-};
-
-const getTaskTimingMeta = (
-  task: TaskState,
-  now: number,
-): { timingClass: string; nextExecutionClass: string } => {
-  if (task.executing) {
-    return { timingClass: "task-card-imminent", nextExecutionClass: "next-execution-imminent" };
-  }
-  if (!task.scheduled) {
-    return { timingClass: "task-card-disabled", nextExecutionClass: "" };
-  }
-
-  const nextMs = parseDateToMs(task.nextExecutionTime);
-  if (nextMs === null) {
-    return { timingClass: "task-card-upcoming", nextExecutionClass: "" };
-  }
-
-  const diff = nextMs - now;
-  if (diff <= 0) {
-    return { timingClass: "task-card-ready", nextExecutionClass: "next-execution-ready" };
-  }
-  if (diff <= ONE_MINUTE_MS) {
-    return { timingClass: "task-card-imminent", nextExecutionClass: "next-execution-imminent" };
-  }
-  if (diff <= FIVE_MINUTES_MS) {
-    return { timingClass: "task-card-upcoming", nextExecutionClass: "next-execution-imminent" };
-  }
-  return { timingClass: "task-card-upcoming", nextExecutionClass: "next-execution-upcoming" };
-};
-
-const getTaskDisplayMeta = (task: TaskState, now: number) => {
-  const { statusClass, statusText } = getTaskStatusMeta(task);
-  const { timingClass, nextExecutionClass } = getTaskTimingMeta(task, now);
-  const cardClassName = ["task-card", statusClass, timingClass].filter(Boolean).join(" ");
-  return {
-    cardClassName,
-    statusClass,
-    statusText,
-    nextExecutionClass,
-  };
-};
-
-export type ProfileStatusKey =
-  | "idle-running"
-  | "running-task"
-  | "waiting-slot"
-  | "disabled"
-  | "stopped"
-  | "paused";
-
-export const PROFILE_STATUS_ORDER: Record<ProfileStatusKey, number> = {
-  "running-task": 0,
-  "idle-running": 1,
-  "waiting-slot": 2,
-  disabled: 3,
-  stopped: 4,
-  paused: 5,
-};
-
-const PROFILE_STATUS_LABEL: Record<ProfileStatusKey, string> = {
-  "idle-running": "Idle (Emulator Ready)",
-  "running-task": "Running Task",
-  "waiting-slot": "Waiting for Slot",
-  disabled: "Disabled",
-  stopped: "Stopped",
-  paused: "Paused",
-};
-
-export interface ProfileSummaryMeta {
-  statusKey: ProfileStatusKey;
-  statusClass: string;
-  statusText: string;
-  statusDetail: string;
-  nextExecutionClass: string;
-  nextExecutionLabel: string;
-  orderRank: number;
-  nextExecutionSort: number;
-  prioritySort: number;
-}
-
-const describeIdleWindow = (diffMs: number): string => {
-  if (diffMs <= ONE_MINUTE_MS) {
-    return "Next task within 1 minute";
-  }
-  if (diffMs <= FIVE_MINUTES_MS) {
-    return "Next task within 5 minutes";
-  }
-  return "Awaiting next schedule";
-};
-
-export const getProfileSummaryMeta = (
-  profile: Profile | undefined,
-  tasks: TaskState[],
-  now: number,
-): ProfileSummaryMeta => {
-  const executingTask = tasks.find((task) => task.executing);
-  const scheduledTasks = tasks
-    .map((task) => {
-      const next = parseDateToMs(task.nextExecutionTime);
-      return next === null ? null : { task, next };
-    })
-    .filter((entry): entry is { task: TaskState; next: number } => entry !== null)
-    .sort((a, b) => a.next - b.next);
-
-  const readyTask = scheduledTasks.find((entry) => entry.next <= now);
-  const upcomingTask = scheduledTasks[0];
-  const queueActive = profile?.queueActive;
-  const queuePosition = profile?.queuePosition ?? null;
-  const hasTasks = tasks.length > 0;
-  const prioritySort = typeof profile?.priority === "number" ? profile.priority : Number.POSITIVE_INFINITY;
-
-  let statusKey: ProfileStatusKey = "idle-running";
-  let statusDetail = profile?.state ?? "Emulator ready";
-  let nextExecutionClass = "";
-  let nextExecutionLabel = "None";
-  let nextExecutionSort = Number.POSITIVE_INFINITY;
-
-  if (profile?.paused) {
-    statusKey = "paused";
-    statusDetail = profile.state ?? "Task queue paused";
-    if (upcomingTask) {
-      const timingMeta = getTaskTimingMeta(upcomingTask.task, now);
-      nextExecutionClass = timingMeta.nextExecutionClass;
-      nextExecutionLabel = upcomingTask.task.nextExecutionTime
-        ? formatDateTime(upcomingTask.task.nextExecutionTime)
-        : "Pending resume";
-      nextExecutionSort = upcomingTask.next;
-    } else {
-      nextExecutionLabel = "Pending resume";
-    }
-  } else if (executingTask) {
-    statusKey = "running-task";
-    statusDetail = executingTask.taskName ? `Running ${executingTask.taskName}` : "Processing queued task";
-    const timingMeta = getTaskTimingMeta(executingTask, now);
-    nextExecutionClass = timingMeta.nextExecutionClass;
-    nextExecutionLabel = executingTask.nextExecutionTime
-      ? formatDateTime(executingTask.nextExecutionTime)
-      : "In progress";
-    nextExecutionSort = parseDateToMs(executingTask.nextExecutionTime) ?? now;
-  } else {
-    const enabled = profile?.enabled ?? true;
-    const isDisabled = !enabled || (!hasTasks && (queuePosition === null || queuePosition === undefined));
-
-    if (isDisabled) {
-      statusKey = "disabled";
-      statusDetail = profile?.state ?? "Queue disabled";
-      nextExecutionLabel = "None";
-      nextExecutionSort = Number.POSITIVE_INFINITY;
-    } else if (profile?.running === false) {
-      statusKey = "stopped";
-      statusDetail = profile?.state ?? "Task queue is stopped";
-      nextExecutionLabel = "None";
-      nextExecutionSort = Number.POSITIVE_INFINITY;
-    } else if ((queuePosition !== null && queuePosition > 0 && queuePosition !== 2147483647) || queueActive === false) {
-      statusKey = "waiting-slot";
-      statusDetail =
-        queuePosition && queuePosition > 0
-          ? `Waiting for slot (#${queuePosition})`
-          : "Waiting for available slot";
-      if (upcomingTask) {
-        const timingMeta = getTaskTimingMeta(upcomingTask.task, now);
-        nextExecutionClass = timingMeta.nextExecutionClass;
-        nextExecutionLabel = upcomingTask.task.nextExecutionTime
-          ? formatDateTime(upcomingTask.task.nextExecutionTime)
-          : "Queued";
-        nextExecutionSort = upcomingTask.next;
-      } else {
-        nextExecutionLabel = "Queued";
-      }
-    } else if (readyTask) {
-      statusKey = "idle-running";
-      statusDetail = "Task ready to execute";
-      const timingMeta = getTaskTimingMeta(readyTask.task, now);
-      nextExecutionClass = timingMeta.nextExecutionClass;
-      nextExecutionLabel = readyTask.task.nextExecutionTime ? formatDateTime(readyTask.task.nextExecutionTime) : "Ready now";
-      nextExecutionSort = readyTask.next;
-    } else if (upcomingTask) {
-      statusKey = "idle-running";
-      const diff = upcomingTask.next - now;
-      statusDetail = describeIdleWindow(diff);
-      const timingMeta = getTaskTimingMeta(upcomingTask.task, now);
-      nextExecutionClass = timingMeta.nextExecutionClass;
-      nextExecutionLabel =
-        upcomingTask.task.nextExecutionTime ? formatDateTime(upcomingTask.task.nextExecutionTime) : "Scheduled";
-      nextExecutionSort = upcomingTask.next;
-    } else {
-      statusKey = "idle-running";
-      statusDetail = profile?.state ?? "Emulator ready";
-      nextExecutionLabel = "None";
-      nextExecutionSort = Number.POSITIVE_INFINITY;
-    }
-  }
-
-  return {
-    statusKey,
-    statusClass: statusKey,
-    statusText: PROFILE_STATUS_LABEL[statusKey],
-    statusDetail,
-    nextExecutionClass,
-    nextExecutionLabel,
-    orderRank: PROFILE_STATUS_ORDER[statusKey],
-    nextExecutionSort,
-    prioritySort,
-  };
-};
+import {
+  getProfileSummaryMeta,
+  getTaskCategory,
+  getTaskDisplayMeta,
+  parseDateToMs,
+  PROFILE_STATUS_ORDER,
+  sortTasksForDisplay,
+} from "../utils/tasks";
 
 const TasksPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -455,23 +207,25 @@ const TasksPage = () => {
 
   const isLoading = !tasksLoaded || !profilesLoaded;
   const combinedError = error;
-  const now = Date.now();
+  const now = useCurrentTime();
   const preparedEntries = filteredTaskEntries.map(([profileId, taskList]) => {
     const profile = profilesById.get(profileId);
     const profileName = profile?.name ?? `Profile ${profileId}`;
     const sortedTasks = sortTasksForDisplay(taskList ?? [], now);
     const summaryMeta = getProfileSummaryMeta(profile, sortedTasks, now);
-    const nextExecutionCountdown =
-      Number.isFinite(summaryMeta.nextExecutionSort) && summaryMeta.nextExecutionSort !== Number.POSITIVE_INFINITY
-        ? formatDuration(Math.max(summaryMeta.nextExecutionSort - now, 0))
-        : "";
+    const enabledTasksCount = sortedTasks.filter((t) => t.scheduled).length;
+    const readyTasksCount = sortedTasks.filter((t) => {
+      const category = getTaskCategory(t, now);
+      return category === 0 || category === 1;
+    }).length;
+    const tasksCountDisplay = `${readyTasksCount} / ${enabledTasksCount}`;
     return {
       profileId,
       profile,
       profileName,
       sortedTasks,
       summaryMeta,
-      nextExecutionCountdown,
+      tasksCountDisplay,
     };
   });
 
@@ -479,6 +233,15 @@ const TasksPage = () => {
     const rankDiff = entryA.summaryMeta.orderRank - entryB.summaryMeta.orderRank;
     if (rankDiff !== 0) {
       return rankDiff;
+    }
+
+    if (entryA.summaryMeta.orderRank === PROFILE_STATUS_ORDER["waiting-slot"]) {
+      const posA = entryA.profile?.queuePosition ?? Number.MAX_SAFE_INTEGER;
+      const posB = entryB.profile?.queuePosition ?? Number.MAX_SAFE_INTEGER;
+      const posDiff = posA - posB;
+      if (posDiff !== 0) {
+        return posDiff;
+      }
     }
 
     if (entryA.summaryMeta.orderRank === PROFILE_STATUS_ORDER.disabled) {
@@ -548,7 +311,13 @@ const TasksPage = () => {
             </div>
           ) : (
             preparedEntries.map(
-              ({ profileId, profileName, profile, sortedTasks, summaryMeta, nextExecutionCountdown }) => {
+              ({ profileId, profileName, profile, sortedTasks, summaryMeta, tasksCountDisplay }, index) => {
+              if (index === 0) {
+                // console.log("--- TASK PAGE DIAGNOSTIC ---");
+                // console.log("Profile:", profileName);
+                // console.log("Summary Meta:", summaryMeta);
+                // console.log("Next 3 Tasks:", sortedTasks.slice(0, 3));
+              }
               const expanded = isProfileExpanded(profileId);
 
               return (
@@ -577,30 +346,44 @@ const TasksPage = () => {
                         {profile?.state ? <div className="profile-summary-profile-state">{profile.state}</div> : null}
                       </div>
                       <div className="profile-summary-right">
-                        {nextExecutionCountdown ? (
-                          <div className="profile-summary-meta">
-                            <span className="summary-label">Next Task</span>
-                            <span
-                              className={`summary-value next-execution-value ${summaryMeta.nextExecutionClass}`}
-                              title={summaryMeta.nextExecutionLabel || undefined}
-                            >
-                              {nextExecutionCountdown}
-                            </span>
-                          </div>
-                        ) : (
-                          <div className="profile-summary-meta">
-                            <span className="summary-label">Next Task</span>
-                            <span
-                              className={`summary-value next-execution-value ${summaryMeta.nextExecutionClass}`}
-                              title={summaryMeta.nextExecutionLabel || undefined}
-                            >
-                              {summaryMeta.nextExecutionLabel}
-                            </span>
-                          </div>
-                        )}
+                        {(() => {
+                          const isExecuting = summaryMeta.statusKey === "running-task";
+                          const remainingMs =
+                            summaryMeta.nextExecutionSort !== Number.POSITIVE_INFINITY
+                              ? Math.max(summaryMeta.nextExecutionSort - now, 0)
+                              : -1;
+                          const isReady = !isExecuting && remainingMs === 0;
+
+                          let countdownDisplay;
+                          if (isExecuting) {
+                            countdownDisplay = "Executing";
+                          } else if (isReady) {
+                            countdownDisplay = "Ready";
+                          } else if (remainingMs > -1) {
+                            countdownDisplay = formatDuration(remainingMs);
+                          } else {
+                            countdownDisplay = summaryMeta.nextExecutionLabel;
+                          }
+
+                          let countdownClassName = `summary-value next-execution-value ${summaryMeta.nextExecutionClass}`;
+                          if (isExecuting) {
+                            countdownClassName += " next-execution-executing";
+                          } else if (isReady) {
+                            countdownClassName += " next-execution-ready";
+                          }
+
+                          return (
+                            <div className="profile-summary-meta">
+                              <span className="summary-label">Next Task</span>
+                              <span className={countdownClassName} title={summaryMeta.nextExecutionLabel || undefined}>
+                                {countdownDisplay}
+                              </span>
+                            </div>
+                          );
+                        })()}
                         <div className="profile-summary-meta">
-                          <span className="summary-label">Tasks</span>
-                          <span className="summary-value">{sortedTasks.length}</span>
+                          <span className="summary-label">Tasks (Ready/Sched.)</span>
+                          <span className="summary-value">{tasksCountDisplay}</span>
                         </div>
                       </div>
                     </div>
@@ -634,10 +417,20 @@ const TasksPage = () => {
                                   <div className="task-detail">
                                     <span className="task-detail-label">Next Run:</span>
                                     <span
-                                      className={`task-detail-value next-execution-value ${nextExecutionClass}`}
+                                      className={`task-detail-value next-execution-value ${nextExecutionClass} ${
+                                        task.executing
+                                          ? "next-execution-executing"
+                                          : nextExecutionCountdown === "0s"
+                                          ? "next-execution-ready"
+                                          : ""
+                                      }`}
                                       title={formatDateTime(nextExecutionTime)}
                                     >
-                                      {nextExecutionCountdown}
+                                      {task.executing
+                                        ? "Executing"
+                                        : nextExecutionCountdown === "0s"
+                                        ? "Ready"
+                                        : nextExecutionCountdown}
                                     </span>
                                   </div>
                                 ) : null}

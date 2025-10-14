@@ -51,7 +51,7 @@ const mergeUpdate = (previous: TaskMap, update: TaskUpdateMessage): TaskMap => {
   const numericProfileId =
     typeof update.profileId === "string"
       ? Number.parseInt(update.profileId, 10)
-      : update.profileId ?? normalizedTask.profileId;
+      : update.profileId;
   if (typeof numericProfileId === "number" && Number.isFinite(numericProfileId)) {
     normalizedTask.profileId = numericProfileId;
   }
@@ -61,9 +61,9 @@ const mergeUpdate = (previous: TaskMap, update: TaskUpdateMessage): TaskMap => {
     const parsedTaskId = Number.parseInt(candidateTaskId, 10);
     if (Number.isFinite(parsedTaskId)) {
       normalizedTask.taskId = parsedTaskId;
-    } else {
-      normalizedTask.taskId = undefined;
     }
+  } else if (typeof candidateTaskId === "number" && Number.isFinite(candidateTaskId)) {
+    normalizedTask.taskId = candidateTaskId;
   }
 
   const nextList = [...existingList];

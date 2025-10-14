@@ -135,30 +135,30 @@ const DashboardLayout = () => {
 
   return (
     <>
+      <button
+        type="button"
+        className={`sidenav-toggle ${isNavOpen ? "active" : ""}`}
+        id="sidenavToggle"
+        onClick={(event) => {
+          event.stopPropagation();
+          handleToggleNav();
+        }}
+        ref={hamburgerRef}
+        aria-expanded={isNavOpen}
+        aria-label={isNavOpen ? "Collapse sidebar" : "Expand sidebar"}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            handleToggleNav();
+          }
+        }}
+      >
+        <span />
+        <span />
+        <span />
+      </button>
       <nav className={`sidenav ${isNavOpen ? "open" : ""}`} id="sideNav" ref={navRef}>
         <div className="sidenav-header">
-          <button
-            type="button"
-            className={`sidenav-toggle ${isNavOpen ? "active" : ""}`}
-            id="sidenavToggle"
-            onClick={(event) => {
-              event.stopPropagation();
-              handleToggleNav();
-            }}
-            ref={hamburgerRef}
-            aria-expanded={isNavOpen}
-            aria-label={isNavOpen ? "Collapse sidebar" : "Expand sidebar"}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                handleToggleNav();
-              }
-            }}
-          >
-            <span />
-            <span />
-            <span />
-          </button>
           <h2>
             <Link className="sidenav-brand" to="/" onClick={handleNavItemClick}>
               <FaRobot aria-hidden="true" className="header-icon" size={22} />

@@ -1,5 +1,8 @@
 # Repository Guidelines
 
+- User confirmation is required for changes to backend service modules (`wos-serv`, `wos-ot`, `wos-persistence`). Frontend (`wos-web-ui`) and web API (`wos-web`) changes are pre-approved.
+- When given multiple tasks at once, first add them all to a `TODO.md` file in the root of the relevant module. Break each task into subtasks if applicable, and go over a high-level implementation plan. Continually reference this `TODO.md` when switching tasks.
+
 ## Project Structure & Module Organization
 - Root Maven multi-module project (`pom.xml`). Requires JDK 21.
 - Modules:
@@ -13,12 +16,14 @@
 - Supporting folders: `lib/` (e.g., `tesseract`, `adb`), `images/`, `log/`, `out/`, `temp/`.
 
 ## Build, Test, and Development Commands
+- **Agent Note:** Do not run `bun run dev`. The user manages the frontend development server. Use `bun run lint` to check for frontend code quality.
 - Frontend dependencies: `bun install` (run inside `wos-web-ui/`)
 - Build all modules: `mvn clean install`
   - Outputs jar and ZIP in `wos-hmi/target/` (e.g., `wos-bot-<version>.zip`).
 - Build only UI (with dependencies): `mvn -pl wos-hmi -am package`
 - Build web dashboard bundle: `bun run build` (from `wos-web-ui/`) - automatically copies into `wos-web/src/main/resources/static`
-- Run web dashboard backend with live reload: `mvn -pl wos-web spring-boot:run` (requires prior `bun run build`; use `bun run dev` from `wos-web-ui/` for hot reload on port 8000; proxy auto-configures for the backend)
+- Run web dashboard backend with live reload: `mvn -pl wos-web spring-boot:run` (requires prior `bun run build`)
+- Lint frontend code: `bun run lint` (run inside `wos-web-ui/`)
 - Run locally: `java -jar wos-hmi/target/wos-bot-<version>.jar`
 - Skip tests when building: `mvn -DskipTests=true clean package`
 - CI: GitHub Actions builds on release and uploads `wos-hmi/target/*.zip`.

@@ -1,14 +1,14 @@
 .tasks-container {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 10px;
 }
 
 .profile-tasks-section {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(10px);
-    border-radius: 10px;
-    padding: 20px;
+    border-radius: 8px;
+    padding: 10px;
     animation: slideIn 0.3s ease;
 }
 
@@ -78,7 +78,7 @@
 }
 
 .task-status-badge.running-task {
-    background: #2196F3;
+    background: #ff9800;
 }
 
 .task-status-badge.waiting-slot {
@@ -95,7 +95,12 @@
 }
 
 .task-status-badge.paused {
-    background: #FFB74D;
+    background: #FF9800;
+    color: #1a1a1a;
+}
+
+.task-status-badge.idle-not-queued {
+    background: #FF9800;
     color: #1a1a1a;
 }
 
@@ -138,6 +143,14 @@
 
 .next-execution-imminent {
     color: #2196F3;
+}
+
+.next-execution-executing {
+    color: #ff9800;
+}
+
+.next-execution-ready {
+    color: #4CAF50;
 }
 
 .profile-summary {
@@ -242,8 +255,8 @@
 }
 
 .profile-summary-card.running-task {
-    border-left-color: #2196F3;
-    background: rgba(33, 150, 243, 0.18);
+    border-left-color: #ff9800;
+    background: rgba(255, 152, 0, 0.18);
 }
 
 .profile-summary-card.waiting-slot {
@@ -254,6 +267,7 @@
 .profile-summary-card.disabled {
     border-left-color: #9E9E9E;
     background: rgba(158, 158, 158, 0.12);
+    opacity: 0.7;
 }
 
 .profile-summary-card.stopped {
@@ -262,8 +276,13 @@
 }
 
 .profile-summary-card.paused {
-    border-left-color: #FFB74D;
-    background: rgba(255, 183, 77, 0.18);
+    border-left-color: #FF9800;
+    background: rgba(255, 152, 0, 0.12);
+}
+
+.profile-summary-card.idle-not-queued {
+    border-left-color: #FF9800;
+    background: rgba(255, 152, 0, 0.12);
 }
 
 .profile-summary-card.task-card-disabled {

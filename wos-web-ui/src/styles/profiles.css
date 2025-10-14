@@ -20,8 +20,8 @@
 }
 
 .profile-card.running-task {
-    border-left-color: #2196F3;
-    background: rgba(33, 150, 243, 0.18);
+    border-left-color: #ff9800;
+    background: rgba(255, 152, 0, 0.18);
 }
 
 .profile-card.waiting-slot {
@@ -32,6 +32,7 @@
 .profile-card.disabled {
     border-left-color: #9E9E9E;
     background: rgba(158, 158, 158, 0.15);
+    opacity: 0.7;
 }
 
 .profile-card.stopped {
@@ -40,8 +41,13 @@
 }
 
 .profile-card.paused {
-    border-left-color: #FFB74D;
-    background: rgba(255, 183, 77, 0.2);
+    border-left-color: #FF9800;
+    background: rgba(255, 152, 0, 0.15);
+}
+
+.profile-card.idle-not-queued {
+    border-left-color: #FF9800;
+    background: rgba(255, 152, 0, 0.15);
 }
 
 .profile-card:hover {
@@ -80,7 +86,7 @@
 }
 
 .profile-status.running-task {
-    background: #2196F3;
+    background: #ff9800;
     color: #ffffff;
 }
 
@@ -99,8 +105,14 @@
     color: #ffffff;
 }
 
-.profile-status.paused {
+.profile-status.paused,
+.profile-status.idle-emulator-closed {
     background: #FFB74D;
+    color: #1a1a1a;
+}
+
+.profile-status.idle-not-queued {
+    background: #FF9800;
     color: #1a1a1a;
 }
 
@@ -321,6 +333,14 @@
     text-align: center;
     font-size: 13px;
     color: rgba(255, 255, 255, 0.8);
+}
+
+.next-execution-executing {
+    color: #ff9800;
+}
+
+.next-execution-ready {
+    color: #4CAF50;
 }
 
 @media (max-width: 768px) {

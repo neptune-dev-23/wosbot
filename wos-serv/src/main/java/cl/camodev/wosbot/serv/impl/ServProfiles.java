@@ -55,25 +55,18 @@ public class ServProfiles implements IServProfile {
 	public List<DTOProfiles> getProfiles() {
 		List<DTOProfiles> profiles = iProfileRepository.getProfiles();
 		TaskQueueManager queueManager = ServScheduler.getServices().getQueueManager();
-		EmulatorManager emulatorManager = EmulatorManager.getInstance();
 
 		profiles.forEach(profile -> {
 			TaskQueue queue = queueManager.getQueue(profile.getId());
 			boolean queueRunning = queue != null && queue.isRunning();
 			profile.setQueueActive(queueRunning);
 
-			boolean emulatorRunning = false;
-			String emulatorNumber = profile.getEmulatorNumber();
-			if (emulatorNumber != null && !emulatorNumber.isBlank()) {
-				try {
-					emulatorRunning = emulatorManager.isRunning(emulatorNumber);
-				} catch (IllegalStateException e) {
-					logger.debug("Emulator manager not initialized when checking emulator {}: {}", emulatorNumber, e.getMessage());
-				} catch (Exception e) {
-					logger.debug("Unable to determine running state for emulator {}: {}", emulatorNumber, e.getMessage());
+			if (queue != null) {
+				DTOProfiles liveProfile = queue.getProfile();
+				if (liveProfile != null) {
+					profile.setQueuePosition(liveProfile.getQueuePosition());
 				}
 			}
-			profile.setRunning(emulatorRunning);
         });
 		return profiles;
 	}

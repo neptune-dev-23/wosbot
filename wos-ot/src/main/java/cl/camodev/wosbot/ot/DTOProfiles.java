@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class DTOProfiles {
     private Long id;
@@ -18,6 +19,7 @@ public class DTOProfiles {
     private int queuePosition = Integer.MAX_VALUE;
     private boolean running;
     private boolean queueActive;
+    @JsonIgnore
     private List<DTOConfig> configs = new ArrayList<>();
     private HashMap<String, String> globalsettings = new HashMap<>();
 
@@ -58,6 +60,7 @@ public class DTOProfiles {
         return enabled;
     }
 
+    @JsonIgnore
     public List<DTOConfig> getConfigs() {
         return configs;
     }
