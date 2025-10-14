@@ -39,7 +39,7 @@ log/bot.log
 
 /target/
 /web-ui/node_modules
-/wos-web/src/main/resources/static
+/wos-web/src/main/resources/static/assets
 
 qodana.yaml
 

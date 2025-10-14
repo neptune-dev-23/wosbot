@@ -4,6 +4,7 @@ import { FaRobot } from "react-icons/fa";
 import { FiCheckSquare, FiClipboard, FiPause, FiPlay, FiStopCircle, FiUsers } from "react-icons/fi";
 
 import type { BotState } from "../types/api";
+import { subscribeToMessage } from "../services/wsClient";
 
 type BotStatus = "running" | "paused" | "stopped" | "unknown";
 
@@ -27,7 +28,7 @@ const DashboardLayout = () => {
   const [versionLabel, setVersionLabel] = useState("Whiteout Survival Bot");
 
   const navRef = useRef<HTMLElement | null>(null);
-  const hamburgerRef = useRef<HTMLDivElement | null>(null);
+  const hamburgerRef = useRef<HTMLButtonElement | null>(null);
 
   const location = useLocation();
 
@@ -56,53 +57,15 @@ const DashboardLayout = () => {
   }, [location.pathname]);
 
   useEffect(() => {
-    let isCancelled = false;
-    let retryTimer: ReturnType<typeof setTimeout> | null = null;
-    let source: EventSource | null = null;
-
-    const connect = () => {
-      if (isCancelled) {
-        return;
-      }
-
-      const eventSource = new EventSource("/api/bot/state/stream");
-      source = eventSource;
-
-      eventSource.addEventListener("botState", (event) => {
-        if (isCancelled) {
-          return;
-        }
-        try {
-          const parsed = JSON.parse((event as MessageEvent).data) as BotState;
-          setBotStatus(resolveBotStatus(parsed));
-        } catch (error) {
-          console.error("Failed to parse bot state event", error);
-        }
-      });
-
-      eventSource.onerror = () => {
-        if (isCancelled) {
-          return;
-        }
-        eventSource.close();
-        setBotStatus("unknown");
-        if (retryTimer) {
-          clearTimeout(retryTimer);
-        }
-        retryTimer = setTimeout(connect, 3000);
-      };
-    };
-
-    connect();
+    const applyState = (state: BotState) => setBotStatus(resolveBotStatus(state));
+    const unsubscribeSnapshot = subscribeToMessage<BotState>("botState.snapshot", applyState);
+    const unsubscribeUpdate = subscribeToMessage<BotState>("botState.update", applyState);
+    const unsubscribeDisconnected = subscribeToMessage("system.disconnected", () => setBotStatus("unknown"));
 
     return () => {
-      isCancelled = true;
-      if (retryTimer) {
-        clearTimeout(retryTimer);
-      }
-      if (source) {
-        source.close();
-      }
+      unsubscribeSnapshot();
+      unsubscribeUpdate();
+      unsubscribeDisconnected();
     };
   }, []);
 
@@ -172,32 +135,30 @@ const DashboardLayout = () => {
 
   return (
     <>
-      <div className="hamburger-menu" id="hamburgerMenu">
-        <div
-          className={`hamburger-icon ${isNavOpen ? "active" : ""}`}
-          id="hamburgerIcon"
-          onClick={(event) => {
-            event.stopPropagation();
-            handleToggleNav();
-          }}
-          ref={hamburgerRef}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
-              handleToggleNav();
-            }
-          }}
-        >
-          <span />
-          <span />
-          <span />
-        </div>
-      </div>
-
       <nav className={`sidenav ${isNavOpen ? "open" : ""}`} id="sideNav" ref={navRef}>
         <div className="sidenav-header">
+          <button
+            type="button"
+            className={`sidenav-toggle ${isNavOpen ? "active" : ""}`}
+            id="sidenavToggle"
+            onClick={(event) => {
+              event.stopPropagation();
+              handleToggleNav();
+            }}
+            ref={hamburgerRef}
+            aria-expanded={isNavOpen}
+            aria-label={isNavOpen ? "Collapse sidebar" : "Expand sidebar"}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                handleToggleNav();
+              }
+            }}
+          >
+            <span />
+            <span />
+            <span />
+          </button>
           <h2>
             <Link className="sidenav-brand" to="/" onClick={handleNavItemClick}>
               <FaRobot aria-hidden="true" className="header-icon" size={22} />
@@ -237,7 +198,7 @@ const DashboardLayout = () => {
         <Outlet />
       </div>
 
-      <div className={`bottom-bar ${isNavOpen ? "shifted" : ""}`} id="bottomBar">
+      <div className="bottom-bar" id="bottomBar">
         <div className="bottom-bar-left">
           <div className="bot-status">
             <span className={`bot-status-indicator ${botStatus}`} id="botStatusIndicator" />

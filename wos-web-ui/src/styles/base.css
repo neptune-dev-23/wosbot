@@ -63,6 +63,7 @@ body {
     border-radius: 5px;
     font-size: 14px;
     width: 200px;
+    color: black;
 }
 
 select.filter-input {

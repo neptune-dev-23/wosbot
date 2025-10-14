@@ -17,6 +17,7 @@ public class DTOProfiles {
     private Long reconnectionTime; // Reconnection time in seconds
     private int queuePosition = Integer.MAX_VALUE;
     private boolean running;
+    private boolean queueActive;
     private List<DTOConfig> configs = new ArrayList<>();
     private HashMap<String, String> globalsettings = new HashMap<>();
 
@@ -100,6 +101,14 @@ public class DTOProfiles {
 
     public void setRunning(boolean running) {
         this.running = running;
+    }
+
+    public boolean isQueueActive() {
+        return queueActive;
+    }
+
+    public void setQueueActive(boolean queueActive) {
+        this.queueActive = queueActive;
     }
 
     /**

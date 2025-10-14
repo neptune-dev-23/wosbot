@@ -4,6 +4,7 @@ import cl.camodev.wosbot.serv.impl.ServLogs;
 import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.web.streaming.BotStateStreamingService;
 import cl.camodev.wosbot.web.streaming.LogStreamingService;
+import cl.camodev.wosbot.web.streaming.ProfileStreamingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
@@ -77,7 +78,8 @@ public class WebDashboardServer {
             // Register services as listeners after Spring context is initialized
             LogStreamingService logStreamingService = context.getBean(LogStreamingService.class);
             BotStateStreamingService botStateStreamingService = context.getBean(BotStateStreamingService.class);
-            
+            context.getBean(ProfileStreamingService.class);
+
             ServLogs.getServices().addLogListener(logStreamingService);
             ServScheduler.getServices().registryBotStateListener(botStateStreamingService);
 

@@ -2,9 +2,6 @@ package cl.camodev.wosbot.web.api;
 
 import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.serv.impl.ServProfiles;
-import cl.camodev.wosbot.serv.impl.ServScheduler;
-import cl.camodev.wosbot.serv.task.TaskQueue;
-import cl.camodev.wosbot.serv.task.TaskQueueManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -26,13 +23,6 @@ public class ProfileApi {
     public ResponseEntity<?> getProfiles() {
         try {
             List<DTOProfiles> profiles = ServProfiles.getServices().getProfiles();
-            TaskQueueManager queueManager = ServScheduler.getServices().getQueueManager();
-
-            for (DTOProfiles profile : profiles) {
-                TaskQueue queue = queueManager.getQueue(profile.getId());
-                profile.setRunning(queue != null && queue.isRunning());
-            }
-
             return ResponseEntity.ok(profiles);
         } catch (Exception e) {
             logger.error("Error fetching profiles: {}", e.getMessage(), e);

@@ -3,6 +3,7 @@ import { FiChevronLeft, FiChevronRight, FiRefreshCw, FiSearch } from "react-icon
 
 import type { LogMessage } from "../types/api";
 import { formatTimestamp } from "../utils/format";
+import { subscribeToMessage } from "../services/wsClient";
 
 const AUTO_SCROLL_THRESHOLD = 5;
 const MAX_LOGS = 1000;
@@ -134,66 +135,42 @@ const LogsPage = () => {
   }, [autoScroll, clampedCurrentPage, paginatedLogs]);
 
   useEffect(() => {
-    let isCancelled = false;
-    let retryTimer: ReturnType<typeof setTimeout> | null = null;
-    let source: EventSource | null = null;
+    setLogConnectionStatus("connecting");
 
-    const connect = () => {
-      if (isCancelled) {
-        return;
-      }
-      setLogConnectionStatus("connecting");
-
-      const eventSource = new EventSource("/logs/stream");
-      source = eventSource;
-
-      eventSource.addEventListener("log", (event) => {
-        if (isCancelled) {
-          return;
+    const handleSnapshot = (snapshot: LogMessage[]) => {
+      setLogConnectionStatus("connected");
+      setLogs(() => {
+        if (!Array.isArray(snapshot)) {
+          return [];
         }
-        try {
-          const parsed = JSON.parse((event as MessageEvent).data) as LogMessage;
-          setLogs((previous) => {
-            const next = [...previous, parsed];
-            if (next.length > MAX_LOGS) {
-              next.shift();
-            }
-            return next;
-          });
-        } catch (error) {
-          console.error("Failed to parse log event", error);
-        }
+        const trimmed = snapshot.slice(-MAX_LOGS);
+        return trimmed;
       });
-
-      eventSource.onopen = () => {
-        if (!isCancelled) {
-          setLogConnectionStatus("connected");
-        }
-      };
-
-      eventSource.onerror = () => {
-        if (isCancelled) {
-          return;
-        }
-        setLogConnectionStatus("disconnected");
-        eventSource.close();
-        if (retryTimer) {
-          clearTimeout(retryTimer);
-        }
-        retryTimer = setTimeout(connect, 3000);
-      };
+      setCurrentPage(1);
+      setAutoScroll(true);
     };
 
-    connect();
+    const handleAppend = (entry: LogMessage) => {
+      setLogConnectionStatus("connected");
+      setLogs((previous) => {
+        const next = [...previous, entry];
+        if (next.length > MAX_LOGS) {
+          next.shift();
+        }
+        return next;
+      });
+    };
+
+    const unsubscribeSnapshot = subscribeToMessage<LogMessage[]>("logs.snapshot", handleSnapshot);
+    const unsubscribeAppend = subscribeToMessage<LogMessage>("logs.append", handleAppend);
+    const unsubscribeConnected = subscribeToMessage("system.connected", () => setLogConnectionStatus("connecting"));
+    const unsubscribeDisconnected = subscribeToMessage("system.disconnected", () => setLogConnectionStatus("disconnected"));
 
     return () => {
-      isCancelled = true;
-      if (retryTimer) {
-        clearTimeout(retryTimer);
-      }
-      if (source) {
-        source.close();
-      }
+      unsubscribeSnapshot();
+      unsubscribeAppend();
+      unsubscribeConnected();
+      unsubscribeDisconnected();
     };
   }, []);
 

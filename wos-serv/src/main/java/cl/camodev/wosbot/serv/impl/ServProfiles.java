@@ -15,6 +15,7 @@ import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.console.enumerable.TpConfigEnum;
 import cl.camodev.wosbot.ot.DTOProfileStatus;
 import cl.camodev.wosbot.ot.DTOProfiles;
+import cl.camodev.wosbot.emulator.EmulatorManager;
 import cl.camodev.wosbot.serv.IProfileDataChangeListener;
 import cl.camodev.wosbot.serv.IProfileStatusChangeListener;
 import cl.camodev.wosbot.serv.IServProfile;
@@ -54,15 +55,26 @@ public class ServProfiles implements IServProfile {
 	public List<DTOProfiles> getProfiles() {
 		List<DTOProfiles> profiles = iProfileRepository.getProfiles();
 		TaskQueueManager queueManager = ServScheduler.getServices().getQueueManager();
+		EmulatorManager emulatorManager = EmulatorManager.getInstance();
 
 		profiles.forEach(profile -> {
 			TaskQueue queue = queueManager.getQueue(profile.getId());
-			boolean running = queue != null && queue.isRunning();
-			profile.setRunning(running);
-			if (profile.getStatus() == null || profile.getStatus().isBlank()) {
-				profile.setStatus(running ? "RUNNING" : "NOT RUNNING");
+			boolean queueRunning = queue != null && queue.isRunning();
+			profile.setQueueActive(queueRunning);
+
+			boolean emulatorRunning = false;
+			String emulatorNumber = profile.getEmulatorNumber();
+			if (emulatorNumber != null && !emulatorNumber.isBlank()) {
+				try {
+					emulatorRunning = emulatorManager.isRunning(emulatorNumber);
+				} catch (IllegalStateException e) {
+					logger.debug("Emulator manager not initialized when checking emulator {}: {}", emulatorNumber, e.getMessage());
+				} catch (Exception e) {
+					logger.debug("Unable to determine running state for emulator {}: {}", emulatorNumber, e.getMessage());
+				}
 			}
-		});
+			profile.setRunning(emulatorRunning);
+        });
 		return profiles;
 	}
 

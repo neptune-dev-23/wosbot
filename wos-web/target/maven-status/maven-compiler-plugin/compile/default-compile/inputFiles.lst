@@ -9,3 +9,11 @@ C:\Users\antho\Desktop\Code\Whiteout Survival\git-bots\wosbot\wos-web\src\main\j
 C:\Users\antho\Desktop\Code\Whiteout Survival\git-bots\wosbot\wos-web\src\main\java\cl\camodev\wosbot\web\server\WebDashboardServer.java
 C:\Users\antho\Desktop\Code\Whiteout Survival\git-bots\wosbot\wos-web\src\main\java\cl\camodev\wosbot\web\streaming\BotStateStreamingService.java
 C:\Users\antho\Desktop\Code\Whiteout Survival\git-bots\wosbot\wos-web\src\main\java\cl\camodev\wosbot\web\streaming\LogStreamingService.java
+C:\Users\antho\Desktop\Code\Whiteout Survival\git-bots\wosbot\wos-web\src\main\java\cl\camodev\wosbot\web\streaming\ProfileStreamingService.java
+C:\Users\antho\Desktop\Code\Whiteout Survival\git-bots\wosbot\wos-web\src\main\java\cl\camodev\wosbot\web\streaming\TaskStateStreamingService.java
+C:\Users\antho\Desktop\Code\Whiteout Survival\git-bots\wosbot\wos-web\src\main\java\cl\camodev\wosbot\web\task\TaskDataService.java
+C:\Users\antho\Desktop\Code\Whiteout Survival\git-bots\wosbot\wos-web\src\main\java\cl\camodev\wosbot\web\websocket\AppWebSocketHandler.java
+C:\Users\antho\Desktop\Code\Whiteout Survival\git-bots\wosbot\wos-web\src\main\java\cl\camodev\wosbot\web\websocket\WebSocketConfig.java
+C:\Users\antho\Desktop\Code\Whiteout Survival\git-bots\wosbot\wos-web\src\main\java\cl\camodev\wosbot\web\websocket\WebSocketMessage.java
+C:\Users\antho\Desktop\Code\Whiteout Survival\git-bots\wosbot\wos-web\src\main\java\cl\camodev\wosbot\web\websocket\WebSocketMessagingService.java
+C:\Users\antho\Desktop\Code\Whiteout Survival\git-bots\wosbot\wos-web\src\main\java\cl\camodev\wosbot\web\websocket\WebSocketTopicListener.java

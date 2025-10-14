@@ -12,20 +12,6 @@
     animation: slideIn 0.3s ease;
 }
 
-.profile-tasks-header {
-    display: flex;
-    justify-content: space-between;
-    align-items:	center;
-    margin-bottom: 15px;
-    padding-bottom: 15px;
-    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
-}
-
-.profile-tasks-name {
-    font-size: 20px;
-    font-weight: 600;
-}
-
 .tasks-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -42,19 +28,6 @@
 
 .task-card:hover {
     background: rgba(255, 255, 255, 0.1);
-}
-
-.task-card.scheduled {
-    border-left-color: #4CAF50;
-}
-
-.task-card.executing {
-    border-left-color: #ff9800;
-}
-
-.task-card.disabled {
-    border-left-color: #9E9E9E;
-    opacity: 0.6;
 }
 
 .task-name {
@@ -100,18 +73,55 @@
     background: #ff9800;
 }
 
+.task-status-badge.idle-running {
+    background: #4CAF50;
+}
+
+.task-status-badge.running-task {
+    background: #2196F3;
+}
+
+.task-status-badge.waiting-slot {
+    background: #29B6F6;
+}
+
 .task-status-badge.disabled {
     background: #9E9E9E;
+    color: #1a1a1a;
+}
+
+.task-status-badge.stopped {
+    background: #f44336;
+}
+
+.task-status-badge.paused {
+    background: #FFB74D;
+    color: #1a1a1a;
+}
+
+.task-card.task-card-upcoming {
+    border-left-color: #ff9800;
+    background: rgba(255, 152, 0, 0.15);
+}
+
+.task-card.task-card-imminent {
+    border-left-color: #2196F3;
+    background: rgba(33, 150, 243, 0.18);
 }
 
 .task-card.task-card-ready {
     border-left-color: #4CAF50;
-    background: rgba(76, 175, 80, 0.12);
+    background: rgba(76, 175, 80, 0.15);
 }
 
-.task-card.task-card-soon {
-    border-left-color: #29B6F6;
-    background: rgba(41, 182, 246, 0.15);
+.task-card.task-card-disabled {
+    border-left-color: #9E9E9E;
+    opacity: 0.6;
+}
+
+.task-card.task-card-paused {
+    border-left-color: #FFB74D;
+    background: rgba(255, 183, 77, 0.18);
 }
 
 .next-execution-value {
@@ -122,10 +132,140 @@
     color: #4CAF50;
 }
 
-.next-execution-soon {
-    color: #4FC3F7;
+.next-execution-upcoming {
+    color: #ff9800;
 }
 
-.next-execution-late {
-    color: #FFB74D;
+.next-execution-imminent {
+    color: #2196F3;
+}
+
+.profile-summary {
+    width: 100%;
+    border: none;
+    background: none;
+    padding: 0;
+    cursor: pointer;
+    text-align: left;
+}
+
+.profile-summary:focus-visible .profile-summary-card {
+    outline: 2px solid rgba(255, 255, 255, 0.6);
+    outline-offset: 3px;
+}
+
+.profile-summary-card {
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 16px;
+}
+
+.profile-summary-left {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1 1 auto;
+}
+
+.profile-summary-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.profile-summary-name {
+    flex: 0 0 auto;
+}
+
+.profile-summary-caret {
+    transition: transform 0.2s ease;
+}
+
+.profile-summary-caret.open {
+    transform: rotate(180deg);
+}
+
+.profile-summary-status {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+}
+
+.profile-summary-detail {
+    opacity: 0.85;
+}
+
+.profile-summary-profile-state {
+    font-size: 12px;
+    opacity: 0.75;
+}
+
+.profile-summary-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex: 0 0 auto;
+}
+
+.profile-summary-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    text-align: right;
+}
+
+.summary-label {
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    opacity: 0.8;
+}
+
+.summary-value {
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.profile-tasks-section.expanded .profile-summary-card {
+    margin-bottom: 16px;
+}
+
+.profile-summary-card.idle-running {
+    border-left-color: #4CAF50;
+    background: rgba(76, 175, 80, 0.15);
+}
+
+.profile-summary-card.running-task {
+    border-left-color: #2196F3;
+    background: rgba(33, 150, 243, 0.18);
+}
+
+.profile-summary-card.waiting-slot {
+    border-left-color: #29B6F6;
+    background: rgba(41, 182, 246, 0.16);
+}
+
+.profile-summary-card.disabled {
+    border-left-color: #9E9E9E;
+    background: rgba(158, 158, 158, 0.12);
+}
+
+.profile-summary-card.stopped {
+    border-left-color: #f44336;
+    background: rgba(244, 67, 54, 0.15);
+}
+
+.profile-summary-card.paused {
+    border-left-color: #FFB74D;
+    background: rgba(255, 183, 77, 0.18);
+}
+
+.profile-summary-card.task-card-disabled {
+    opacity: 0.75;
 }
