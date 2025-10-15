@@ -626,7 +626,7 @@ public class EmulatorManager {
         try {
             // Check if this thread already has an active slot
             if (activeSlots.contains(currentThread)) {
-                if (emulator.isRunning(profile.getEmulatorNumber())) {
+                if (emulator.isRunningCached(profile.getEmulatorNumber())) {
                     logger.info("Profile {} already has an active slot, continuing without acquiring a new one.",
                             profile.getName());
                     logSlotHolders();

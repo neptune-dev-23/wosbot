@@ -121,7 +121,7 @@ public class DTOProfiles {
     public <T> T getConfig(EnumConfigurationKey key, Class<T> clazz) {
         Optional<DTOConfig> configOptional = configs.stream().filter(config -> config.getConfigurationName().equalsIgnoreCase(key.name())).findFirst();
 
-        if (!configOptional.isPresent()) {
+        if (configOptional.isEmpty()) {
 
             DTOConfig defaultConfig = new DTOConfig(-1L, key.name(), key.getDefaultValue());
             configs.add(defaultConfig);

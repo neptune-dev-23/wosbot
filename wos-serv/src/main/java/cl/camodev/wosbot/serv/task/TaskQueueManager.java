@@ -13,7 +13,6 @@ import cl.camodev.wosbot.ot.DTOProfiles;
 import cl.camodev.wosbot.ot.DTOQueueProfileState;
 import cl.camodev.wosbot.ot.DTOTaskState;
 import cl.camodev.wosbot.serv.impl.ServLogs;
-import cl.camodev.wosbot.serv.impl.ServProfiles;
 import cl.camodev.wosbot.serv.impl.ServTaskManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -855,13 +855,15 @@ public abstract class Emulator {
 		logger.debug("Device cache invalidated for emulator {}", emulatorNumber);
 	}
 
-	/**
-	 * Checks if the emulator is running with caching to avoid repeated external process calls.
-	 * This wrapper method provides significant performance improvement for MEmu emulator.
-	 * @param emulatorNumber Emulator identifier
-	 * @return true if running, false otherwise
-	 */
-	    public boolean isRunningCached(String emulatorNumber) {		long currentTime = System.currentTimeMillis();
+    /**
+     * Checks if the emulator is running with caching to avoid repeated external process calls.
+     * This wrapper method provides significant performance improvement for MEmu emulator.
+     *
+     * @param emulatorNumber Emulator identifier
+     * @return true if running, false otherwise
+     */
+    public boolean isRunningCached(String emulatorNumber) {
+        long currentTime = System.currentTimeMillis();
 
 		// Check if we have a cached status and it's still valid
 		Boolean cachedStatus = runningStatusCache.get(emulatorNumber);
@@ -880,7 +882,7 @@ public abstract class Emulator {
 		runningStatusCache.put(emulatorNumber, status);
 		runningStatusTimestamp.put(emulatorNumber, currentTime);
 		logger.trace("Running status cached for emulator {}: {}", emulatorNumber, status);
-
+        logger.info("Cache MISS for emulator {}: {}", emulatorNumber, status);
 		return status;
 	}
 
