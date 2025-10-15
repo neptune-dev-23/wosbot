@@ -12,6 +12,15 @@ body {
     overflow: hidden;
 }
 
+@media (max-width: 640px) {
+    body {
+        height: auto;
+        min-height: 100vh;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
 .btn {
     padding: 8px 16px;
     border: none;
@@ -82,7 +91,6 @@ select.filter-input {
     height: 10px;
     border-radius: 50%;
     background: #4CAF50;
-    animation: pulse 2s infinite;
 }
 
 .status-indicator.disconnected {

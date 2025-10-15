@@ -56,19 +56,35 @@ public class ServProfiles implements IServProfile {
 		List<DTOProfiles> profiles = iProfileRepository.getProfiles();
 		TaskQueueManager queueManager = ServScheduler.getServices().getQueueManager();
 
-		profiles.forEach(profile -> {
-			TaskQueue queue = queueManager.getQueue(profile.getId());
-			boolean queueRunning = queue != null && queue.isRunning();
-			profile.setQueueActive(queueRunning);
-
-			if (queue != null) {
-				DTOProfiles liveProfile = queue.getProfile();
-				if (liveProfile != null) {
-					profile.setQueuePosition(liveProfile.getQueuePosition());
-				}
-			}
-        });
+		profiles.forEach(profile -> applyQueueMetadata(queueManager, profile));
 		return profiles;
+	}
+
+	public DTOProfiles getProfileWithConfigs(Long id) {
+		if (id == null) {
+			return null;
+		}
+		DTOProfiles profile = iProfileRepository.getProfileWithConfigsById(id);
+		if (profile != null) {
+			applyQueueMetadata(ServScheduler.getServices().getQueueManager(), profile);
+		}
+		return profile;
+	}
+
+	private void applyQueueMetadata(TaskQueueManager queueManager, DTOProfiles profile) {
+		if (profile == null || queueManager == null) {
+			return;
+		}
+		TaskQueue queue = queueManager.getQueue(profile.getId());
+		boolean queueRunning = queue != null && queue.isRunning();
+		profile.setQueueActive(queueRunning);
+
+		if (queue != null) {
+			DTOProfiles liveProfile = queue.getProfile();
+			if (liveProfile != null) {
+				profile.setQueuePosition(liveProfile.getQueuePosition());
+			}
+		}
 	}
 
 	public HashMap<EnumConfigurationKey, String> getGlobalSettings() {
@@ -101,7 +117,12 @@ public class ServProfiles implements IServProfile {
 
 			boolean success = iProfileRepository.addProfile(newProfile);
 			if (success) {
-				notifyProfileDataChange(null);
+				DTOProfiles created = getProfileWithConfigs(newProfile.getId());
+				if (created != null) {
+					notifyProfileDataChange(created);
+				} else {
+					notifyProfileDataChange(null);
+				}
 			}
 			return success;
 
@@ -149,7 +170,12 @@ public class ServProfiles implements IServProfile {
 
 			boolean success = iProfileRepository.saveProfile(existingProfile);
 			if (success) {
-				notifyProfileDataChange(profileDTO);
+				DTOProfiles updated = getProfileWithConfigs(existingProfile.getId());
+				if (updated != null) {
+					notifyProfileDataChange(updated);
+				} else {
+					notifyProfileDataChange(profileDTO);
+				}
 			}
 			return success;
 

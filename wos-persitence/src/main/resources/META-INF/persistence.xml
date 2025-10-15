@@ -26,10 +26,29 @@
 			<!-- <property name="hibernate.show_sql" value="true" /> -->
 			<!-- <property name="hibernate.format_sql" value="true" /> -->
 			<property name="hibernate.connection.provider_class"
-				value="com.zaxxer.hikari.hibernate.HikariConnectionProvider" />
+				value="org.hibernate.hikaricp.internal.HikariCPConnectionProvider" />
 			<property name="hibernate.hikari.minimumIdle" value="1" />
 			<property name="hibernate.hikari.maximumPoolSize" value="1" />
-			<property name="hibernate.hikari.idleTimeout" value="300000" />
+			<property name="hibernate.hikari.connectionTimeout" value="20000" />
+		</properties>
+	</persistence-unit>
+
+	<persistence-unit name="statsPU">
+		<class>cl.camodev.wosbot.almac.entity.TaskExecutionStat</class>
+
+		<properties>
+			<property name="jakarta.persistence.jdbc.driver"
+				value="org.sqlite.JDBC" />
+			<property name="jakarta.persistence.jdbc.url"
+				value="jdbc:sqlite:stats.db?busy_timeout=1000&amp;journal_mode=WAL" />
+
+			<property name="hibernate.dialect"
+				value="org.hibernate.community.dialect.SQLiteDialect" />
+			<property name="hibernate.hbm2ddl.auto" value="update" />
+			<property name="hibernate.connection.provider_class"
+				value="org.hibernate.hikaricp.internal.HikariCPConnectionProvider" />
+			<property name="hibernate.hikari.minimumIdle" value="1" />
+			<property name="hibernate.hikari.maximumPoolSize" value="1" />
 			<property name="hibernate.hikari.connectionTimeout" value="20000" />
 		</properties>
 	</persistence-unit>

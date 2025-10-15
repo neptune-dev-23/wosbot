@@ -6,6 +6,11 @@
 - [ ] Ensure the “focus” navigation from Profiles → Tasks expands the target profile, collapses the rest, leaves the profile filter on “All”, and scrolls the section into view.
 - [ ] Restore the sidebar hamburger button: keep it pinned to the left edge, visible in both collapsed and expanded states, and adjust CSS so it no longer hides under the clip-mask.
 - [ ] Add lightweight slide/fade transitions for profile and task reordering so resorting feels smooth.
+- [x] Review `AGENTS.md` for current frontend task guidelines.
+- [x] Add task rescheduling control to the Tasks view.
+  - [x] Add a clock-icon button to each task item without altering layout dimensions.
+  - [x] Show a reschedule modal with a datetime picker defaulting to the current time when the button is clicked.
+  - [x] Persist the scheduled time through existing task update wiring or a dedicated action.
 
 
 To resume codex session: codex resume 0199df90-fe8f-70b3-8c37-9de048828cfd

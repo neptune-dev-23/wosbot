@@ -1,7 +1,7 @@
 
-
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { FiCheckSquare, FiChevronDown } from "react-icons/fi";
+import type { FormEvent } from "react";
+import { FiCheckSquare, FiChevronDown, FiClock } from "react-icons/fi";
 import { useSearchParams } from "react-router-dom";
 
 import type { Profile, TaskState } from "../types/api";
@@ -23,6 +23,33 @@ import {
   PROFILE_STATUS_ORDER,
   sortTasksForDisplay,
 } from "../utils/tasks";
+
+interface RescheduleContext {
+  profileId: string;
+  profileName: string;
+  task: TaskState;
+}
+
+const padTimePart = (value: number) => String(value).padStart(2, "0");
+
+const toLocalDateTimeInputValue = (date: Date) => {
+  const year = date.getFullYear();
+  const month = padTimePart(date.getMonth() + 1);
+  const day = padTimePart(date.getDate());
+  const hours = padTimePart(date.getHours());
+  const minutes = padTimePart(date.getMinutes());
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
+
+const normalizeInputToPayload = (value: string) => {
+  if (!value) {
+    return null;
+  }
+  if (value.length === 16) {
+    return `${value}:00`;
+  }
+  return value;
+};
 
 const TasksPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -47,6 +74,10 @@ const TasksPage = () => {
     return {};
   });
   const [error, setError] = useState<string | null>(null);
+  const [rescheduleTarget, setRescheduleTarget] = useState<RescheduleContext | null>(null);
+  const [rescheduleValue, setRescheduleValue] = useState<string>(() => toLocalDateTimeInputValue(new Date()));
+  const [rescheduleError, setRescheduleError] = useState<string | null>(null);
+  const [rescheduleSubmitting, setRescheduleSubmitting] = useState(false);
 
   useEffect(() => {
     const unsubscribeTasks = subscribeTasksStore((next) => {
@@ -102,6 +133,18 @@ const TasksPage = () => {
     });
   }, [focusParam, expandParam, profileParam]);
 
+  const updateSearchParams = useCallback(
+    (mutator: (next: URLSearchParams) => void) => {
+      const currentString = searchParams.toString();
+      const next = new URLSearchParams(searchParams);
+      mutator(next);
+      if (next.toString() !== currentString) {
+        setSearchParams(next, { replace: true });
+      }
+    },
+    [searchParams, setSearchParams],
+  );
+
   const handleProfileFilterChange = useCallback(
     (value: string) => {
       setTaskProfileFilter(value);
@@ -117,18 +160,18 @@ const TasksPage = () => {
         });
       }
 
-      const next = new URLSearchParams(searchParams);
-      next.delete("focus");
-      if (value) {
-        next.set("profile", value);
-        next.set("expand", value);
-      } else {
-        next.delete("profile");
-        next.delete("expand");
-      }
-      setSearchParams(next, { replace: true });
+      updateSearchParams((next) => {
+        next.delete("focus");
+        if (value) {
+          next.set("profile", value);
+          next.set("expand", value);
+        } else {
+          next.delete("profile");
+          next.delete("expand");
+        }
+      });
     },
-    [searchParams, setSearchParams],
+    [updateSearchParams],
   );
 
   const toggleProfileExpansion = useCallback(
@@ -154,22 +197,39 @@ const TasksPage = () => {
         return updated;
       });
 
-      const next = new URLSearchParams(searchParams);
-      next.delete("focus");
-      if (nextExpanded) {
-        next.set("expand", profileId);
-      } else if (next.get("expand") === profileId) {
-        next.delete("expand");
-      }
-      setSearchParams(next, { replace: true });
+      updateSearchParams((next) => {
+        next.delete("focus");
+        if (nextExpanded) {
+          next.set("expand", profileId);
+        } else if (next.get("expand") === profileId) {
+          next.delete("expand");
+        }
+      });
     },
-    [expandedProfiles, searchParams, setSearchParams],
+    [expandedProfiles, updateSearchParams],
   );
 
   const isProfileExpanded = useCallback(
     (profileId: string) => expandedProfiles[profileId] ?? false,
     [expandedProfiles],
   );
+
+  useEffect(() => {
+    if (!rescheduleTarget) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setRescheduleTarget(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [rescheduleTarget]);
 
   const profilesById = useMemo(() => {
     const map = new Map<string, Profile>();
@@ -272,6 +332,88 @@ const TasksPage = () => {
 
     return entryA.profileName.localeCompare(entryB.profileName, undefined, { sensitivity: "base" });
   });
+
+  const openRescheduleModal = useCallback(
+    (profileId: string, profileName: string, task: TaskState) => {
+      setRescheduleTarget({ profileId, profileName, task });
+      setRescheduleValue(toLocalDateTimeInputValue(new Date()));
+      setRescheduleError(null);
+    },
+    [],
+  );
+
+  const handleRescheduleCancel = useCallback(() => {
+    setRescheduleTarget(null);
+    setRescheduleError(null);
+  }, []);
+
+  const handleRescheduleSubmit = useCallback(
+    async (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      if (!rescheduleTarget) {
+        return;
+      }
+
+      const { task, profileId } = rescheduleTarget;
+      if (task.taskId == null) {
+        setRescheduleError("This task cannot be rescheduled because it is missing an identifier.");
+        return;
+      }
+
+      const normalized = normalizeInputToPayload(rescheduleValue);
+      if (!normalized) {
+        setRescheduleError("Please pick a new date and time.");
+        return;
+      }
+
+      const profileIdValue = task.profileId ?? Number.parseInt(profileId, 10);
+      if (!Number.isFinite(profileIdValue)) {
+        setRescheduleError("Missing profile information, cannot reschedule right now.");
+        return;
+      }
+
+      const payload = {
+        profileId: profileIdValue,
+        taskId: task.taskId,
+        taskName: task.taskName,
+        scheduled: true,
+        nextExecutionTime: normalized,
+      };
+
+      setRescheduleSubmitting(true);
+      setRescheduleError(null);
+
+      try {
+        const response = await fetch("/api/tasks/reschedule", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+          let message = "Failed to reschedule task.";
+          try {
+            const data = (await response.json()) as { message?: string; error?: string };
+            message = data?.message ?? data?.error ?? message;
+          } catch {
+            // ignore parse failure
+          }
+          throw new Error(message);
+        }
+
+        setRescheduleTarget(null);
+      } catch (submitError) {
+        const message =
+          submitError instanceof Error ? submitError.message : "Failed to reschedule task.";
+        setRescheduleError(message);
+      } finally {
+        setRescheduleSubmitting(false);
+      }
+    },
+    [rescheduleTarget, rescheduleValue],
+  );
 
   return (
     <div className="view active" id="tasksView">
@@ -388,7 +530,7 @@ const TasksPage = () => {
                       </div>
                     </div>
                   </button>
-                  {expanded ? (
+                  <div className={`tasks-grid-wrapper ${expanded ? "expanded" : "collapsed"}`} aria-hidden={!expanded}>
                     <div className="tasks-grid" id={`profile-tasks-${profileId}`}>
                       {sortedTasks.length > 0 ? (
                         sortedTasks.map((task, index) => {
@@ -397,10 +539,20 @@ const TasksPage = () => {
                           const nextExecutionTime = task.nextExecutionTime;
                           const nextExecutionCountdown =
                             nextExecutionMs !== null ? formatDuration(Math.max(nextExecutionMs - now, 0)) : null;
-                          const taskKey = task.taskId != null ? `task-${task.taskId}` : `${task.taskName ?? "task"}-${index}`;
+                          const taskKey =
+                            task.taskId != null ? `task-${task.taskId}` : `${task.taskName ?? "task"}-${index}`;
 
                           return (
                             <div className={cardClassName} key={taskKey}>
+                              <button
+                                type="button"
+                                className="task-reschedule-button"
+                                onClick={() => openRescheduleModal(profileId, profileName, task)}
+                                aria-label={`Reschedule ${task.taskName ?? "task"}`}
+                                title="Reschedule"
+                              >
+                                <FiClock aria-hidden="true" size={16} />
+                              </button>
                               <div className="task-name">{task.taskName ?? "Unknown Task"}</div>
                               <div className="task-details">
                                 <div className="task-detail">
@@ -442,13 +594,70 @@ const TasksPage = () => {
                         <div className="loading">No tasks for this profile.</div>
                       )}
                     </div>
-                  ) : null}
+                  </div>
                 </div>
               );
             })
           )}
         </div>
       </div>
+      {rescheduleTarget ? (
+        <div className="task-reschedule-overlay" role="presentation" onClick={handleRescheduleCancel}>
+          <div
+            className="task-reschedule-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="task-reschedule-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header className="task-reschedule-header">
+              <FiClock aria-hidden="true" size={20} />
+              <div>
+                <h2 id="task-reschedule-title">Reschedule Task</h2>
+                <p>
+                  {rescheduleTarget.task.taskName ?? "Task"} · {rescheduleTarget.profileName}
+                </p>
+              </div>
+            </header>
+            <form className="task-reschedule-form" onSubmit={handleRescheduleSubmit}>
+              <label className="task-reschedule-label" htmlFor="task-reschedule-datetime">
+                Next execution time
+              </label>
+              <input
+                id="task-reschedule-datetime"
+                className="task-reschedule-input"
+                type="datetime-local"
+                value={rescheduleValue}
+                onChange={(event) => setRescheduleValue(event.target.value)}
+                min={toLocalDateTimeInputValue(new Date())}
+                step={60}
+                required
+              />
+              {rescheduleTarget.task.nextExecutionTime ? (
+                <p className="task-reschedule-hint">
+                  Currently scheduled for {formatDateTime(rescheduleTarget.task.nextExecutionTime)}.
+                </p>
+              ) : (
+                <p className="task-reschedule-hint">This task does not have a scheduled run yet.</p>
+              )}
+              {rescheduleError ? <p className="task-reschedule-error">{rescheduleError}</p> : null}
+              <div className="task-reschedule-actions">
+                <button
+                  type="button"
+                  className="task-reschedule-cancel"
+                  onClick={handleRescheduleCancel}
+                  disabled={rescheduleSubmitting}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="task-reschedule-submit" disabled={rescheduleSubmitting}>
+                  {rescheduleSubmitting ? "Scheduling…" : "Schedule"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 };

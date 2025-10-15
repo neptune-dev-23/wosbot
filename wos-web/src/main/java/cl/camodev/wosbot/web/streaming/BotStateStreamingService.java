@@ -55,10 +55,11 @@ public class BotStateStreamingService implements IBotStateListener, WebSocketTop
         cl.camodev.wosbot.serv.task.TaskQueueManager queueManager =
                 ServScheduler.getServices().getQueueManager();
         boolean hasRunningQueues = queueManager.hasRunningQueues();
+        boolean globallyPaused = queueManager.isGloballyPaused();
 
         DTOBotState currentState = new DTOBotState();
         currentState.setRunning(hasRunningQueues);
-        currentState.setPaused(false);
+        currentState.setPaused(hasRunningQueues && globallyPaused);
         currentState.setActionTime(LocalDateTime.now());
         return currentState;
     }

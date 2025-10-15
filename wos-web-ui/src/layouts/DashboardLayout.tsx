@@ -1,12 +1,35 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { FaRobot } from "react-icons/fa";
-import { FiCheckSquare, FiClipboard, FiPause, FiPlay, FiStopCircle, FiUsers } from "react-icons/fi";
+import {
+  FiAlertTriangle,
+  FiAward,
+  FiBarChart2,
+  FiCheckSquare,
+  FiClipboard,
+  FiCloudSnow,
+  FiCpu,
+  FiPause,
+  FiHeart,
+  FiMap,
+  FiPackage,
+  FiPlay,
+  FiSend,
+  FiShield,
+  FiShoppingBag,
+  FiStopCircle,
+  FiTarget,
+  FiUsers,
+  FiBookOpen,
+  FiCalendar,
+  FiTrendingUp,
+} from "react-icons/fi";
+import type { IconType } from "react-icons";
 
 import type { BotState } from "../types/api";
 import { subscribeToMessage } from "../services/wsClient";
 
-type BotStatus = "running" | "paused" | "stopped" | "unknown";
+type BotStatus = "running" | "paused" | "stopped" | "unknown" | "starting";
 
 const resolveBotStatus = (botState: BotState): BotStatus => {
   if (!botState) {
@@ -25,12 +48,39 @@ const DashboardLayout = () => {
   const [isNavOpen, setIsNavOpen] = useState(false);
   const [botStatus, setBotStatus] = useState<BotStatus>("unknown");
   const [botActionPending, setBotActionPending] = useState(false);
+  const [pendingAction, setPendingAction] = useState<"start" | "stop" | "pause" | "resume" | null>(null);
   const [versionLabel, setVersionLabel] = useState("Whiteout Survival Bot");
+  const lastStableStatusRef = useRef<BotStatus>("unknown");
 
   const navRef = useRef<HTMLElement | null>(null);
   const hamburgerRef = useRef<HTMLButtonElement | null>(null);
 
   const location = useLocation();
+
+  const navItems = useMemo(
+    () =>
+      [
+        { path: "/logs", label: "Logs", icon: FiClipboard },
+        { path: "/profiles", label: "Profiles", icon: FiUsers },
+        { path: "/tasks", label: "Task Manager", icon: FiCheckSquare },
+        { path: "/task-stats", label: "Task Stats", icon: FiTrendingUp },
+        { path: "/alliance", label: "Alliance", icon: FiShield },
+        { path: "/city", label: "City", icon: FiMap },
+        { path: "/events", label: "Events", icon: FiCalendar },
+        { path: "/gather", label: "Gather", icon: FiPackage },
+        { path: "/intel", label: "Intel", icon: FiTarget },
+        { path: "/mobilization", label: "Mobilization", icon: FiSend },
+        { path: "/pets", label: "Pets", icon: FiHeart },
+        { path: "/shop", label: "Shop", icon: FiShoppingBag },
+        { path: "/training", label: "Training", icon: FiBarChart2 },
+        { path: "/polar-terror", label: "Polar Terror", icon: FiCloudSnow },
+        { path: "/bear-trap", label: "Bear Trap", icon: FiAlertTriangle },
+        { path: "/chief-order", label: "Chief Order", icon: FiAward },
+        { path: "/experts", label: "Experts", icon: FiBookOpen },
+        { path: "/emulator", label: "Emulators", icon: FiCpu },
+      ] satisfies Array<{ path: string; label: string; icon: IconType }>,
+    []
+  );
 
   useEffect(() => {
     if (!isNavOpen) {
@@ -57,10 +107,19 @@ const DashboardLayout = () => {
   }, [location.pathname]);
 
   useEffect(() => {
-    const applyState = (state: BotState) => setBotStatus(resolveBotStatus(state));
+    const applyState = (state: BotState) => {
+      const resolved = resolveBotStatus(state);
+      setBotStatus(resolved);
+      lastStableStatusRef.current = resolved;
+      setPendingAction(null);
+      setBotActionPending(false);
+    };
     const unsubscribeSnapshot = subscribeToMessage<BotState>("botState.snapshot", applyState);
     const unsubscribeUpdate = subscribeToMessage<BotState>("botState.update", applyState);
-    const unsubscribeDisconnected = subscribeToMessage("system.disconnected", () => setBotStatus("unknown"));
+    const unsubscribeDisconnected = subscribeToMessage("system.disconnected", () => {
+      setBotStatus("unknown");
+      lastStableStatusRef.current = "unknown";
+    });
 
     return () => {
       unsubscribeSnapshot();
@@ -88,10 +147,61 @@ const DashboardLayout = () => {
     loadVersion().catch(() => undefined);
   }, []);
 
+  useEffect(() => {
+    const loadInitialBotStatus = async () => {
+      try {
+        const response = await fetch("/api/bot/status");
+        if (!response.ok) {
+          return;
+        }
+        const data = (await response.json()) as {
+          status?: string;
+          running?: boolean;
+          paused?: boolean;
+        };
+
+        if (typeof data.running === "boolean") {
+          const resolved = resolveBotStatus({ running: data.running, paused: data.paused ?? false });
+          setBotStatus(resolved);
+          lastStableStatusRef.current = resolved;
+          return;
+        }
+
+        if (typeof data.status === "string") {
+          const normalized = data.status.toLowerCase();
+          if (normalized === "paused") {
+            setBotStatus("paused");
+            lastStableStatusRef.current = "paused";
+          } else if (normalized === "running") {
+            setBotStatus("running");
+            lastStableStatusRef.current = "running";
+          } else if (normalized === "stopped") {
+            setBotStatus("stopped");
+            lastStableStatusRef.current = "stopped";
+          }
+        }
+      } catch (error) {
+        console.warn("Failed to load bot status", error);
+      }
+    };
+
+    loadInitialBotStatus().catch(() => undefined);
+  }, []);
+
   const handleBotCommand = useCallback(
-    async (endpoint: string, actionDescription: string) => {
+    async (
+      endpoint: string,
+      actionDescription: string,
+      actionKey: "start" | "stop" | "pause" | "resume",
+    ) => {
+      const previousStatus = botStatus;
       try {
         setBotActionPending(true);
+        setPendingAction(actionKey);
+        if (actionKey === "start") {
+          lastStableStatusRef.current = botStatus !== "starting" ? botStatus : lastStableStatusRef.current;
+          setBotStatus("starting");
+        }
         const response = await fetch(endpoint, { method: "POST" });
         if (!response.ok) {
           throw new Error(`Failed to ${actionDescription}: ${response.status}`);
@@ -100,15 +210,49 @@ const DashboardLayout = () => {
         if (data.success === false) {
           throw new Error(data.error ?? `Failed to ${actionDescription}`);
         }
+
+        switch (actionKey) {
+          case "stop":
+            setBotStatus("stopped");
+            lastStableStatusRef.current = "stopped";
+            break;
+          case "pause":
+            setBotStatus("paused");
+            lastStableStatusRef.current = "paused";
+            break;
+          case "resume":
+            setBotStatus("running");
+            lastStableStatusRef.current = "running";
+            break;
+          case "start":
+            setBotStatus("running");
+            lastStableStatusRef.current = "running";
+            break;
+          default:
+            break;
+        }
+        setPendingAction(null);
+        setBotActionPending(false);
       } catch (error) {
         console.error(error);
         const message = error instanceof Error ? error.message : `Failed to ${actionDescription}`;
         window.alert(message);
-      } finally {
+        if (actionKey === "start") {
+          setBotStatus(lastStableStatusRef.current);
+        } else {
+          setBotStatus(previousStatus);
+          lastStableStatusRef.current = previousStatus;
+        }
+        setPendingAction(null);
         setBotActionPending(false);
+      } finally {
+        if (actionKey !== "start") {
+          setBotActionPending(false);
+          setPendingAction(null);
+        }
       }
     },
-    []
+    [botStatus]
   );
 
   const botStatusTextMap: Record<BotStatus, string> = useMemo(
@@ -116,6 +260,7 @@ const DashboardLayout = () => {
       running: "Bot Status: Running",
       paused: "Bot Status: Paused",
       stopped: "Bot Status: Stopped",
+      starting: "Bot Status: Starting...",
       unknown: "Bot Status: Unknown",
     }),
     []
@@ -158,40 +303,33 @@ const DashboardLayout = () => {
         <span />
       </button>
       <nav className={`sidenav ${isNavOpen ? "open" : ""}`} id="sideNav" ref={navRef}>
-        <div className="sidenav-header">
-          <h2>
-            <Link className="sidenav-brand" to="/" onClick={handleNavItemClick}>
-              <FaRobot aria-hidden="true" className="header-icon" size={22} />
-              <span className="sidenav-title-text">WosBot</span>
-            </Link>
-          </h2>
+        <div className="sidenav-content">
+          <div className="sidenav-header">
+            <h2>
+              <Link className="sidenav-brand" to="/" onClick={handleNavItemClick}>
+                <FaRobot aria-hidden="true" className="header-icon" size={22} />
+                <span className="sidenav-title-text">WosBot</span>
+              </Link>
+            </h2>
+          </div>
+          <ul className="sidenav-menu">
+            {navItems.map((item) => (
+              <li key={item.path}>
+                <NavLink
+                  to={item.path}
+                  className={navItemClass}
+                  onClick={handleNavItemClick}
+                  title={item.label}
+                >
+                  <span className="nav-icon" aria-hidden="true">
+                    <item.icon size={20} />
+                  </span>
+                  <span className="nav-text">{item.label}</span>
+                </NavLink>
+              </li>
+            ))}
+          </ul>
         </div>
-        <ul className="sidenav-menu">
-          <li>
-            <NavLink to="/logs" className={navItemClass} onClick={handleNavItemClick}>
-              <span className="nav-icon" aria-hidden="true">
-                <FiClipboard size={20} />
-              </span>
-              <span className="nav-text">Logs</span>
-            </NavLink>
-          </li>
-          <li>
-            <NavLink to="/profiles" className={navItemClass} onClick={handleNavItemClick}>
-              <span className="nav-icon" aria-hidden="true">
-                <FiUsers size={20} />
-              </span>
-              <span className="nav-text">Profiles</span>
-            </NavLink>
-          </li>
-          <li>
-            <NavLink to="/tasks" className={navItemClass} onClick={handleNavItemClick}>
-              <span className="nav-icon" aria-hidden="true">
-                <FiCheckSquare size={20} />
-              </span>
-              <span className="nav-text">Task Manager</span>
-            </NavLink>
-          </li>
-        </ul>
       </nav>
 
       <div className={`main-content ${isNavOpen ? "shifted" : ""}`} id="mainContent">
@@ -216,7 +354,7 @@ const DashboardLayout = () => {
               <button
                 className="bottom-btn bottom-btn-pause"
                 id="btnPause"
-                onClick={() => handleBotCommand("/api/bot/pause", "pause bot")}
+                onClick={() => handleBotCommand("/api/bot/pause", "pause bot", "pause")}
                 disabled={botActionPending}
                 type="button"
               >
@@ -228,7 +366,7 @@ const DashboardLayout = () => {
               <button
                 className="bottom-btn bottom-btn-stop"
                 id="btnStop"
-                onClick={() => handleBotCommand("/api/bot/stop", "stop bot")}
+                onClick={() => handleBotCommand("/api/bot/stop", "stop bot", "stop")}
                 disabled={botActionPending}
                 type="button"
               >
@@ -244,7 +382,7 @@ const DashboardLayout = () => {
               <button
                 className="bottom-btn bottom-btn-resume"
                 id="btnResume"
-                onClick={() => handleBotCommand("/api/bot/resume", "resume bot")}
+                onClick={() => handleBotCommand("/api/bot/resume", "resume bot", "resume")}
                 disabled={botActionPending}
                 type="button"
               >
@@ -256,7 +394,7 @@ const DashboardLayout = () => {
               <button
                 className="bottom-btn bottom-btn-stop"
                 id="btnStopPaused"
-                onClick={() => handleBotCommand("/api/bot/stop", "stop bot")}
+                onClick={() => handleBotCommand("/api/bot/stop", "stop bot", "stop")}
                 disabled={botActionPending}
                 type="button"
               >
@@ -267,18 +405,18 @@ const DashboardLayout = () => {
               </button>
             </>
           )}
-          {(botStatus === "stopped" || botStatus === "unknown") && (
+          {(botStatus === "stopped" || botStatus === "unknown" || botStatus === "starting") && (
             <button
-              className="bottom-btn bottom-btn-start"
+              className={`bottom-btn bottom-btn-start${botStatus === "starting" || pendingAction === "start" ? " pending-state" : ""}`}
               id="btnStart"
-              onClick={() => handleBotCommand("/api/bot/start", "start bot")}
+              onClick={() => handleBotCommand("/api/bot/start", "start bot", "start")}
               disabled={botActionPending}
               type="button"
             >
               <span className="btn-icon" aria-hidden="true">
                 <FiPlay size={16} />
               </span>
-              <span className="btn-text">Start Bot</span>
+              <span className="btn-text">{botStatus === "starting" ? "Starting..." : "Start Bot"}</span>
             </button>
           )}
         </div>

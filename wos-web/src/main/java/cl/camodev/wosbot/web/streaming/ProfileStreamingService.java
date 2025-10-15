@@ -26,6 +26,10 @@ public class ProfileStreamingService implements IProfileStatusChangeListener, IP
 
     private final WebSocketMessagingService messagingService;
 
+    private record ProfileStatusUpdate(Long id, String status) {}
+
+    private record ProfileUpdatePayload(List<DTOProfiles> changed, List<Long> removed, List<ProfileStatusUpdate> statuses) {}
+
     public ProfileStreamingService(WebSocketMessagingService messagingService) {
         this.messagingService = messagingService;
     }
@@ -50,13 +54,43 @@ public class ProfileStreamingService implements IProfileStatusChangeListener, IP
     @Override
     public void onProfileStatusChange(DTOProfileStatus status) {
         logger.debug("Profile status change received for profile {}", status.getId());
-        broadcastSnapshot();
+        if (status == null || status.getId() == null) {
+            return;
+        }
+
+        DTOProfiles latest = ServProfiles.getServices().getProfileWithConfigs(status.getId());
+        ProfileUpdatePayload payload = new ProfileUpdatePayload(
+                latest != null ? Collections.singletonList(latest) : null,
+                null,
+                Collections.singletonList(new ProfileStatusUpdate(status.getId(), status.getStatus()))
+        );
+        broadcastUpdate(payload);
     }
 
     @Override
     public void onProfileDataChanged(DTOProfiles profile) {
         logger.debug("Profile data change detected for profile {}", profile != null ? profile.getId() : "unknown");
-        broadcastSnapshot();
+        if (profile == null || profile.getId() == null) {
+            broadcastSnapshot();
+            return;
+        }
+
+        DTOProfiles latest = ServProfiles.getServices().getProfileWithConfigs(profile.getId());
+        if (latest != null) {
+            ProfileUpdatePayload payload = new ProfileUpdatePayload(
+                    Collections.singletonList(latest),
+                    null,
+                    null
+            );
+            broadcastUpdate(payload);
+        } else {
+            ProfileUpdatePayload payload = new ProfileUpdatePayload(
+                    null,
+                    Collections.singletonList(profile.getId()),
+                    null
+            );
+            broadcastUpdate(payload);
+        }
     }
 
     private void broadcastSnapshot() {
@@ -76,5 +110,12 @@ public class ProfileStreamingService implements IProfileStatusChangeListener, IP
             logger.error("Failed to load profiles snapshot: {}", ex.getMessage());
             return Collections.emptyList();
         }
+    }
+
+    private void broadcastUpdate(ProfileUpdatePayload payload) {
+        if (payload == null) {
+            return;
+        }
+        messagingService.broadcast("profiles", "profiles.update", payload);
     }
 }

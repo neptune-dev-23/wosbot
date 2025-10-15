@@ -25,6 +25,12 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.sidenav-content {
+    display: flex;
+    flex-direction: column;
+    height: calc(100% - 0px);
+}
+
 .sidenav-header h2 {
     font-size: 18px;
     font-weight: 600;
@@ -53,8 +59,23 @@
 
 .sidenav-menu {
     list-style: none;
-    padding: 20px 0;
     margin: 0;
+    height: calc(100vh - 120px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.sidenav-menu::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidenav-menu::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.25);
+    border-radius: 4px;
+}
+
+.sidenav-menu::-webkit-scrollbar-track {
+    background: transparent;
 }
 
 .nav-item {

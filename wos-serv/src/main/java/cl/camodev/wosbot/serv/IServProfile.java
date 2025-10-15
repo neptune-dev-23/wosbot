@@ -8,6 +8,8 @@ public interface IServProfile {
 
 	public List<DTOProfiles> getProfiles();
 
+	public DTOProfiles getProfileWithConfigs(Long id);
+
 	public boolean addProfile(DTOProfiles profile);
 
 	public boolean saveProfile(DTOProfiles profile);

@@ -47,7 +47,6 @@
 
 .bot-status-indicator.running {
     background: #4CAF50;
-    animation: pulse 2s infinite;
 }
 
 .bot-status-indicator.paused {
@@ -56,6 +55,10 @@
 
 .bot-status-indicator.stopped {
     background: #f44336;
+}
+
+.bot-status-indicator.starting {
+    background: #64B5F6;
 }
 
 .bot-status-text {
@@ -130,4 +133,70 @@
     background: #da190b;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4);
+}
+
+.bottom-btn:disabled {
+    opacity: 0.6;
+    cursor: default;
+    transform: none;
+    box-shadow: none;
+}
+
+.bottom-btn.pending-state {
+    background: #9E9E9E !important;
+    color: #1a1a1a;
+    box-shadow: none;
+}
+
+.bottom-btn.pending-state .btn-icon {
+    color: inherit;
+}
+
+@media (max-width: 640px) {
+    .bottom-bar {
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+        padding: 12px 16px;
+        gap: 12px;
+        height: auto;
+    }
+
+    .bottom-bar-left,
+    .bottom-bar-center,
+    .bottom-bar-right {
+        width: 100%;
+        flex: none;
+        justify-content: space-between;
+    }
+
+    .bottom-bar-center {
+        justify-content: flex-start;
+    }
+
+    .bottom-bar-right {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .bot-status {
+        gap: 8px;
+    }
+
+    .bot-status-text,
+    .app-version {
+        font-size: 13px;
+    }
+
+    .bottom-btn {
+        flex: 1 0 48%;
+        justify-content: center;
+        padding: 12px;
+        font-size: 15px;
+    }
+
+    .bottom-bar-right .bottom-btn {
+        min-width: 140px;
+    }
+
 }

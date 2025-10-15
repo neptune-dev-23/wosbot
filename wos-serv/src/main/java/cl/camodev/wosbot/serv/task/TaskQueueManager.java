@@ -150,6 +150,19 @@ public class TaskQueueManager {
     public boolean hasRunningQueues() {
         return taskQueues.values().stream().anyMatch(TaskQueue::isRunning);
     }
+
+    public boolean isGloballyPaused() {
+        if (taskQueues.isEmpty()) {
+            return false;
+        }
+        for (Map.Entry<Long, TaskQueue> entry : taskQueues.entrySet()) {
+            Long profileId = entry.getKey();
+            if (!queuePausedStates.getOrDefault(profileId, Boolean.FALSE)) {
+                return false;
+            }
+        }
+        return true;
+    }
     public Map<Long, Boolean> getRunningQueues() {
         Map<Long, Boolean> runningQueues = new HashMap<>();
         taskQueues.forEach((k, v) -> {

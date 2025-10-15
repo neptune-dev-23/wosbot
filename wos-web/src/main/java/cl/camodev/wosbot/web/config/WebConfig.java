@@ -16,10 +16,13 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.config.annotation.AsyncSupportConfigurer;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.resource.PathResourceResolver;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
+
+import cl.camodev.wosbot.web.logging.WebRequestLoggingInterceptor;
 
 /**
  * Spring MVC configuration for the web dashboard.
@@ -30,6 +33,12 @@ import org.springframework.web.servlet.view.InternalResourceViewResolver;
 public class WebConfig implements WebMvcConfigurer {
     @Value("${app.cors.allowed-origins:}")
     private String corsAllowedOrigins;
+
+    private final WebRequestLoggingInterceptor webRequestLoggingInterceptor;
+
+    public WebConfig(WebRequestLoggingInterceptor webRequestLoggingInterceptor) {
+        this.webRequestLoggingInterceptor = webRequestLoggingInterceptor;
+    }
 
     
     @Override
@@ -80,6 +89,11 @@ public class WebConfig implements WebMvcConfigurer {
         // Enable redirect: and forward: prefix handling
         resolver.setRedirectHttp10Compatible(false);
         return resolver;
+    }
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(webRequestLoggingInterceptor);
     }
 
     private static class SpaFallbackResourceResolver extends PathResourceResolver {

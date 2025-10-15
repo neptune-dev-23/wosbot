@@ -20,12 +20,14 @@ import cl.camodev.wosbot.ex.StopExecutionException;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOProfileStatus;
 import cl.camodev.wosbot.ot.DTOProfiles;
+import cl.camodev.wosbot.ot.DTOTaskExecutionStat;
 import cl.camodev.wosbot.ot.DTOTaskQueueStatus;
 import cl.camodev.wosbot.ot.DTOTaskState;
 import cl.camodev.wosbot.serv.impl.ServLogs;
 import cl.camodev.wosbot.serv.impl.ServProfiles;
 import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.impl.ServTaskManager;
+import cl.camodev.wosbot.serv.impl.ServTaskStats;
 import cl.camodev.wosbot.serv.task.impl.InitializeTask;
 
 import org.slf4j.Logger;
@@ -183,13 +185,17 @@ public class TaskQueue {
 
         LocalDateTime scheduledBefore = task.getScheduled();
         DTOTaskState taskState = createInitialTaskState(task);
-        boolean executionSuccessful;
+        boolean executionSuccessful = false;
+        String errorMessage = null;
+        LocalDateTime startedAt = null;
+        LocalDateTime finishedAt = null;
 
         try {
             logInfoWithTask(task, "Starting task execution: " + task.getTaskName());
             updateProfileStatus("Executing " + task.getTaskName());
 
-            task.setLastExecutionTime(LocalDateTime.now());
+            startedAt = LocalDateTime.now();
+            task.setLastExecutionTime(startedAt);
             task.run();
 
             executionSuccessful = true;
@@ -205,7 +211,28 @@ public class TaskQueue {
         } catch (Exception e) {
             handleTaskExecutionException(task, e);
             executionSuccessful = false;
+            errorMessage = e.getMessage();
         } finally {
+            finishedAt = LocalDateTime.now();
+            if (startedAt == null) {
+                startedAt = finishedAt;
+            }
+
+            long durationMillis = Duration.between(startedAt, finishedAt).toMillis();
+            DTOTaskExecutionStat stat = new DTOTaskExecutionStat(
+                    profile.getId(),
+                    profile.getName(),
+                    profile.getEmulatorNumber(),
+                    task.getTpTask() != null ? task.getTpTask().getId() : null,
+                    task.getTaskName(),
+                    scheduledBefore,
+                    startedAt,
+                    finishedAt,
+                    durationMillis,
+                    executionSuccessful,
+                    errorMessage);
+            ServTaskStats.getInstance().recordExecution(stat);
+
             // Always handle task rescheduling, regardless of success or failure
             handleTaskRescheduling(task, scheduledBefore);
             finalizeTaskState(task, taskState);

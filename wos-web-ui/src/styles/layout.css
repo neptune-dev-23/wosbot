@@ -62,3 +62,31 @@
     flex-wrap: wrap;
     align-items: center;
 }
+
+@media (max-width: 640px) {
+    .main-content {
+        margin-left: 0;
+        margin-bottom: 120px;
+        height: auto;
+        min-height: 100vh;
+    }
+
+    .view {
+        height: auto;
+        min-height: calc(100vh - 120px);
+    }
+
+    .content-container {
+        padding: 16px 14px 24px;
+        overflow-y: visible;
+    }
+
+    .header {
+        padding: 16px 14px;
+    }
+
+    .header h1 {
+        font-size: 22px;
+        gap: 8px;
+    }
+}

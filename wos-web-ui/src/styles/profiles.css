@@ -11,7 +11,7 @@
     padding: 20px;
     border-left: 4px solid rgba(255, 255, 255, 0.2);
     transition: all 0.3s ease;
-    animation: slideIn 0.3s ease;
+    will-change: transform;
 }
 
 .profile-card.idle-running {

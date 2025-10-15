@@ -394,5 +394,3 @@ const ProfilesPage = () => {
 
 export default ProfilesPage;
 
-
-

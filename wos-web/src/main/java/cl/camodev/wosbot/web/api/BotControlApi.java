@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -66,17 +67,33 @@ public class BotControlApi {
     }
 
     @GetMapping("/status")
-    public ResponseEntity<Map<String, String>> getBotStatus() {
+    public ResponseEntity<Map<String, Object>> getBotStatus() {
         try {
             cl.camodev.wosbot.serv.task.TaskQueueManager queueManager = 
                 ServScheduler.getServices().getQueueManager();
             boolean hasRunningQueues = queueManager.hasRunningQueues();
-            
-            String status = hasRunningQueues ? "running" : "stopped";
-            return ResponseEntity.ok(Map.of("status", status));
+            boolean globallyPaused = queueManager.isGloballyPaused();
+
+            String status;
+            if (!hasRunningQueues) {
+                status = "stopped";
+            } else if (globallyPaused) {
+                status = "paused";
+            } else {
+                status = "running";
+            }
+
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("status", status);
+            payload.put("running", hasRunningQueues);
+            payload.put("paused", globallyPaused);
+            return ResponseEntity.ok(payload);
         } catch (Exception e) {
             logger.error("Error getting bot status: {}", e.getMessage(), e);
-            return ResponseEntity.status(500).body(Map.of("error", "Failed to get bot status"));
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("error", "Failed to get bot status");
+            payload.put("status", "unknown");
+            return ResponseEntity.status(500).body(payload);
         }
     }
 }

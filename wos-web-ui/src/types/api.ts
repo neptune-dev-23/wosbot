@@ -30,6 +30,22 @@ export interface ProfileConfig {
   value?: string;
 }
 
+export interface AllianceSettings {
+  techContribution: boolean;
+  techOffsetMinutes: number;
+  chestClaim: boolean;
+  chestOffsetMinutes: number;
+  honorChest: boolean;
+  helpRequests: boolean;
+  triumph: boolean;
+  triumphOffsetMinutes: number;
+  lifeEssence: boolean;
+  lifeEssenceOffsetMinutes: number;
+  autojoinEnabled: boolean;
+  autojoinQueues: number;
+  autojoinMode: "allTroops" | "useFormation";
+}
+
 export interface TaskState {
   taskId?: number;
   profileId?: number;
@@ -43,4 +59,32 @@ export interface TaskState {
 export interface BotState {
   running?: boolean;
   paused?: boolean;
+}
+
+export interface TaskStatsAggregate {
+  taskId?: number | null;
+  taskName?: string | null;
+  totalRuns: number;
+  successCount: number;
+  failureCount: number;
+  successRate: number;
+  minDurationMillis: number;
+  maxDurationMillis: number;
+  averageDurationMillis: number;
+  p95DurationMillis: number;
+  lastStartedAt?: string | null;
+  lastFinishedAt?: string | null;
+  lastErrorMessage?: string | null;
+  profileCount: number;
+  sampleProfiles: string[];
+}
+
+export interface TaskStatsResponse {
+  meta: {
+    profileId?: number | null;
+    taskId?: number | null;
+    limit: number;
+    groups: number;
+  };
+  data: TaskStatsAggregate[];
 }

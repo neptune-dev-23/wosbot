@@ -1,7 +1,7 @@
 # Repository Guidelines
 
 - User confirmation is required for changes to backend service modules (`wos-serv`, `wos-ot`, `wos-persistence`). Frontend (`wos-web-ui`) and web API (`wos-web`) changes are pre-approved.
-- When given multiple tasks at once, first add them all to a `TODO.md` file in the root of the relevant module. Break each task into subtasks if applicable, and go over a high-level implementation plan. Continually reference this `TODO.md` when switching tasks.
+- When given multiple tasks at once, capture them in the agent's internal task list (use the planning tool) and outline a high-level implementation plan there. Reference and update the plan as work progresses instead of editing module `TODO.md` files.
 
 ## Project Structure & Module Organization
 - Root Maven multi-module project (`pom.xml`). Requires JDK 21.
@@ -41,6 +41,7 @@
 
 ## Logs
 - Bot runtime log: `log/bot.log`
+- Web interactions log: `log/web.log`
 
 ## Commit & Pull Request Guidelines
 - Use Conventional Commits: `feat:`, `fix:`, `refactor:`, `chore:` with optional scope (`feat(hmi): ...`).

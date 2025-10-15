@@ -1,5 +1,7 @@
 package cl.camodev.wosbot.almac.jpa;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
 
@@ -111,7 +113,15 @@ public final class BotPersistence {
 			// Agregar los parámetros a la Query
 			if (parameters != null) {
 				for (Map.Entry<String, Object> param : parameters.entrySet()) {
-					query.setParameter(param.getKey(), param.getValue());
+					Object value = param.getValue();
+					if (value instanceof String) {
+						try {
+							value = LocalDateTime.parse((String) value);
+						} catch (DateTimeParseException e) {
+							// No es un LocalDateTime, se deja el valor como está
+						}
+					}
+					query.setParameter(param.getKey(), value);
 				}
 			}
 
@@ -129,8 +139,15 @@ public final class BotPersistence {
 
             if (parameters != null) {
                 for (Map.Entry<String, Object> param : parameters.entrySet()) {
-                    query.setParameter(param.getKey(), param.getValue());
-                }
+                    					Object value = param.getValue();
+                    					if (value instanceof String) {
+                    						try {
+                    							value = LocalDateTime.parse((String) value);
+                    						} catch (DateTimeParseException e) {
+                    							// No es un LocalDateTime, se deja el valor como está
+                    						}
+                    					}
+                    					query.setParameter(param.getKey(), value);                }
             }
 
             int result = query.executeUpdate();

@@ -1,0 +1,270 @@
+.page-content {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.header-subtitle {
+    margin-top: 8px;
+    font-size: 14px;
+    opacity: 0.75;
+    max-width: 720px;
+}
+
+.page-section {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.page-section h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.stat-card h3 {
+    margin: 0;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    opacity: 0.8;
+}
+
+.stat-card .stat-value {
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.stat-card .stat-trend {
+    font-size: 12px;
+    opacity: 0.75;
+}
+
+.page-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+}
+
+.page-panel {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.page-panel h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.page-panel p {
+    margin: 0;
+    opacity: 0.8;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.list-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+}
+
+.list-card {
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 10px;
+    padding: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.list-card strong {
+    font-size: 14px;
+}
+
+.list-card span {
+    font-size: 13px;
+    opacity: 0.75;
+}
+
+.timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.timeline-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.timeline-item strong {
+    font-size: 14px;
+}
+
+.timeline-item span {
+    font-size: 12px;
+    opacity: 0.7;
+}
+
+.settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+}
+
+.settings-card {
+    gap: 12px;
+}
+
+.settings-toggle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.settings-toggle input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #4CAF50;
+    cursor: pointer;
+}
+
+.settings-helper {
+    margin: 0;
+    font-size: 13px;
+    opacity: 0.75;
+}
+
+.settings-offset,
+.settings-inline {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.settings-offset label,
+.settings-inline label {
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    opacity: 0.7;
+}
+
+.settings-offset input,
+.settings-inline select {
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 8px;
+    color: inherit;
+    padding: 8px 10px;
+    font-size: 14px;
+}
+
+.settings-offset input:disabled,
+.settings-inline select:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.settings-radio-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.settings-radio-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.settings-radio-option input[type="radio"] {
+    accent-color: #4CAF50;
+    cursor: pointer;
+}
+
+.settings-radio-option input:disabled + span {
+    opacity: 0.6;
+}
+
+.settings-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: flex-end;
+    justify-content: space-between;
+}
+
+.settings-toolbar .settings-inline {
+    min-width: 220px;
+}
+
+.settings-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    justify-content: flex-end;
+    margin-left: auto;
+}
+
+.settings-actions .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.settings-message {
+    font-size: 13px;
+    opacity: 0.8;
+    margin-right: auto;
+}
+
+.settings-message.info {
+    opacity: 0.65;
+}
+
+.settings-message.success {
+    color: #9ef6c5;
+}
+
+.settings-message.error {
+    color: #ff9c9c;
+}
