@@ -228,8 +228,7 @@ public abstract class Emulator {
 	 * @return Result of the action
 	 */
 	protected <T> T withRetries(String emulatorNumber, Function<IDevice, T> action, String actionName) {
-		if (!isRunning(emulatorNumber)) {
-			logger.error("Emulator {} is not running, cannot perform action {}", emulatorNumber, actionName);
+		        if (!isRunningCached(emulatorNumber)) {			logger.error("Emulator {} is not running, cannot perform action {}", emulatorNumber, actionName);
 			throw new ADBConnectionException(
 					"Emulator " + emulatorNumber + " is not running, cannot perform action " + actionName);
 		}
@@ -862,8 +861,7 @@ public abstract class Emulator {
 	 * @param emulatorNumber Emulator identifier
 	 * @return true if running, false otherwise
 	 */
-	protected boolean isRunningCached(String emulatorNumber) {
-		long currentTime = System.currentTimeMillis();
+	    public boolean isRunningCached(String emulatorNumber) {		long currentTime = System.currentTimeMillis();
 
 		// Check if we have a cached status and it's still valid
 		Boolean cachedStatus = runningStatusCache.get(emulatorNumber);

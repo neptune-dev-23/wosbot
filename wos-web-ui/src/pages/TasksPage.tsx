@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { FiCheckSquare, FiChevronDown, FiClock } from "react-icons/fi";
-import { useSearchParams } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 import type { Profile, TaskState } from "../types/api";
 import { formatDateTime, formatDuration } from "../utils/format";
@@ -52,37 +52,27 @@ const normalizeInputToPayload = (value: string) => {
 };
 
 const TasksPage = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const profileParam = searchParams.get("profile") ?? "";
-  const expandParam = searchParams.get("expand") ?? "";
-  const focusParam = searchParams.get("focus") ?? "";
+  const location = useLocation();
+  const focusProfileId = (location.state as { focusProfileId?: string })?.focusProfileId;
+
   const [tasks, setTasks] = useState<Record<string, TaskState[]>>(() => getTasksSnapshot());
   const [profiles, setProfiles] = useState<Profile[]>(() => getProfilesSnapshot());
   const [tasksLoaded, setTasksLoaded] = useState(hasTasksSnapshot());
   const [profilesLoaded, setProfilesLoaded] = useState(hasProfilesSnapshot());
-  const [taskProfileFilter, setTaskProfileFilter] = useState(() => (focusParam ? "" : profileParam));
-  const [expandedProfiles, setExpandedProfiles] = useState<Record<string, boolean>>(() => {
-    if (focusParam) {
-      return { [focusParam]: true };
-    }
-    if (expandParam) {
-      return { [expandParam]: true };
-    }
-    if (profileParam) {
-      return { [profileParam]: true };
-    }
-    return {};
-  });
+  const [taskProfileFilter, setTaskProfileFilter] = useState("");
+  const [expandedProfiles, setExpandedProfiles] = useState<Record<string, boolean>>({});
   const [error, setError] = useState<string | null>(null);
   const [rescheduleTarget, setRescheduleTarget] = useState<RescheduleContext | null>(null);
   const [rescheduleValue, setRescheduleValue] = useState<string>(() => toLocalDateTimeInputValue(new Date()));
   const [rescheduleError, setRescheduleError] = useState<string | null>(null);
   const [rescheduleSubmitting, setRescheduleSubmitting] = useState(false);
+  const [lastTasksUpdateTime, setLastTasksUpdateTime] = useState(() => Date.now());
 
   useEffect(() => {
     const unsubscribeTasks = subscribeTasksStore((next) => {
       setTasks(next);
       setTasksLoaded(true);
+      setLastTasksUpdateTime(Date.now());
     });
     const unsubscribeProfiles = subscribeProfilesStore((next) => {
       setProfiles(next);
@@ -106,108 +96,39 @@ const TasksPage = () => {
   }, []);
 
   useEffect(() => {
-    if (focusParam) {
-      return;
+    if (focusProfileId) {
+      setExpandedProfiles((prev) => ({ ...prev, [focusProfileId]: true }));
+      // When focusing a profile, we don't want to also have a filter active
+      setTaskProfileFilter("");
     }
-    if (profileParam !== taskProfileFilter) {
-      setTaskProfileFilter(profileParam);
-    }
-  }, [focusParam, profileParam, taskProfileFilter]);
+  }, [focusProfileId]);
 
-  useEffect(() => {
-    if (focusParam) {
-      return;
-    }
-    const target = expandParam || profileParam;
-    if (!target) {
-      return;
-    }
-    setExpandedProfiles((previous) => {
-      if (previous[target]) {
-        return previous;
-      }
-      return {
-        ...previous,
-        [target]: true,
-      };
-    });
-  }, [focusParam, expandParam, profileParam]);
-
-  const updateSearchParams = useCallback(
-    (mutator: (next: URLSearchParams) => void) => {
-      const currentString = searchParams.toString();
-      const next = new URLSearchParams(searchParams);
-      mutator(next);
-      if (next.toString() !== currentString) {
-        setSearchParams(next, { replace: true });
-      }
-    },
-    [searchParams, setSearchParams],
-  );
-
-  const handleProfileFilterChange = useCallback(
-    (value: string) => {
-      setTaskProfileFilter(value);
-      if (value) {
-        setExpandedProfiles((previous) => {
-          if (previous[value]) {
-            return previous;
-          }
-          return {
-            ...previous,
-            [value]: true,
-          };
-        });
-      }
-
-      updateSearchParams((next) => {
-        next.delete("focus");
-        if (value) {
-          next.set("profile", value);
-          next.set("expand", value);
-        } else {
-          next.delete("profile");
-          next.delete("expand");
-        }
-      });
-    },
-    [updateSearchParams],
-  );
-
-  const toggleProfileExpansion = useCallback(
-    (profileId: string) => {
-      const nextExpanded = !(expandedProfiles[profileId] ?? false);
+  const handleProfileFilterChange = useCallback((value: string) => {
+    setTaskProfileFilter(value);
+    if (value) {
       setExpandedProfiles((previous) => {
-        if (nextExpanded) {
-          if (previous[profileId]) {
-            return previous;
-          }
-          return {
-            ...previous,
-            [profileId]: true,
-          };
-        }
-
-        if (!previous[profileId]) {
+        if (previous[value]) {
           return previous;
         }
+        return {
+          ...previous,
+          [value]: true,
+        };
+      });
+    }
+  }, []);
 
-        const updated = { ...previous };
+  const toggleProfileExpansion = useCallback((profileId: string) => {
+    setExpandedProfiles((previous) => {
+      const updated = { ...previous };
+      if (updated[profileId]) {
         delete updated[profileId];
-        return updated;
-      });
-
-      updateSearchParams((next) => {
-        next.delete("focus");
-        if (nextExpanded) {
-          next.set("expand", profileId);
-        } else if (next.get("expand") === profileId) {
-          next.delete("expand");
-        }
-      });
-    },
-    [expandedProfiles, updateSearchParams],
-  );
+      } else {
+        updated[profileId] = true;
+      }
+      return updated;
+    });
+  }, []);
 
   const isProfileExpanded = useCallback(
     (profileId: string) => expandedProfiles[profileId] ?? false,
@@ -268,70 +189,76 @@ const TasksPage = () => {
   const isLoading = !tasksLoaded || !profilesLoaded;
   const combinedError = error;
   const now = useCurrentTime();
-  const preparedEntries = filteredTaskEntries.map(([profileId, taskList]) => {
-    const profile = profilesById.get(profileId);
-    const profileName = profile?.name ?? `Profile ${profileId}`;
-    const sortedTasks = sortTasksForDisplay(taskList ?? [], now);
-    const summaryMeta = getProfileSummaryMeta(profile, sortedTasks, now);
-    const enabledTasksCount = sortedTasks.filter((t) => t.scheduled).length;
-    const readyTasksCount = sortedTasks.filter((t) => {
-      const category = getTaskCategory(t, now);
-      return category === 0 || category === 1;
-    }).length;
-    const tasksCountDisplay = `${readyTasksCount} / ${enabledTasksCount}`;
-    return {
-      profileId,
-      profile,
-      profileName,
-      sortedTasks,
-      summaryMeta,
-      tasksCountDisplay,
-    };
-  });
 
-  preparedEntries.sort((entryA, entryB) => {
-    const rankDiff = entryA.summaryMeta.orderRank - entryB.summaryMeta.orderRank;
-    if (rankDiff !== 0) {
-      return rankDiff;
-    }
+    const preparedEntries = useMemo(() => {
+        const sortTime = lastTasksUpdateTime;
+        const entries = filteredTaskEntries.map(([profileId, taskList]) => {
+            const profile = profilesById.get(profileId);
+            const profileName = profile?.name ?? `Profile ${profileId}`;
+            const sortedTasks = sortTasksForDisplay(taskList ?? [], sortTime);
+            const summaryMeta = getProfileSummaryMeta(profile, sortedTasks, sortTime);
+            const enabledTasksCount = sortedTasks.filter((t) => t.scheduled).length;
+            const readyTasksCount = sortedTasks.filter((t) => {
+                const category = getTaskCategory(t, sortTime);
+                return category === 0 || category === 1;
+            }).length;
+            const tasksCountDisplay = `${readyTasksCount} / ${enabledTasksCount}`;
+            return {
+                profileId,
+                profile,
+                profileName,
+                sortedTasks,
+                summaryMeta,
+                tasksCountDisplay,
+            };
+        });
 
-    if (entryA.summaryMeta.orderRank === PROFILE_STATUS_ORDER["waiting-slot"]) {
-      const posA = entryA.profile?.queuePosition ?? Number.MAX_SAFE_INTEGER;
-      const posB = entryB.profile?.queuePosition ?? Number.MAX_SAFE_INTEGER;
-      const posDiff = posA - posB;
-      if (posDiff !== 0) {
-        return posDiff;
-      }
-    }
+        entries.sort((entryA, entryB) => {
+            const rankDiff = entryA.summaryMeta.orderRank - entryB.summaryMeta.orderRank;
+            if (rankDiff !== 0) {
+                return rankDiff;
+            }
 
-    if (entryA.summaryMeta.orderRank === PROFILE_STATUS_ORDER.disabled) {
-      const priorityA = entryA.summaryMeta.prioritySort;
-      const priorityB = entryB.summaryMeta.prioritySort;
-      if (priorityA !== priorityB) {
-        return priorityA - priorityB;
-      }
-    }
+            if (entryA.summaryMeta.orderRank === PROFILE_STATUS_ORDER["waiting-slot"]) {
+                const posA = entryA.profile?.queuePosition ?? Number.MAX_SAFE_INTEGER;
+                const posB = entryB.profile?.queuePosition ?? Number.MAX_SAFE_INTEGER;
+                const posDiff = posA - posB;
+                if (posDiff !== 0) {
+                    return posDiff;
+                }
+            }
 
-    const timeA = entryA.summaryMeta.nextExecutionSort;
-    const timeB = entryB.summaryMeta.nextExecutionSort;
-    const timeAFinite = Number.isFinite(timeA);
-    const timeBFinite = Number.isFinite(timeB);
+            if (entryA.summaryMeta.orderRank === PROFILE_STATUS_ORDER.disabled) {
+                const priorityA = entryA.summaryMeta.prioritySort;
+                const priorityB = entryB.summaryMeta.prioritySort;
+                if (priorityA !== priorityB) {
+                    return priorityA - priorityB;
+                }
+            }
 
-    if (timeAFinite || timeBFinite) {
-      if (!timeAFinite) {
-        return 1;
-      }
-      if (!timeBFinite) {
-        return -1;
-      }
-      const diff = timeA - timeB;
-      if (diff !== 0) {
-        return diff;
-      }
-    }
+            const timeA = entryA.summaryMeta.nextExecutionSort;
+            const timeB = entryB.summaryMeta.nextExecutionSort;
+            const timeAFinite = Number.isFinite(timeA);
+            const timeBFinite = Number.isFinite(timeB);
 
-    return entryA.profileName.localeCompare(entryB.profileName, undefined, { sensitivity: "base" });
-  });
+            if (timeAFinite || timeBFinite) {
+                if (!timeAFinite) {
+                    return 1;
+                }
+                if (!timeBFinite) {
+                    return -1;
+                }
+                const diff = timeA - timeB;
+                if (diff !== 0) {
+                    return diff;
+                }
+            }
+
+            return entryA.profileName.localeCompare(entryB.profileName, undefined, {sensitivity: "base"});
+        });
+
+        return entries;
+    }, [filteredTaskEntries, profilesById, lastTasksUpdateTime]);
 
   const openRescheduleModal = useCallback(
     (profileId: string, profileName: string, task: TaskState) => {
@@ -453,13 +380,7 @@ const TasksPage = () => {
             </div>
           ) : (
             preparedEntries.map(
-              ({ profileId, profileName, profile, sortedTasks, summaryMeta, tasksCountDisplay }, index) => {
-              if (index === 0) {
-                // console.log("--- TASK PAGE DIAGNOSTIC ---");
-                // console.log("Profile:", profileName);
-                // console.log("Summary Meta:", summaryMeta);
-                // console.log("Next 3 Tasks:", sortedTasks.slice(0, 3));
-              }
+                ({profileId, profileName, profile, sortedTasks, summaryMeta, tasksCountDisplay}) => {
               const expanded = isProfileExpanded(profileId);
 
               return (
@@ -532,67 +453,72 @@ const TasksPage = () => {
                   </button>
                   <div className={`tasks-grid-wrapper ${expanded ? "expanded" : "collapsed"}`} aria-hidden={!expanded}>
                     <div className="tasks-grid" id={`profile-tasks-${profileId}`}>
-                      {sortedTasks.length > 0 ? (
-                        sortedTasks.map((task, index) => {
-                          const { cardClassName, statusClass, statusText, nextExecutionClass } = getTaskDisplayMeta(task, now);
-                          const nextExecutionMs = parseDateToMs(task.nextExecutionTime);
-                          const nextExecutionTime = task.nextExecutionTime;
-                          const nextExecutionCountdown =
-                            nextExecutionMs !== null ? formatDuration(Math.max(nextExecutionMs - now, 0)) : null;
-                          const taskKey =
-                            task.taskId != null ? `task-${task.taskId}` : `${task.taskName ?? "task"}-${index}`;
+                      {expanded
+                        ? sortedTasks.length > 0
+                          ? sortedTasks.map((task, index) => {
+                              const { cardClassName, statusClass, statusText, nextExecutionClass } = getTaskDisplayMeta(
+                                task,
+                                now,
+                              );
+                              const nextExecutionMs = parseDateToMs(task.nextExecutionTime);
+                              const nextExecutionTime = task.nextExecutionTime;
+                              const nextExecutionCountdown =
+                                nextExecutionMs !== null ? formatDuration(Math.max(nextExecutionMs - now, 0)) : null;
+                              const taskKey =
+                                task.taskId != null ? `task-${task.taskId}` : `${task.taskName ?? "task"}-${index}`;
 
-                          return (
-                            <div className={cardClassName} key={taskKey}>
-                              <button
-                                type="button"
-                                className="task-reschedule-button"
-                                onClick={() => openRescheduleModal(profileId, profileName, task)}
-                                aria-label={`Reschedule ${task.taskName ?? "task"}`}
-                                title="Reschedule"
-                              >
-                                <FiClock aria-hidden="true" size={16} />
-                              </button>
-                              <div className="task-name">{task.taskName ?? "Unknown Task"}</div>
-                              <div className="task-details">
-                                <div className="task-detail">
-                                  <span className="task-detail-label">Status:</span>
-                                  <span className={`task-status-badge ${statusClass}`}>{statusText}</span>
+                              return (
+                                <div className={cardClassName} key={taskKey}>
+                                  <button
+                                    type="button"
+                                    className="task-reschedule-button"
+                                    onClick={() => openRescheduleModal(profileId, profileName, task)}
+                                    aria-label={`Reschedule ${task.taskName ?? "task"}`}
+                                    title="Reschedule"
+                                  >
+                                    <FiClock aria-hidden="true" size={16} />
+                                  </button>
+                                  <div className="task-name">{task.taskName ?? "Unknown Task"}</div>
+                                  <div className="task-details">
+                                    <div className="task-detail">
+                                      <span className="task-detail-label">Status:</span>
+                                      <span className={`task-status-badge ${statusClass}`}>{statusText}</span>
+                                    </div>
+                                    {task.lastExecutionTime ? (
+                                      <div className="task-detail">
+                                        <span className="task-detail-label">Last Run:</span>
+                                        <span className="task-detail-value">
+                                          {formatDateTime(task.lastExecutionTime)}
+                                        </span>
+                                      </div>
+                                    ) : null}
+                                    {nextExecutionMs !== null && nextExecutionTime ? (
+                                      <div className="task-detail">
+                                        <span className="task-detail-label">Next Run:</span>
+                                        <span
+                                          className={`task-detail-value next-execution-value ${nextExecutionClass} ${
+                                            task.executing
+                                              ? "next-execution-executing"
+                                              : nextExecutionCountdown === "0s"
+                                              ? "next-execution-ready"
+                                              : ""
+                                          }`}
+                                          title={formatDateTime(nextExecutionTime)}
+                                        >
+                                          {task.executing
+                                            ? "Executing"
+                                            : nextExecutionCountdown === "0s"
+                                            ? "Ready"
+                                            : nextExecutionCountdown}
+                                        </span>
+                                      </div>
+                                    ) : null}
+                                  </div>
                                 </div>
-                                {task.lastExecutionTime ? (
-                                  <div className="task-detail">
-                                    <span className="task-detail-label">Last Run:</span>
-                                    <span className="task-detail-value">{formatDateTime(task.lastExecutionTime)}</span>
-                                  </div>
-                                ) : null}
-                                {nextExecutionMs !== null && nextExecutionTime ? (
-                                  <div className="task-detail">
-                                    <span className="task-detail-label">Next Run:</span>
-                                    <span
-                                      className={`task-detail-value next-execution-value ${nextExecutionClass} ${
-                                        task.executing
-                                          ? "next-execution-executing"
-                                          : nextExecutionCountdown === "0s"
-                                          ? "next-execution-ready"
-                                          : ""
-                                      }`}
-                                      title={formatDateTime(nextExecutionTime)}
-                                    >
-                                      {task.executing
-                                        ? "Executing"
-                                        : nextExecutionCountdown === "0s"
-                                        ? "Ready"
-                                        : nextExecutionCountdown}
-                                    </span>
-                                  </div>
-                                ) : null}
-                              </div>
-                            </div>
-                          );
-                        })
-                      ) : (
-                        <div className="loading">No tasks for this profile.</div>
-                      )}
+                              );
+                            })
+                          : <div className="loading">No tasks for this profile.</div>
+                        : null}
                     </div>
                   </div>
                 </div>

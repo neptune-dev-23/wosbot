@@ -47,11 +47,7 @@ export default defineConfig(({ command, mode }) => {
           changeOrigin: true,
           secure: false,
         },
-        "/logs": {
-          target: proxyTarget,
-          changeOrigin: true,
-          secure: false,
-        },
+
         "/ws": {
           target: proxyTarget,
           changeOrigin: true,

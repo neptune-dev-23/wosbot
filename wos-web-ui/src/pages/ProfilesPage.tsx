@@ -198,10 +198,7 @@ const ProfilesPage = () => {
     }
     const profileId = String(selectedProfile.id);
     setSelectedProfileId(null);
-    navigate({
-      pathname: "/tasks",
-      search: `?focus=${encodeURIComponent(profileId)}&expand=${encodeURIComponent(profileId)}`,
-    });
+    navigate("/tasks", { state: { focusProfileId: profileId } });
   };
 
   return (

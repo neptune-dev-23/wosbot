@@ -42,10 +42,7 @@ public class EmulatorManager {
     private int MAX_RUNNING_EMULATORS = 3;
     private final Set<Thread> activeSlots = new HashSet<>();
 
-    // Cache for isRunning status to avoid repeated external process calls
-	private final ConcurrentHashMap<String, Boolean> runningStatusCache = new ConcurrentHashMap<>();
-	private final ConcurrentHashMap<String, Long> runningStatusTimestamp = new ConcurrentHashMap<>();
-	private static final long RUNNING_STATUS_CACHE_TTL = 5000; // 5 seconds cache TTL
+    // Caching for isRunning status is delegated to the Emulator instance.
 
     private EmulatorManager() {
 
@@ -610,27 +607,7 @@ public class EmulatorManager {
 
     public boolean isRunning(String emulatorNumber) {
         checkEmulatorInitialized();
-        long currentTime = System.currentTimeMillis();
-
-		// Check if we have a cached status and it's still valid
-		Boolean cachedStatus = runningStatusCache.get(emulatorNumber);
-		Long statusTime = runningStatusTimestamp.get(emulatorNumber);
-
-		if (cachedStatus != null && statusTime != null) {
-			// Check if cache is still valid (TTL not expired)
-			if ((currentTime - statusTime) < RUNNING_STATUS_CACHE_TTL) {
-				logger.trace("Using cached running status for emulator {}: {}", emulatorNumber, cachedStatus);
-				return cachedStatus;
-			}
-		}
-
-		// Cache miss or expired, call actual isRunning and update cache
-		boolean status = emulator.isRunning(emulatorNumber);
-		runningStatusCache.put(emulatorNumber, status);
-		runningStatusTimestamp.put(emulatorNumber, currentTime);
-		logger.trace("Running status cached for emulator {}: {}", emulatorNumber, status);
-
-		return status;
+        return emulator.isRunningCached(emulatorNumber);
     }
 
     public boolean isPackageRunning(String emulatorNumber, String packageName) {
@@ -749,9 +726,8 @@ public class EmulatorManager {
     }
 
     private void invalidateRunningStatusCache(String emulatorNumber) {
-		runningStatusCache.remove(emulatorNumber);
-		runningStatusTimestamp.remove(emulatorNumber);
-		logger.debug("Running status cache invalidated for emulator {}", emulatorNumber);
+        checkEmulatorInitialized();
+		emulator.invalidateRunningStatusCache(emulatorNumber);
 	}
 
     public void resetQueueState() {

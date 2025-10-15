@@ -25,6 +25,9 @@ import cl.camodev.wosbot.serv.task.EnumStartLocation;
 import cl.camodev.wosbot.serv.task.TaskQueue;
 import net.sourceforge.tess4j.TesseractException;
 
+import cl.camodev.wosbot.serv.SubTaskExecutionStatService;
+import cl.camodev.wosbot.serv.impl.SubTaskExecutionStatServiceImpl;
+
 public class IntelligenceTask extends DelayedTask {
 
 	// Constants

@@ -35,6 +35,7 @@
 
 	<persistence-unit name="statsPU">
 		<class>cl.camodev.wosbot.almac.entity.TaskExecutionStat</class>
+		<class>cl.camodev.wosbot.almac.entity.SubTaskExecutionStat</class>
 
 		<properties>
 			<property name="jakarta.persistence.jdbc.driver"

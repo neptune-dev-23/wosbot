@@ -1,35 +1,27 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { FiChevronLeft, FiChevronRight, FiRefreshCw, FiSearch } from "react-icons/fi";
+import { FiRefreshCw, FiSearch } from "react-icons/fi";
 
 import type { LogMessage } from "../types/api";
 import { formatTimestamp } from "../utils/format";
 import { subscribeToMessage } from "../services/wsClient";
 
-const AUTO_SCROLL_THRESHOLD = 5;
+
 const MAX_LOGS = 1000;
 const SEVERITY_LEVELS = ["INFO", "WARNING", "ERROR", "DEBUG"] as const;
 
-const pageSizeFromStorage = () => {
-  if (typeof window === "undefined") {
-    return 50;
-  }
-  const stored = window.localStorage.getItem("logPageSize");
-  const parsed = stored ? Number.parseInt(stored, 10) : 50;
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 50;
-};
 
 const LogsPage = () => {
   const [logs, setLogs] = useState<LogMessage[]>([]);
-  const [logConnectionStatus, setLogConnectionStatus] = useState<"connecting" | "connected" | "disconnected">("connecting");
+  const [logConnectionStatus, setLogConnectionStatus] = useState<"connecting" | "connected" | "disconnected">(
+    "connecting",
+  );
   const [showDebug, setShowDebug] = useState(false);
   const [filters, setFilters] = useState({ search: "", profile: "", severity: "" });
-  const [pageSize, setPageSize] = useState<number>(pageSizeFromStorage);
-  const [currentPage, setCurrentPage] = useState(1);
+
   const [autoScroll, setAutoScroll] = useState(true);
 
   const logContainerRef = useRef<HTMLDivElement | null>(null);
   const previousScrollHeightRef = useRef(0);
-  const previousScrollTopRef = useRef(0);
 
   const availableLogProfiles = useMemo(() => {
     const unique = new Set<string>();
@@ -64,13 +56,7 @@ const LogsPage = () => {
 
   const orderedLogs = useMemo(() => filteredLogs.slice().reverse(), [filteredLogs]);
 
-  const totalPages = Math.max(1, Math.ceil(orderedLogs.length / pageSize));
-  const clampedCurrentPage = Math.min(Math.max(currentPage, 1), totalPages);
-  const startIndex = (clampedCurrentPage - 1) * pageSize;
-  const endIndex = Math.min(startIndex + pageSize, orderedLogs.length);
-  const paginatedLogs = orderedLogs.slice(startIndex, endIndex);
-  const showingStart = orderedLogs.length === 0 ? 0 : startIndex + 1;
-  const showingEnd = endIndex;
+
 
   const logStatusText =
     logConnectionStatus === "connected"
@@ -79,39 +65,7 @@ const LogsPage = () => {
       ? "Connecting..."
       : "Disconnected - Reconnecting...";
 
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-    window.localStorage.setItem("logPageSize", String(pageSize));
-  }, [pageSize]);
 
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    } else if (currentPage < 1) {
-      setCurrentPage(1);
-    }
-  }, [currentPage, totalPages]);
-
-  useEffect(() => {
-    const container = logContainerRef.current;
-    if (!container) {
-      return;
-    }
-    const handleScroll = () => {
-      previousScrollTopRef.current = container.scrollTop;
-      if (clampedCurrentPage !== 1) {
-        setAutoScroll(false);
-        return;
-      }
-      const atTop = container.scrollTop <= AUTO_SCROLL_THRESHOLD;
-      setAutoScroll(atTop);
-    };
-
-    container.addEventListener("scroll", handleScroll);
-    return () => container.removeEventListener("scroll", handleScroll);
-  }, [clampedCurrentPage]);
 
   useLayoutEffect(() => {
     const container = logContainerRef.current;
@@ -119,20 +73,18 @@ const LogsPage = () => {
       return;
     }
 
-    const previousHeight = previousScrollHeightRef.current;
-    const shouldAutoScroll = autoScroll && clampedCurrentPage === 1;
+    // If auto-scroll is off, we want to maintain the scroll position.
+    // This happens when new logs are added at the top.
+    const scrollDelta = container.scrollHeight - previousScrollHeightRef.current;
 
-    if (shouldAutoScroll) {
-      container.scrollTo({ top: 0, behavior: "auto" });
-    } else {
-      const scrollDelta = container.scrollHeight - previousHeight;
-      const nextScrollTop = Math.max(0, previousScrollTopRef.current + scrollDelta);
-      container.scrollTop = nextScrollTop;
-      previousScrollTopRef.current = nextScrollTop;
+    // Only adjust scroll if new content has been added at the top.
+    if (!autoScroll && scrollDelta > 0) {
+      container.scrollTop += scrollDelta;
     }
 
+    // Always update the scroll height for the next render.
     previousScrollHeightRef.current = container.scrollHeight;
-  }, [autoScroll, clampedCurrentPage, paginatedLogs]);
+  }, [autoScroll, orderedLogs]);
 
   useEffect(() => {
     setLogConnectionStatus("connecting");
@@ -143,10 +95,8 @@ const LogsPage = () => {
         if (!Array.isArray(snapshot)) {
           return [];
         }
-        const trimmed = snapshot.slice(-MAX_LOGS);
-        return trimmed;
+        return snapshot.slice(-MAX_LOGS);
       });
-      setCurrentPage(1);
       setAutoScroll(true);
     };
 
@@ -164,7 +114,9 @@ const LogsPage = () => {
     const unsubscribeSnapshot = subscribeToMessage<LogMessage[]>("logs.snapshot", handleSnapshot);
     const unsubscribeAppend = subscribeToMessage<LogMessage>("logs.append", handleAppend);
     const unsubscribeConnected = subscribeToMessage("system.connected", () => setLogConnectionStatus("connecting"));
-    const unsubscribeDisconnected = subscribeToMessage("system.disconnected", () => setLogConnectionStatus("disconnected"));
+    const unsubscribeDisconnected = subscribeToMessage("system.disconnected", () =>
+      setLogConnectionStatus("disconnected"),
+    );
 
     return () => {
       unsubscribeSnapshot();
@@ -176,24 +128,14 @@ const LogsPage = () => {
 
   const handleClearLogs = () => {
     setLogs([]);
-    setCurrentPage(1);
     setAutoScroll(true);
-    const container = logContainerRef.current;
-    if (container) {
-      container.scrollTo({ top: 0, behavior: "auto" });
-      previousScrollHeightRef.current = container.scrollHeight;
-      previousScrollTopRef.current = 0;
-    }
   };
 
   const handleRefreshLogs = () => {
-    setCurrentPage(1);
-    setAutoScroll(true);
-    const container = logContainerRef.current;
-    if (container) {
-      container.scrollTo({ top: 0, behavior: "auto" });
-    }
+    logContainerRef.current?.scrollTo({ top: 0, behavior: "auto" });
   };
+
+
 
   return (
     <div className="view active" id="logsView">
@@ -209,7 +151,6 @@ const LogsPage = () => {
             value={filters.search}
             onChange={(event) => {
               setFilters((previous) => ({ ...previous, search: event.target.value }));
-              setCurrentPage(1);
             }}
           />
         </div>
@@ -219,7 +160,6 @@ const LogsPage = () => {
             value={filters.profile}
             onChange={(event) => {
               setFilters((previous) => ({ ...previous, profile: event.target.value }));
-              setCurrentPage(1);
             }}
           >
             <option value="">All profiles</option>
@@ -234,7 +174,6 @@ const LogsPage = () => {
             value={filters.severity}
             onChange={(event) => {
               setFilters((previous) => ({ ...previous, severity: event.target.value }));
-              setCurrentPage(1);
             }}
           >
             <option value="">All levels</option>
@@ -262,12 +201,12 @@ const LogsPage = () => {
             </tr>
           </thead>
           <tbody>
-            {paginatedLogs.length === 0 ? (
+            {orderedLogs.length === 0 ? (
               <tr className="no-logs-row">
                 <td colSpan={5}>{logs.length === 0 ? "Waiting for logs..." : "No logs match the current filters."}</td>
               </tr>
             ) : (
-              paginatedLogs.map((log, index) => (
+              orderedLogs.map((log, index) => (
                 <tr key={`${log.timestamp ?? "ts"}-${index}`}>
                   <td>{formatTimestamp(log.timestamp)}</td>
                   <td>
@@ -291,58 +230,16 @@ const LogsPage = () => {
               checked={showDebug}
               onChange={(event) => {
                 setShowDebug(event.target.checked);
-                setCurrentPage(1);
               }}
             />
             <span>Debug Mode</span>
           </label>
           <span id="logCount">
-            Showing {showingStart}-{showingEnd} of {orderedLogs.length} logs ({logs.length} total)
+            {orderedLogs.length} of {filteredLogs.length} logs (max {MAX_LOGS})
           </span>
         </div>
-        <div className="logs-pagination">
-          <div className="pagination-size">
-            <label htmlFor="logPageSize">Logs per page:</label>
-            <select
-              id="logPageSize"
-              className="pagination-dropdown"
-              value={pageSize}
-              onChange={(event) => {
-                const nextSize = Number.parseInt(event.target.value, 10);
-                setPageSize(nextSize);
-                setCurrentPage(1);
-                setAutoScroll(true);
-              }}
-            >
-              <option value={10}>10</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-              <option value={250}>250</option>
-            </select>
-          </div>
-          <div className="pagination-controls">
-            <button
-              className="pagination-btn"
-              onClick={() => setCurrentPage((previous) => Math.max(previous - 1, 1))}
-              disabled={clampedCurrentPage <= 1}
-              type="button"
-            >
-              <FiChevronLeft aria-hidden="true" size={16} />
-              <span>Prev</span>
-            </button>
-            <span className="pagination-info">Page {clampedCurrentPage} of {Math.max(1, totalPages)}</span>
-            <button
-              className="pagination-btn"
-              onClick={() => setCurrentPage((previous) => Math.min(previous + 1, totalPages))}
-              disabled={clampedCurrentPage >= totalPages}
-              type="button"
-            >
-              <span>Next</span>
-              <FiChevronRight aria-hidden="true" size={16} />
-            </button>
-          </div>
-        </div>
         <div className="logs-footer-controls">
+
           <div className={`status-connection ${logConnectionStatus === "connected" ? "connected" : "disconnected"}`}>
             <div className={`status-indicator ${logConnectionStatus === "connected" ? "" : "disconnected"}`} />
             <span>{logStatusText}</span>

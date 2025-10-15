@@ -104,7 +104,7 @@ public class WebConfig implements WebMvcConfigurer {
                 return requestedResource;
             }
 
-            if (resourcePath.startsWith("api") || resourcePath.startsWith("logs/")) {
+            if (resourcePath.startsWith("api")) {
                 return null;
             }
 

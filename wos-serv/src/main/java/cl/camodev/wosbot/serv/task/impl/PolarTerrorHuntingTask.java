@@ -17,6 +17,9 @@ import cl.camodev.wosbot.serv.task.EnumStartLocation;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 
+import cl.camodev.wosbot.serv.SubTaskExecutionStatService;
+import cl.camodev.wosbot.serv.impl.SubTaskExecutionStatServiceImpl;
+
 public class PolarTerrorHuntingTask extends DelayedTask {
     private final int refreshStaminaLevel = 180;
     private final int minStaminaLevel = 100;

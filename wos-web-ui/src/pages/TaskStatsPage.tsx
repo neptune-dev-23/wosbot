@@ -24,6 +24,23 @@ const buildEntryKey = (entry: TaskStatsAggregate) =>
 
 const percentage = (value: number) => `${Math.round((value ?? 0) * 1000) / 10}%`;
 
+const MAX_PROFILES_TO_SHOW = 2;
+
+const formatSampleProfiles = (sampleProfiles: string[] | undefined, profileCount: number): string | null => {
+    if (!sampleProfiles || sampleProfiles.length === 0) {
+        return null;
+    }
+
+    const displayedProfiles = sampleProfiles.slice(0, MAX_PROFILES_TO_SHOW);
+    const remainingCount = profileCount - displayedProfiles.length;
+
+    let result = displayedProfiles.join(", ");
+    if (remainingCount > 0) {
+        result += ` + ${remainingCount} other${remainingCount === 1 ? "" : "s"}`;
+    }
+    return result;
+};
+
 const TaskStatsPage = () => {
   const [stats, setStats] = useState<TaskStatsAggregate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -172,10 +189,13 @@ const TaskStatsPage = () => {
 
   const defaultTaskLink = useMemo(() => {
     if (matchingTaskStates.length === 0) {
-      return "/tasks";
+        return {pathname: "/tasks"};
     }
-    const targetProfile = matchingTaskStates[0].profileId;
-    return `/tasks?profile=${targetProfile}&expand=${targetProfile}&focus=${targetProfile}`;
+      const targetProfile = String(matchingTaskStates[0].profileId);
+      return {
+          pathname: "/tasks",
+          state: {focusProfileId: targetProfile},
+      };
   }, [matchingTaskStates]);
 
   const nextExecutionForSelected = useMemo(() => {
@@ -237,7 +257,7 @@ const TaskStatsPage = () => {
   const lastUpdatedLabel = lastUpdated ? lastUpdated.toLocaleTimeString() : null;
 
   return (
-    <div className="page task-stats-page">
+      <div className="view active task-stats-page">
       <header className="task-stats-header">
         <div>
           <h1>Task Execution Stats</h1>
@@ -260,95 +280,99 @@ const TaskStatsPage = () => {
         </div>
       </header>
 
-      {loading && (
-        <div className="task-stats-placeholder">
-          <div className="task-stats-spinner" />
-          <span>Loading execution history…</span>
-        </div>
-      )}
+          <div className="task-stats-content">
+              {loading && (
+                  <div className="task-stats-placeholder">
+                      <div className="task-stats-spinner"/>
+                      <span>Loading execution history…</span>
+                  </div>
+              )}
 
-      {!loading && error && (
-        <div className="task-stats-error">
-          <p>{error}</p>
-          <button type="button" onClick={() => loadStats(true)}>
-            Retry
-          </button>
-        </div>
-      )}
+              {!loading && error && (
+                  <div className="task-stats-error">
+                      <p>{error}</p>
+                      <button type="button" onClick={() => loadStats(true)} className="btn btn-primary">
+                          Retry
+                      </button>
+                  </div>
+              )}
 
-      {!loading && !error && keyedStats.length === 0 && (
-        <div className="task-stats-empty">
-          <p>No executions recorded yet. Tasks will appear here once they run at least once.</p>
-        </div>
-      )}
+              {!loading && !error && keyedStats.length === 0 && (
+                  <div className="task-stats-empty">
+                      <p>No executions recorded yet. Tasks will appear here once they run at least once.</p>
+                  </div>
+              )}
 
-      {!loading && !error && keyedStats.length > 0 && (
-        <div className="task-stats-grid">
-          {keyedStats.map(({ entry, key }) => (
-            <button
-              key={key}
-              type="button"
-              className="task-stats-card"
-              onClick={() => handleOpenDetails(key)}
-              aria-label={`Open stats for ${entry.taskName ?? `Task ${entry.taskId ?? ""}`}`}
-            >
-              <header className="task-stats-card-header">
-                <span className="task-stats-task-name">{entry.taskName ?? `Task ${entry.taskId ?? ""}`}</span>
-                <span className="task-stats-profile">
-                  <FiUsers />
-                  <span>
-                    {entry.profileCount > 0
-                      ? `${entry.profileCount} profile${entry.profileCount === 1 ? "" : "s"}`
-                      : "No profiles yet"}
+              {!loading && !error && keyedStats.length > 0 && (
+                  <div className="task-stats-grid">
+                      {keyedStats.map(({entry, key}) => (
+                          <button
+                              key={key}
+                              type="button"
+                              className="task-stats-card"
+                              onClick={() => handleOpenDetails(key)}
+                              aria-label={`Open stats for ${entry.taskName ?? `Task ${entry.taskId ?? ""}`}`}
+                          >
+                              <header className="task-stats-card-header">
+                                  <span
+                                      className="task-stats-task-name">{entry.taskName ?? `Task ${entry.taskId ?? ""}`}</span>
+                                  <span className="task-stats-profile">
+                    <FiUsers/>
+                    <span>
+                      {entry.profileCount > 0
+                          ? `${entry.profileCount} profile${entry.profileCount === 1 ? "" : "s"}`
+                          : "No profiles yet"}
+                    </span>
                   </span>
-                </span>
-              </header>
-              {entry.sampleProfiles?.length ? (
-                <p className="task-stats-sample">
-                  {entry.sampleProfiles.join(", ")}
-                  {entry.profileCount > entry.sampleProfiles.length ? " +" : ""}
-                </p>
-              ) : null}
-              <div className="task-stats-card-body">
-                <div className="task-stats-metric">
-                  <FiActivity />
-                  <div>
-                    <span className="metric-label">Total Runs</span>
-                    <span className="metric-value">{entry.totalRuns}</span>
+                              </header>
+                              {entry.sampleProfiles?.length ? (
+                                  <p className="task-stats-sample">
+                                      {formatSampleProfiles(entry.sampleProfiles, entry.profileCount)}
+                                  </p>
+                              ) : null}
+                              <div className="task-stats-card-body">
+                                  <div className="task-stats-metric">
+                                      <FiActivity/>
+                                      <div>
+                                          <span className="metric-label">Total Runs</span>
+                                          <span className="metric-value">{entry.totalRuns}</span>
+                                      </div>
+                                  </div>
+                                  <div className="task-stats-metric">
+                                      <FiTrendingUp/>
+                                      <div>
+                                          <span className="metric-label">Success Rate</span>
+                                          <span className="metric-value">{percentage(entry.successRate)}</span>
+                                      </div>
+                                  </div>
+                                  <div className="task-stats-metric">
+                                      <FiClock/>
+                                      <div>
+                                          <span className="metric-label">Avg Duration</span>
+                                          <span
+                                              className="metric-value">{formatDuration(entry.averageDurationMillis)}</span>
+                                      </div>
+                                  </div>
+                                  <div className="task-stats-metric">
+                                      <FiRefreshCcw/>
+                                      <div>
+                                          <span className="metric-label">P95 Duration</span>
+                                          <span
+                                              className="metric-value">{formatDuration(entry.p95DurationMillis)}</span>
+                                      </div>
+                                  </div>
+                              </div>
+                              <footer className="task-stats-card-footer">
+                  <span className="task-stats-last-run">
+                    Last run: {entry.lastFinishedAt ? formatDateTime(entry.lastFinishedAt) : "N/A"}
+                  </span>
+                                  <span className="task-stats-card-link">View details</span>
+                              </footer>
+                          </button>
+                      ))}
                   </div>
-                </div>
-                <div className="task-stats-metric">
-                  <FiTrendingUp />
-                  <div>
-                    <span className="metric-label">Success Rate</span>
-                    <span className="metric-value">{percentage(entry.successRate)}</span>
-                  </div>
-                </div>
-                <div className="task-stats-metric">
-                  <FiClock />
-                  <div>
-                    <span className="metric-label">Avg Duration</span>
-                    <span className="metric-value">{formatDuration(entry.averageDurationMillis)}</span>
-                  </div>
-                </div>
-                <div className="task-stats-metric">
-                  <FiRefreshCcw />
-                  <div>
-                    <span className="metric-label">P95 Duration</span>
-                    <span className="metric-value">{formatDuration(entry.p95DurationMillis)}</span>
-                  </div>
-                </div>
-              </div>
-              <footer className="task-stats-card-footer">
-                <span className="task-stats-last-run">
-                  Last run: {entry.lastFinishedAt ? formatDateTime(entry.lastFinishedAt) : "N/A"}
-                </span>
-                <span className="task-stats-card-link">View details</span>
-              </footer>
-            </button>
-          ))}
-        </div>
-      )}
+              )}
+          </div>
 
       {selectedEntry && (
         <div
@@ -372,8 +396,7 @@ const TaskStatsPage = () => {
                 </p>
                 {selectedEntry.sampleProfiles?.length ? (
                   <p className="task-stats-sample">
-                    Recently active: {selectedEntry.sampleProfiles.join(", ")}
-                    {selectedEntry.profileCount > selectedEntry.sampleProfiles.length ? " +" : ""}
+                      Recently active: {formatSampleProfiles(selectedEntry.sampleProfiles, selectedEntry.profileCount)}
                   </p>
                 ) : null}
               </div>
@@ -447,7 +470,10 @@ const TaskStatsPage = () => {
                       const lastLabel = item.task.lastExecutionTime
                         ? formatDateTime(item.task.lastExecutionTime)
                         : "N/A";
-                      const profileLink = `/tasks?profile=${item.profileId}&expand=${item.profileId}&focus=${item.profileId}`;
+                        const profileLink = {
+                            pathname: "/tasks",
+                            state: {focusProfileId: String(item.profileId)},
+                        };
                       return (
                         <li key={`${item.profileId}-${item.task.taskId ?? item.task.taskName ?? "unknown"}`}>
                           <div>
