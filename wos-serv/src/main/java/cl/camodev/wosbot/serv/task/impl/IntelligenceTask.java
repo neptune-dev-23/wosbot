@@ -8,6 +8,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import cl.camodev.utiles.UtilTime;
+import cl.camodev.wosbot.almac.entity.DailyTask;
 import cl.camodev.wosbot.almac.repo.DailyTaskRepository;
 import cl.camodev.wosbot.almac.repo.IDailyTaskRepository;
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
@@ -226,7 +227,7 @@ public class IntelligenceTask extends DelayedTask {
 		boolean beastFound = false;
 
 		// Search for fire beasts if enabled
-		if (fireBeastsEnabled && !marchQueueLimitReached && !(useFlag && beastMarchSent)) {
+		if (fireBeastsEnabled && !(useFlag && beastMarchSent)) {
 			logInfo("Searching for fire beasts.");
 			if (searchAndProcess(EnumTemplates.INTEL_FIRE_BEAST, 5, 90, this::processBeast)) {
 				beastFound = true;
@@ -237,7 +238,7 @@ public class IntelligenceTask extends DelayedTask {
 		}
 
 		// Search for regular beasts
-		if (!marchQueueLimitReached && !(useFlag && beastMarchSent)) {
+		if (!(useFlag && beastMarchSent)) {
 			logInfo("Searching for beasts using grayscale matching.");
 			EnumTemplates beastTemplate = fcEra ? EnumTemplates.INTEL_BEAST_GRAYSCALE_FC
 					: EnumTemplates.INTEL_BEAST_GRAYSCALE;
@@ -519,10 +520,7 @@ public class IntelligenceTask extends DelayedTask {
 
 	private MarchesAvailable getMarchesAvailable() {
 		// Open active marches panel
-		tapPoint(new DTOPoint(2, 550));
-		sleepTask(500);
-		tapPoint(new DTOPoint(340, 265));
-		sleepTask(500);
+		openLeftMenuCitySection(false);
 
 		// Try OCR to find idle marches
 		try {
@@ -564,15 +562,18 @@ public class IntelligenceTask extends DelayedTask {
 			logInfo("March queue for " + gatherType.getName() + " detected. (Used: " +
 					activeMarchQueues + "/" + totalMarchesAvailable + ")");
 
-			// Find when this gather task is scheduled to complete
-			LocalDateTime task = iDailyTaskRepository
-					.findByProfileIdAndTaskName(profile.getId(), gatherType.getTask())
-					.getNextSchedule();
+			// Find when the unified GATHER_RESOURCES task is scheduled to complete
+			DailyTask gatherTask = iDailyTaskRepository
+					.findByProfileIdAndTaskName(profile.getId(), TpDailyTaskEnum.GATHER_RESOURCES);
 
-			if (task.isBefore(earliestAvailableMarch)) {
-				earliestAvailableMarch = task;
-				logInfo("Updated earliest available march: " + earliestAvailableMarch);
-			}
+			if (gatherTask != null && gatherTask.getNextSchedule() != null) {
+            LocalDateTime nextSchedule = gatherTask.getNextSchedule();
+            
+            if (nextSchedule.isBefore(earliestAvailableMarch)) {
+                earliestAvailableMarch = nextSchedule;
+                logInfo("Updated earliest available march: " + earliestAvailableMarch);
+            }
+        }
 		}
 
 		if (activeMarchQueues >= totalMarchesAvailable) {
@@ -598,19 +599,17 @@ public class IntelligenceTask extends DelayedTask {
 	}
 
 	private enum GatherType {
-		MEAT("meat", EnumTemplates.GAME_HOME_SHORTCUTS_MEAT, TpDailyTaskEnum.GATHER_MEAT),
-		WOOD("wood", EnumTemplates.GAME_HOME_SHORTCUTS_WOOD, TpDailyTaskEnum.GATHER_WOOD),
-		COAL("coal", EnumTemplates.GAME_HOME_SHORTCUTS_COAL, TpDailyTaskEnum.GATHER_COAL),
-		IRON("iron", EnumTemplates.GAME_HOME_SHORTCUTS_IRON, TpDailyTaskEnum.GATHER_IRON);
+		MEAT("meat", EnumTemplates.GAME_HOME_SHORTCUTS_MEAT),
+		WOOD("wood", EnumTemplates.GAME_HOME_SHORTCUTS_WOOD),
+		COAL("coal", EnumTemplates.GAME_HOME_SHORTCUTS_COAL),
+		IRON("iron", EnumTemplates.GAME_HOME_SHORTCUTS_IRON);
 
 		final String name;
 		final EnumTemplates template;
-		final TpDailyTaskEnum task;
 
-		GatherType(String name, EnumTemplates enumTemplate, TpDailyTaskEnum task) {
+		GatherType(String name, EnumTemplates enumTemplate) {
 			this.name = name;
 			this.template = enumTemplate;
-			this.task = task;
 		}
 
 		public String getName() {
@@ -619,10 +618,6 @@ public class IntelligenceTask extends DelayedTask {
 
 		public EnumTemplates getTemplate() {
 			return template;
-		}
-
-		public TpDailyTaskEnum getTask() {
-			return task;
 		}
 	}
 

@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
@@ -56,6 +57,10 @@ public abstract class DelayedTask implements Runnable, Delayed {
     protected TextRecognitionRetrier<Integer> integerHelper;
     protected TextRecognitionRetrier<Duration> durationHelper;
     protected boolean shouldUpdateConfig;
+
+    // Time format
+    protected static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
+    protected static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
 
     private static final int DEFAULT_RETRIES = 3;
 
@@ -420,10 +425,8 @@ public abstract class DelayedTask implements Runnable, Delayed {
     }
 
     protected boolean checkMarchesAvailable() {
-        // Open active marches panel
-        tapPoint(new DTOPoint(2, 550));
-        sleepTask(200);
-        tapRandomPoint(new DTOPoint(340, 265), new DTOPoint(340, 265), 3, 100);
+        // Open left menu on wilderness section
+        openLeftMenuCitySection(false);
 
         // Define march slot coordinates
         DTOPoint[] marchTopLeft = {
@@ -472,6 +475,18 @@ public abstract class DelayedTask implements Runnable, Delayed {
         logInfo("No idle marches detected in any of the 6 slots.");
         closeLeftMenu();
         return false;
+    }
+
+    protected void openLeftMenuCitySection(boolean cityTab) {
+        tapPoint(new DTOPoint(2, 550));
+        sleepTask(200);
+        if (cityTab) {
+            logInfo("Opening city left menu");
+            tapRandomPoint(new DTOPoint(100, 270), new DTOPoint(120, 270), 3, 100);
+        } else {
+            logInfo("Opening wilderness left menu");
+            tapRandomPoint(new DTOPoint(320, 270), new DTOPoint(340, 270), 3, 100);
+        }
     }
 
     protected void closeLeftMenu() {
