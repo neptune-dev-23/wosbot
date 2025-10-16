@@ -32,7 +32,6 @@ public class InitializeTask extends DelayedTask {
 				logInfo("Waiting 10 seconds before checking again.");
 				sleepTask(10000);
 			}
-
 		}
 
 		if (!emuManager.isWhiteoutSurvivalInstalled(EMULATOR_NUMBER)) {
@@ -79,7 +78,7 @@ public class InitializeTask extends DelayedTask {
 				emuManager.closeEmulator(EMULATOR_NUMBER);
 				isStarted = false;
 				this.setRecurring(true);
-			}else {
+            } else {
                 // Successfully reached home screen, reading stamina
                 updateStaminaFromProfile();
             }

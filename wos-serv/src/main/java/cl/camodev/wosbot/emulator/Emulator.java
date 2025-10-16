@@ -228,9 +228,11 @@ public abstract class Emulator {
 	 * @return Result of the action
 	 */
 	protected <T> T withRetries(String emulatorNumber, Function<IDevice, T> action, String actionName) {
-		        if (!isRunningCached(emulatorNumber)) {			logger.error("Emulator {} is not running, cannot perform action {}", emulatorNumber, actionName);
-			throw new ADBConnectionException(
-					"Emulator " + emulatorNumber + " is not running, cannot perform action " + actionName);
+        boolean cached = isRunningCached(emulatorNumber);
+        if (!cached) {
+            logger.error("Emulator {} is not running, cannot perform action {}", emulatorNumber, actionName);
+            throw new ADBConnectionException(
+                    "Emulator " + emulatorNumber + " is not running, cannot perform action " + actionName);
 		}
 
 		// --- Phase 1: Initial attempts with ADB restarts ---
@@ -871,8 +873,9 @@ public abstract class Emulator {
 
 		if (cachedStatus != null && statusTime != null) {
 			// Check if cache is still valid (TTL not expired)
-			if ((currentTime - statusTime) < RUNNING_STATUS_CACHE_TTL) {
-				logger.trace("Using cached running status for emulator {}: {}", emulatorNumber, cachedStatus);
+            if (((currentTime - statusTime) < RUNNING_STATUS_CACHE_TTL) && cachedStatus) {
+                // we only want to read cache for positive results
+                logger.info("Using cached running status for emulator {}: {}", emulatorNumber, cachedStatus);
 				return cachedStatus;
 			}
 		}
@@ -882,7 +885,6 @@ public abstract class Emulator {
 		runningStatusCache.put(emulatorNumber, status);
 		runningStatusTimestamp.put(emulatorNumber, currentTime);
 		logger.trace("Running status cached for emulator {}: {}", emulatorNumber, status);
-        logger.info("Cache MISS for emulator {}: {}", emulatorNumber, status);
 		return status;
 	}
 
