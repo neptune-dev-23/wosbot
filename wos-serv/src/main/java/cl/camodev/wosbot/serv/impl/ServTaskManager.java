@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import cl.camodev.wosbot.almac.entity.DailyTask;
 import cl.camodev.wosbot.almac.repo.DailyTaskRepository;
 import cl.camodev.wosbot.ot.DTODailyTaskStatus;
 import cl.camodev.wosbot.ot.DTOTaskState;
@@ -54,6 +55,7 @@ public class ServTaskManager {
 	}
 
     public void rescheduleTask(Long profileId, int taskId, String newSchedule) {
+//        DailyTask task =
         DailyTaskRepository.getRepository().updateSchedule(profileId, taskId, newSchedule);
 
         DTOTaskState taskState = getTaskState(profileId, taskId);

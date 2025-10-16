@@ -21,7 +21,7 @@ import cl.camodev.wosbot.ot.DTOTaskStatsAggregate;
 public class ServTaskStats {
 
     private static final Logger logger = LoggerFactory.getLogger(ServTaskStats.class);
-    private static final int DEFAULT_LIMIT = 1000;
+    private static final int DEFAULT_LIMIT = 10000;
     private static final long MINIMUM_DURATION_MILLIS = 5_000L;
 
     private static ServTaskStats instance;

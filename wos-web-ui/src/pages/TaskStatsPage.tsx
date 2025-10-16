@@ -79,7 +79,7 @@ const TaskStatsPage = () => {
       }
       setError(null);
       try {
-        const response = await fetchTaskStats({ limit: 1000, signal });
+          const response = await fetchTaskStats({limit: 10000, signal});
         setStats(response.data ?? []);
         setLastUpdated(new Date());
       } catch (err) {

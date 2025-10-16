@@ -12,10 +12,7 @@ import cl.camodev.wosbot.emulator.EmulatorManager;
 import cl.camodev.wosbot.ex.HomeNotFoundException;
 import cl.camodev.wosbot.ex.ProfileInReconnectStateException;
 import cl.camodev.wosbot.logging.ProfileLogger;
-import cl.camodev.wosbot.ot.DTOImageSearchResult;
-import cl.camodev.wosbot.ot.DTOPoint;
-import cl.camodev.wosbot.ot.DTOProfiles;
-import cl.camodev.wosbot.ot.DTOTesseractSettings;
+import cl.camodev.wosbot.ot.*;
 import cl.camodev.wosbot.serv.impl.ServLogs;
 import cl.camodev.wosbot.serv.impl.ServProfiles;
 import cl.camodev.wosbot.serv.impl.ServScheduler;
@@ -148,54 +145,58 @@ public abstract class DelayedTask implements Runnable, Delayed {
         logDebug("Verifying screen location. Required: " + requiredLocation);
 
         for (int attempt = 1; attempt <= 10; attempt++) {
-            DTOImageSearchResult home = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_FURNACE, 90);
-            DTOImageSearchResult world = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.GAME_HOME_WORLD, 90);
-            DTOImageSearchResult reconnect = emuManager.searchTemplate(EMULATOR_NUMBER,
-                    EnumTemplates.GAME_HOME_RECONNECT, 90);
+            DTOImageSearchResult home = searchTemplateWithRetries(EnumTemplates.GAME_HOME_FURNACE, 1);
+            DTOImageSearchResult world = searchTemplateWithCache(EnumTemplates.GAME_HOME_WORLD);
+            DTOImageSearchResult reconnect = searchTemplateWithCache(EnumTemplates.GAME_HOME_RECONNECT);
 
             if (reconnect.isFound()) {
                 throw new ProfileInReconnectStateException(
                         "Profile " + profile.getName() + " is in reconnect state, cannot execute task: " + taskName);
             }
 
-            if (home.isFound() || world.isFound()) {
-                // Found Home or World; check if we need to navigate to the correct location
-                if (requiredLocation == EnumStartLocation.HOME && !home.isFound()) {
-                    // We need HOME but we are in WORLD, navigate to HOME
-                    logInfo("Navigating from WORLD to HOME...");
-                    emuManager.tapAtPoint(EMULATOR_NUMBER, world.getPoint());
-                    sleepTask(2000); // Wait for navigation
-
-                    // Validate that we actually moved to HOME
-                    DTOImageSearchResult homeAfterNav = emuManager.searchTemplate(EMULATOR_NUMBER,
-                            EnumTemplates.GAME_HOME_FURNACE, 90);
-                    if (!homeAfterNav.isFound()) {
-                        logWarning("Failed to navigate to HOME, retrying...");
-                        continue; // Try again
-                    }
-                    logInfo("Successfully navigated to HOME.");
-
-                } else if (requiredLocation == EnumStartLocation.WORLD && !world.isFound()) {
-                    // We need WORLD but we are in HOME, navigate to WORLD
-                    logInfo("Navigating from HOME to WORLD...");
-                    emuManager.tapAtPoint(EMULATOR_NUMBER, home.getPoint());
-                    sleepTask(2000); // Wait for navigation
-
-                    // Validate that we actually moved to WORLD
-                    DTOImageSearchResult worldAfterNav = emuManager.searchTemplate(EMULATOR_NUMBER,
-                            EnumTemplates.GAME_HOME_WORLD, 90);
-                    if (!worldAfterNav.isFound()) {
-                        logWarning("Failed to navigate to WORLD, retrying...");
-                        continue; // Try again
-                    }
-                    logInfo("Successfully navigated to WORLD.");
-                }
-                // If requiredLocation is ANY, we can execute from either location
-                return; // Success, correct screen is found
-            } else {
+            if (!home.isFound() && !world.isFound()) {
                 logWarning("Home/World screen not found. Tapping back button (Attempt " + attempt + "/10)");
                 EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
-                sleepTask(100);
+                sleepTask(200);
+                continue;
+            }
+            // If the requiredLocation is ANY, we can execute from either location
+            if (requiredLocation == EnumStartLocation.ANY) return;
+            // Found Home or World; check if we need to navigate to the correct location
+            if (requiredLocation == EnumStartLocation.HOME && !home.isFound()) {
+                // We need HOME, but we are in the WORLD, navigate HOME
+                logInfo("Navigating from WORLD to HOME...");
+                emuManager.tapAtPoint(EMULATOR_NUMBER, world.getPoint());
+                sleepTask(500); // Wait for navigation
+
+                // Validate that we actually moved to HOME
+                DTOImageSearchResult homeAfterNav = searchTemplateWithRetries(
+                        EnumTemplates.GAME_HOME_FURNACE, 10, 300L);
+                if (!homeAfterNav.isFound()) {
+                    logWarning("Failed to navigate to HOME, retrying...");
+                    continue; // Try again
+                }
+                logInfo("Successfully navigated to HOME.");
+                return;
+            } else if (requiredLocation == EnumStartLocation.WORLD && !world.isFound()) {
+                // We need WORLD but we are in HOME, navigate to WORLD
+                logInfo("Navigating from HOME to WORLD...");
+                emuManager.tapAtPoint(EMULATOR_NUMBER, home.getPoint());
+                sleepTask(500); // Wait for navigation
+
+                // Validate that we actually moved to WORLD
+                DTOImageSearchResult worldAfterNav = searchTemplateWithRetries(
+                        EnumTemplates.GAME_HOME_WORLD, 10, 300L);
+                if (!worldAfterNav.isFound()) {
+                    logWarning("Failed to navigate to WORLD, retrying...");
+                    continue; // Try again
+                }
+                logInfo("Successfully navigated to WORLD.");
+                return;
+            } else if (requiredLocation == EnumStartLocation.HOME && home.isFound()) {
+                return;
+            } else if (requiredLocation == EnumStartLocation.WORLD && world.isFound()) {
+                return;
             }
         }
 
@@ -554,6 +555,9 @@ public abstract class DelayedTask implements Runnable, Delayed {
         return result;
     }
 
+    protected DTOImageSearchResult searchTemplateWithCache(EnumTemplates template) {
+        return emuManager.searchTemplate(EMULATOR_NUMBER, template, 90, true);
+    }
     protected DTOImageSearchResult searchTemplateWithRetries(EnumTemplates template) {
         return searchTemplateWithRetries(template, 90, DEFAULT_RETRIES);
     }

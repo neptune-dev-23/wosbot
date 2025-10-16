@@ -114,22 +114,21 @@ public class HeroMissionEventTask extends DelayedTask {
 
         // Swipe completely to the left
         logInfo("Hero's Mission event not immediately visible. Swiping left to locate it.");
-        for (int i = 0; i < 3; i++) {
-            swipe(new DTOPoint(80, 120), new DTOPoint(578, 130));
-            sleepTask(300);
+        for (int i = 0; i < 5; i++) {
+            swipe(new DTOPoint(120, 120), new DTOPoint(578, 130));
+            sleepTask(150);
         }
 
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 8; i++) {
             result = searchTemplateWithRetries(
                     EnumTemplates.HERO_MISSION_EVENT_TAB, 90, 1);
             if (result.isFound()) {
-                sleepTask(500);
                 tapPoint(result.getPoint());
                 return true;
             }
             logInfo("Hero's Mission event not found. Swiping right and retrying...");
-            swipe(new DTOPoint(630, 143), new DTOPoint(400, 128));
-            sleepTask(300);
+            swipe(new DTOPoint(630, 143), new DTOPoint(450, 128));
+            sleepTask(750);
         }
 
         return false;

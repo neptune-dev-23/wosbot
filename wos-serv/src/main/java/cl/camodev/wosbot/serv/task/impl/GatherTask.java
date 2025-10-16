@@ -634,7 +634,7 @@ public class GatherTask extends DelayedTask {
      */
     private Integer readCurrentResourceLevel() {
         DTOTesseractSettings settings = DTOTesseractSettings.builder()
-                .setAllowedChars("0123456789")
+                .setAllowedChars("12345678")
                 .setPageSegMode(DTOTesseractSettings.PageSegMode.SINGLE_LINE)
                 .setRemoveBackground(true)
                 .setTextColor(new Color(71, 106, 143))

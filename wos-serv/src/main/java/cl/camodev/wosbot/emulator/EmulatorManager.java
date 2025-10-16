@@ -132,6 +132,17 @@ public class EmulatorManager {
     }
 
     /**
+     * Fetches the last taken screenshot of the emulator from the cache
+     *
+     * @param emulatorNumber Emulator identifier
+     * @return Cached screenshot
+     */
+    public DTORawImage getCachedScreenshot(String emulatorNumber) {
+        checkEmulatorInitialized();
+        return emulator.getCachedScreenshot(emulatorNumber);
+    }
+
+    /**
      * Taps at a specific coordinate.
      */
     public void tapAtPoint(String emulatorNumber, DTOPoint point) {
@@ -343,12 +354,17 @@ public class EmulatorManager {
         }
     }
 
+    public DTOImageSearchResult searchTemplate(String emulatorNumber, EnumTemplates templatePath, double threshold) {
+        checkEmulatorInitialized();
+        return searchTemplate(emulatorNumber, templatePath, threshold, false);
+    }
     /**
      * Searches for an image on the entire emulator screen.
      */
-    public DTOImageSearchResult searchTemplate(String emulatorNumber, EnumTemplates templatePath, double threshold) {
+    public DTOImageSearchResult searchTemplate(String emulatorNumber, EnumTemplates templatePath, double threshold, boolean useCachedImage) {
         checkEmulatorInitialized();
-        DTORawImage rawImage = captureScreenshotViaADB(emulatorNumber);
+        DTORawImage rawImage = useCachedImage ?
+                getCachedScreenshot(emulatorNumber) : captureScreenshotViaADB(emulatorNumber);
         String bestTemplatePath = getBestTemplatePath(templatePath.getTemplate());
 
         try {

@@ -228,9 +228,10 @@ public abstract class Emulator {
 	 * @return Result of the action
 	 */
 	protected <T> T withRetries(String emulatorNumber, Function<IDevice, T> action, String actionName) {
-		        if (!isRunningCached(emulatorNumber)) {			logger.error("Emulator {} is not running, cannot perform action {}", emulatorNumber, actionName);
-			throw new ADBConnectionException(
-					"Emulator " + emulatorNumber + " is not running, cannot perform action " + actionName);
+        if (!isRunningCached(emulatorNumber)) {
+            logger.error("Emulator {} is not running, cannot perform action {}", emulatorNumber, actionName);
+            throw new ADBConnectionException(
+                    "Emulator " + emulatorNumber + " is not running, cannot perform action " + actionName);
 		}
 
 		// --- Phase 1: Initial attempts with ADB restarts ---
@@ -803,6 +804,19 @@ public abstract class Emulator {
 		return UtilOCR.ocrFromRegion(rawImage, p1, p2, settings);
 	}
 
+    public DTORawImage getCachedScreenshot(String emulatorNumber) {
+        DTORawImage rawImage;
+
+        // Check if we should reuse the last image
+        rawImage = lastScreenshotCache.get(emulatorNumber);
+        if (rawImage != null) {
+            logger.debug("Reusing cached screenshot for OCR on emulator {}", emulatorNumber);
+        } else {
+            logger.debug("No cached screenshot available, capturing new one for emulator {}", emulatorNumber);
+            rawImage = captureScreenshot(emulatorNumber);
+        }
+        return rawImage;
+    }
 	/**
 	 * Gets a cached device or finds it if not in cache or expired.
 	 * This significantly improves performance by avoiding repeated device lookups.

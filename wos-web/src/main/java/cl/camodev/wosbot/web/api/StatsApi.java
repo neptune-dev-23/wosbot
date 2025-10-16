@@ -25,9 +25,9 @@ public class StatsApi {
     public ResponseEntity<?> getTaskStats(
             @RequestParam(name = "profileId", required = false) Long profileId,
             @RequestParam(name = "taskId", required = false) Integer taskId,
-            @RequestParam(name = "limit", required = false, defaultValue = "1000") Integer limit) {
+            @RequestParam(name = "limit", required = false, defaultValue = "10000") Integer limit) {
         try {
-            int effectiveLimit = (limit != null && limit > 0) ? limit : 1000;
+            int effectiveLimit = (limit != null && limit > 0) ? limit : 10000;
             logger.info("Fetching task execution stats (profileId={}, taskId={}, limit={})",
                     profileId, taskId, effectiveLimit);
 
