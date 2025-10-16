@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantLock;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -11,7 +12,7 @@ import jakarta.persistence.Persistence;
 import jakarta.persistence.Query;
 
 public final class BotPersistence {
-
+    private static final ReentrantLock lock = new ReentrantLock(true);
 	private static final String PERSISTENCE_UNIT_NAME = "botPU";
 	private static BotPersistence instance;
 	private static EntityManagerFactory entityManagerFactory;
@@ -44,6 +45,7 @@ public final class BotPersistence {
 	public boolean createEntity(Object entity) {
 		EntityManager entityManager = getEntityManager();
 		try {
+            lock.lock();
 			entityManager.getTransaction().begin();
 			entityManager.persist(entity);
 			entityManager.getTransaction().commit();
@@ -56,12 +58,14 @@ public final class BotPersistence {
 			return false;
 		} finally {
 			entityManager.close(); // Cierra el EntityManager después de cada transacción
-		}
+            lock.unlock();
+        }
 	}
 
 	public boolean updateEntity(Object entity) {
 		EntityManager entityManager = getEntityManager();
 		try {
+            lock.lock();
 			entityManager.getTransaction().begin();
 			entityManager.merge(entity);
 			entityManager.getTransaction().commit();
@@ -74,12 +78,14 @@ public final class BotPersistence {
 			return false;
 		} finally {
 			entityManager.close();
+            lock.unlock();
 		}
 	}
 
 	public boolean deleteEntity(Object entity) {
 		EntityManager entityManager = getEntityManager();
 		try {
+            lock.lock();
 			entityManager.getTransaction().begin();
 			entityManager.remove(entityManager.contains(entity) ? entity : entityManager.merge(entity));
 			entityManager.getTransaction().commit();
@@ -92,6 +98,7 @@ public final class BotPersistence {
 			return false;
 		} finally {
 			entityManager.close();
+            lock.unlock();
 		}
 	}
 
@@ -133,23 +140,25 @@ public final class BotPersistence {
 
     public int executeUpdate(String queryString, Map<String, Object> parameters) {
         EntityManager entityManager = getEntityManager();
-        try {
-            entityManager.getTransaction().begin();
-            Query query = entityManager.createQuery(queryString);
+        Query query = entityManager.createQuery(queryString);
 
-            if (parameters != null) {
-                for (Map.Entry<String, Object> param : parameters.entrySet()) {
-                    					Object value = param.getValue();
-                    					if (value instanceof String) {
-                    						try {
-                    							value = LocalDateTime.parse((String) value);
-                    						} catch (DateTimeParseException e) {
-                    							// No es un LocalDateTime, se deja el valor como está
-                    						}
-                    					}
-                    					query.setParameter(param.getKey(), value);                }
+        if (parameters != null) {
+            for (Map.Entry<String, Object> param : parameters.entrySet()) {
+                Object value = param.getValue();
+                if (value instanceof String) {
+                    try {
+                        value = LocalDateTime.parse((String) value);
+                    } catch (DateTimeParseException e) {
+                        // No es un LocalDateTime, se deja el valor como está
+                    }
+                }
+                query.setParameter(param.getKey(), value);
             }
+        }
 
+        try {
+            lock.lock();
+            entityManager.getTransaction().begin();
             int result = query.executeUpdate();
             entityManager.getTransaction().commit();
             return result;
@@ -161,6 +170,7 @@ public final class BotPersistence {
             return 0;
         } finally {
             entityManager.close();
+            lock.unlock();
         }
     }
 

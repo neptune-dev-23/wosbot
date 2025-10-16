@@ -87,6 +87,14 @@ public enum TpDailyTaskEnum {
         throw new IllegalArgumentException("No TpDailyTaskEnum exists with id " + id);
     }
 
+    public static TpDailyTaskEnum fromName(String name) {
+        for (TpDailyTaskEnum t : values()) {
+            if (t.getName().equals(name)) {
+                return t;
+            }
+        }
+        throw new IllegalArgumentException("No TpDailyTaskEnum exists with name " + name);
+    }
     public int getId() {
         return id;
     }

@@ -10,6 +10,7 @@ import cl.camodev.wosbot.almac.entity.TpDailyTask;
 import cl.camodev.wosbot.almac.jpa.BotPersistence;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.ot.DTODailyTaskStatus;
+import cl.camodev.wosbot.ot.DTOProfiles;
 
 public class DailyTaskRepository implements IDailyTaskRepository {
 	private final BotPersistence persistence = BotPersistence.getInstance();
@@ -75,7 +76,8 @@ public class DailyTaskRepository implements IDailyTaskRepository {
 
 	@Override
 	public Map<Integer, DTODailyTaskStatus> findDailyTasksStatusByProfile(Long profileId) {
-		String query = """
+//        DTOProfiles profile =profile
+        String query = """
 				SELECT new cl.camodev.wosbot.ot.DTODailyTaskStatus(
 				d.profile.id, d.task.id, d.lastExecution, d.nextSchedule)
 				FROM DailyTask d
@@ -91,6 +93,7 @@ public class DailyTaskRepository implements IDailyTaskRepository {
 	}
 
     public void updateSchedule(Long profileId, int taskId, String newSchedule) {
+
         String query = "UPDATE DailyTask d SET d.nextSchedule = :newSchedule WHERE d.profile.id = :profileId AND d.task.id = :taskId";
 
         Map<String, Object> parameters = new HashMap<>();
