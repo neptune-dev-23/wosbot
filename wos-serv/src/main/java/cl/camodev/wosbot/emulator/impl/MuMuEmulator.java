@@ -40,7 +40,7 @@ public class MuMuEmulator extends Emulator {
 	@Override
 	public boolean isRunning(String emulatorNumber) {
 		try {
-			String[] command = { consolePath + File.separator + "MuMuManager.exe", "api", "-v", emulatorNumber, "player_state" };
+            String[] command = {consolePath + File.separator + "MuMuManager.exe", "info", "-v", emulatorNumber};
 			ProcessBuilder pb = new ProcessBuilder(command);
 			pb.directory(new File(consolePath).getParentFile());
 
@@ -49,10 +49,11 @@ public class MuMuEmulator extends Emulator {
 			String line;
 
 			while ((line = reader.readLine()) != null) {
-				if (line.contains("state=start_finished")) {
+                if (line.contains("is_process_started") && line.contains("true")) {
 					return true;
 				}
-			}
+
+            }
 
 			process.waitFor();
 		} catch (IOException | InterruptedException e) {

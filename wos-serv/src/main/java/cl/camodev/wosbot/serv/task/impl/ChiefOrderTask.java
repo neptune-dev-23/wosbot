@@ -12,11 +12,9 @@ import cl.camodev.wosbot.serv.task.EnumStartLocation;
 public class ChiefOrderTask extends DelayedTask {
 
 	public enum ChiefOrderType {
-	//@formatter:off
 	RUSH_JOB("Rush Job", EnumTemplates.CHIEF_ORDER_RUSH_JOB, 24),
 	URGENT_MOBILIZATION("Urgent Mobilization", EnumTemplates.CHIEF_ORDER_URGENT_MOBILISATION, 8),
 	PRODUCTIVITY_DAY("Productivity Day", EnumTemplates.CHIEF_ORDER_PRODUCTIVITY_DAY, 12);
-	//@formatter:on
 
 		private final String description;
 		private final EnumTemplates template;
