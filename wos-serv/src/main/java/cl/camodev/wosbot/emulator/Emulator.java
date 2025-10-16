@@ -228,11 +228,9 @@ public abstract class Emulator {
 	 * @return Result of the action
 	 */
 	protected <T> T withRetries(String emulatorNumber, Function<IDevice, T> action, String actionName) {
-        boolean cached = isRunningCached(emulatorNumber);
-        if (!cached) {
-            logger.error("Emulator {} is not running, cannot perform action {}", emulatorNumber, actionName);
-            throw new ADBConnectionException(
-                    "Emulator " + emulatorNumber + " is not running, cannot perform action " + actionName);
+		        if (!isRunningCached(emulatorNumber)) {			logger.error("Emulator {} is not running, cannot perform action {}", emulatorNumber, actionName);
+			throw new ADBConnectionException(
+					"Emulator " + emulatorNumber + " is not running, cannot perform action " + actionName);
 		}
 
 		// --- Phase 1: Initial attempts with ADB restarts ---
