@@ -31,7 +31,7 @@ import cl.camodev.wosbot.serv.impl.SubTaskExecutionStatServiceImpl;
 public class IntelligenceTask extends DelayedTask {
 
 	// Constants
-	private static final int MIN_STAMINA_REQUIRED = 30;
+    private static final int MIN_STAMINA_REQUIRED = 20;
 	private static final int SURVIVOR_STAMINA_COST = 12;
 	private static final int JOURNEY_STAMINA_COST = 10;
 
@@ -108,7 +108,7 @@ public class IntelligenceTask extends DelayedTask {
 			logInfo("Searching for survivor camps using grayscale matching.");
 			EnumTemplates survivorTemplate = fcEra ? EnumTemplates.INTEL_SURVIVOR_GRAYSCALE_FC
 					: EnumTemplates.INTEL_SURVIVOR_GRAYSCALE;
-			if (searchAndProcessGrayscale(survivorTemplate, 5, 90, this::processSurvivor)) {
+            if (searchAndProcessGrayscale(survivorTemplate, 2, 90, this::processSurvivor)) {
 				anyIntelProcessed = true;
 				nonBeastIntelProcessed = true;
 			}
@@ -120,7 +120,7 @@ public class IntelligenceTask extends DelayedTask {
 			logInfo("Searching for explorations using grayscale matching.");
 			EnumTemplates journeyTemplate = fcEra ? EnumTemplates.INTEL_JOURNEY_GRAYSCALE_FC
 					: EnumTemplates.INTEL_JOURNEY_GRAYSCALE;
-			if (searchAndProcessGrayscale(journeyTemplate, 5, 90, this::processJourney)) {
+            if (searchAndProcessGrayscale(journeyTemplate, 2, 90, this::processJourney)) {
 				anyIntelProcessed = true;
 				nonBeastIntelProcessed = true;
 			}
@@ -232,7 +232,7 @@ public class IntelligenceTask extends DelayedTask {
 		// Search for fire beasts if enabled
 		if (fireBeastsEnabled && !(useFlag && beastMarchSent)) {
 			logInfo("Searching for fire beasts.");
-			if (searchAndProcess(EnumTemplates.INTEL_FIRE_BEAST, 5, 90, this::processBeast)) {
+            if (searchAndProcess(EnumTemplates.INTEL_FIRE_BEAST, 2, 90, this::processBeast)) {
 				beastFound = true;
 				if (useFlag) {
 					return true; // Only one beast march in flag mode
@@ -245,7 +245,7 @@ public class IntelligenceTask extends DelayedTask {
 			logInfo("Searching for beasts using grayscale matching.");
 			EnumTemplates beastTemplate = fcEra ? EnumTemplates.INTEL_BEAST_GRAYSCALE_FC
 					: EnumTemplates.INTEL_BEAST_GRAYSCALE;
-			if (searchAndProcessGrayscale(beastTemplate, 5, 90, this::processBeast)) {
+            if (searchAndProcessGrayscale(beastTemplate, 2, 90, this::processBeast)) {
 				beastFound = true;
 			}
 		}
@@ -483,7 +483,7 @@ public class IntelligenceTask extends DelayedTask {
 		logDebug("Spent stamina read: " + spentStamina);
 
 		// Deploy march
-		DTOImageSearchResult deploy = searchTemplateWithRetries(EnumTemplates.DEPLOY_BUTTON, 90, 3);
+        DTOImageSearchResult deploy = searchTemplateWithRetries(EnumTemplates.DEPLOY_BUTTON, 3);
 		if (!deploy.isFound()) {
 			logError("Deploy button not found. Rescheduling to try again in 5 minutes.");
 			reschedule(LocalDateTime.now().plusMinutes(5));
@@ -494,7 +494,7 @@ public class IntelligenceTask extends DelayedTask {
 		sleepTask(2000);
 
 		// Verify deployment
-		deploy = searchTemplateWithRetries(EnumTemplates.DEPLOY_BUTTON, 90, 3);
+        deploy = searchTemplateWithRetries(EnumTemplates.DEPLOY_BUTTON, 3);
 		if (deploy.isFound()) {
 			logWarning(
 					"Deploy button still present after deployment attempt. March may have failed. Rescheduling in 5 minutes.");

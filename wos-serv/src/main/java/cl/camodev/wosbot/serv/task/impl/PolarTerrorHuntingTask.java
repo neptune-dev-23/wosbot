@@ -21,8 +21,8 @@ import cl.camodev.wosbot.serv.SubTaskExecutionStatService;
 import cl.camodev.wosbot.serv.impl.SubTaskExecutionStatServiceImpl;
 
 public class PolarTerrorHuntingTask extends DelayedTask {
-    private final int refreshStaminaLevel = 180;
-    private final int minStaminaLevel = 100;
+    private final int refreshStaminaLevel = 160;
+    private final int minStaminaLevel = 60;
     private final IDailyTaskRepository iDailyTaskRepository = DailyTaskRepository.getRepository();
     private final ServTaskManager servTaskManager = ServTaskManager.getInstance();
     private static final int MAX_POLAR_LEVEL = 8;

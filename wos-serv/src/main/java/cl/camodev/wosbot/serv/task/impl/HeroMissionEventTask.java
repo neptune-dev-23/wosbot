@@ -22,8 +22,8 @@ import cl.camodev.wosbot.serv.task.EnumStartLocation;
 import java.awt.Color;
 
 public class HeroMissionEventTask extends DelayedTask {
-    private final int refreshStaminaLevel = 180;
-    private final int minStaminaLevel = 100;
+    private final int refreshStaminaLevel = 140;
+    private final int minStaminaLevel = 60;
     private final IDailyTaskRepository iDailyTaskRepository = DailyTaskRepository.getRepository();
     private final ServTaskManager servTaskManager = ServTaskManager.getInstance();
     private int flagNumber = 0;
@@ -62,8 +62,11 @@ public class HeroMissionEventTask extends DelayedTask {
         }
 
         // Verify if there's enough stamina to hunt, if not, reschedule the task
-        if (!checkStaminaAndMarchesOrReschedule(minStaminaLevel, refreshStaminaLevel))
+        if (!checkStaminaAndMarchesOrReschedule(minStaminaLevel, refreshStaminaLevel, true)) {
+            reschedule(LocalDateTime.now().plusHours(1));
+            logWarning("Not enough stamina or marches, rescheduling for in 1 hour");
             return;
+        }
 
         int attempt = 0;
         while (attempt < 2) {
@@ -138,8 +141,8 @@ public class HeroMissionEventTask extends DelayedTask {
         ReaperAvailabilityResult reaperStatus = reapersAvailable();
 
         if (reaperStatus.isOcrError()) {
-            logWarning("OCR error while checking reaper availability. Retrying in 5 minutes.");
-            reschedule(LocalDateTime.now().plusMinutes(5));
+            logWarning("OCR error while checking reaper availability. Retrying in 1 hour.");
+            reschedule(LocalDateTime.now().plusMinutes(60));
             return;
         }
 

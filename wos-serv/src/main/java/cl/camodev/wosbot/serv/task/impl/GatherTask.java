@@ -349,7 +349,7 @@ public class GatherTask extends DelayedTask {
         logInfo(String.format("Processing %s gathering.", gatherType.name()));
 
         openLeftMenuCitySection(false);
-
+        sleepTask(500); // wait for menu to open
         ActiveMarchResult result = checkActiveMarch(gatherType);
 
         closeActiveMarchesMenu();
@@ -358,9 +358,12 @@ public class GatherTask extends DelayedTask {
             logInfo(String.format("%s march is active. Returns in: %s",
                     gatherType.name(), UtilTime.localDateTimeToDDHHMMSS(result.getReturnTime())));
             updateRescheduleTime(result.getReturnTime());
-        } else {
+        } else if (checkMarchesAvailable()) {
             logInfo(String.format("No active %s march found. Deploying new march.", gatherType.name()));
             deployNewGatherMarch(gatherType);
+        } else {
+            logInfo(String.format("No active %s march found, but no marches available. Rescheduling for in 15 minutes. ", gatherType.name()));
+            updateRescheduleTime(LocalDateTime.now().plusMinutes(15));
         }
     }
 
@@ -382,17 +385,17 @@ public class GatherTask extends DelayedTask {
      */
     private ActiveMarchResult checkActiveMarch(GatherType gatherType) {
         logDebug(String.format("Checking for active %s march", gatherType.name()));
-
+        openLeftMenuCitySection(false);
         // Calculate search region based on active march queues
         int maxQueueIndex = Math.min(activeMarchQueues - 1, MARCH_QUEUES.length - 1);
-        DTOPoint searchBottomRight = new DTOPoint(415, MARCH_QUEUES[maxQueueIndex].bottomRight.getY());
+        DTOPoint searchBottomRight = new DTOPoint(415, MARCH_QUEUES[5].bottomRight.getY());
 
         DTOImageSearchResult resource = searchTemplateRegionWithRetries(
                 gatherType.getTemplate(),
                 MARCH_QUEUES[0].topLeft,
                 searchBottomRight,
                 3,
-                3);
+                200L);
 
         if (!resource.isFound()) {
             return ActiveMarchResult.notActive();

@@ -137,6 +137,7 @@ public class TaskQueue {
             } else if (taskQueueStatus.isReadyToReconnect() && !emuManager.isRunning(profile.getEmulatorNumber())) {
                 logInfo("Emulator is not running, acquiring emulator slot now");
                 acquireEmulatorSlot();
+                attemptReconnectAndInitialize();
             }
 
             DelayedTask task = taskQueue.peek();

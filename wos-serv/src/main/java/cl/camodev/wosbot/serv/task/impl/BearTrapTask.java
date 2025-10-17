@@ -177,8 +177,9 @@ public class BearTrapTask extends DelayedTask {
                 }
                 logInfo("Trap has been ACTIVATED automatically!");
             } else {
-                // this will skip preration and go directly to play event
                 logInfo("Trap is already ACTIVE (preparation time passed)");
+                logInfo("Quickly executing Setup strategy...");
+                prepareForTrap();
             }
 
             // Phase 2: TRAP ACTIVE - execute strategy until it ends
@@ -424,14 +425,14 @@ public class BearTrapTask extends DelayedTask {
         sleepTask(3000);
         // go to territory
 
-        DTOImageSearchResult territoryButton = searchTemplateWithRetries(ALLIANCE_TERRITORY_BUTTON, 1);
+        DTOImageSearchResult territoryButton = searchTemplateWithRetries(ALLIANCE_TERRITORY_BUTTON, 5, 300L);
         if (!territoryButton.isFound()) {
             logError("Territory button not found to go to bear trap");
             return false;
         }
         tapRandomPoint(territoryButton.getPoint(), territoryButton.getPoint(), 1, 2000);
         // go to special buildings
-        tapRandomPoint(new DTOPoint(460, 110), new DTOPoint(560, 130), 1, 300);
+        tapRandomPoint(new DTOPoint(460, 110), new DTOPoint(560, 130), 5, 300);
         // click on go button based on trap number
 
         switch (trapNumber) {
@@ -456,12 +457,12 @@ public class BearTrapTask extends DelayedTask {
             logError("Pets button not found to enable pets");
             return;
         }
-        tapRandomPoint(petsButton.getPoint(), petsButton.getPoint(), 1, 500);
+        tapRandomPoint(petsButton.getPoint(), petsButton.getPoint(), 1, 1000);
         tapRandomPoint(new DTOPoint(100, 410), new DTOPoint(160, 460), 1, 500); // razorbreak
         tapRandomPoint(new DTOPoint(120, 1070), new DTOPoint(280, 1100), 1, 500); // quick use
         tapRandomPoint(new DTOPoint(460, 800), new DTOPoint(550, 830), 1, 100); // use
         tapBackButton();
-        ensureCorrectScreenLocation(EnumStartLocation.ANY);
+        ensureCorrectScreenLocation(EnumStartLocation.WORLD);
     }
 
     /**
@@ -591,7 +592,7 @@ public class BearTrapTask extends DelayedTask {
             logInfo("Calling own rally...");
 
             // Tap bear center (assuming camera is already on the bear)
-            tapRandomPoint(new DTOPoint(370, 507), new DTOPoint(370, 507), 1, 200);
+            tapRandomPoint(new DTOPoint(370, 507), new DTOPoint(370, 507), 3, 200);
 
             // Search for rally button (it can be in different places)
             DTOImageSearchResult rallyButton = searchTemplateWithRetries(EnumTemplates.BEAR_RALLY_BUTTON, 80, 10);
@@ -604,7 +605,7 @@ public class BearTrapTask extends DelayedTask {
             tapRandomPoint(rallyButton.getPoint(), rallyButton.getPoint(), 1, 200);
 
             // Search and tap hold rally button
-            DTOImageSearchResult holdRallyButton = searchTemplateWithRetries(EnumTemplates.RALLY_HOLD_BUTTON, 90, 10);
+            DTOImageSearchResult holdRallyButton = searchTemplateWithRetries(EnumTemplates.RALLY_HOLD_BUTTON, 10, 100L);
             if (!holdRallyButton.isFound()) {
                 logError("Hold Rally button not found!");
                 ownRallyActive.set(false);
@@ -635,7 +636,7 @@ public class BearTrapTask extends DelayedTask {
                 // Calculate rally duration: 5 minutes + (march time * 2) - 1 second buffer
                 long marchSeconds = marchingTime.getSeconds();
                 durationSeconds = 5 * 60 + marchSeconds * 2 - 3;
-                DTOImageSearchResult deploy = searchTemplateWithRetries(EnumTemplates.BEAR_DEPLOY_BUTTON, 90, 3);
+                DTOImageSearchResult deploy = searchTemplateWithRetries(EnumTemplates.BEAR_DEPLOY_BUTTON, 3);
 
                 if (!deploy.isFound()) {
                     logWarning("Deploy button not found. Rescheduling to try again in 5 minutes.");

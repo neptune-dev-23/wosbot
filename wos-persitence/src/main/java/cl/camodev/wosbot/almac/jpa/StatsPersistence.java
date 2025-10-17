@@ -2,6 +2,7 @@ package cl.camodev.wosbot.almac.jpa;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantLock;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -13,6 +14,7 @@ public final class StatsPersistence {
     private static final String PERSISTENCE_UNIT_NAME = "statsPU";
     private static StatsPersistence instance;
     private static EntityManagerFactory entityManagerFactory;
+    private static final ReentrantLock lock = new ReentrantLock(true);
 
     private StatsPersistence() {
         try {
@@ -41,6 +43,7 @@ public final class StatsPersistence {
     public boolean createEntity(Object entity) {
         EntityManager entityManager = getEntityManager();
         try {
+            lock.lock();
             entityManager.getTransaction().begin();
             entityManager.persist(entity);
             entityManager.getTransaction().commit();
@@ -53,6 +56,7 @@ public final class StatsPersistence {
             return false;
         } finally {
             entityManager.close();
+            lock.unlock();
         }
     }
 

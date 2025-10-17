@@ -38,7 +38,7 @@ public class BankTask extends DelayedTask {
 	 */
 	private boolean navigateToBank() {
 		// Search for the Deals button
-		DTOImageSearchResult dealsResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.HOME_DEALS_BUTTON,  90);
+        DTOImageSearchResult dealsResult = searchTemplateWithRetries(EnumTemplates.HOME_DEALS_BUTTON);
 		if (!dealsResult.isFound()) {
 			logWarning("Deals button not found. Cannot proceed to bank.");
 			return false;
@@ -51,8 +51,8 @@ public class BankTask extends DelayedTask {
 		emuManager.executeSwipe(EMULATOR_NUMBER, new DTOPoint(630, 143), new DTOPoint(2, 128));
 		sleepTask(200);
 		// Search for the bank option within events
-		DTOImageSearchResult bankResult = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.EVENTS_DEALS_BANK, 90);
-		if (!bankResult.isFound()) {
+        DTOImageSearchResult bankResult = searchTemplateWithRetries(EnumTemplates.EVENTS_DEALS_BANK);
+        if (!bankResult.isFound()) {
 			logWarning("Bank option not found in deals. Cannot proceed.");
 			return false;
 		}

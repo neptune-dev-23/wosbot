@@ -719,7 +719,7 @@ public class EmulatorManager {
             if (activeSlots.remove(currentThread)) {
                 // MAX_RUNNING_EMULATORS++;
                 logger.info("Thread {} released its slot, slots available: {}", currentThread.getName(),
-                        MAX_RUNNING_EMULATORS);
+                        MAX_RUNNING_EMULATORS - activeSlots.size());
             } else {
                 logger.warn("Thread {} tried to release a slot it didn't have", currentThread.getName());
             }

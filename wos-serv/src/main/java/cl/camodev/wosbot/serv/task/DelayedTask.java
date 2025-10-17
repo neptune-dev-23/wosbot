@@ -391,8 +391,11 @@ public abstract class DelayedTask implements Runnable, Delayed {
     protected int getCurrentStamina() {
         return StaminaService.getServices().getCurrentStamina(profile.getId());
     }
-
     protected boolean checkStaminaAndMarchesOrReschedule(int minStaminaLevel, int refreshStaminaLevel) {
+        return checkStaminaAndMarchesOrReschedule(minStaminaLevel, refreshStaminaLevel, false);
+    }
+
+    protected boolean checkStaminaAndMarchesOrReschedule(int minStaminaLevel, int refreshStaminaLevel, boolean callerHandlesReschedule) {
         int currentStamina = getCurrentStamina();
         logInfo("Current stamina: " + currentStamina);
 
