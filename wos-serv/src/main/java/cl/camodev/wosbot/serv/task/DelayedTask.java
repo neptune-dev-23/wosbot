@@ -771,6 +771,10 @@ public abstract class DelayedTask implements Runnable, Delayed {
         return taskName;
     }
 
+    public void setProfile(DTOProfiles profile) {
+        this.profile = profile;
+    }
+
     @Override
     public long getDelay(TimeUnit unit) {
         long diff = scheduledTime.toEpochSecond(ZoneOffset.UTC) - LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
@@ -782,7 +786,7 @@ public abstract class DelayedTask implements Runnable, Delayed {
         if (this == o)
             return 0;
 
-        // Priority 1: InitializeTask has highest priority
+        // Priority 1: InitializeTask has absolute highest priority
         boolean thisInit = this instanceof InitializeTask;
         boolean otherInit = o instanceof InitializeTask;
         if (thisInit && !otherInit)
@@ -790,32 +794,42 @@ public abstract class DelayedTask implements Runnable, Delayed {
         if (!thisInit && otherInit)
             return 1;
 
-        // Priority 2: BearTrapTask
-        boolean thisBearTrap = this instanceof BearTrapTask;
-        boolean otherBearTrap = o instanceof BearTrapTask;
+        // Get delays
+        long thisDelay = this.getDelay(TimeUnit.NANOSECONDS);
+        long otherDelay = o.getDelay(TimeUnit.NANOSECONDS);
 
-        if (thisBearTrap && !otherBearTrap && this.getDelay(TimeUnit.NANOSECONDS) <= 0) {
+        boolean thisReady = thisDelay <= 0;
+        boolean otherReady = otherDelay <= 0;
+
+        // Priority 2: Tasks with delay <= 0 (ready) have higher priority than not ready
+        if (thisReady && !otherReady)
             return -1;
-        }
-
-        if (!thisBearTrap && otherBearTrap && o.getDelay(TimeUnit.NANOSECONDS) <= 0) {
-            return 1;
-        }
-
-        // Priority 3: ArenaTask
-        boolean thisArena = this instanceof ArenaTask;
-        boolean otherArena = o instanceof ArenaTask;
-
-        if (thisArena && !otherArena && this.getDelay(TimeUnit.NANOSECONDS) <= 0)
-            return -1;
-
-        if (!thisArena && otherArena && o.getDelay(TimeUnit.NANOSECONDS) <= 0)
+        if (!thisReady && otherReady)
             return 1;
 
-        // For tasks of same priority, compare by scheduled time
-        long diff = this.getDelay(TimeUnit.NANOSECONDS)
-                - o.getDelay(TimeUnit.NANOSECONDS);
-        return Long.compare(diff, 0);
+        // If both are ready (delay <= 0), compare by task type first
+        if (thisReady && otherReady) {
+            // Priority 3a: BearTrapTask among ready tasks
+            boolean thisBearTrap = this instanceof BearTrapTask;
+            boolean otherBearTrap = o instanceof BearTrapTask;
+            if (thisBearTrap && !otherBearTrap)
+                return -1;
+            if (!thisBearTrap && otherBearTrap)
+                return 1;
+
+            // Priority 4a: ArenaTask among ready tasks
+            boolean thisArena = this instanceof ArenaTask;
+            boolean otherArena = o instanceof ArenaTask;
+            if (thisArena && !otherArena)
+                return -1;
+            if (!thisArena && otherArena)
+                return 1;
+        }
+
+        // Priority 5: Compare by scheduled time (delay)
+        // For ready tasks of same type: by delay (most overdue first)
+        // For non-ready tasks: by delay (earliest scheduled first)
+        return Long.compare(thisDelay, otherDelay);
     }
 
     public LocalDateTime getScheduled() {
