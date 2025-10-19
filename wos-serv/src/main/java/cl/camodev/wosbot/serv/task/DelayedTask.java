@@ -311,7 +311,7 @@ public abstract class DelayedTask implements Runnable, Delayed {
                 .setAllowedChars("0123456789/")
                 .setRemoveBackground(true)
                 .setTextColor(new Color(255, 255, 255)) // White text
-                //.setPageSegMode(DTOTesseractSettings.PageSegMode.SINGLE_LINE)
+//                .setDebug(true)
                 // .setReuseLastImage(true)
                 .build();
 

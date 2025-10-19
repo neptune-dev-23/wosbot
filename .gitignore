@@ -50,3 +50,6 @@ fix.ps1
 temp-python
 # Local environment overrides
 /wos-web-ui/.env
+database*
+*.crt
+*.key
