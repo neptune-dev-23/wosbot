@@ -316,7 +316,7 @@ public class EmulatorManager {
      * Gets the most appropriate template path according to the configured region
      */
     private String getBestTemplatePath(String originalPath) {
-        // Generate region-specific path
+        // Generate a region-specific path
         String regionSpecificPath = getRegionSpecificTemplatePath(originalPath);
 
         // If it's different from the original, check if it exists
@@ -331,13 +331,23 @@ public class EmulatorManager {
         return originalPath;
     }
 
+    public DTOImageSearchResult searchTemplate(String emulatorNumber, EnumTemplates templatePath,
+                                               DTOPoint topLeftCorner, DTOPoint bottomRightCorner, double threshold) {
+        return searchTemplate(emulatorNumber, templatePath, topLeftCorner, bottomRightCorner, threshold, false);
+    }
+
     /**
      * Searches for an image on the captured screen of the emulator.
      */
     public DTOImageSearchResult searchTemplate(String emulatorNumber, EnumTemplates templatePath,
-            DTOPoint topLeftCorner, DTOPoint bottomRightCorner, double threshold) {
+                                               DTOPoint topLeftCorner, DTOPoint bottomRightCorner, double threshold, boolean useCached) {
         checkEmulatorInitialized();
-        DTORawImage rawImage = captureScreenshotViaADB(emulatorNumber);
+        DTORawImage rawImage;
+        if (useCached) {
+            rawImage = getCachedScreenshot(emulatorNumber);
+        } else {
+            rawImage = captureScreenshotViaADB(emulatorNumber);
+        }
         String bestTemplatePath = getBestTemplatePath(templatePath.getTemplate());
 
         try {

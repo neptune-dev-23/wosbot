@@ -264,7 +264,7 @@ public class BearTrapTask extends DelayedTask {
             if (callOwnRally && !ownRallyActive.get() && secondsRemaining > 360) {
                 long durationSeconds = callOwnRally();
                 if (durationSeconds > 0) {
-                    LocalDateTime returnTime = now.plusSeconds(durationSeconds * 2 + 2).plusMinutes(5);
+                    LocalDateTime returnTime = now.plusSeconds(durationSeconds * 2 + 4).plusMinutes(5);
                     logInfo("Own rally started successfully, returning in: " + returnTime.format(TIME_FORMATTER));
                     ownRallyActive.set(true);// marca el rally como activo
                     sleepTask(200);

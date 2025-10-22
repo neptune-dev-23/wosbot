@@ -79,13 +79,13 @@ public class TrainingTask extends DelayedTask {
         // ready
         Optional<QueueInfo> soonReady = analyzedQueues.stream()
                 .filter(q -> q.status() == QueueStatus.TRAINING && q.readyAt() != null)
-                .filter(q -> Duration.between(LocalDateTime.now(), q.readyAt()).toMinutes() <= 3)
+                .filter(q -> Duration.between(LocalDateTime.now(), q.readyAt()).toMinutes() <= 5)
                 .findFirst();
 
         if (soonReady.isPresent()) {
             QueueInfo queue = soonReady.get();
             logInfo("Queue for " + queue.type().name()
-                    + " will be ready in less than 3 minutes. Rescheduling task when it's ready at " + queue.readyAt().format(DATETIME_FORMATTER));
+                    + " will be ready in less than 5 minutes. Rescheduling task when it's ready at " + queue.readyAt().format(DATETIME_FORMATTER));
             reschedule(queue.readyAt());
             return;
         }

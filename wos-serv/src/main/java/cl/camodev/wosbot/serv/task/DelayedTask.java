@@ -145,8 +145,13 @@ public abstract class DelayedTask implements Runnable, Delayed {
         logDebug("Verifying screen location. Required: " + requiredLocation);
 
         for (int attempt = 1; attempt <= 10; attempt++) {
-            DTOImageSearchResult home = searchTemplateWithRetries(EnumTemplates.GAME_HOME_FURNACE, 1);
-            DTOImageSearchResult world = searchTemplateWithCache(EnumTemplates.GAME_HOME_WORLD);
+            DTOImageSearchResult home = searchTemplateRegionWithRetries(
+                    EnumTemplates.GAME_HOME_FURNACE,
+                    new DTOPoint(580, 1140), new DTOPoint(720, 1280),
+                    90, 1, 100L);
+            DTOImageSearchResult world = searchTemplateRegionWithCache(EnumTemplates.GAME_HOME_WORLD,
+                    new DTOPoint(580, 1140), new DTOPoint(720, 1280)
+            );
             DTOImageSearchResult reconnect = searchTemplateWithCache(EnumTemplates.GAME_HOME_RECONNECT);
 
             if (reconnect.isFound()) {
@@ -157,7 +162,7 @@ public abstract class DelayedTask implements Runnable, Delayed {
             if (!home.isFound() && !world.isFound()) {
                 logWarning("Home/World screen not found. Tapping back button (Attempt " + attempt + "/10)");
                 EmulatorManager.getInstance().tapBackButton(EMULATOR_NUMBER);
-                sleepTask(200);
+                sleepTask(500);
                 continue;
             }
             // If the requiredLocation is ANY, we can execute from either location
@@ -555,6 +560,10 @@ public abstract class DelayedTask implements Runnable, Delayed {
                 text -> NumberConverters.regexToInt(text, Pattern.compile(".*?(\\d+).*")));
         logDebug("Number value read: " + (result != null ? result : "null"));
         return result;
+    }
+
+    protected DTOImageSearchResult searchTemplateRegionWithCache(EnumTemplates template, DTOPoint topLeft, DTOPoint bottomRight) {
+        return emuManager.searchTemplate(EMULATOR_NUMBER, template, topLeft, bottomRight, 90, true);
     }
 
     protected DTOImageSearchResult searchTemplateWithCache(EnumTemplates template) {
