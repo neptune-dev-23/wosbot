@@ -2,6 +2,7 @@ package cl.camodev.wosbot.profile.view;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -44,7 +45,7 @@ public class ProfileManagerLayoutController implements IProfileChangeObserver {
 
 	private final ExecutorService profileQueueExecutor = Executors.newSingleThreadExecutor();
 	private ProfileManagerActionController profileManagerActionController;
-	private ObservableList<ProfileAux> profiles;
+    private ObservableList<ProfileAux> profiles = FXCollections.observableArrayList();
 	private SortedList<ProfileAux> sortedProfiles;
 	@FXML
 	private TableView<ProfileAux> tableviewLogMessages;
@@ -299,9 +300,15 @@ public class ProfileManagerLayoutController implements IProfileChangeObserver {
 	}
 
 	public void loadProfiles() {
-		profileManagerActionController.loadProfiles(dtoProfiles -> {
+        if (this.profileManagerActionController == null) {
+            initializeController();
+        }
+        this.profileManagerActionController.loadProfiles(dtoProfiles -> {
 			Platform.runLater(() -> {
-				profiles.clear();
+                if (profiles == null) {
+                    return;
+                }
+                profiles.clear();
 				dtoProfiles.forEach(dtoProfile -> {
 					ProfileAux profileAux = new ProfileAux(dtoProfile.getId(), dtoProfile.getName(), dtoProfile.getEmulatorNumber(), dtoProfile.getEnabled(), dtoProfile.getPriority(), "NOT RUNNING", dtoProfile.getReconnectionTime());
 					dtoProfile.getConfigs().forEach(config -> {
@@ -404,7 +411,7 @@ public class ProfileManagerLayoutController implements IProfileChangeObserver {
 
 	public void handleProfileStatusChange(DTOProfileStatus status) {
 		Platform.runLater(() -> {
-			profiles.stream().filter(p -> p.getId() == status.getId()).forEach(p -> {
+            profiles.stream().filter(p -> Objects.equals(p.getId(), status.getId())).forEach(p -> {
 				p.setStatus(status.getStatus());
 			});
 			tableviewLogMessages.refresh();

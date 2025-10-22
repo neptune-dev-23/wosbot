@@ -1,5 +1,6 @@
 package cl.camodev.wosbot.main;
 
+import cl.camodev.wosbot.almac.jpa.BotPersistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -8,21 +9,28 @@ import cl.camodev.wosbot.web.server.WebDashboardServer;
 
 public class Main {
 	private static final Logger logger = LoggerFactory.getLogger(Main.class);
-
+    private static final long programStart = System.currentTimeMillis();
 	public static void main(String[] args) {
 		try {
-			// Silence logback's internal status messages
+            // Silence logback's internal status messages
 			System.setProperty("logback.statusListenerClass", "ch.qos.logback.core.status.NopStatusListener");
 			
 			// Initialize Log4j configuration
-			configureLog4j();
+            logger.info("Starting Log4j initialization at {} ms", System.currentTimeMillis() - programStart);
+            long log4jInitStart = System.currentTimeMillis();
+            configureLog4j();
+            long log4jInitEnd = System.currentTimeMillis();
+            logger.info("Log4j initialization completed in " + (log4jInitEnd - log4jInitStart) + "ms");
 
 			logger.info("Starting WosBot application");
 			logger.info("Logging configured. Check target/log/bot.log for detailed logs.");
 			logger.info("Profile-specific logs will be created in target/log/profile_*.log files");
-			
-			// Start the log web server
-			startLogWebServer();
+
+            // Start initializing the database
+            Thread.ofVirtual().start(Main::initializeDatabase).setName("DatabaseInitializer");
+
+            // Start the log web server
+            Thread.ofVirtual().start(Main::startLogWebServer).setName("LogWebServerInitializer");
 
             // Add shutdown hook to close log files and web server
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -32,6 +40,7 @@ public class Main {
             }));
 
 			// Launch JavaFX application
+            logger.info("Starting JavaFX loading at {} ms", System.currentTimeMillis() - programStart);
 			FXApp.main(args);
 
 		} catch (Exception e) {
@@ -62,15 +71,25 @@ public class Main {
 		}
 	}
 
+    private static void initializeDatabase() {
+        long initDbStart = System.currentTimeMillis();
+        logger.info("Starting to initialize database at {} ms", initDbStart - programStart);
+        BotPersistence.getInstance();
+        logger.info("Finished initializing database, took {} ms", System.currentTimeMillis() - initDbStart);
+
+    }
+
 	/**
 	 * Starts the web dashboard server for real-time log viewing and bot control
 	 */
 	private static void startLogWebServer() {
         try {
-            Thread.ofVirtual().start(() -> {
-                WebDashboardServer webDashboardServer = WebDashboardServer.getInstance();
-                webDashboardServer.start(); // Starts on default port 8080
-            });
+            logger.info("Starting web dashboard server at {} ms", System.currentTimeMillis() - programStart);
+            long webServerInitStart = System.currentTimeMillis();
+            WebDashboardServer webDashboardServer = WebDashboardServer.getInstance();
+            webDashboardServer.start(); // Starts on default port 8080
+            long webServerInitEnd = System.currentTimeMillis();
+            logger.info("Web dashboard server started in " + (webServerInitEnd - webServerInitStart) + "ms");
         } catch (Exception e) {
             logger.error("Failed to start web dashboard server: " + e.getMessage(), e);
             // Don't fail the application if the web server can't start

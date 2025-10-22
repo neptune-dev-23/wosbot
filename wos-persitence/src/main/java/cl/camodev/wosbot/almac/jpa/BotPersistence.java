@@ -14,7 +14,7 @@ import jakarta.persistence.Query;
 public final class BotPersistence {
     private static final ReentrantLock lock = new ReentrantLock(true);
 	private static final String PERSISTENCE_UNIT_NAME = "botPU";
-	private static BotPersistence instance;
+    private static volatile BotPersistence instance;
 	private static EntityManagerFactory entityManagerFactory;
 
 	private BotPersistence() {

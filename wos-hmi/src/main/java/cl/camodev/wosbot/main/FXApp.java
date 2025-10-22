@@ -26,16 +26,18 @@ public class FXApp extends Application {
 	private static final String KEY_H      = "windowHeight";
 	private static final double DEFAULT_W  = 900;
 	private static final double DEFAULT_H  = 500;
+    private static final long javaFXStart = System.currentTimeMillis();
 
 	private Preferences prefs;
 
 	public static void main(String[] args) {
-		launch(args);
+        launch(args);
 	}
 
 	@Override
 	public void start(Stage stage) throws IOException {
-		// Inicializar Preferences
+        logger.info("JavaFX init time: {} ms", System.currentTimeMillis() - javaFXStart);
+        // Inicializar Preferences
 		Image appIcon = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/icons/appIcon.png")));
 		prefs = Preferences.userRoot().node(FXApp.class.getName());
 
@@ -45,7 +47,11 @@ public class FXApp extends Application {
 		);
 		LauncherLayoutController controller = new LauncherLayoutController(stage);
 		fxmlLoader.setController(controller);
-		Parent root = fxmlLoader.load();
+        logger.info("Ready to start fxml loader at {} ms", System.currentTimeMillis() - javaFXStart);
+        long startFxmlLoader = System.currentTimeMillis();
+        Parent root = fxmlLoader.load();
+        logger.info("FXML loaded in {} ms", System.currentTimeMillis() - startFxmlLoader);
+        long endFxmlLoader = System.currentTimeMillis();
 
 		// Crear escena con tamaño por defecto primero
 		Scene scene = new Scene(root, DEFAULT_W, DEFAULT_H);
@@ -80,8 +86,10 @@ public class FXApp extends Application {
 				positionOnPrimaryScreen(stage, savedWidth, savedHeight);
 			}
 		}
+        logger.info("Loaded all other things after the fxml loader at {} ms", System.currentTimeMillis() - endFxmlLoader);
+        logger.info("Finished loading full JavaFX app at {} ms", System.currentTimeMillis() - javaFXStart);
 
-		// Antes de cerrar, guardar posición y tamaño
+        // Antes de cerrar, guardar posición y tamaño
 		stage.setOnCloseRequest(event -> {
 			prefs.putDouble(KEY_X, stage.getX());
 			prefs.putDouble(KEY_Y, stage.getY());

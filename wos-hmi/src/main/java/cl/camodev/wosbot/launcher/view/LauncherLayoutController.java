@@ -12,10 +12,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 import cl.camodev.utiles.ImageSearchUtil;
 import cl.camodev.wosbot.alliance.view.AllianceLayoutController;
 import cl.camodev.wosbot.alliancechampionship.view.AllianceChampionshipLayoutController;
+import cl.camodev.wosbot.almac.jpa.BotPersistence;
 import cl.camodev.wosbot.bear.view.BearTrapLayoutController;
 import cl.camodev.wosbot.chieforder.view.ChiefOrderLayoutController;
 import cl.camodev.wosbot.city.view.CityEventsExtraLayoutController;
@@ -84,7 +87,7 @@ public class LauncherLayoutController implements IProfileLoadListener, IStaminaC
     private Label labelVersion;
     @FXML
     private ComboBox<ProfileAux> profileComboBox;
-    private Stage stage;
+    private final Stage stage;
     private LauncherActionController actionController;
     private ConsoleLogLayoutController consoleLogLayoutController;
     private ProfileManagerLayoutController profileManagerLayoutController;
@@ -93,6 +96,7 @@ public class LauncherLayoutController implements IProfileLoadListener, IStaminaC
     private ProfileAux currentProfile = null; // Perfil actualmente cargado
     private boolean allQueuesPaused = false;
     private final Map<Long, DTOQueueProfileState> activeQueueStates = new HashMap<>();
+    Map<String, Parent> sceneCache = new HashMap<>();
 
     public LauncherLayoutController(Stage stage) {
         this.stage = stage;
@@ -101,14 +105,15 @@ public class LauncherLayoutController implements IProfileLoadListener, IStaminaC
 
     @FXML
     private void initialize() {
+        initializeExternalLibraries();
+        showVersion();
         initializeDiscordBot();
+
         initializeEmulatorManager();
         initializeLogModule();
         initializeProfileModule();
         initializeProfileComboBox();
         initializeModules();
-        initializeExternalLibraries();
-        showVersion();
         buttonStartStop.setDisable(false);
         buttonPauseResume.setDisable(true);
         configurePauseMenu();
@@ -754,43 +759,51 @@ public class LauncherLayoutController implements IProfileLoadListener, IStaminaC
     }
 
     private Button addButton(String fxmlName, String title, Object controller) {
-        try {
-            FXMLLoader loader = new FXMLLoader(controller.getClass().getResource(fxmlName + ".fxml"));
-            loader.setController(controller);
-            Parent root = loader.load();
+        Button button = new Button(title);
+        button.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(button, Priority.ALWAYS);
 
-            Button button = new Button(title);
-            button.setMaxWidth(Double.MAX_VALUE);
-            HBox.setHgrow(button, Priority.ALWAYS);
+        // Asigna la clase personalizada para esquinas cuadradas a este botón
+        button.getStyleClass().add("square-button");
 
-            // Asigna la clase personalizada para esquinas cuadradas a este botón
-            button.getStyleClass().add("square-button");
+        // Cache to avoid reloading same FXML
 
-            button.setOnAction(e -> {
-                // Limpia el contenido actual y agrega el nuevo panel
-                mainContentPane.getChildren().clear();
-                AnchorPane.setTopAnchor(root, 0.0);
-                AnchorPane.setBottomAnchor(root, 0.0);
-                AnchorPane.setLeftAnchor(root, 0.0);
-                AnchorPane.setRightAnchor(root, 0.0);
-                mainContentPane.getChildren().add(root);
-
-
-                for (Node node : buttonsContainer.getChildren()) {
-                    if (node instanceof Button) {
-                        node.getStyleClass().remove("active");
-                    }
+        button.setOnAction(e -> {
+            Parent root;
+            // Load FXML only on the first click (then cache it)
+            if (!sceneCache.containsKey(fxmlName)) {
+                try {
+                    FXMLLoader loader = new FXMLLoader(controller.getClass().getResource(fxmlName + ".fxml"));
+                    loader.setController(controller);
+                    root = loader.load();
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
                 }
+                sceneCache.put(fxmlName, root);
+            } else {
+                root = sceneCache.get(fxmlName);
+            }
 
-                button.getStyleClass().add("active");
-            });
+            // Limpia el contenido actual y agrega el nuevo panel
+            mainContentPane.getChildren().clear();
+            AnchorPane.setTopAnchor(root, 0.0);
+            AnchorPane.setBottomAnchor(root, 0.0);
+            AnchorPane.setLeftAnchor(root, 0.0);
+            AnchorPane.setRightAnchor(root, 0.0);
+            mainContentPane.getChildren().add(root);
 
-            buttonsContainer.getChildren().add(button);
-            return button;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
+
+            for (Node node : buttonsContainer.getChildren()) {
+                if (node instanceof Button) {
+                    node.getStyleClass().remove("active");
+                }
+            }
+
+            button.getStyleClass().add("active");
+        });
+
+        buttonsContainer.getChildren().add(button);
+        return button;
     }
 
     public <T> T getModuleController(String key, Class<T> type) {

@@ -19,24 +19,27 @@
             <property name="jakarta.persistence.jdbc.url"
                       value="jdbc:sqlite:database.db?busy_timeout=1000"/>
 
+            <!--            <property name="hibernate.hikari.connectionInitSql"-->
+            <!--                      value="PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; PRAGMA wal_autocheckpoint=128;"/>-->
             <property name="hibernate.hikari.connectionInitSql"
-                      value="PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; PRAGMA wal_autocheckpoint=128;"/>
+                      value="PRAGMA synchronous=NORMAL;"/>
 			<!-- Hibernate settings -->
 			<property name="hibernate.dialect"
 				value="org.hibernate.community.dialect.SQLiteDialect" />
-			<property name="hibernate.hbm2ddl.auto" value="update" />
-			<!-- <property name="hibernate.show_sql" value="true" /> -->
-			<!-- <property name="hibernate.format_sql" value="true" /> -->
+            <!--            <property name="hibernate.hbm2ddl.auto" value="update"/>-->
+            <!--            <property name="hibernate.show_sql" value="true"/>-->
+            <!--            <property name="hibernate.format_sql" value="true"/>-->
 			<property name="hibernate.connection.provider_class"
 				value="org.hibernate.hikaricp.internal.HikariCPConnectionProvider" />
 			<property name="hibernate.hikari.minimumIdle" value="1" />
-            <property name="hibernate.hikari.maximumPoolSize" value="10"/>
+            <property name="hibernate.hikari.maximumPoolSize" value="3"/>
             <property name="hibernate.hikari.connectionTimeout" value="20000"/>
 
             <!-- Hygiene: recycle connections so snapshots don't linger -->
             <property name="hibernate.hikari.idleTimeout" value="60000"/>
             <property name="hibernate.hikari.maxLifetime" value="1800000"/>
             <property name="hibernate.hikari.leakDetectionThreshold" value="60000"/>
+            <property name="hibernate.generate_statistics" value="false"/>
         </properties>
 	</persistence-unit>
 
@@ -48,24 +51,28 @@
 			<property name="jakarta.persistence.jdbc.driver"
 				value="org.sqlite.JDBC" />
 			<property name="jakarta.persistence.jdbc.url"
-				value="jdbc:sqlite:stats.db?busy_timeout=1000&amp;journal_mode=WAL" />
+                      value="jdbc:sqlite:stats.db?busy_timeout=1000"/>
 
 
+            <!--            <property name="hibernate.hikari.connectionInitSql"-->
+            <!--                      value="PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; PRAGMA wal_autocheckpoint=128;"/>-->
             <property name="hibernate.hikari.connectionInitSql"
-                      value="PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; PRAGMA wal_autocheckpoint=128;"/>
+                      value="PRAGMA synchronous=NORMAL;"/>
 			<property name="hibernate.dialect"
 				value="org.hibernate.community.dialect.SQLiteDialect" />
-			<property name="hibernate.hbm2ddl.auto" value="update" />
+            <!--            <property name="hibernate.hbm2ddl.auto" value="update"/>-->
 			<property name="hibernate.connection.provider_class"
 				value="org.hibernate.hikaricp.internal.HikariCPConnectionProvider" />
             <property name="hibernate.hikari.minimumIdle" value="1"/>
-            <property name="hibernate.hikari.maximumPoolSize" value="10"/>
+            <property name="hibernate.hikari.maximumPoolSize" value="3"/>
             <property name="hibernate.hikari.connectionTimeout" value="20000"/>
 
             <!-- Hygiene: recycle connections so snapshots don't linger -->
             <property name="hibernate.hikari.idleTimeout" value="60000"/>
             <property name="hibernate.hikari.maxLifetime" value="1800000"/>
             <property name="hibernate.hikari.leakDetectionThreshold" value="60000"/>
-		</properties>
+            <property name="hibernate.generate_statistics" value="false"/>
+
+        </properties>
 	</persistence-unit>
 </persistence>
