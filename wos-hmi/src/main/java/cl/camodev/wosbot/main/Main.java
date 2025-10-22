@@ -32,9 +32,7 @@ public class Main {
             }));
 
 			// Launch JavaFX application
-            logger.info("Launching JavaFX application...");
 			FXApp.main(args);
-            logger.info("JavaFX application launched successfully");
 
 		} catch (Exception e) {
 			logger.error("Failed to start application: " + e.getMessage(), e);
