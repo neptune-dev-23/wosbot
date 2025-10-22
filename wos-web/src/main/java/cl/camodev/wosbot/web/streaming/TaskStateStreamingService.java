@@ -34,7 +34,7 @@ public class TaskStateStreamingService implements ITaskStatusChangeListener, Web
     @PostConstruct
     public void registerListener() {
         ServTaskManager.getInstance().addTaskStatusChangeListener(this);
-        logger.info("Task state streaming service registered as listener");
+        logger.debug("Task state streaming service registered as listener");
     }
 
     @Override

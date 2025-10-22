@@ -24,15 +24,17 @@ public class Main {
 			// Start the log web server
 			startLogWebServer();
 
- 		// Add shutdown hook to close log files and web server
- 		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
- 			logger.info("Application shutting down, closing log files...");
- 			ProfileLogger.closeAllLogWriters();
- 			WebDashboardServer.getInstance().stop();
- 		}));
+            // Add shutdown hook to close log files and web server
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                logger.info("Application shutting down, closing log files...");
+                ProfileLogger.closeAllLogWriters();
+                WebDashboardServer.getInstance().stop();
+            }));
 
 			// Launch JavaFX application
+            logger.info("Launching JavaFX application...");
 			FXApp.main(args);
+            logger.info("JavaFX application launched successfully");
 
 		} catch (Exception e) {
 			logger.error("Failed to start application: " + e.getMessage(), e);
@@ -66,13 +68,15 @@ public class Main {
 	 * Starts the web dashboard server for real-time log viewing and bot control
 	 */
 	private static void startLogWebServer() {
-		try {
-			WebDashboardServer webDashboardServer = WebDashboardServer.getInstance();
-			webDashboardServer.start(); // Starts on default port 8080
-			logger.info("Web dashboard server started successfully");
-		} catch (Exception e) {
-			logger.error("Failed to start web dashboard server: " + e.getMessage(), e);
-			// Don't fail the application if web server can't start
-		}
+        try {
+            Thread.ofVirtual().start(() -> {
+                WebDashboardServer webDashboardServer = WebDashboardServer.getInstance();
+                webDashboardServer.start(); // Starts on default port 8080
+                logger.info("Web dashboard server started successfully");
+            });
+        } catch (Exception e) {
+            logger.error("Failed to start web dashboard server: " + e.getMessage(), e);
+            // Don't fail the application if the web server can't start
+        }
 	}
 }

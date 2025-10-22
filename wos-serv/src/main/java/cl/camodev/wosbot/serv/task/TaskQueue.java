@@ -2,6 +2,7 @@ package cl.camodev.wosbot.serv.task;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import java.util.concurrent.PriorityBlockingQueue;
@@ -28,6 +29,7 @@ import cl.camodev.wosbot.serv.impl.ServProfiles;
 import cl.camodev.wosbot.serv.impl.ServScheduler;
 import cl.camodev.wosbot.serv.impl.ServTaskManager;
 import cl.camodev.wosbot.serv.impl.ServTaskStats;
+import cl.camodev.wosbot.serv.impl.ServConfig;
 import cl.camodev.wosbot.serv.task.impl.InitializeTask;
 
 import org.slf4j.Logger;
@@ -149,6 +151,7 @@ public class TaskQueue {
 
             if (task != null && task.getDelay(TimeUnit.SECONDS) <= 0) {
                 taskQueue.poll();
+                taskQueueStatus.getLoopState().setTaskStarted();
                 taskQueueStatus.getLoopState().setExecutedTask(executeTask(task));
             } else if (task != null) {
                 taskQueueStatus.setDelayUntil(task.getScheduled());
@@ -164,8 +167,7 @@ public class TaskQueue {
                 updateProfileStatus("Idling for " + timeFormatted + "\nNext task: " + nextTaskName);
 
                 // Sleep for remaining time to maintain consistent 1-second intervals
-                taskQueueStatus.getLoopState().endLoop();
-                long sleepTime = Math.max(0, IDLE_WAIT_TIME - taskQueueStatus.getLoopState().getDuration());
+                long sleepTime = Math.max(0, IDLE_WAIT_TIME - taskQueueStatus.getLoopState().getDurationMillis());
                 try {
                     Thread.sleep(sleepTime);
                 } catch (InterruptedException e) {
@@ -191,20 +193,13 @@ public class TaskQueue {
 
         LocalDateTime scheduledBefore = task.getScheduled();
         DTOTaskState taskState = createInitialTaskState(task);
-        boolean executionSuccessful = false;
-        String errorMessage = null;
-        LocalDateTime startedAt = null;
-        LocalDateTime finishedAt = null;
 
         try {
             logInfoWithTask(task, "Starting task execution: " + task.getTaskName());
             updateProfileStatus("Executing " + task.getTaskName());
 
-            startedAt = LocalDateTime.now();
-            task.setLastExecutionTime(startedAt);
+            task.setLastExecutionTime(LocalDateTime.now());
             task.run();
-
-            executionSuccessful = true;
 
             // Check if daily missions should be scheduled
             checkAndScheduleDailyMissions(task);
@@ -216,27 +211,13 @@ public class TaskQueue {
 
         } catch (Exception e) {
             handleTaskExecutionException(task, e);
-            executionSuccessful = false;
-            errorMessage = e.getMessage();
+            taskQueueStatus.getLoopState().setErrorMessage(e.getMessage());
         } finally {
-            finishedAt = LocalDateTime.now();
-            if (startedAt == null) {
-                startedAt = finishedAt;
-            }
-
-            long durationMillis = Duration.between(startedAt, finishedAt).toMillis();
             DTOTaskExecutionStat stat = new DTOTaskExecutionStat(
-                    profile.getId(),
-                    profile.getName(),
-                    profile.getEmulatorNumber(),
-                    task.getTpTask() != null ? task.getTpTask().getId() : null,
-                    task.getTaskName(),
-                    scheduledBefore,
-                    startedAt,
-                    finishedAt,
-                    durationMillis,
-                    executionSuccessful,
-                    errorMessage);
+                    profile,
+                    task.getTpTask(),
+                    scheduledBefore.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+                    taskQueueStatus.getLoopState());
             ServTaskStats.getInstance().recordExecution(stat);
 
             // Always handle task rescheduling, regardless of success or failure
@@ -244,7 +225,7 @@ public class TaskQueue {
             finalizeTaskState(task, taskState);
         }
 
-        return executionSuccessful;
+        return taskQueueStatus.getLoopState().isExecutedTask();
     }
 
     /**
@@ -254,15 +235,16 @@ public class TaskQueue {
      * @return true if the Initialize task should proceed, false otherwise
      */
     private boolean shouldExecuteInitializeTask() {
-        // Get the maximum idle time configuration
-        long maxIdleMinutes = Optional
-                .ofNullable(profile.getGlobalsettings().get(EnumConfigurationKey.MAX_IDLE_TIME_INT.name()))
+        // Get the maximum idle time configuration desde ServConfig con fallback al default
+        int maxIdleMinutes = Optional
+                .ofNullable(ServConfig.getServices().getGlobalConfig())
+                .map(cfg -> cfg.get(EnumConfigurationKey.MAX_IDLE_TIME_INT.name()))
                 .map(Integer::parseInt)
                 .orElse(Integer.parseInt(EnumConfigurationKey.MAX_IDLE_TIME_INT.getDefaultValue()));
 
         // Check if there are tasks with acceptable idle time (excluding Initialize
         // tasks)
-        return hasTasksWithAcceptableIdleTime((int) maxIdleMinutes);
+        return hasTasksWithAcceptableIdleTime(maxIdleMinutes);
     }
 
     private DTOTaskState createInitialTaskState(DelayedTask task) {
@@ -407,12 +389,16 @@ public class TaskQueue {
         }
     }
 
+
     // Idle time management methods
     private void idlingEmulator(LocalDateTime delayUntil) {
-        boolean sendToBackground = Boolean.parseBoolean(
-                profile.getGlobalsettings().getOrDefault(
+        boolean sendToBackground = Optional
+                .ofNullable(ServConfig.getServices().getGlobalConfig())
+                .map(cfg -> cfg.getOrDefault(
                         EnumConfigurationKey.IDLE_BEHAVIOR_SEND_TO_BACKGROUND_BOOL.name(),
-                        EnumConfigurationKey.IDLE_BEHAVIOR_SEND_TO_BACKGROUND_BOOL.getDefaultValue()));
+                        EnumConfigurationKey.IDLE_BEHAVIOR_SEND_TO_BACKGROUND_BOOL.getDefaultValue()))
+                .map(Boolean::parseBoolean)
+                .orElse(Boolean.parseBoolean(EnumConfigurationKey.IDLE_BEHAVIOR_SEND_TO_BACKGROUND_BOOL.getDefaultValue()));
 
         if (sendToBackground) {
             // Send game to background (home screen), keep emulator and game running
@@ -502,10 +488,13 @@ public class TaskQueue {
             return;
         }
 
-        taskQueueStatus.setIdleTimeLimit(Optional
-                .ofNullable(profile.getGlobalsettings().get(EnumConfigurationKey.MAX_IDLE_TIME_INT.name()))
+        // Obtener MAX_IDLE_TIME_INT desde ServConfig en lugar del perfil, con fallback al default
+        int idleLimit = Optional
+                .ofNullable(ServConfig.getServices().getGlobalConfig())
+                .map(cfg -> cfg.get(EnumConfigurationKey.MAX_IDLE_TIME_INT.name()))
                 .map(Integer::parseInt)
-                .orElse(Integer.parseInt(EnumConfigurationKey.MAX_IDLE_TIME_INT.getDefaultValue())));
+                .orElse(Integer.parseInt(EnumConfigurationKey.MAX_IDLE_TIME_INT.getDefaultValue()));
+        taskQueueStatus.setIdleTimeLimit(idleLimit);
 
         // If delay exceeds max idle time, and we haven't yet handled it
         if (!taskQueueStatus.isIdleTimeExceeded() && taskQueueStatus.checkIdleTimeExceeded()) {

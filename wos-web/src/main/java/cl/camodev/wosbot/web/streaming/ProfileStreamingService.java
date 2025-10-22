@@ -38,7 +38,7 @@ public class ProfileStreamingService implements IProfileStatusChangeListener, IP
     public void registerListeners() {
         ServProfiles.getServices().addProfileStatusChangeListerner(this);
         ServProfiles.getServices().addProfileDataChangeListener(this);
-        logger.info("Profile streaming service registered as listener");
+        logger.debug("Profile streaming service registered as listener");
     }
 
     @Override

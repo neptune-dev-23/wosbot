@@ -1,7 +1,8 @@
 package cl.camodev.wosbot.ot;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.*;
+import java.time.temporal.ChronoField;
+import java.util.Objects;
 
 public class DTOTaskQueueStatus {
     private volatile boolean running;
@@ -82,7 +83,7 @@ public class DTOTaskQueueStatus {
      * @param reconnectionTime The time to wait before reconnecting, in minutes
      */
     public void setReconnectAt(long reconnectionTime) {
-        this.setDelayUntil(LocalDateTime.now().plusMinutes(reconnectionTime)); 
+        this.setDelayUntil(LocalDateTime.now().plusMinutes(reconnectionTime));
         this.setReconnectAt(LocalDateTime.now().plusMinutes(reconnectionTime));
     }
 
@@ -133,6 +134,7 @@ public class DTOTaskQueueStatus {
     public void pause() {
         this.setPaused(true);
     }
+
     public void setPaused(boolean paused) {
         this.paused = paused;
         if (paused) this.pausedAt = LocalDateTime.now();
@@ -154,17 +156,9 @@ public class DTOTaskQueueStatus {
         return this.delayUntil;
     }
 
-    /**
-     * Sets delay to a specific time from now
-     *
-     * @param delayUntil delay in seconds
-     */
-    public void setDelayUntil(long delayUntil) {
-        this.delayUntil = LocalDateTime.now().plusSeconds(delayUntil);
-    }
-
     public boolean checkIdleTimeExceeded() {
-        return LocalDateTime.now().plusMinutes(this.idleTimeLimit).isBefore(this.getDelayUntil());
+        if (this.delayUntil == null) return false;
+        return LocalDateTime.now().plusMinutes(this.idleTimeLimit).isBefore(this.delayUntil);
     }
 
     public void setDelayUntil(LocalDateTime delayUntil) {
@@ -184,25 +178,43 @@ public class DTOTaskQueueStatus {
     }
 
     public static class LoopState {
-        private final long startTime;
-        private long endTime;
-
+        private final LocalDateTime startTime;
+        private LocalDateTime endTime;
+        private LocalDateTime taskStarted;
         private boolean executedTask = false;
+        private String errorMessage = "";
 
         public LoopState() {
-            this.startTime = System.currentTimeMillis();
+            this.startTime = LocalDateTime.now();
+        }
+
+        public void setTaskStarted() {
+            this.taskStarted = LocalDateTime.now();
+        }
+
+        public LocalDateTime getTaskStartedAt() {
+            return this.taskStarted;
         }
 
         public void endLoop() {
-            this.endTime = System.currentTimeMillis();
+            this.endTime = LocalDateTime.now();
         }
 
-        public long getDuration() {
+        public long getDurationMillis() {
             // If endTime is 0, endLoop() hasn't been called yet, return current duration
-            if (this.endTime == 0) {
-                return System.currentTimeMillis() - this.startTime;
-            }
-            return this.endTime - this.startTime;
+            return Duration.between(this.startTime, Objects.requireNonNullElseGet(this.endTime, LocalDateTime::now)).toMillis();
+        }
+
+        public LocalDateTime getEndTime() {
+            return this.endTime != null ? this.endTime : LocalDateTime.now();
+        }
+
+        public void setErrorMessage(String errorMessage) {
+            this.errorMessage = errorMessage;
+        }
+
+        public String getErrorMessage() {
+            return this.errorMessage;
         }
 
         public boolean isExecutedTask() {
@@ -211,6 +223,7 @@ public class DTOTaskQueueStatus {
 
         public void setExecutedTask(boolean executedTask) {
             this.executedTask = executedTask;
+            this.endLoop();
         }
     }
 }

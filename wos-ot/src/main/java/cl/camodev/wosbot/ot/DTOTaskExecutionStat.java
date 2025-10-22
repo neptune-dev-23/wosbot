@@ -1,134 +1,70 @@
 package cl.camodev.wosbot.ot;
 
+import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
+
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 /**
  * Data transfer object representing the execution statistics of a task.
  */
 public class DTOTaskExecutionStat {
-
-    private Long id;
-    private Long profileId;
-    private String profileName;
-    private String emulatorNumber;
-    private Integer taskId;
-    private String taskName;
-    private LocalDateTime scheduledAt;
-    private LocalDateTime startedAt;
-    private LocalDateTime finishedAt;
-    private long durationMillis;
+    private DTOProfiles profile;
+    private TpDailyTaskEnum task;
+    private DTOTaskQueueStatus.LoopState loopState;
+    private long scheduledAtMillis;
     private boolean success;
-    private String errorMessage;
 
-    public DTOTaskExecutionStat() {
-    }
-
-    public DTOTaskExecutionStat(Long profileId,
-                                String profileName,
-                                String emulatorNumber,
-                                Integer taskId,
-                                String taskName,
-                                LocalDateTime scheduledAt,
-                                LocalDateTime startedAt,
-                                LocalDateTime finishedAt,
-                                long durationMillis,
-                                boolean success,
-                                String errorMessage) {
-        this.profileId = profileId;
-        this.profileName = profileName;
-        this.emulatorNumber = emulatorNumber;
-        this.taskId = taskId;
-        this.taskName = taskName;
-        this.scheduledAt = scheduledAt;
-        this.startedAt = startedAt;
-        this.finishedAt = finishedAt;
-        this.durationMillis = durationMillis;
-        this.success = success;
-        this.errorMessage = errorMessage;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
+    public DTOTaskExecutionStat(
+            DTOProfiles profile,
+            TpDailyTaskEnum task,
+            long scheduledAtMillis,
+            DTOTaskQueueStatus.LoopState loopState) {
+        this.profile = profile;
+        this.task = task;
+        this.loopState = loopState;
+        this.scheduledAtMillis = scheduledAtMillis;
     }
 
     public Long getProfileId() {
-        return profileId;
-    }
-
-    public void setProfileId(Long profileId) {
-        this.profileId = profileId;
+        return this.profile.getId();
     }
 
     public String getProfileName() {
-        return profileName;
-    }
-
-    public void setProfileName(String profileName) {
-        this.profileName = profileName;
+        return this.profile.getName();
     }
 
     public String getEmulatorNumber() {
-        return emulatorNumber;
-    }
-
-    public void setEmulatorNumber(String emulatorNumber) {
-        this.emulatorNumber = emulatorNumber;
+        return this.profile.getEmulatorNumber();
     }
 
     public Integer getTaskId() {
-        return taskId;
-    }
-
-    public void setTaskId(Integer taskId) {
-        this.taskId = taskId;
+        return this.task.getId();
     }
 
     public String getTaskName() {
-        return taskName;
-    }
-
-    public void setTaskName(String taskName) {
-        this.taskName = taskName;
+        return this.task.getName();
     }
 
     public LocalDateTime getScheduledAt() {
-        return scheduledAt;
-    }
-
-    public void setScheduledAt(LocalDateTime scheduledAt) {
-        this.scheduledAt = scheduledAt;
+        return LocalDateTime.ofInstant(Instant.ofEpochMilli(this.scheduledAtMillis), ZoneId.systemDefault());
     }
 
     public LocalDateTime getStartedAt() {
-        return startedAt;
-    }
-
-    public void setStartedAt(LocalDateTime startedAt) {
-        this.startedAt = startedAt;
+        return this.loopState.getTaskStartedAt();
     }
 
     public LocalDateTime getFinishedAt() {
-        return finishedAt;
-    }
-
-    public void setFinishedAt(LocalDateTime finishedAt) {
-        this.finishedAt = finishedAt;
+        return this.loopState.getEndTime();
     }
 
     public long getDurationMillis() {
-        return durationMillis;
-    }
-
-    public void setDurationMillis(long durationMillis) {
-        this.durationMillis = durationMillis;
+        return this.loopState.getDurationMillis();
     }
 
     public boolean isSuccess() {
-        return success;
+        return this.success;
     }
 
     public void setSuccess(boolean success) {
@@ -136,10 +72,6 @@ public class DTOTaskExecutionStat {
     }
 
     public String getErrorMessage() {
-        return errorMessage;
-    }
-
-    public void setErrorMessage(String errorMessage) {
-        this.errorMessage = errorMessage;
+        return this.loopState.getErrorMessage();
     }
 }
