@@ -83,8 +83,7 @@ public class WebDashboardServer {
             ServLogs.getServices().addLogListener(logStreamingService);
             ServScheduler.getServices().registryBotStateListener(botStateStreamingService);
 
-            logger.info("Web dashboard server started successfully on port {}", port);
-            logger.info("Access dashboard at: http://localhost:{}", port);
+            logger.info("Web dashboard server started successfully! Access dashboard at: http://localhost:{}", port);
 
         } catch (Exception e) {
             logger.error("Failed to start web dashboard server: {}", e.getMessage(), e);

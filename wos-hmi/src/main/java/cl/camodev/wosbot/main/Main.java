@@ -70,7 +70,6 @@ public class Main {
             Thread.ofVirtual().start(() -> {
                 WebDashboardServer webDashboardServer = WebDashboardServer.getInstance();
                 webDashboardServer.start(); // Starts on default port 8080
-                logger.info("Web dashboard server started successfully");
             });
         } catch (Exception e) {
             logger.error("Failed to start web dashboard server: " + e.getMessage(), e);
