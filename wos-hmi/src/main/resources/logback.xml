@@ -53,6 +53,7 @@
     <!-- Debug levels for specific components -->
     <logger name="cl.camodev.wosbot.emulator.impl" level="DEBUG"/>
     <logger name="cl.camodev.wosbot.serv.task.TaskQueue" level="DEBUG"/>
+    <logger name="cl.camodev.wosbot.almac.jpa.BotPersistence" level="DEBUG"/>
 
     <!-- Suppress verbose logging from third-party libraries -->
     <logger name="com.android.ddmlib" level="WARN"/>
@@ -60,7 +61,7 @@
     <logger name="javafx" level="ERROR"/>
     <logger name="com.zaxxer.hikari" level="ERROR"/>
     <logger name="com.sun.javafx" level="ERROR"/>
-    <logger name="javax.persistence" level="ERROR"/>
+    <logger name="javax.persistence" level="INFO"/>
     
     <!-- Root logger configuration -->
     <root level="INFO">

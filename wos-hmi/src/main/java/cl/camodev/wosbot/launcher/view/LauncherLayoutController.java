@@ -759,51 +759,39 @@ public class LauncherLayoutController implements IProfileLoadListener, IStaminaC
     }
 
     private Button addButton(String fxmlName, String title, Object controller) {
-        Button button = new Button(title);
-        button.setMaxWidth(Double.MAX_VALUE);
-        HBox.setHgrow(button, Priority.ALWAYS);
+        try {
+            FXMLLoader loader = new FXMLLoader(controller.getClass().getResource(fxmlName + ".fxml"));
+            loader.setController(controller);
+            Parent root = loader.load();
+            Button button = new Button(title);
+            button.setMaxWidth(Double.MAX_VALUE);
+            HBox.setHgrow(button, Priority.ALWAYS);
 
-        // Asigna la clase personalizada para esquinas cuadradas a este botón
-        button.getStyleClass().add("square-button");
+            // Asigna la clase personalizada para esquinas cuadradas a este botón
+            button.getStyleClass().add("square-button");
 
-        // Cache to avoid reloading same FXML
+            button.setOnAction(e -> {
+                // Limpia el contenido actual y agrega el nuevo panel
+                mainContentPane.getChildren().clear();
+                AnchorPane.setTopAnchor(root, 0.0);
+                AnchorPane.setBottomAnchor(root, 0.0);
+                AnchorPane.setLeftAnchor(root, 0.0);
+                AnchorPane.setRightAnchor(root, 0.0);
+                mainContentPane.getChildren().add(root);
 
-        button.setOnAction(e -> {
-            Parent root;
-            // Load FXML only on the first click (then cache it)
-            if (!sceneCache.containsKey(fxmlName)) {
-                try {
-                    FXMLLoader loader = new FXMLLoader(controller.getClass().getResource(fxmlName + ".fxml"));
-                    loader.setController(controller);
-                    root = loader.load();
-                } catch (IOException ex) {
-                    throw new RuntimeException(ex);
+                for (Node node : buttonsContainer.getChildren()) {
+                    if (node instanceof Button) {
+                        node.getStyleClass().remove("active");
+                    }
                 }
-                sceneCache.put(fxmlName, root);
-            } else {
-                root = sceneCache.get(fxmlName);
-            }
-
-            // Limpia el contenido actual y agrega el nuevo panel
-            mainContentPane.getChildren().clear();
-            AnchorPane.setTopAnchor(root, 0.0);
-            AnchorPane.setBottomAnchor(root, 0.0);
-            AnchorPane.setLeftAnchor(root, 0.0);
-            AnchorPane.setRightAnchor(root, 0.0);
-            mainContentPane.getChildren().add(root);
-
-
-            for (Node node : buttonsContainer.getChildren()) {
-                if (node instanceof Button) {
-                    node.getStyleClass().remove("active");
-                }
-            }
-
-            button.getStyleClass().add("active");
-        });
-
-        buttonsContainer.getChildren().add(button);
-        return button;
+                button.getStyleClass().add("active");
+            });
+            buttonsContainer.getChildren().add(button);
+            return button;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public <T> T getModuleController(String key, Class<T> type) {
