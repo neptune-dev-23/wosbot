@@ -101,14 +101,15 @@ public class WarAcademyTask extends DelayedTask {
 
 
         DTOImageSearchResult warAcademyUi = null;
-
+        DTOImageSearchResult warAcademyUi2 = null;
         for (int uiAttempt = 1; uiAttempt <= MAX_RETRY_ATTEMPTS; uiAttempt++) {
             logInfo("Searching for the War Academy UI");
             logDebug("Searching for the War Academy UI (Attempt " + uiAttempt + "/" + MAX_RETRY_ATTEMPTS + ")...");
 
             warAcademyUi = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.VALIDATION_WAR_ACADEMY_UI, 90);
+            warAcademyUi2 = emuManager.searchTemplate(EMULATOR_NUMBER, EnumTemplates.VALIDATION_WAR_ACADEMY_UIv2, 90);
 
-            if (warAcademyUi.isFound()) {
+            if (warAcademyUi.isFound() || warAcademyUi2.isFound()) {
                 logInfo("The War Academy UI was found on attempt " + uiAttempt + ".");
                 break;
             } else {
@@ -119,7 +120,7 @@ public class WarAcademyTask extends DelayedTask {
             }
         }
 
-        if (!warAcademyUi.isFound()) {
+        if (!warAcademyUi.isFound() && !warAcademyUi2.isFound()) {
             logError("The War Academy UI was not found after " + MAX_RETRY_ATTEMPTS + " attempts.");
             reschedule(LocalDateTime.now().plusMinutes(5));
             return;

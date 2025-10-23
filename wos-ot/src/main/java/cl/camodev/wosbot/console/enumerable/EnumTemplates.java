@@ -335,7 +335,8 @@ public enum EnumTemplates {
     // ========================================================================
     // VALIDATION TEMPLATES
     // ========================================================================
-	VALIDATION_WAR_ACADEMY_UI("/templates/validation/warAcademy.png"),
+    VALIDATION_WAR_ACADEMY_UI("/templates/validation/warAcademy.png"),
+    VALIDATION_WAR_ACADEMY_UIv2("/templates/validation/warAcademyv2.png"),
     VALIDATION_CRYSTAL_LAB_UI("/templates/validation/crystalLab.png"),
 	
     // ========================================================================
