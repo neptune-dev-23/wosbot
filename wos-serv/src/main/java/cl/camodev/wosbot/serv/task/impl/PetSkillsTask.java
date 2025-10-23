@@ -6,6 +6,7 @@ import java.util.regex.Pattern;
 
 import cl.camodev.utiles.number.NumberConverters;
 import cl.camodev.utiles.number.NumberValidators;
+import cl.camodev.wosbot.almac.repo.DailyTaskRepository;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
@@ -115,7 +116,13 @@ public class PetSkillsTask extends DelayedTask {
 	}
 
 	public LocalDateTime parseCooldown(String input) {
-		if (input == null || !input.toLowerCase().contains("on cooldown:")) {
+        if (input == null || !input.toLowerCase().contains("on cooldown:")) {
+            if (input.toLowerCase().contains("active")) {
+                // activated, reschedule to 3 min after gathertask
+                return DailyTaskRepository.getRepository()
+                        .findByProfileIdAndTaskName(profile.getId(), TpDailyTaskEnum.GATHER_RESOURCES)
+                        .getNextSchedule().plusMinutes(3);
+            }
 			throw new IllegalArgumentException("Invalid format: " + input);
 		}
 
