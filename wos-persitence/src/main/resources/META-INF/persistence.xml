@@ -19,11 +19,10 @@
             <property name="jakarta.persistence.jdbc.url"
                       value="jdbc:sqlite:database.db?busy_timeout=1000"/>
 
-            <!--            <property name="hibernate.hikari.connectionInitSql"-->
-            <!--                      value="PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; PRAGMA wal_autocheckpoint=128;"/>-->
             <property name="hibernate.hikari.connectionInitSql"
-                      value="PRAGMA synchronous=NORMAL;"/>
-			<!-- Hibernate settings -->
+                      value="PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; PRAGMA wal_autocheckpoint=128;"/>
+
+            <!-- Hibernate settings -->
 			<property name="hibernate.dialect"
 				value="org.hibernate.community.dialect.SQLiteDialect" />
             <property name="hibernate.hbm2ddl.auto" value="update"/>
@@ -54,10 +53,8 @@
                       value="jdbc:sqlite:stats.db?busy_timeout=1000"/>
 
 
-            <!--            <property name="hibernate.hikari.connectionInitSql"-->
-            <!--                      value="PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; PRAGMA wal_autocheckpoint=128;"/>-->
             <property name="hibernate.hikari.connectionInitSql"
-                      value="PRAGMA synchronous=NORMAL;"/>
+                      value="PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; PRAGMA wal_autocheckpoint=128;"/>
 			<property name="hibernate.dialect"
 				value="org.hibernate.community.dialect.SQLiteDialect" />
             <property name="hibernate.hbm2ddl.auto" value="update"/>
