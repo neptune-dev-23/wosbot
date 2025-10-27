@@ -23,7 +23,7 @@
 		<module>wos-utiles</module>
 		<module>wos-persitence</module>
 		<module>wos-serv</module>
-		<module>wos-web</module>
+        <module>wos-api</module>
 		<module>wos-ot</module>
 	</modules>
 

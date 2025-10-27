@@ -49,7 +49,7 @@
 		</dependency>
 		<dependency>
 			<groupId>cl.camodev</groupId>
-			<artifactId>wos-web</artifactId>
+			<artifactId>wos-api</artifactId>
 			<version>${revision}</version>
 			<scope>compile</scope>
 		</dependency>
