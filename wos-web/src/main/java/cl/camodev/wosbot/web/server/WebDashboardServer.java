@@ -69,7 +69,6 @@ public class WebDashboardServer {
             
             // Disable banner and set log level
             System.setProperty("spring.main.banner-mode", "off");
-            System.setProperty("logging.level.root", "WARN");
             System.setProperty("logging.level.org.springframework", "WARN");
             
             context = app.run();
