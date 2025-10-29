@@ -31,22 +31,16 @@ log/bot.log
 /temp
 
 ./**/target
-/wos-web/.settings
-/wos-web/.classpath
-/wos-web/.project
-/wos-web/bin
-/wos-web/log
-/wos-web/target
 
 /target/
-/web-ui/node_modules
-/wos-web/src/main/resources/static/assets
 
 qodana.yaml
 /.gemini
 
 # Local environment overrides
-/wos-web-ui/.env
 database*
 *.crt
 *.key
+
+dataset
+wosbot.iml

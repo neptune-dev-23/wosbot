@@ -385,8 +385,6 @@ public abstract class Emulator {
         }
 
         try {
-            long captureStartTime = System.currentTimeMillis();
-
             // Use native screencap command for maximum speed
             ByteArrayOutputStream imageData = new ByteArrayOutputStream();
             CollectingOutputReceiver receiver = new CollectingOutputReceiver() {
@@ -395,6 +393,7 @@ public abstract class Emulator {
                     imageData.write(data, offset, length);
                 }
             };
+            long captureStartTime = System.currentTimeMillis();
 
             // Execute screencap command (raw format is fastest)
             device.executeShellCommand("screencap", receiver, 2000, TimeUnit.MILLISECONDS);

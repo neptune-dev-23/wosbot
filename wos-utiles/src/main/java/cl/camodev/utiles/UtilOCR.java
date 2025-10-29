@@ -129,6 +129,8 @@ public class UtilOCR {
         long ocrEndTime = System.currentTimeMillis();
         log.debug("Tesseract OCR execution took: {} ms", (ocrEndTime - ocrStartTime));
 
+        saveImageDataset(processedImage);
+
         // Optional: dump debug image
         if (settings.isDebug()) {
             long debugStartTime = System.currentTimeMillis();
@@ -297,6 +299,20 @@ public class UtilOCR {
         return result;
     }
 
+    private static void saveImageDataset(BufferedImage processedImage) {
+        try {
+            // Save combined image
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(processedImage, "png", baos);
+            Path outputPath = Paths.get(System.getProperty("user.dir"))
+                    .resolve("dataset")
+                    .resolve(System.currentTimeMillis() + ".png");
+            Files.write(outputPath, baos.toByteArray());
+            log.debug("Logged processed image for dataset");
+        } catch (Exception e) {
+            log.error("Failed to save dataset image: {}", e.getMessage());
+        }
+    }
     /**
      * Extracts a region from DTORawImage and upscales it directly without intermediate conversions.
      * This is highly optimized for performance.

@@ -47,13 +47,12 @@ public class ExpertSkillTrainingTask extends DelayedTask {
         DTOImageSearchResult trainingExpertButton = null;
         for (int attempt = 1; attempt <= maxScrollAttempts; attempt++) {
             swipe(new DTOPoint(255, 477), new DTOPoint(255, 400));
-            sleepTask(500);
-            trainingExpertButton = searchTemplateWithRetries(EnumTemplates.LEFT_MENU_EXPERT_TRAINING_BUTTON);
+            trainingExpertButton = searchTemplateWithRetries(EnumTemplates.LEFT_MENU_EXPERT_TRAINING_BUTTON, 5, 100);
             if (trainingExpertButton.isFound()){
                 break;
             }
-
         }
+
         if (!trainingExpertButton.isFound()){
             logInfo("No training expert found, ending task.");
             reschedule(LocalDateTime.now().plusMinutes(10));
@@ -185,7 +184,7 @@ public class ExpertSkillTrainingTask extends DelayedTask {
 
                 if (tapsNeeded > 0) {
                     logInfo("Moving from " + currentExpert + " to " + expert + " - tapping " + tapsNeeded + " time(s)");
-
+                    tapPoint(new DTOPoint(400, 100)); // make sure current skill menu is closed before navigating
                     for (int i = 0; i < tapsNeeded; i++) {
                         tapPoint(new DTOPoint(671, 650)); // right arrow to change expert
                         sleepTask(300);
@@ -289,7 +288,7 @@ public class ExpertSkillTrainingTask extends DelayedTask {
 
     }
 
-private DTOArea getSkillArea(ExpertSkillItem skillItem) {
+    private DTOArea getSkillArea(ExpertSkillItem skillItem) {
     return switch (skillItem) {
         case CYRILLE_SKILL_1, AGNES_SKILL_1, HOLGER_SKILL_1, ROMULUS_SKILL_1 ->
                 new DTOArea(new DTOPoint(62, 1032), new DTOPoint(132, 1102));

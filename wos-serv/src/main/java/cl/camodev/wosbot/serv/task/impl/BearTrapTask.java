@@ -350,11 +350,11 @@ public class BearTrapTask extends DelayedTask {
         tapRandomPoint(plusIcon.getPoint(), plusIcon.getPoint(), 1, 100);
         DTOPoint flagPoint = UtilRally.getMarchFlagPoint(joinRallyFlag);
         tapRandomPoint(flagPoint, flagPoint, 1, 0);
-
         DTOImageSearchResult deploy = searchTemplateWithRetries(EnumTemplates.BEAR_DEPLOY_BUTTON, 90, 3);
+        sleepTask(50); // make sure the flag selection has time to work
 
         if (deploy.isFound()) {
-            logWarning("Deploy button not found. Rescheduling to try again in 5 minutes.");
+            logInfo("Deploy button found and pressed.");
             tapPoint(deploy.getPoint());
         }
         ensureCorrectScreenLocation(EnumStartLocation.ANY);
@@ -591,11 +591,12 @@ public class BearTrapTask extends DelayedTask {
                 return 0;
             }
             tapRandomPoint(holdRallyButton.getPoint(), holdRallyButton.getPoint(), 1, 200);
-
+            // wait for menu to open
+            DTOImageSearchResult deployButton = searchTemplateWithRetries(EnumTemplates.BEAR_DEPLOY_BUTTON, 30, 50L);
             // Select rally flag
             DTOPoint flagPoint = UtilRally.getMarchFlagPoint(ownRallyFlag);
             tapRandomPoint(flagPoint, flagPoint, 1, 200);
-
+            sleepTask(50); // give the heroes time to populate
             // Read march time from screen using OCR
             DTOPoint p1 = new DTOPoint(521, 1141);
             DTOPoint p2 = new DTOPoint(608, 1162);

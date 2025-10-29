@@ -67,7 +67,7 @@ public class InitializeTask extends DelayedTask {
 					throw new ProfileInReconnectStateException("Profile " + profile.getName() + " is in a reconnect state and cannot execute the task: " + taskName);
 				}
 
-				logWarning("Home screen not found. Waiting 5 seconds before retrying...");
+                logWarning("Home/world screen not found. Waiting 5 seconds before retrying...");
 				tapBackButton();
 				sleepTask(WAIT_TIME);
 				attempts++;

@@ -53,6 +53,7 @@
     <!-- Debug levels for specific components -->
     <logger name="cl.camodev.wosbot.emulator.impl" level="DEBUG"/>
     <logger name="cl.camodev.wosbot.serv.task.TaskQueue" level="DEBUG"/>
+    <logger name="cl.camodev.wosbot.emulator.Emulator" level="INFO"/>
     <logger name="cl.camodev.wosbot.almac.jpa.BotPersistence" level="DEBUG"/>
 
     <!-- Suppress verbose logging from third-party libraries -->
