@@ -24,7 +24,6 @@ public class TaskQueueManager {
         private final static Logger logger = LoggerFactory.getLogger(TaskQueueManager.class);
         private final Map<Long, TaskQueue> taskQueues = new HashMap<>();
         private final Map<Long, Boolean> queuePausedStates = new ConcurrentHashMap<>();
-        private TaskQueueManager instance;
 
         public void createQueue(DTOProfiles profile) {
                 if (!taskQueues.containsKey(profile.getId())) {
@@ -33,70 +32,78 @@ public class TaskQueueManager {
                 }
         }
 
-	public TaskQueue getQueue(Long queueName) {
-		return taskQueues.get(queueName);
-	}
+        public TaskQueue getQueue(Long queueName) {
+                return taskQueues.get(queueName);
+        }
 
-	public void startQueues() {
-        if (instance == null) { instance = new TaskQueueManager(); }
-		ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueueManager", "-", "Starting queues");
-		logger.info("Starting queues ");
-		taskQueues.entrySet().stream()
-			.sorted(Map.Entry.<Long, TaskQueue>comparingByValue((queue1, queue2) -> {
-                // Obtener el delay global desde ServConfig con fallback al default
-                int delay = Optional
-                        .ofNullable(ServConfig.getServices().getGlobalConfig())
-                        .map(cfg -> cfg.get(EnumConfigurationKey.MAX_IDLE_TIME_INT.name()))
-                        .map(Integer::parseInt)
-                        .orElse(Integer.parseInt(EnumConfigurationKey.MAX_IDLE_TIME_INT.getDefaultValue()));
+        public void startQueues() {
+                ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueueManager", "-",
+                                "Starting queues");
+                logger.info("Starting queues ");
+                taskQueues.entrySet().stream()
+                                .sorted(Map.Entry.<Long, TaskQueue>comparingByValue((queue1, queue2) -> {
+                                        // Obtener el delay global desde ServConfig con fallback al default
+                                        int delay = Optional
+                                                        .ofNullable(ServConfig.getServices().getGlobalConfig())
+                                                        .map(cfg -> cfg.get(
+                                                                        EnumConfigurationKey.MAX_IDLE_TIME_INT.name()))
+                                                        .map(Integer::parseInt)
+                                                        .orElse(Integer.parseInt(EnumConfigurationKey.MAX_IDLE_TIME_INT
+                                                                        .getDefaultValue()));
 
-				// Check if queues have tasks with acceptable idle time
-				boolean hasAcceptableIdle1 = queue1.hasTasksWithAcceptableIdleTime(delay);
-				boolean hasAcceptableIdle2 = queue2.hasTasksWithAcceptableIdleTime(delay);
+                                        // Check if queues have tasks with acceptable idle time
+                                        boolean hasAcceptableIdle1 = queue1.hasTasksWithAcceptableIdleTime(delay);
+                                        boolean hasAcceptableIdle2 = queue2.hasTasksWithAcceptableIdleTime(delay);
 
-				// Prioritize queues with tasks having acceptable idle time
-				if (hasAcceptableIdle1 && !hasAcceptableIdle2) {
-					return -1; // queue1 has priority
-				} else if (!hasAcceptableIdle1 && hasAcceptableIdle2) {
-					return 1; // queue2 has priority
-				} else {
-					// If both have acceptable idle time or both don't, use original priority logic
-					return Long.compare(queue2.getProfile().getPriority(), queue1.getProfile().getPriority());
-				}
-			}))
-			.forEach(entry -> {
-				TaskQueue queue = entry.getValue();
-				DTOProfiles profile = queue.getProfile();
-                int delay = Optional
-                        .ofNullable(ServConfig.getServices().getGlobalConfig())
-                        .map(cfg -> cfg.get(EnumConfigurationKey.MAX_IDLE_TIME_INT.name()))
-                        .map(Integer::parseInt)
-                        .orElse(Integer.parseInt(EnumConfigurationKey.MAX_IDLE_TIME_INT.getDefaultValue()));
-				boolean hasAcceptableIdle = queue.hasTasksWithAcceptableIdleTime(delay);
+                                        // Prioritize queues with tasks having acceptable idle time
+                                        if (hasAcceptableIdle1 && !hasAcceptableIdle2) {
+                                                return -1; // queue1 has priority
+                                        } else if (!hasAcceptableIdle1 && hasAcceptableIdle2) {
+                                                return 1; // queue2 has priority
+                                        } else {
+                                                // If both have acceptable idle time or both don't, use original
+                                                // priority logic
+                                                return Long.compare(queue2.getProfile().getPriority(),
+                                                                queue1.getProfile().getPriority());
+                                        }
+                                }))
+                                .forEach(entry -> {
+                                        TaskQueue queue = entry.getValue();
+                                        DTOProfiles profile = queue.getProfile();
+                                        int delay = Optional
+                                                        .ofNullable(ServConfig.getServices().getGlobalConfig())
+                                                        .map(cfg -> cfg.get(
+                                                                        EnumConfigurationKey.MAX_IDLE_TIME_INT.name()))
+                                                        .map(Integer::parseInt)
+                                                        .orElse(Integer.parseInt(EnumConfigurationKey.MAX_IDLE_TIME_INT
+                                                                        .getDefaultValue()));
+                                        boolean hasAcceptableIdle = queue.hasTasksWithAcceptableIdleTime(delay);
 
-				logger.info("Starting queue for profile: {} with priority: {} (has tasks with idle < {} min: {})",
-					profile.getName(), profile.getPriority(), delay, hasAcceptableIdle);
+                                        logger.info("Starting queue for profile: {} with priority: {} (has tasks with idle < {} min: {})",
+                                                        profile.getName(), profile.getPriority(), delay,
+                                                        hasAcceptableIdle);
 
-				queue.start();
-				try {
-					Thread.sleep(200);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			});
-	}
+                                        queue.start();
+                                        try {
+                                                Thread.sleep(200);
+                                        } catch (InterruptedException e) {
+                                                e.printStackTrace();
+                                        }
+                                });
+        }
 
         public void stopQueues() {
-                ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueueManager", "-", "Stopping queues");
+                ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueueManager", "-",
+                                "Stopping queues");
                 logger.info("Stopping queues");
                 taskQueues.forEach((k, v) -> {
-			for (TpDailyTaskEnum task : TpDailyTaskEnum.values()) {
-				DTOTaskState taskState = ServTaskManager.getInstance().getTaskState(k, task.getId());
-				if (taskState != null) {
-					taskState.setScheduled(false);
-					ServTaskManager.getInstance().setTaskState(k, taskState);
-				}
-			}
+                        for (TpDailyTaskEnum task : TpDailyTaskEnum.values()) {
+                                DTOTaskState taskState = ServTaskManager.getInstance().getTaskState(k, task.getId());
+                                if (taskState != null) {
+                                        taskState.setScheduled(false);
+                                        ServTaskManager.getInstance().setTaskState(k, taskState);
+                                }
+                        }
 
                         v.stop();
                 });
@@ -114,7 +121,8 @@ public class TaskQueueManager {
         }
 
         public void resumeQueues() {
-                ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueueManager", "-", "Resuming queues");
+                ServLogs.getServices().appendLog(EnumTpMessageSeverity.INFO, "TaskQueueManager", "-",
+                                "Resuming queues");
                 logger.info("Resuming all queues");
                 taskQueues.forEach((k, v) -> {
                         v.resume();
@@ -157,27 +165,4 @@ public class TaskQueueManager {
                 return states;
         }
 
-    public boolean hasRunningQueues() {
-        return taskQueues.values().stream().anyMatch(TaskQueue::isRunning);
-    }
-
-    public boolean isGloballyPaused() {
-        if (taskQueues.isEmpty()) {
-            return false;
-        }
-        for (Map.Entry<Long, TaskQueue> entry : taskQueues.entrySet()) {
-            Long profileId = entry.getKey();
-            if (!queuePausedStates.getOrDefault(profileId, Boolean.FALSE)) {
-                return false;
-            }
-        }
-        return true;
-    }
-    public Map<Long, Boolean> getRunningQueues() {
-        Map<Long, Boolean> runningQueues = new HashMap<>();
-        taskQueues.forEach((k, v) -> {
-            runningQueues.put(v.getProfile().getId(), v.isRunning());
-        });
-        return runningQueues;
-    }
 }

@@ -1,11 +1,9 @@
 package cl.camodev.wosbot.main;
 
-import cl.camodev.wosbot.almac.jpa.BotPersistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cl.camodev.wosbot.logging.ProfileLogger;
-import cl.camodev.wosbot.web.server.WebDashboardServer;
 
 public class Main {
 	private static final Logger logger = LoggerFactory.getLogger(Main.class);
@@ -14,8 +12,10 @@ public class Main {
 		try {
             // Silence logback's internal status messages
 			System.setProperty("logback.statusListenerClass", "ch.qos.logback.core.status.NopStatusListener");
-			
-			// Initialize Log4j configuration
+
+            suppressJavaFXWarnings();
+
+            // Initialize Log4j configuration
             logger.info("Starting Log4j initialization at {} ms", System.currentTimeMillis() - programStart);
             long log4jInitStart = System.currentTimeMillis();
             configureLog4j();
@@ -70,6 +70,18 @@ public class Main {
 			e.printStackTrace();
 		}
 	}
+    private static void suppressJavaFXWarnings() {
+        // Configure java.util.logging to suppress JavaFX warnings
+        java.util.logging.Logger rootLogger = java.util.logging.Logger.getLogger("");
+        rootLogger.setLevel(java.util.logging.Level.WARNING);
+
+        // Set specific loggers to SEVERE level
+        java.util.logging.Logger.getLogger("javafx").setLevel(java.util.logging.Level.SEVERE);
+        java.util.logging.Logger.getLogger("com.sun.javafx").setLevel(java.util.logging.Level.SEVERE);
+        java.util.logging.Logger.getLogger("javax.swing").setLevel(java.util.logging.Level.SEVERE);
+
+        logger.info("JavaFX warnings suppressed");
+    }
 
     private static void initializeDatabase() {
         long initDbStart = System.currentTimeMillis();

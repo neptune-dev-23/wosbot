@@ -195,10 +195,21 @@ public abstract class AbstractProfileController implements IProfileLoadListener,
 
 			priorityListMappings.forEach((priorityListView, key) -> {
 				String value = profile.getConfiguration(key);
+				Class<? extends Enum<?>> enumClass = priorityListEnumClasses.get(priorityListView);
 				if (value != null && !value.trim().isEmpty()) {
+					// Load saved configuration first
 					priorityListView.fromConfigString(value);
+					// After loading saved configuration, merge with current enum values so any
+					// newly added enum constants are included in the list
+					if (enumClass != null) {
+						@SuppressWarnings("rawtypes")
+						Class castClass = (Class) enumClass;
+						// Suppress unchecked warnings - this is required due to Java's type erasure with generics
+						@SuppressWarnings("unchecked")
+						Runnable call = () -> mergeEnumWithSavedPriorities(priorityListView, castClass, key);
+						call.run();
+					}
 				} else {
-					Class<? extends Enum<?>> enumClass = priorityListEnumClasses.get(priorityListView);
 					if (enumClass != null) {
 						reinitializePriorityListWithDefaults(priorityListView, enumClass);
 					}

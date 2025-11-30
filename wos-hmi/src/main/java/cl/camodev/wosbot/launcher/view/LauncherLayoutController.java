@@ -727,15 +727,6 @@ public class LauncherLayoutController implements IProfileLoadListener, IStaminaC
         return null;
     }
 
-    private boolean isQueuePaused(Long profileId) {
-        if (profileId == null) {
-            return false;
-        }
-
-        DTOQueueProfileState state = activeQueueStates.get(profileId);
-        return state != null && state.isPaused();
-    }
-
     private void setAllQueuesPausedLocally(boolean paused) {
         activeQueueStates.values().forEach(state -> state.setPaused(paused));
         updateAggregatedPauseStates();

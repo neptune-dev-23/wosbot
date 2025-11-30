@@ -75,6 +75,7 @@ public enum EnumConfigurationKey {
 	INTEL_USE_FLAG_BOOL("false", Boolean.class),
 	INTEL_FC_ERA_BOOL("false", Boolean.class),
 	INTEL_SMART_PROCESSING_BOOL("false", Boolean.class),
+	INTEL_RECALL_GATHER_TROOPS_BOOL("false", Boolean.class),
 	
     // ========================================================================
     // ALLIANCE FEATURES
@@ -112,7 +113,6 @@ public enum EnumConfigurationKey {
 	ALLIANCE_MOBILIZATION_USE_SPEEDUPS_BOOL("false", Boolean.class),
 	ALLIANCE_MOBILIZATION_MINIMUM_POINTS_200_INT("800", Integer.class),
 	ALLIANCE_MOBILIZATION_MINIMUM_POINTS_120_INT("520", Integer.class),
-	ALLIANCE_MOBILIZATION_MINIMUM_POINTS_INT("520", Integer.class),
 	ALLIANCE_MOBILIZATION_AUTO_ACCEPT_BOOL("true", Boolean.class),
 	ALLIANCE_MOBILIZATION_USE_GEMS_FOR_ACCEPT_BOOL("false", Boolean.class),
 	ALLIANCE_CHAMPIONSHIP_BOOL("false", Boolean.class),
@@ -152,6 +152,7 @@ public enum EnumConfigurationKey {
 	ARENA_TASK_BOOL("false", Boolean.class),
 	ARENA_TASK_EXTRA_ATTEMPTS_INT("0", Integer.class),
 	ARENA_TASK_REFRESH_WITH_GEMS_BOOL("false", Boolean.class),
+	ARENA_TASK_PLAYER_STATE_INT("0", Integer.class),
 	
     // ========================================================================
     // SHOPS AND MERCHANTS
@@ -244,6 +245,7 @@ public enum EnumConfigurationKey {
 	// Example: "Fire Crystals:1:true|VIP Points:2:true|Hero Shards:3:false|Speedups:4:true"
     ALLIANCE_SHOP_ENABLED_BOOL("false", Boolean.class),
 	ALLIANCE_SHOP_PRIORITIES_STRING("", String.class),
+    ALLIANCE_SHOP_MIN_PERCENTAGE_INT("50", Integer.class),
 	ALLIANCE_SHOP_MIN_COINS_TO_ACTIVATE_INT("0", Integer.class),
 	ALLIANCE_SHOP_MIN_COINS_INT("0", Integer.class);
 

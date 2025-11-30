@@ -48,7 +48,7 @@ public class TaskQueue {
     protected final EmulatorManager emuManager = EmulatorManager.getInstance();
 
     // State flags
-     final DTOTaskQueueStatus taskQueueStatus = new DTOTaskQueueStatus();
+    final DTOTaskQueueStatus taskQueueStatus = new DTOTaskQueueStatus();
 
     // Thread that will evaluate and execute tasks
     private Thread schedulerThread;
@@ -235,7 +235,8 @@ public class TaskQueue {
      * @return true if the Initialize task should proceed, false otherwise
      */
     private boolean shouldExecuteInitializeTask() {
-        // Get the maximum idle time configuration desde ServConfig con fallback al default
+        // Get the maximum idle time configuration desde ServConfig con fallback al
+        // default
         int maxIdleMinutes = Optional
                 .ofNullable(ServConfig.getServices().getGlobalConfig())
                 .map(cfg -> cfg.get(EnumConfigurationKey.MAX_IDLE_TIME_INT.name()))
@@ -283,7 +284,8 @@ public class TaskQueue {
         }
 
         if (task.isRecurring()) {
-            logInfoWithTask(task, "Next task scheduled to run in: " + UtilTime.localDateTimeToDDHHMMSS(task.getScheduled()));
+            logInfoWithTask(task,
+                    "Next task scheduled to run in: " + UtilTime.localDateTimeToDDHHMMSS(task.getScheduled()));
             addTask(task);
         } else {
             logInfoWithTask(task, "Task removed from schedule");
@@ -305,7 +307,7 @@ public class TaskQueue {
             logErrorWithTask(task, "Error executing task: " + e.getMessage());
         }
     }
-    @SuppressWarnings(value = { "unused" })
+
     private void handleReconnectStateException(ProfileInReconnectStateException e) {
         Long reconnectionTime = profile.getReconnectionTime(); // in minutes
         if (reconnectionTime != null && reconnectionTime > 0) {
@@ -320,7 +322,8 @@ public class TaskQueue {
     private void resumeAfterReconnectionDelay() {
         taskQueueStatus.setNeedsReconnect(false);
         updateProfileStatus("RESUMING AFTER PAUSE");
-        logInfo("TaskQueue resuming after " + Duration.between(taskQueueStatus.getPausedAt(), LocalDateTime.now()).toMinutes()
+        logInfo("TaskQueue resuming after "
+                + Duration.between(taskQueueStatus.getPausedAt(), LocalDateTime.now()).toMinutes()
                 + " minutes pause");
         taskQueueStatus.setPaused(false);
 
@@ -389,7 +392,6 @@ public class TaskQueue {
         }
     }
 
-
     // Idle time management methods
     private void idlingEmulator(LocalDateTime delayUntil) {
         boolean sendToBackground = Optional
@@ -398,7 +400,8 @@ public class TaskQueue {
                         EnumConfigurationKey.IDLE_BEHAVIOR_SEND_TO_BACKGROUND_BOOL.name(),
                         EnumConfigurationKey.IDLE_BEHAVIOR_SEND_TO_BACKGROUND_BOOL.getDefaultValue()))
                 .map(Boolean::parseBoolean)
-                .orElse(Boolean.parseBoolean(EnumConfigurationKey.IDLE_BEHAVIOR_SEND_TO_BACKGROUND_BOOL.getDefaultValue()));
+                .orElse(Boolean
+                        .parseBoolean(EnumConfigurationKey.IDLE_BEHAVIOR_SEND_TO_BACKGROUND_BOOL.getDefaultValue()));
 
         if (sendToBackground) {
             // Send game to background (home screen), keep emulator and game running
@@ -488,7 +491,8 @@ public class TaskQueue {
             return;
         }
 
-        // Obtener MAX_IDLE_TIME_INT desde ServConfig en lugar del perfil, con fallback al default
+        // Obtener MAX_IDLE_TIME_INT desde ServConfig en lugar del perfil, con fallback
+        // al default
         int idleLimit = Optional
                 .ofNullable(ServConfig.getServices().getGlobalConfig())
                 .map(cfg -> cfg.get(EnumConfigurationKey.MAX_IDLE_TIME_INT.name()))
@@ -504,7 +508,8 @@ public class TaskQueue {
         }
 
         // If we're idling but the next task is coming soon, re-acquire the emulator
-        if (taskQueueStatus.isIdleTimeExceeded() && LocalDateTime.now().plusMinutes(1).isAfter(taskQueueStatus.getDelayUntil())) {
+        if (taskQueueStatus.isIdleTimeExceeded()
+                && LocalDateTime.now().plusMinutes(1).isAfter(taskQueueStatus.getDelayUntil())) {
             enqueueNewTask();
             taskQueueStatus.setIdleTimeExceeded(false);
             return;
@@ -528,7 +533,8 @@ public class TaskQueue {
 
     private void runBackgroundChecks() {
         // Counter logic for periodic checks
-        if (!taskQueueStatus.shouldRunBackgroundChecks()) return;
+        if (!taskQueueStatus.shouldRunBackgroundChecks())
+            return;
 
         // Early check with detailed logging
         synchronized (emuManager) {
@@ -610,6 +616,7 @@ public class TaskQueue {
         logger.info(prefixedMessage);
         ServLogs.getServices().appendLog(EnumTpMessageSeverity.DEBUG, "TaskQueue", profile.getName(), message);
     }
+
     @SuppressWarnings(value = { "unused" })
     private void logDebugWithTask(DelayedTask task, String message) {
         String prefixedMessage = profile.getName() + " - " + message;
@@ -743,8 +750,8 @@ public class TaskQueue {
         taskState.setTaskId(taskEnum.getId());
         taskState.setScheduled(true);
         taskState.setExecuting(false);
-        taskState.setLastExecutionTime(prototype.getScheduled());
-        taskState.setNextExecutionTime(LocalDateTime.now());
+        taskState.setLastExecutionTime(LocalDateTime.now());
+        taskState.setNextExecutionTime(prototype.getScheduled());
         ServTaskManager.getInstance().setTaskState(profile.getId(), taskState);
     }
 

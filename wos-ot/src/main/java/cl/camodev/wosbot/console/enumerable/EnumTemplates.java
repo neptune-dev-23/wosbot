@@ -71,6 +71,10 @@ public enum EnumTemplates {
 	GAME_HOME_SHORTCUTS_FARM_GATHER("/templates/shortcuts/farmGather.png"),
 	
 	GATHER_DEPLOY_BUTTON("/templates/shortcuts/gatherDeploy.png"),
+	GATHER_MEAT_HERO("/templates/gathering/meatHero.png"),
+	GATHER_WOOD_HERO("/templates/gathering/woodHero.png"),
+	GATHER_COAL_HERO("/templates/gathering/coalHero.png"),
+	GATHER_IRON_HERO("/templates/gathering/ironHero.png"),
 
     // ========================================================================
     // BUILDING INTERACTIONS
@@ -194,7 +198,13 @@ public enum EnumTemplates {
 	ALLIANCE_HELP_BUTTON("/templates/alliance/helpButton.png"),
 	ALLIANCE_HELP_REQUESTS("/templates/alliance/helpRequests.png"),
 
+    ALLIANCE_SHOP_EXPERT_ICON("/templates/alliance/expertBadge.png"),
     ALLIANCE_SHOP_SOLD_OUT("/templates/alliance/shopSoldOut.png"),
+    ALLIANCE_SHOP_100_VIP_XP("/templates/alliance/shop/vipXP100.png"),
+    ALLIANCE_SHOP_10_VIP_XP("/templates/alliance/shop/vipXP10.png"),
+    ALLIANCE_SHOP_RECALL_MARCH("/templates/alliance/shop/recallMarch.png"),
+    ALLIANCE_SHOP_ADVANCED_TELEPORT("/templates/alliance/shop/advancedTeleport.png"),
+    ALLIANCE_SHOP_TERRITORY_TELEPORT("/templates/alliance/shop/territoryTeleport.png"),
 
     // ========================================================================
     // ALLIANCE MOBILIZATION
@@ -385,7 +395,10 @@ public enum EnumTemplates {
     EXPERT_TRAINING_AGNES_BADGE("/templates/experts/agnesBadge.png"),
     EXPERT_TRAINING_ROMULUS_BADGE("/templates/experts/romulusBadge.png"),
     EXPERT_TRAINING_HOLGER_BADGE("/templates/experts/holgerBadge.png"),
+    EXPERT_TRAINING_BALDUR_BADGE("/templates/experts/baldurBadge.png"),
+    EXPERT_TRAINING_FABIAN_BADGE("/templates/experts/fabianBadge.png"),
     EXPERT_TRAINING_LEARN_BUTTON("/templates/experts/learnButton.png"),
+
 	
 	MERCENARY_EVENT_TAB("/templates/mercenary/mercenaryEventTab.png"),
 	MERCENARY_SCOUT_BUTTON("/templates/mercenary/mercenaryEventScout.png"),
@@ -393,6 +406,12 @@ public enum EnumTemplates {
 	MERCENARY_ATTACK_BUTTON("/templates/mercenary/mercenaryEventAttack.png"),
 	MERCENARY_DEPLOY_BUTTON("/templates/mercenary/mercenaryEventDeploy.png"),
 	MERCENARY_DIFFICULTY_CHALLENGE("/templates/mercenary/mercenaryEventDifficultyChallenge.png"),
+	MERCENARY_EPIC_INITIATION_SELECTED("/templates/mercenary/mercenaryEventEpicInitiationSelected.png"),
+	MERCENARY_EPIC_INITIATION_UNSELECTED("/templates/mercenary/mercenaryEventEpicInitiationUnselected.png"),
+	MERCENARY_CHAMPIONS_INITIATION_SELECTED("/templates/mercenary/mercenaryEventChampionsInitiationSelected.png"),
+	MERCENARY_CHAMPIONS_INITIATION_UNSELECTED("/templates/mercenary/mercenaryEventChampionsInitiationUnselected.png"),
+	MERCENARY_LEGENDS_INITIATION_SELECTED("/templates/mercenary/mercenaryEventLegendsInitiationSelected.png"),
+	MERCENARY_LEGENDS_INITIATION_UNSELECTED("/templates/mercenary/mercenaryEventLegendsInitiationUnselected.png"),
 
 	// ========================================================================
     // HERO'S MISSION EVENT

@@ -13,9 +13,9 @@ import cl.camodev.utiles.number.NumberValidators;
 import cl.camodev.utiles.time.TimeConverters;
 import cl.camodev.utiles.time.TimeValidators;
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
-import cl.camodev.wosbot.almac.repo.DailyTaskRepository;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
+import cl.camodev.wosbot.ot.DTOArea;
 import cl.camodev.wosbot.ot.DTOImageSearchResult;
 import cl.camodev.wosbot.ot.DTOPoint;
 import cl.camodev.wosbot.ot.DTOProfiles;
@@ -23,11 +23,12 @@ import cl.camodev.wosbot.ot.DTOTesseractSettings;
 import cl.camodev.wosbot.serv.impl.StaminaService;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 import cl.camodev.wosbot.serv.task.EnumStartLocation;
+import cl.camodev.wosbot.serv.task.constants.SearchConfigConstants;
 
 /**
  * Unified Pet Skills task that processes all enabled pet skills in a single
  * execution.
- *
+ * 
  * <p>
  * This task:
  * <ul>
@@ -38,7 +39,7 @@ import cl.camodev.wosbot.serv.task.EnumStartLocation;
  * <li>Reads cooldown timers for each skill</li>
  * <li>Reschedules to the earliest cooldown time among all skills</li>
  * </ul>
- *
+ * 
  * <p>
  * <b>Skill Types:</b>
  * <ul>
@@ -47,7 +48,7 @@ import cl.camodev.wosbot.serv.task.EnumStartLocation;
  * <li>Treasure: Provides resource rewards</li>
  * <li>Gathering: Increases gathering speed</li>
  * </ul>
- *
+ * 
  * <p>
  * <b>Execution Flow:</b>
  * <ol>
@@ -58,14 +59,14 @@ import cl.camodev.wosbot.serv.task.EnumStartLocation;
  * cooldown</li>
  * <li>Reschedule to earliest cooldown or fallback time</li>
  * </ol>
- *
+ * 
  * <p>
  * <b>Rescheduling Logic:</b>
  * <ul>
  * <li>If any cooldown is successfully read: reschedule to earliest
  * cooldown</li>
  * <li>If all OCR fails: reschedule in 5 minutes as fallback</li>
- * <li>If no skills enabled: disable recurring execution</li>
+ * <li>If no skills enabled: reschedule to game reset</li>
  * </ul>
  */
 public class PetSkillsTask extends DelayedTask {
@@ -82,19 +83,25 @@ public class PetSkillsTask extends DelayedTask {
     private static final DTOPoint TREASURE_SKILL_BOTTOM_RIGHT = new DTOPoint(320, 490);
 
     // ========== Skill Details UI (overlay on pets menu) ==========
-    private static final DTOPoint COOLDOWN_OCR_TOP_LEFT = new DTOPoint(368, 1075);
-    private static final DTOPoint COOLDOWN_OCR_BOTTOM_RIGHT = new DTOPoint(507, 1105);
+    private static final DTOArea TREASURE_COOLDOWN_OCR_AREA = new DTOArea(
+            new DTOPoint(231, 428),
+            new DTOPoint(330, 470));
+    private static final DTOArea GATHERING_COOLDOWN_OCR_AREA = new DTOArea(
+            new DTOPoint(379, 292),
+            new DTOPoint(474, 314));
+    private static final DTOArea FOOD_COOLDOWN_OCR_AREA = new DTOArea(
+            new DTOPoint(522, 288),
+            new DTOPoint(626, 318));
+    private static final DTOArea STAMINA_COOLDOWN_OCR_AREA = new DTOArea(
+            new DTOPoint(229, 285),
+            new DTOPoint(334, 320));
     private static final DTOPoint SKILL_LEVEL_OCR_TOP_LEFT = new DTOPoint(276, 779);
     private static final DTOPoint SKILL_LEVEL_OCR_BOTTOM_RIGHT = new DTOPoint(363, 811);
 
-    // ========== Retry and Timing Constants ==========
-    private static final int USE_SKILL_TAP_COUNT = 5;
-    private static final int USE_SKILL_TAP_DELAY = 200;
-    private static final int MAX_NAVIGATION_ATTEMPTS = 3;
-    private static final int FALLBACK_RESCHEDULE_MINUTES = 10;
-    private static final int OCR_MAX_RETRIES = 5;
-    private static final long OCR_RETRY_DELAY_MS = 200L;
-    private static final int SKILL_LEVEL_OCR_MAX_RETRIES = 5;
+    // ========== Retry Constants ==========
+    private static final int FALLBACK_RESCHEDULE_MINUTES = 5;
+    private static final int SKILL_LEVEL_OCR_MAX_RETRIES = 3;
+    private static final int OCR_RETRY_DELAY_MS = 200;
 
     // ========== Stamina Calculation Constants ==========
     private static final int STAMINA_BASE_VALUE = 35;
@@ -103,9 +110,9 @@ public class PetSkillsTask extends DelayedTask {
 
     // ========== OCR Settings ==========
     private static final DTOTesseractSettings COOLDOWN_OCR_SETTINGS = DTOTesseractSettings.builder()
-            .setPageSegMode(DTOTesseractSettings.PageSegMode.SINGLE_LINE)
-            .setOcrEngineMode(DTOTesseractSettings.OcrEngineMode.LSTM)
             .setAllowedChars("0123456789d:")
+            .setRemoveBackground(true)
+            .setTextColor(new Color(244, 59, 59))
             .build();
 
     private static final DTOTesseractSettings SKILL_LEVEL_OCR_SETTINGS = DTOTesseractSettings.builder()
@@ -138,7 +145,7 @@ public class PetSkillsTask extends DelayedTask {
     /**
      * Loads task configuration from the profile.
      * This must be called from execute() to ensure configuration is current.
-     *
+     * 
      * <p>
      * Loads individual skill enable flags:
      * <ul>
@@ -147,7 +154,7 @@ public class PetSkillsTask extends DelayedTask {
      * <li>Treasure skill enabled/disabled</li>
      * <li>Gathering skill enabled/disabled</li>
      * </ul>
-     *
+     * 
      * <p>
      * All flags default to false if not configured.
      */
@@ -163,7 +170,7 @@ public class PetSkillsTask extends DelayedTask {
 
     /**
      * Helper method to safely retrieve boolean configuration values.
-     *
+     * 
      * @param key          the configuration key to retrieve
      * @param defaultValue the default value if configuration is not set
      * @return the configured boolean value or default if not set
@@ -175,7 +182,7 @@ public class PetSkillsTask extends DelayedTask {
 
     /**
      * Resets execution-specific state before each run.
-     *
+     * 
      * <p>
      * Resets:
      * <ul>
@@ -191,7 +198,7 @@ public class PetSkillsTask extends DelayedTask {
 
     /**
      * Main execution method for the Pet Skills task.
-     *
+     * 
      * <p>
      * Flow:
      * <ol>
@@ -204,7 +211,7 @@ public class PetSkillsTask extends DelayedTask {
      * <li>Close Pets menu</li>
      * <li>Reschedule based on cooldowns</li>
      * </ol>
-     *
+     * 
      * <p>
      * Rescheduling:
      * <ul>
@@ -258,7 +265,7 @@ public class PetSkillsTask extends DelayedTask {
 
     /**
      * Builds a list of enabled pet skills based on current configuration.
-     *
+     * 
      * @return list of PetSkill enums that are enabled, may be empty
      */
     private List<PetSkill> buildEnabledSkillsList() {
@@ -283,27 +290,28 @@ public class PetSkillsTask extends DelayedTask {
 
     /**
      * Opens the Pets menu by searching for and tapping the Pets button.
-     *
+     * 
      * <p>
      * Includes retry logic up to MAX_NAVIGATION_ATTEMPTS.
-     *
+     * 
      * @return true if menu opened successfully, false after max retries
      */
     private boolean openPetsMenu() {
         logDebug("Opening Pets menu");
 
-        DTOImageSearchResult petsButton = searchTemplateWithRetries(
-                EnumTemplates.GAME_HOME_PETS);
+        DTOImageSearchResult petsButton = templateSearchHelper.searchTemplate(
+                EnumTemplates.GAME_HOME_PETS,
+                SearchConfigConstants.DEFAULT_SINGLE);
 
         if (!petsButton.isFound()) {
             navigationAttempts++;
 
-            if (navigationAttempts >= MAX_NAVIGATION_ATTEMPTS) {
-                logError("Could not find Pets menu after " + MAX_NAVIGATION_ATTEMPTS + " attempts.");
+            if (navigationAttempts >= 3) { // Max navigation attempts
+                logError("Could not find Pets menu after 3 attempts.");
                 return false;
             }
 
-            logWarning("Pets button not found (attempt " + navigationAttempts + "/" + MAX_NAVIGATION_ATTEMPTS + ").");
+            logWarning("Pets button not found (attempt " + navigationAttempts + "/3).");
             return false;
         }
 
@@ -316,7 +324,7 @@ public class PetSkillsTask extends DelayedTask {
 
     /**
      * Processes all enabled pet skills sequentially.
-     *
+     * 
      * <p>
      * For each skill:
      * <ul>
@@ -325,7 +333,7 @@ public class PetSkillsTask extends DelayedTask {
      * <li>Uses skill if available</li>
      * <li>Reads and tracks cooldown timer</li>
      * </ul>
-     *
+     * 
      * @param enabledSkills list of skills to process
      */
     private void processAllSkills(List<PetSkill> enabledSkills) {
@@ -337,7 +345,7 @@ public class PetSkillsTask extends DelayedTask {
 
     /**
      * Processes a single pet skill.
-     *
+     * 
      * <p>
      * Flow:
      * <ol>
@@ -347,11 +355,11 @@ public class PetSkillsTask extends DelayedTask {
      * <li>Attempts to use skill if Use button is visible</li>
      * <li>Reads cooldown timer and tracks earliest cooldown</li>
      * </ol>
-     *
+     * 
      * <p>
      * Note: All skill details appear as overlays on the same pets menu screen.
      * No explicit navigation back is needed between skills.
-     *
+     * 
      * @param skill the skill to process
      */
     private void processSkill(PetSkill skill) {
@@ -377,7 +385,7 @@ public class PetSkillsTask extends DelayedTask {
 
     /**
      * Taps the skill icon to display its details overlay.
-     *
+     * 
      * @param skill the skill whose icon to tap
      */
     private void tapSkillIcon(PetSkill skill) {
@@ -387,15 +395,14 @@ public class PetSkillsTask extends DelayedTask {
 
     /**
      * Checks if a skill is learned by looking for the info/skills indicator.
-     *
+     * 
      * @param skill the skill to check
      * @return true if skill is learned, false otherwise
      */
     private boolean isSkillLearned(PetSkill skill) {
-        DTOImageSearchResult infoSkill = searchTemplateWithRetries(
+        DTOImageSearchResult infoSkill = templateSearchHelper.searchTemplate(
                 EnumTemplates.PETS_INFO_SKILLS,
-                90,
-                1);
+                SearchConfigConstants.QUICK_SEARCH);
 
         if (!infoSkill.isFound()) {
             logInfo(skill.name() + " skill not learned yet. Skipping.");
@@ -407,15 +414,14 @@ public class PetSkillsTask extends DelayedTask {
 
     /**
      * Checks if a skill is locked (requires unlocking).
-     *
+     * 
      * @param skill the skill to check
      * @return true if skill is locked, false if unlocked
      */
     private boolean isSkillLocked(PetSkill skill) {
-        DTOImageSearchResult unlockText = searchTemplateWithRetries(
+        DTOImageSearchResult unlockText = templateSearchHelper.searchTemplate(
                 EnumTemplates.PETS_UNLOCK_TEXT,
-                90,
-                1);
+                SearchConfigConstants.QUICK_SEARCH);
 
         if (unlockText.isFound()) {
             logInfo(skill.name() + " skill is locked. Skipping.");
@@ -427,21 +433,20 @@ public class PetSkillsTask extends DelayedTask {
 
     /**
      * Attempts to use a skill if the Use button is visible.
-     *
+     * 
      * <p>
      * If the Use button is not found, the skill is assumed to be on cooldown.
-     *
+     * 
      * <p>
      * Special handling for Stamina skill: adds stamina to profile after use.
-     *
+     * 
      * @param skill the skill to use
      * @return true if skill was used, false if on cooldown
      */
     private boolean tryUseSkill(PetSkill skill) {
-        DTOImageSearchResult useButton = searchTemplateWithRetries(
+        DTOImageSearchResult useButton = templateSearchHelper.searchTemplate(
                 EnumTemplates.PETS_SKILL_USE,
-                90,
-                1);
+                SearchConfigConstants.QUICK_SEARCH);
 
         if (!useButton.isFound()) {
             return false;
@@ -451,8 +456,8 @@ public class PetSkillsTask extends DelayedTask {
         tapRandomPoint(
                 useButton.getPoint(),
                 useButton.getPoint(),
-                USE_SKILL_TAP_COUNT,
-                USE_SKILL_TAP_DELAY);
+                3, // Number of taps
+                100); // Delay between taps in ms
 
         sleepTask(1500); // Wait for skill use animation
 
@@ -465,22 +470,43 @@ public class PetSkillsTask extends DelayedTask {
 
     /**
      * Reads the cooldown timer for a skill and tracks the earliest cooldown.
-     *
+     * 
      * <p>
      * Uses OCR to read the cooldown display and convert to Duration.
      * Updates the earliestCooldown field if this cooldown is sooner.
-     *
+     * 
      * <p>
      * If OCR fails, logs a warning and continues without updating cooldown.
-     *
+     * 
      * @param skill the skill whose cooldown to read
      */
     private void readAndTrackCooldown(PetSkill skill) {
-        Duration cooldownDuration = readCooldownDuration();
+        Duration cooldownDuration;
+
+        switch (skill) {
+            case STAMINA:
+                cooldownDuration = readSkillCooldown(STAMINA_COOLDOWN_OCR_AREA);
+                break;
+
+            case FOOD:
+                cooldownDuration = readSkillCooldown(FOOD_COOLDOWN_OCR_AREA);
+                break;
+
+            case TREASURE:
+                cooldownDuration = readSkillCooldown(TREASURE_COOLDOWN_OCR_AREA);
+                break;
+
+            case GATHERING:
+                cooldownDuration = readSkillCooldown(GATHERING_COOLDOWN_OCR_AREA);
+                break;
+
+            default:
+                cooldownDuration = null;
+        }
 
         if (cooldownDuration == null) {
-            logWarning("Failed to read cooldown for " + skill.name() + ". Skipping cooldown tracking.");
-            return;
+            logWarning("Failed to read cooldown for " + skill.name() + ". Using 5 minute fallback cooldown.");
+            cooldownDuration = Duration.ofMinutes(5);
         }
 
         LocalDateTime cooldownEnd = LocalDateTime.now().plus(cooldownDuration);
@@ -494,16 +520,17 @@ public class PetSkillsTask extends DelayedTask {
     }
 
     /**
-     * Reads the cooldown duration from the UI using OCR.
-     *
+     * Reads the cooldown duration from the UI using OCR for a specific skill area.
+     * 
+     * @param area The area containing the cooldown text
      * @return Duration representing the cooldown time, or null if OCR fails
      */
-    private Duration readCooldownDuration() {
+    private Duration readSkillCooldown(DTOArea area) {
         return durationHelper.execute(
-                COOLDOWN_OCR_TOP_LEFT,
-                COOLDOWN_OCR_BOTTOM_RIGHT,
-                OCR_MAX_RETRIES,
-                OCR_RETRY_DELAY_MS,
+                area.topLeft(),
+                area.bottomRight(),
+                5, // Max retries
+                200L, // Retry delay in ms
                 COOLDOWN_OCR_SETTINGS,
                 TimeValidators::isValidTime,
                 TimeConverters::toDuration);
@@ -511,7 +538,7 @@ public class PetSkillsTask extends DelayedTask {
 
     /**
      * Updates the earliest cooldown tracker if the provided cooldown is sooner.
-     *
+     * 
      * @param cooldownEnd the cooldown end time to compare
      */
     private void updateEarliestCooldown(LocalDateTime cooldownEnd) {
@@ -523,10 +550,10 @@ public class PetSkillsTask extends DelayedTask {
 
     /**
      * Adds stamina based on the skill level displayed in the UI.
-     *
+     * 
      * <p>
      * Formula: 35 + (level - 1) * 5
-     *
+     * 
      * <p>
      * If OCR fails to read the skill level, uses a fallback value of 35 (level 1
      * equivalent).
@@ -548,7 +575,7 @@ public class PetSkillsTask extends DelayedTask {
 
     /**
      * Reads the skill level from the UI using OCR.
-     *
+     * 
      * @return the skill level as an Integer, or null if OCR fails
      */
     private Integer readSkillLevel() {
@@ -564,10 +591,10 @@ public class PetSkillsTask extends DelayedTask {
 
     /**
      * Calculates stamina amount for a given skill level.
-     *
+     * 
      * <p>
      * Formula: 35 + (level - 1) * 5
-     *
+     * 
      * @param level the skill level (must be >= 1)
      * @return the stamina amount for that level
      */
@@ -586,7 +613,7 @@ public class PetSkillsTask extends DelayedTask {
 
     /**
      * Finalizes rescheduling based on earliest cooldown among all skills.
-     *
+     * 
      * <p>
      * Rescheduling logic:
      * <ul>
@@ -611,7 +638,7 @@ public class PetSkillsTask extends DelayedTask {
     /**
      * Specifies that this task can start from any screen location.
      * The task will handle navigation to the pets menu internally.
-     *
+     * 
      * @return EnumStartLocation.ANY
      */
     @Override
@@ -621,7 +648,7 @@ public class PetSkillsTask extends DelayedTask {
 
     /**
      * Indicates that this task does not provide daily mission progress.
-     *
+     * 
      * @return false
      */
     @Override
@@ -631,62 +658,52 @@ public class PetSkillsTask extends DelayedTask {
 
     /**
      * Enum representing the four pet skills with their screen coordinates.
-     *
+     * 
      * <p>
      * Each skill has a defined region on the pets menu screen that can be tapped
      * to display the skill's details overlay.
      */
     public enum PetSkill {
-        /**
-         * Stamina skill - adds stamina to the profile
-         */
+        /** Stamina skill - adds stamina to the profile */
         STAMINA(STAMINA_SKILL_TOP_LEFT, STAMINA_SKILL_BOTTOM_RIGHT),
 
-        /**
-         * Gathering skill - increases gathering speed
-         */
+        /** Gathering skill - increases gathering speed */
         GATHERING(GATHERING_SKILL_TOP_LEFT, GATHERING_SKILL_BOTTOM_RIGHT),
 
-        /**
-         * Food skill - increases food production
-         */
+        /** Food skill - increases food production */
         FOOD(FOOD_SKILL_TOP_LEFT, FOOD_SKILL_BOTTOM_RIGHT),
 
-        /**
-         * Treasure skill - provides resource rewards
-         */
+        /** Treasure skill - provides resource rewards */
         TREASURE(TREASURE_SKILL_TOP_LEFT, TREASURE_SKILL_BOTTOM_RIGHT);
 
-        private final DTOPoint topLeft;
-        private final DTOPoint bottomRight;
+        private final DTOArea area;
 
         /**
          * Constructs a PetSkill with screen coordinates.
-         *
+         * 
          * @param topLeft     top-left corner of the skill icon region
          * @param bottomRight bottom-right corner of the skill icon region
          */
         PetSkill(DTOPoint topLeft, DTOPoint bottomRight) {
-            this.topLeft = topLeft;
-            this.bottomRight = bottomRight;
+            this.area = new DTOArea(topLeft, bottomRight);
         }
 
         /**
          * Gets the top-left corner of the skill icon region.
-         *
+         * 
          * @return DTOPoint representing top-left coordinate
          */
         public DTOPoint getTopLeft() {
-            return topLeft;
+            return area.topLeft();
         }
 
         /**
          * Gets the bottom-right corner of the skill icon region.
-         *
+         * 
          * @return DTOPoint representing bottom-right coordinate
          */
         public DTOPoint getBottomRight() {
-            return bottomRight;
+            return area.bottomRight();
         }
     }
 }
