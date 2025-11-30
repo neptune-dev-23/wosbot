@@ -758,4 +758,8 @@ public class TaskQueue {
     public DTOProfiles getProfile() {
         return profile;
     }
+
+    public boolean isPaused() {
+        return taskQueueStatus.isPaused();
+    }
 }

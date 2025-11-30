@@ -165,4 +165,12 @@ public class TaskQueueManager {
                 return states;
         }
 
+    public boolean hasRunningQueues() {
+        return taskQueues.values().stream().anyMatch(TaskQueue::isRunning);
+    }
+
+    public boolean isGloballyPaused() {
+        return taskQueues.values().stream().allMatch(TaskQueue::isPaused);
+    }
+
 }

@@ -1,5 +1,7 @@
 package cl.camodev.wosbot.main;
 
+import cl.camodev.wosbot.almac.jpa.BotPersistence;
+import cl.camodev.wosbot.web.server.WebDashboardServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
