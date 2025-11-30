@@ -187,8 +187,8 @@ public class PolarTerrorHuntingTask extends DelayedTask {
 
         // Tap "Hold a Rally" button
         tapRandomPoint(new DTOPoint(275, 821), new DTOPoint(444, 856), 1, 400);
-        sleepTask(500);
-
+        sleepTask(200);
+        DTOImageSearchResult deploy = searchTemplateWithRetries(EnumTemplates.DEPLOY_BUTTON, 20, 50L);
         // Select flag if needed
         if (useFlag) {
             selectFlag(flagNumber);
@@ -200,7 +200,6 @@ public class PolarTerrorHuntingTask extends DelayedTask {
         Integer spentStamina = getSpentStamina();
 
         // Deploy march
-        DTOImageSearchResult deploy = searchTemplateWithRetries(EnumTemplates.DEPLOY_BUTTON, 90, 3);
 
         if (!deploy.isFound()) {
             logDebug("Deploy button not found. Rescheduling to try again in 5 minutes.");
@@ -208,12 +207,12 @@ public class PolarTerrorHuntingTask extends DelayedTask {
         }
 
         tapPoint(deploy.getPoint());
-        sleepTask(2000);
+        sleepTask(1000);
 
-        deploy = searchTemplateWithRetries(EnumTemplates.DEPLOY_BUTTON, 90, 3);
-        if (deploy.isFound()) {
+        DTOImageSearchResult home = searchTemplateWithRetries(EnumTemplates.GAME_HOME_WORLD, 20, 50L);
+        if (!home.isFound()) {
             // Probably march got taken by auto-join or something
-            logInfo("Deploy button still found after trying to deploy march. Rescheduling to try again in 5 minutes.");
+            logInfo("March deployment may have failed (home button not found).");
             return 0;
         }
 
@@ -229,7 +228,7 @@ public class PolarTerrorHuntingTask extends DelayedTask {
                 return -1;
             }
             long returnTimeSeconds = travelTimeSeconds * 2 + 2;
-            LocalDateTime rescheduleTime = LocalDateTime.now().plusSeconds(returnTimeSeconds).plusMinutes(5);
+            LocalDateTime rescheduleTime = LocalDateTime.now().plusSeconds(0);
             reschedule(rescheduleTime);
             logInfo("Rally with flag scheduled to return in " + UtilTime.localDateTimeToDDHHMMSS(rescheduleTime));
             return 2;
@@ -268,17 +267,15 @@ public class PolarTerrorHuntingTask extends DelayedTask {
 
     private boolean openRallyMenu() {
         // Search for rally button
-        DTOImageSearchResult rallyButton = searchTemplateWithRetries(EnumTemplates.RALLY_BUTTON, 90, 3);
-        sleepTask(500);
+        DTOImageSearchResult rallyButton = searchTemplateWithRetries(EnumTemplates.RALLY_BUTTON, 90, 5);
 
         if (!rallyButton.isFound()) {
             logDebug("Rally button not found.");
-            sleepTask(500);
             return false;
         }
 
         tapPoint(rallyButton.getPoint());
-        sleepTask(1000);
+        sleepTask(300);
         return true;
     }
 
@@ -290,14 +287,14 @@ public class PolarTerrorHuntingTask extends DelayedTask {
 
         // Swipe left to find polar terror icon
         swipe(new DTOPoint(40, 913), new DTOPoint(678, 913));
-        sleepTask(500);
+        sleepTask(200);
 
         // Search the polar terror search icon
         DTOImageSearchResult polarTerror = searchTemplateWithRetries(EnumTemplates.POLAR_TERROR_SEARCH_ICON, 90, 3);
         logDebug("Searching for Polar Terror icon");
         for (int i = 0; i < 3 && !polarTerror.isFound(); i++) {
             swipe(new DTOPoint(40, 913), new DTOPoint(678, 913));
-            sleepTask(500);
+            sleepTask(200);
             polarTerror = searchTemplateWithRetries(EnumTemplates.POLAR_TERROR_SEARCH_ICON, 90, 3);
         }
 
@@ -331,7 +328,7 @@ public class PolarTerrorHuntingTask extends DelayedTask {
         // tap on search button
         logDebug("Tapping on search button...");
         tapRandomPoint(new DTOPoint(301, 1200), new DTOPoint(412, 1229));
-        sleepTask(1500);
+
         return true;
     }
 
