@@ -28,3 +28,16 @@ log/bot.log
 .vscode/settings.json
 /log
 /temp
+
+
+*.yaml
+*.db-shm
+*.db-wal
+*.iml
+.DS_Store
+*.crt
+*.key
+wos-api
+wos-web-ui
+
+*.db
