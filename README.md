@@ -1,3 +1,10 @@
+# NOTE: This Repo is a Fork.
+
+Check out the original repo [here](https://github.com/camoloqlo/wosbot). 
+The upstream project is actively (and better) maintained. 
+
+This fork builds on the core by adding a web dashboard and experimental, related features.
+
 # Whiteout Survival Bot
 
 [![](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://buymeacoffee.com/cearivera1z)
@@ -162,4 +169,5 @@ Note: For best performance and reliability, disable the Snowfall and Day/Night C
 - 🔹 **And more...** 🔥
 
 ---
+
 
