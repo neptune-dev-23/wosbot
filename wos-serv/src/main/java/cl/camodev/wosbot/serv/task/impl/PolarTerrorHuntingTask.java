@@ -68,6 +68,7 @@ public class PolarTerrorHuntingTask extends DelayedTask {
                 useFlag ? "#" + flagNumber : "None"));
 
         // Verify if there's enough stamina to hunt, if not, reschedule the task
+        updateStaminaFromProfile();
         if (!checkStaminaAndMarchesOrReschedule(minStaminaLevel, refreshStaminaLevel))
             return;
 

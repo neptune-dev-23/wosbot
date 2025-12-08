@@ -181,9 +181,9 @@ public class BearTrapTask extends DelayedTask {
     private static final int DEFAULT_OWN_RALLY_FLAG = 1;
     private static final int DEFAULT_JOIN_RALLY_FLAG = 1;
     private static final boolean DEFAULT_CALL_OWN_RALLY = false;
-    private static final boolean DEFAULT_JOIN_RALLY = false;
+    private static final boolean DEFAULT_JOIN_RALLY = true;
     private static final boolean DEFAULT_USE_PETS = false;
-    private static final boolean DEFAULT_RECALL_TROOPS = false;
+    private static final boolean DEFAULT_RECALL_TROOPS = true;
     private static final int DEFAULT_FREE_MARCHES_FALLBACK = 1;
 
     // ========== Configuration (loaded in loadConfiguration()) ==========
