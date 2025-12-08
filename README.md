@@ -155,6 +155,32 @@ Note: For best performance and reliability, disable the Snowfall and Day/Night C
 
 ---
 
+## API Module WebSocket (Spring Boot)
+
+The `wos-api` module now hosts a Spring Boot WebSocket endpoint at `ws://localhost:8765/bot` (with `/health` available as well) so UI clients can connect through the same WebSocket handler. Keep all Maven commands scoped to this module by running them inside `wos-api` or using `-pl wos-api` from the repository root; building the entire reactor triggers missing-artifact errors because the other modules’ binaries are not distributed here.
+
+### Building the API module
+```bash
+cd wos-api
+mvn clean install -DskipTests
+# or from the root:
+mvn -pl wos-api clean install -DskipTests
+```
+
+### Running the Spring Boot server
+```bash
+mvn -pl wos-api spring-boot:run -Dspring-boot.run.arguments=--server.port=8765
+```
+
+### API module tests
+```bash
+mvn -pl wos-api test
+```
+
+The module uses `WebSocketSessionManager` and `MessageDispatcher` so you can exercise the API with `curl http://localhost:8765/health` or `wscat -c ws://localhost:8765/bot`.
+
+---
+
 ### 🚀 Future Features (Planned)
 - 🔹 **Beast Hunt**
 - 🔹 **Alliance Mobilization**

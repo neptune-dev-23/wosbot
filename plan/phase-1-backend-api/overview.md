@@ -8,7 +8,7 @@ Create a WebSocket-based API layer that wraps existing backend services without 
 
 ## Objectives
 1. ✅ Create new `wos-api` module with clean structure
-2. ✅ Implement WebSocket server using Jetty or Spring Boot
+2. ✅ Implement a Spring Boot-based WebSocket server
 3. ✅ Build service facade (`BotApiService`) that wraps all backend calls
 4. ✅ Design JSON-based command/event protocol
 5. ✅ Convert listener callbacks to WebSocket event broadcasts
@@ -32,7 +32,10 @@ Create a WebSocket-based API layer that wraps existing backend services without 
 - Existing `wos-serv` module (wraps these services)
 - Existing `wos-ot` module (reuses DTOs)
 - Jackson library (already in project)
-- Jetty WebSocket or Spring Boot WebSocket library (new dependency)
+- Spring Boot WebSocket (`spring-boot-starter-websocket`) (new dependency)
+
+## Build Scope
+All Maven commands for Phase 1 should target the `wos-api` module (for example, `mvn -pl wos-api clean test`). Building the entire reactor will likely fail because the other modules’ artifacts are not distributed yet, so keep compilation and testing confined to `wos-api` unless another module is explicitly required.
 
 ## Risks
 | Risk | Mitigation |
@@ -43,7 +46,7 @@ Create a WebSocket-based API layer that wraps existing backend services without 
 
 ## Sub-Steps
 1. [1.1 Create API Module Structure](1.1-create-api-module.md) - Set up Maven module and packages
-2. [1.2 Implement WebSocket Server](1.2-websocket-server.md) - Build server with Jetty
+2. [1.2 Implement WebSocket Server](1.2-websocket-server.md) - Build the server with Spring Boot WebSocket handlers
 3. [1.3 Build Service Facade](1.3-service-facade.md) - Wrap all backend service calls
 4. [1.4 Design Protocol](1.4-protocol-design.md) - Define Command/Event/Response formats
 5. [1.5 Convert Listeners to Event Emitters](1.5-listener-conversion.md) - Broadcast events via WebSocket

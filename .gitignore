@@ -28,7 +28,7 @@ log/bot.log
 .vscode/settings.json
 /log
 /temp
-
+**/target/
 
 *.yaml
 *.db-shm
@@ -37,7 +37,5 @@ log/bot.log
 .DS_Store
 *.crt
 *.key
-wos-api
-wos-web-ui
 
 *.db

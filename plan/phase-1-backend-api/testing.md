@@ -20,6 +20,8 @@ Phase 1 testing focuses on **API-only** validation. The UI has not been modified
 
 ## Setup
 
+> **Module scope:** All Maven commands in this plan should target the `wos-api` module. Run them from inside `wos-api` or use `mvn -pl wos-api ...` from the root so Maven does not attempt to build unrelated modules whose artifacts are missing.
+
 ### Install Testing Tools
 
 **wscat (WebSocket CLI):**
@@ -30,7 +32,7 @@ npm install -g wscat
 **Test server is running:**
 ```bash
 cd wos-api
-mvn clean compile exec:java -Dexec.mainClass="cl.camodev.wosbot.api.server.BotWebSocketServer"
+mvn clean compile spring-boot:run -Dspring-boot.run.arguments=--server.port=8765
 ```
 
 ---
@@ -41,7 +43,7 @@ mvn clean compile exec:java -Dexec.mainClass="cl.camodev.wosbot.api.server.BotWe
 
 #### 1.1 Server Starts Successfully
 ```bash
-mvn exec:java -Dexec.mainClass="cl.camodev.wosbot.api.server.BotWebSocketServer"
+mvn -pl wos-api spring-boot:run -Dspring-boot.run.arguments=--server.port=8765
 ```
 
 **Expected output:**
@@ -389,7 +391,7 @@ wait
 
 Run existing unit tests:
 ```bash
-mvn test
+mvn -pl wos-api test
 ```
 
 **Expected:** All tests pass
