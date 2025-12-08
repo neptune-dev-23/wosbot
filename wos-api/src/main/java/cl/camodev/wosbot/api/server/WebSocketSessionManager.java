@@ -1,14 +1,15 @@
 package cl.camodev.wosbot.api.server;
 
-import org.springframework.web.socket.WebSocketSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.socket.WebSocketSession;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Manages WebSocket sessions (connections) and provides broadcast functionality.
+ * Manages WebSocket sessions (connections) and provides broadcast
+ * functionality.
  */
 public class WebSocketSessionManager {
     private static final Logger logger = LoggerFactory.getLogger(WebSocketSessionManager.class);
@@ -22,7 +23,7 @@ public class WebSocketSessionManager {
         String sessionId = session.getId();
         sessions.put(sessionId, session);
         logger.info("Client connected. Session ID: {}. Total clients: {}",
-                    sessionId, sessions.size());
+                sessionId, sessions.size());
     }
 
     /**
@@ -32,7 +33,7 @@ public class WebSocketSessionManager {
         String sessionId = session.getId();
         sessions.remove(sessionId);
         logger.info("Client disconnected. Session ID: {}. Total clients: {}",
-                    sessionId, sessions.size());
+                sessionId, sessions.size());
     }
 
     /**
@@ -43,10 +44,10 @@ public class WebSocketSessionManager {
             if (session.isOpen()) {
                 session.sendMessage(new org.springframework.web.socket.TextMessage(message));
             } else {
-                logger.warn("Attempted to send to closed session: {}", session.getId());
+                logger.warn("Attempted to send to closed session: {}", session);
             }
         } catch (Exception e) {
-            logger.error("Failed to send message to session: {}", session.getId(), e);
+            logger.error("Failed to send message to session: {}", session, e);
         }
     }
 
@@ -66,7 +67,7 @@ public class WebSocketSessionManager {
                     failCount++;
                 }
             } catch (Exception e) {
-                logger.error("Failed to broadcast to session: {}", session.getId(), e);
+                logger.error("Failed to broadcast to session: {}", session, e);
                 failCount++;
             }
         }

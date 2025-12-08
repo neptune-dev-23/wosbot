@@ -19,7 +19,7 @@ public class MessageDispatcher {
 
             // For now, just echo back
             logger.info("Handling message: {}", message);
-            return "{\"success\":true,\"message\":\"Echo: " + message + "\"}";
+            return "{\"success\":true,\"message\":\"Echo: " + message.replace("\"", "\\\"") + "\"}";
 
         } catch (Exception e) {
             logger.error("Failed to parse message", e);

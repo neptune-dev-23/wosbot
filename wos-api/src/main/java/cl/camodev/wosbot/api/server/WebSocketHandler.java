@@ -16,7 +16,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
     private final MessageDispatcher messageDispatcher;
 
     public WebSocketHandler(WebSocketSessionManager sessionManager,
-                           MessageDispatcher messageDispatcher) {
+            MessageDispatcher messageDispatcher) {
         this.sessionManager = sessionManager;
         this.messageDispatcher = messageDispatcher;
     }
@@ -28,9 +28,10 @@ public class WebSocketHandler extends TextWebSocketHandler {
     }
 
     @Override
-    public void afterConnectionClosed(WebSocketSession session, org.springframework.web.socket.CloseStatus status) throws Exception {
+    public void afterConnectionClosed(WebSocketSession session, org.springframework.web.socket.CloseStatus status)
+            throws Exception {
         logger.info("WebSocket connection closed: {}. Status: {}, Reason: {}",
-                   session.getRemoteAddress(), status.getCode(), status.getReason());
+                session.getRemoteAddress(), status.getCode(), status.getReason());
         sessionManager.removeSession(session);
     }
 
@@ -55,9 +56,8 @@ public class WebSocketHandler extends TextWebSocketHandler {
 
     private void sendError(WebSocketSession session, String errorMessage) {
         String errorJson = String.format(
-            "{\"success\":false,\"error\":\"%s\"}",
-            errorMessage.replace("\"", "\\\"")
-        );
+                "{\"success\":false,\"error\":\"%s\"}",
+                errorMessage.replace("\"", "\\\""));
         sessionManager.sendToSession(session, errorJson);
     }
 }

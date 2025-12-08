@@ -8,7 +8,7 @@
     <parent>
         <groupId>cl.camodev</groupId>
         <artifactId>wosbot</artifactId>
-        <version>1.5.4</version>
+        <version>${revision}</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -84,6 +84,7 @@
         </dependency>
 
         <!-- Project Dependencies -->
+        <!-- TODO: Uncomment when wos-serv and wos-ot are fully ready
         <dependency>
             <groupId>cl.camodev</groupId>
             <artifactId>wos-serv</artifactId>
@@ -94,6 +95,7 @@
             <artifactId>wos-ot</artifactId>
             <version>${revision}</version>
         </dependency>
+        -->
 
         <!-- Logging -->
         <dependency>
