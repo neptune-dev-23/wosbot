@@ -21,6 +21,18 @@ Create a WebSocket-based API layer that wraps existing backend services without 
 - [ ] All 40+ backend service calls have API equivalents
 - [ ] Existing UI still works unchanged (backward compatibility)
 
+## Test Verification
+
+### Run All Tests
+```bash
+# Single command to verify all Phase 1 success criteria
+mvn -pl wos-api clean test
+```
+
+**Per-Step Success Criteria:** Each step document (1.1-1.5) contains detailed success criteria with automated test commands.
+
+---
+
 ## Key Deliverables
 - `wos-api` module with working WebSocket server
 - `BotApiService` facade class

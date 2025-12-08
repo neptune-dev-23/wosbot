@@ -400,8 +400,65 @@ Key test classes:
 - `ProtocolTest` - Protocol serialization
 - `MessageDispatcherTest` - Command dispatching
 - `BotApiServiceTest` - Service facade methods
+- `WebSocketSessionManagerTest` - Session management
+- `WebSocketHandlerTest` - Connection lifecycle
+- `EventBroadcasterTest` - Event broadcasting
 
 **Status:** [ ]
+
+---
+
+## Comprehensive Automated Test Suite
+
+> [!IMPORTANT]
+> All automated tests must pass before Phase 1 is considered complete.
+
+### Test Matrix
+
+| Test Class | Component | Coverage | Command |
+|------------|-----------|----------|---------|
+| `WebSocketSessionManagerTest` | Session Management | Session add/remove, broadcast | `mvn -pl wos-api test -Dtest=WebSocketSessionManagerTest` |
+| `WebSocketHandlerTest` | Connection Lifecycle | Open, close, message handling | `mvn -pl wos-api test -Dtest=WebSocketHandlerTest` |
+| `MessageDispatcherTest` | Command Routing | JSON parsing, command dispatch | `mvn -pl wos-api test -Dtest=MessageDispatcherTest` |
+| `BotWebSocketServerIntegrationTest` | End-to-End | Health check, WebSocket echo | `mvn -pl wos-api test -Dtest=BotWebSocketServerIntegrationTest` |
+| `ProtocolTest` | Protocol Classes | Serialization tests | `mvn -pl wos-api test -Dtest=ProtocolTest` |
+| `BotApiServiceTest` | Service Facade | Service wrapper methods | `mvn -pl wos-api test -Dtest=BotApiServiceTest` |
+| `EventBroadcasterTest` | Event Broadcasting | Listener registration, broadcast | `mvn -pl wos-api test -Dtest=EventBroadcasterTest` |
+
+### Run Commands
+
+```bash
+# Run ALL tests (recommended before phase completion)
+mvn -pl wos-api test
+
+# Run by category
+mvn -pl wos-api test -Dtest="*WebSocket*"            # WebSocket tests
+mvn -pl wos-api test -Dtest="*Service*,*Dispatcher*"  # Service layer tests
+mvn -pl wos-api test -Dtest="*Protocol*,*Event*"      # Protocol & event tests
+mvn -pl wos-api test -Dtest="*IntegrationTest"        # Integration tests only
+```
+
+### Required Test Files
+
+| Location | File | Status |
+|----------|------|--------|
+| `server/` | `WebSocketSessionManagerTest.java` | ✅ Exists |
+| `server/` | `WebSocketHandlerTest.java` | ✅ Exists |
+| `server/` | `MessageDispatcherTest.java` | ✅ Exists |
+| `server/` | `BotWebSocketServerIntegrationTest.java` | ✅ Exists |
+| `protocol/` | `ProtocolTest.java` | 📝 Create if missing |
+| `service/` | `BotApiServiceTest.java` | 📝 Create if missing |
+| `event/` | `EventBroadcasterTest.java` | 📝 Create if missing |
+
+### Coverage Requirements
+
+| Component | Target | Critical Methods |
+|-----------|--------|------------------|
+| `WebSocketSessionManager` | 80% | `addSession`, `broadcast`, `closeAll` |
+| `MessageDispatcher` | 80% | `handleMessage`, `dispatchCommand` |
+| `BotApiService` | 70% | All public methods |
+| Protocol Classes | 90% | Serialization, factory methods |
+| `EventBroadcaster` | 75% | Event handlers, `broadcastEvent` |
 
 ---
 
