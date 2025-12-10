@@ -135,6 +135,7 @@ public enum EnumConfigurationKey {
 	PET_SKILL_FOOD_BOOL("false", Boolean.class),
 	PET_SKILL_TREASURE_BOOL("false", Boolean.class),
 	PET_SKILL_GATHERING_BOOL("false", Boolean.class),
+	PET_SKILL_GATHERING_RESOURCE_STRING("MEAT", String.class),
 	PET_PERSONAL_TREASURE_BOOL("false", Boolean.class),
 	
     // ========================================================================
@@ -226,7 +227,7 @@ public enum EnumConfigurationKey {
     BEAR_TRAP_RECALL_TROOPS_BOOL("false", Boolean.class),
     BEAR_TRAP_CALL_RALLY_BOOL("false", Boolean.class),
     BEAR_TRAP_JOIN_RALLY_BOOL("false", Boolean.class),
-    BEAR_TRAP_JOIN_FLAG_INT("1", Integer.class),
+    BEAR_TRAP_JOIN_FLAG_INT("1", String.class),  // Comma-separated flags: "1,3,4"
 
     // ========================================================================
     // EXPERT SETTINGS
