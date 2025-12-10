@@ -404,8 +404,17 @@ public class BearTrapTask extends DelayedTask {
         logInfo("Rescheduling Bear Trap for (UTC): " + nextWindowStartUtc.format(DATETIME_FORMATTER));
         logInfo("Rescheduling Bear Trap for (Local): " + nextWindowStart.format(DATETIME_FORMATTER));
 
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
+        String formattedDateTime = nextWindowStart.format(formatter);
+
+        logInfo("Updating next trap activation time to: " + formattedDateTime + " UTC");
+
+        ServConfig.getServices().updateProfileConfig(
+                profile,
+                BEAR_TRAP_SCHEDULE_DATETIME_STRING,
+                formattedDateTime);
+
         reschedule(nextWindowStart);
-        updateNextWindowDateTime();
     }
 
     /**
