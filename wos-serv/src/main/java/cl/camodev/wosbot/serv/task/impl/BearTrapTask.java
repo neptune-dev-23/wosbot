@@ -1439,8 +1439,6 @@ public class BearTrapTask extends DelayedTask {
                 profile,
                 BEAR_TRAP_SCHEDULE_DATETIME_STRING,
                 formattedDateTime);
-
-        reschedule(nextWindowStart);
     }
 
     /**
