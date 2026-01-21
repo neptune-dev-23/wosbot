@@ -142,7 +142,7 @@ public interface CommonGameAreas {
         // ========================================================================
 
         /** OCR region for reading march travel time on deployment screen */
-        DTOArea TRAVEL_TIME_OCR_AREA = new DTOArea(
-                        new DTOPoint(521, 1141),
-                        new DTOPoint(608, 1162));
+	DTOArea TRAVEL_TIME_OCR_AREA = new DTOArea(
+			new DTOPoint(515, 1135),
+			new DTOPoint(621, 1169));
 }

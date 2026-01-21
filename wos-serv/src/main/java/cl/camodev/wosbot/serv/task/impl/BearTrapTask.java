@@ -1,25 +1,10 @@
 package cl.camodev.wosbot.serv.task.impl;
 
-import cl.camodev.utiles.UtilRally;
-import cl.camodev.utiles.number.NumberConverters;
-import cl.camodev.utiles.number.NumberValidators;
-import cl.camodev.utiles.ocr.TextRecognitionRetrier;
-import cl.camodev.utiles.time.TimeConverters;
-import cl.camodev.utiles.time.TimeValidators;
-import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
-import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
-import cl.camodev.wosbot.ot.DTOImageSearchResult;
-import cl.camodev.wosbot.ot.DTOPoint;
-import cl.camodev.wosbot.ot.DTOProfiles;
-import cl.camodev.wosbot.ot.DTOTesseractSettings;
-import cl.camodev.wosbot.serv.impl.ServConfig;
-import cl.camodev.wosbot.serv.ocr.BotTextRecognitionProvider;
-import cl.camodev.wosbot.serv.task.*;
-import cl.camodev.wosbot.serv.task.helper.BearTrapHelper;
-import cl.camodev.wosbot.serv.task.helper.TemplateSearchHelper.SearchConfig;
-
-import java.awt.*;
-import java.time.*;
+import java.awt.Color;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -30,8 +15,47 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static cl.camodev.wosbot.console.enumerable.EnumConfigurationKey.*;
-import static cl.camodev.wosbot.console.enumerable.EnumTemplates.*;
+import cl.camodev.utiles.UtilRally;
+import cl.camodev.utiles.number.NumberConverters;
+import cl.camodev.utiles.number.NumberValidators;
+import cl.camodev.utiles.ocr.TextRecognitionRetrier;
+import cl.camodev.utiles.time.TimeConverters;
+import cl.camodev.utiles.time.TimeValidators;
+import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
+import static cl.camodev.wosbot.console.enumerable.EnumConfigurationKey.BEAR_TRAP_ACTIVE_PETS_BOOL;
+import static cl.camodev.wosbot.console.enumerable.EnumConfigurationKey.BEAR_TRAP_CALL_RALLY_BOOL;
+import static cl.camodev.wosbot.console.enumerable.EnumConfigurationKey.BEAR_TRAP_JOIN_FLAG_INT;
+import static cl.camodev.wosbot.console.enumerable.EnumConfigurationKey.BEAR_TRAP_JOIN_RALLY_BOOL;
+import static cl.camodev.wosbot.console.enumerable.EnumConfigurationKey.BEAR_TRAP_NUMBER_INT;
+import static cl.camodev.wosbot.console.enumerable.EnumConfigurationKey.BEAR_TRAP_PREPARATION_TIME_INT;
+import static cl.camodev.wosbot.console.enumerable.EnumConfigurationKey.BEAR_TRAP_RALLY_FLAG_INT;
+import static cl.camodev.wosbot.console.enumerable.EnumConfigurationKey.BEAR_TRAP_RECALL_TROOPS_BOOL;
+import static cl.camodev.wosbot.console.enumerable.EnumConfigurationKey.BEAR_TRAP_SCHEDULE_DATETIME_STRING;
+import static cl.camodev.wosbot.console.enumerable.EnumTemplates.ALLIANCE_TERRITORY_BUTTON;
+import static cl.camodev.wosbot.console.enumerable.EnumTemplates.ALLIANCE_WAR_BUTTON;
+import static cl.camodev.wosbot.console.enumerable.EnumTemplates.BEAR_DEPLOY_BUTTON;
+import static cl.camodev.wosbot.console.enumerable.EnumTemplates.BEAR_JOIN_PLUS_ICON;
+import static cl.camodev.wosbot.console.enumerable.EnumTemplates.BEAR_RALLY_BUTTON;
+import static cl.camodev.wosbot.console.enumerable.EnumTemplates.GAME_HOME_PETS;
+import static cl.camodev.wosbot.console.enumerable.EnumTemplates.GAME_HOME_WAR;
+import static cl.camodev.wosbot.console.enumerable.EnumTemplates.MARCHES_AREA_RECALL_BUTTON;
+import static cl.camodev.wosbot.console.enumerable.EnumTemplates.MARCHES_AREA_SPEEDUP_BUTTON;
+import static cl.camodev.wosbot.console.enumerable.EnumTemplates.MARCHES_AREA_VIEW_BUTTON;
+import static cl.camodev.wosbot.console.enumerable.EnumTemplates.RALLY_HOLD_BUTTON;
+import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
+import cl.camodev.wosbot.ot.DTOImageSearchResult;
+import cl.camodev.wosbot.ot.DTOPoint;
+import cl.camodev.wosbot.ot.DTOProfiles;
+import cl.camodev.wosbot.ot.DTOTesseractSettings;
+import cl.camodev.wosbot.serv.impl.ServConfig;
+import cl.camodev.wosbot.serv.ocr.BotTextRecognitionProvider;
+import cl.camodev.wosbot.serv.task.DelayedTask;
+import cl.camodev.wosbot.serv.task.EnumStartLocation;
+import cl.camodev.wosbot.serv.task.TaskQueue;
+import cl.camodev.wosbot.serv.task.constants.CommonGameAreas;
+import cl.camodev.wosbot.serv.task.constants.CommonOCRSettings;
+import cl.camodev.wosbot.serv.task.helper.BearTrapHelper;
+import cl.camodev.wosbot.serv.task.helper.TemplateSearchHelper.SearchConfig;
 
 /**
  * Bear Trap Task - Manages automated participation in the Bear Trap event.
@@ -485,6 +509,34 @@ public class BearTrapTask extends DelayedTask {
 
         reschedule(nextWindowStart);
     }
+/**
+	 * Parses the travel time displayed on the deployment screen.
+	 * 
+	 * <p>
+	 * Travel time is read via OCR from the march preview and converted
+	 * to total seconds for scheduling calculations.
+	 * 
+	 * @return Travel time in seconds, or 0 if OCR failed
+	 */
+	public long parseTravelTime() {
+		Duration marchingTime = durationHelper.execute(
+				CommonGameAreas.TRAVEL_TIME_OCR_AREA.topLeft(),
+				CommonGameAreas.TRAVEL_TIME_OCR_AREA.bottomRight(),
+				3, // Max retry attempts
+				200L, // Delay between retries
+				CommonOCRSettings.TRAVEL_TIME_SETTINGS,
+				TimeValidators::isValidTime,
+				TimeConverters::toDuration);
+
+		if (marchingTime != null) {
+			long seconds = marchingTime.getSeconds();
+			logDebug("Travel time: " + seconds + " seconds");
+			return seconds * 2 + 2;
+		}
+
+		logWarning("Failed to parse travel time");
+		return 0;
+	}
 
     /**
      * Verifies that current time is within the valid execution window.
@@ -906,14 +958,14 @@ public class BearTrapTask extends DelayedTask {
 
         logInfo("Calling own rally...");
 
-        tapRandomPoint(BEAR_CENTER_POINT, BEAR_CENTER_POINT, 1, 200);
-        sleepTask(500); // Wait for bear selection
+        tapRandomPoint(BEAR_CENTER_POINT, BEAR_CENTER_POINT, 1, 1);
 
         DTOImageSearchResult rallyButton = templateSearchHelper.searchTemplate(
                 BEAR_RALLY_BUTTON,
                 SearchConfig.builder()
                         .withThreshold(80)
                         .withMaxAttempts(TEMPLATE_SEARCH_RETRIES_MAX)
+                        .withDelay(100)
                         .build());
 
         if (!rallyButton.isFound()) {
@@ -923,14 +975,14 @@ public class BearTrapTask extends DelayedTask {
         }
 
         logInfo("Opening rally menu...");
-        tapRandomPoint(rallyButton.getPoint(), rallyButton.getPoint(), 1, 200);
-        sleepTask(500); // Wait for rally menu
+        tapRandomPoint(rallyButton.getPoint(), rallyButton.getPoint(), 1, 1);
 
         DTOImageSearchResult holdRallyButton = templateSearchHelper.searchTemplate(
                 RALLY_HOLD_BUTTON,
                 SearchConfig.builder()
                         .withThreshold(90)
                         .withMaxAttempts(TEMPLATE_SEARCH_RETRIES_MAX)
+                        .withDelay(100)
                         .build());
 
         if (!holdRallyButton.isFound()) {
@@ -946,7 +998,7 @@ public class BearTrapTask extends DelayedTask {
         tapRandomPoint(flagPoint, flagPoint, 1, 200);
         sleepTask(300); // Wait for march time to appear
 
-        long marchSeconds = readMarchTime();
+        long marchSeconds = parseTravelTime();
 
         if (marchSeconds == 0) {
             logError("Could not read march time from screen");
